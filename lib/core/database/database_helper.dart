@@ -19,8 +19,9 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 2, // Subimos la versión para forzar la actualización si ya tenías la v1
       onCreate: _createDB,
+      onUpgrade: _upgradeDB,
       onConfigure: _onConfigure,
     );
   }
@@ -35,6 +36,18 @@ class DatabaseHelper {
     const intType = 'INTEGER NOT NULL';
     const realType = 'REAL NOT NULL';
 
+    // 1. Tabla de Promociones (Plantillas globales)
+    await db.execute('''
+      CREATE TABLE promotions (
+        id $idType,
+        name $textType,
+        type $textType,
+        threshold $intType,
+        discount_value $realType
+      )
+    ''');
+
+    // 2. Tabla de Productos (Añadimos promotion_id)
     await db.execute('''
       CREATE TABLE products (
         id $idType,
@@ -42,10 +55,13 @@ class DatabaseHelper {
         units $intType,
         price $realType,
         cost $realType,
-        image_path TEXT
+        image_path TEXT,
+        promotion_id INTEGER,
+        FOREIGN KEY (promotion_id) REFERENCES promotions (id) ON DELETE SET NULL
       )
     ''');
 
+    // 3. Tabla de Ventas
     await db.execute('''
       CREATE TABLE sales (
         id $idType,
@@ -54,6 +70,7 @@ class DatabaseHelper {
       )
     ''');
 
+    // 4. Tabla de Detalles de Venta
     await db.execute('''
       CREATE TABLE sale_items (
         id $idType,
@@ -65,6 +82,24 @@ class DatabaseHelper {
         FOREIGN KEY (product_id) REFERENCES products (id) ON DELETE RESTRICT
       )
     ''');
+  }
+
+  // Por si la app ya estaba instalada en el emulador con la versión anterior
+  Future<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute('''
+        CREATE TABLE promotions (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          type TEXT NOT NULL,
+          threshold INTEGER NOT NULL,
+          discount_value REAL NOT NULL
+        )
+      ''');
+      await db.execute(
+        'ALTER TABLE products ADD COLUMN promotion_id INTEGER REFERENCES promotions(id) ON DELETE SET NULL',
+      );
+    }
   }
 
   Future<void> close() async {

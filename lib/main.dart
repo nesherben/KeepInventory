@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:keepinventory/presentation/promotions/promotions_screen.dart';
 
 import 'presentation/dashboard/dashboard_screen.dart';
 import 'presentation/inventory/inventory_screen.dart';
@@ -29,6 +30,7 @@ class KeepInventoryApp extends StatelessWidget {
         '/inventory': (context) => const InventoryScreen(),
         '/sales': (context) => const SalesScreen(),
         '/history': (context) => const HistoryScreen(), // NUEVO
+        '/promotions': (context) => const PromotionsScreen(),
       },
     );
   }

@@ -62,6 +62,13 @@ class AppDrawer extends StatelessWidget {
               Navigator.pushReplacementNamed(context, '/history');
             },
           ),
+          ListTile(
+            leading: const Icon(Icons.local_offer_outlined),
+            title: const Text('Gestor de Promociones'),
+            onTap: () {
+              Navigator.pushReplacementNamed(context, '/promotions');
+            },
+          ),
         ],
       ),
     );

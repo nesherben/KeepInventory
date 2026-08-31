@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../shared/app_drawer.dart';
 import '../../domain/entities/product.dart';
 import '../../domain/entities/sale.dart';
+import '../../domain/entities/promotion.dart';
 import '../../data/datasources/local_database_datasource.dart';
 import '../../data/repositories/inventory_repository_impl.dart';
 
@@ -19,6 +20,7 @@ class _SalesScreenState extends State<SalesScreen> {
   final _repository = InventoryRepositoryImpl(LocalDatabaseDatasource());
 
   List<Product> _products = [];
+  Map<int, Promotion> _promotionsMap = {};
   bool _isLoading = true;
 
   final Map<Product, int> _cart = {};
@@ -26,14 +28,19 @@ class _SalesScreenState extends State<SalesScreen> {
   @override
   void initState() {
     super.initState();
-    _loadProducts();
+    _loadData();
   }
 
-  Future<void> _loadProducts() async {
+  Future<void> _loadData() async {
     setState(() => _isLoading = true);
     final products = await _repository.getProducts();
+    final promotions = await _repository.getPromotions();
+
+    final Map<int, Promotion> promoMap = {for (var p in promotions) p.id!: p};
+
     setState(() {
       _products = products;
+      _promotionsMap = promoMap;
       _isLoading = false;
     });
   }
@@ -69,11 +76,53 @@ class _SalesScreenState extends State<SalesScreen> {
     });
   }
 
-  double get _cartTotal {
-    return _cart.entries.fold(
-      0.0,
-      (total, entry) => total + (entry.key.price * entry.value),
+  void _removeAllFromCart(Product product) {
+    if (!_cart.containsKey(product)) return;
+
+    setState(() {
+      _cart.remove(product);
+    });
+
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('${product.name} eliminado del carrito'),
+        duration: const Duration(seconds: 1),
+      ),
     );
+  }
+
+  double _calculateItemTotal(Product product, int qty) {
+    if (product.promotionId == null ||
+        !_promotionsMap.containsKey(product.promotionId)) {
+      return product.price * qty;
+    }
+
+    final promo = _promotionsMap[product.promotionId!]!;
+
+    if (promo.type == 'bundle_fixed_price') {
+      final int bundles = qty ~/ promo.threshold;
+      final int remainder = qty % promo.threshold;
+
+      final double bundleTotal = bundles * promo.discountValue;
+      final double remainderTotal = remainder * product.price;
+
+      return bundleTotal + remainderTotal;
+    } else if (promo.type == 'percentage') {
+      if (qty >= promo.threshold) {
+        final double discountedUnitPrice =
+            product.price * (1 - (promo.discountValue / 100));
+        return qty * discountedUnitPrice;
+      }
+    }
+
+    return product.price * qty;
+  }
+
+  double get _cartTotal {
+    return _cart.entries.fold(0.0, (total, entry) {
+      return total + _calculateItemTotal(entry.key, entry.value);
+    });
   }
 
   int get _cartItemCount {
@@ -84,10 +133,13 @@ class _SalesScreenState extends State<SalesScreen> {
     if (_cart.isEmpty) return;
 
     final saleItems = _cart.entries.map((entry) {
+      final finalSubtotal = _calculateItemTotal(entry.key, entry.value);
+      final effectiveUnitPrice = finalSubtotal / entry.value;
+
       return SaleItem(
         productId: entry.key.id!,
         quantity: entry.value,
-        historicalPrice: entry.key.price,
+        historicalPrice: effectiveUnitPrice,
       );
     }).toList();
 
@@ -103,7 +155,7 @@ class _SalesScreenState extends State<SalesScreen> {
       _cart.clear();
     });
 
-    await _loadProducts();
+    await _loadData();
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -119,13 +171,13 @@ class _SalesScreenState extends State<SalesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Panel de Ventas')),
+      appBar: AppBar(title: const Text('Panel de Ventas (TPV)')),
       drawer: const AppDrawer(),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Stack(
               children: [
-                // CAPA INFERIOR: El Grid con los productos
+                // CAPA INFERIOR: Grid de productos
                 GridView.builder(
                   padding: const EdgeInsets.only(
                     left: 8,
@@ -135,7 +187,7 @@ class _SalesScreenState extends State<SalesScreen> {
                   ),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 3,
-                    childAspectRatio: 0.8,
+                    childAspectRatio: 0.75,
                     crossAxisSpacing: 8,
                     mainAxisSpacing: 8,
                   ),
@@ -143,9 +195,21 @@ class _SalesScreenState extends State<SalesScreen> {
                   itemBuilder: (context, index) {
                     final product = _products[index];
                     final hasStock = product.units > 0;
+                    final qtyInCart = _cart[product] ?? 0;
+                    final isInCart = qtyInCart > 0;
 
+                    // TARJETA DEL PRODUCTO CON MARCO VISUAL SI ESTÁ EN EL CARRITO
                     Widget cardContent = Card(
-                      elevation: 2,
+                      elevation: isInCart ? 6 : 2,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        side: BorderSide(
+                          color: isInCart
+                              ? Theme.of(context).primaryColor
+                              : Colors.transparent,
+                          width: isInCart ? 3.0 : 0.0,
+                        ),
+                      ),
                       clipBehavior: Clip.antiAlias,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -166,13 +230,14 @@ class _SalesScreenState extends State<SalesScreen> {
                                   ),
                           ),
                           Padding(
-                            padding: const EdgeInsets.all(8.0),
+                            padding: const EdgeInsets.all(6.0),
                             child: Column(
                               children: [
                                 Text(
                                   product.name,
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
+                                    fontSize: 13,
                                   ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
@@ -182,6 +247,7 @@ class _SalesScreenState extends State<SalesScreen> {
                                   '${product.price.toStringAsFixed(2)} €',
                                   style: TextStyle(
                                     color: Theme.of(context).primaryColor,
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
                               ],
@@ -252,24 +318,47 @@ class _SalesScreenState extends State<SalesScreen> {
                                 '${product.units}',
                                 style: const TextStyle(
                                   color: Colors.white,
-                                  fontSize: 12,
+                                  fontSize: 11,
                                 ),
                               ),
                             ),
                           ),
-                          if (_cart.containsKey(product))
+                          if (isInCart)
                             Positioned(
                               top: 4,
                               left: 4,
                               child: CircleAvatar(
-                                radius: 12,
+                                radius: 13,
                                 backgroundColor: Theme.of(context).primaryColor,
                                 child: Text(
-                                  '${_cart[product]}',
+                                  '$qtyInCart',
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 12,
                                     fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          if (isInCart)
+                            Positioned(
+                              bottom: 4,
+                              right: 4,
+                              child: Material(
+                                color: Colors.red.shade700,
+                                shape: const CircleBorder(),
+                                child: InkWell(
+                                  customBorder: const CircleBorder(),
+                                  onTap: () => _removeFromCart(product),
+                                  onLongPress: () =>
+                                      _removeAllFromCart(product),
+                                  child: const Padding(
+                                    padding: EdgeInsets.all(6.0),
+                                    child: Icon(
+                                      Icons.remove,
+                                      size: 16,
+                                      color: Colors.white,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -280,16 +369,14 @@ class _SalesScreenState extends State<SalesScreen> {
                   },
                 ),
 
-                // CAPA SUPERIOR: El carrito desplegable
+                // CAPA SUPERIOR: Carrito desplegable
                 DraggableScrollableSheet(
                   initialChildSize: 0.12,
                   minChildSize: 0.12,
                   maxChildSize: 0.7,
                   builder: (BuildContext context, ScrollController scrollController) {
-                    // LayoutBuilder nos da la altura real del panel en cada momento
                     return LayoutBuilder(
                       builder: (context, constraints) {
-                        // Consideramos que está "desplegado" si supera los 150 píxeles de alto
                         final bool isExpanded = constraints.maxHeight > 150;
 
                         return Container(
@@ -313,10 +400,8 @@ class _SalesScreenState extends State<SalesScreen> {
                             ),
                             child: Stack(
                               children: [
-                                // 1. LA LISTA SCROLLEABLE (Fondo)
                                 ListView.builder(
                                   controller: scrollController,
-                                  // Ajustamos el margen inferior para que no quede tapado por el botón
                                   padding: EdgeInsets.only(
                                     top: 75,
                                     bottom: (isExpanded && _cart.isNotEmpty)
@@ -338,30 +423,98 @@ class _SalesScreenState extends State<SalesScreen> {
                                         ),
                                       );
                                     }
+
                                     final product = _cart.keys.elementAt(index);
                                     final qty = _cart[product]!;
+                                    final itemTotal = _calculateItemTotal(
+                                      product,
+                                      qty,
+                                    );
+
+                                    String? promoText;
+                                    bool promoActive = false;
+                                    if (product.promotionId != null &&
+                                        _promotionsMap.containsKey(
+                                          product.promotionId,
+                                        )) {
+                                      final promo =
+                                          _promotionsMap[product.promotionId!]!;
+                                      promoText = promo.name;
+
+                                      if (promo.type == 'bundle_fixed_price' &&
+                                          qty >= promo.threshold) {
+                                        promoActive = true;
+                                      } else if (promo.type == 'percentage' &&
+                                          qty >= promo.threshold) {
+                                        promoActive = true;
+                                      }
+                                    }
+
                                     return ListTile(
                                       title: Text(product.name),
-                                      subtitle: Text(
-                                        '${product.price.toStringAsFixed(2)} € x $qty',
+                                      subtitle: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            '${product.price.toStringAsFixed(2)} € x $qty unidades',
+                                          ),
+                                          if (promoText != null) ...[
+                                            const SizedBox(height: 2),
+                                            Row(
+                                              children: [
+                                                Icon(
+                                                  Icons.local_offer,
+                                                  size: 12,
+                                                  color: promoActive
+                                                      ? Colors.amber.shade800
+                                                      : Colors.grey,
+                                                ),
+                                                const SizedBox(width: 4),
+                                                Text(
+                                                  promoActive
+                                                      ? 'Oferta aplicada: $promoText'
+                                                      : 'Oferta disponible: $promoText',
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: promoActive
+                                                        ? Colors.amber.shade800
+                                                        : Colors.grey,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ],
                                       ),
+                                      isThreeLine: promoText != null,
                                       trailing: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
                                           Text(
-                                            '${(product.price * qty).toStringAsFixed(2)} €',
+                                            '${itemTotal.toStringAsFixed(2)} €',
                                             style: const TextStyle(
                                               fontWeight: FontWeight.bold,
+                                              fontSize: 16,
                                             ),
                                           ),
                                           const SizedBox(width: 8),
-                                          IconButton(
-                                            icon: const Icon(
-                                              Icons.remove_circle,
-                                              color: Colors.redAccent,
-                                            ),
-                                            onPressed: () =>
+                                          GestureDetector(
+                                            onTap: () =>
                                                 _removeFromCart(product),
+                                            onLongPress: () =>
+                                                _removeAllFromCart(product),
+                                            child: Container(
+                                              padding: const EdgeInsets.all(
+                                                8.0,
+                                              ),
+                                              child: const Icon(
+                                                Icons.remove_circle,
+                                                color: Colors.redAccent,
+                                                size: 28,
+                                              ),
+                                            ),
                                           ),
                                         ],
                                       ),
@@ -369,13 +522,12 @@ class _SalesScreenState extends State<SalesScreen> {
                                   },
                                 ),
 
-                                // 2. LA CABECERA FIJA (Arriba)
+                                // Cabecera fija
                                 Positioned(
                                   top: 0,
                                   left: 0,
                                   right: 0,
                                   child: IgnorePointer(
-                                    // Deja pasar el toque hacia la lista
                                     child: Container(
                                       color: Colors.white,
                                       child: Column(
@@ -427,7 +579,7 @@ class _SalesScreenState extends State<SalesScreen> {
                                   ),
                                 ),
 
-                                // 3. EL BOTÓN FIJO (Abajo del todo, solo si está desplegado y hay items)
+                                // Botón de Cobrar fijo abajo al desplegar
                                 if (isExpanded && _cart.isNotEmpty)
                                   Positioned(
                                     bottom: 0,

@@ -1,3 +1,6 @@
+import 'package:keepinventory/data/models/promotion_model.dart';
+import 'package:keepinventory/domain/entities/promotion.dart';
+
 import '../../domain/entities/product.dart';
 import '../../domain/entities/sale.dart';
 import '../../domain/repositories/inventory_repository.dart';
@@ -27,6 +30,7 @@ class InventoryRepositoryImpl implements InventoryRepository {
       price: product.price,
       cost: product.cost,
       imagePath: product.imagePath,
+      promotionId: product.promotionId, // <--- Añadir esto
     );
     return await datasource.insertProduct(model);
   }
@@ -40,6 +44,7 @@ class InventoryRepositoryImpl implements InventoryRepository {
       price: product.price,
       cost: product.cost,
       imagePath: product.imagePath,
+      promotionId: product.promotionId, // <--- Y esto
     );
     return await datasource.updateProduct(model);
   }
@@ -78,5 +83,39 @@ class InventoryRepositoryImpl implements InventoryRepository {
   @override
   Future<List<Sale>> getSales() async {
     return await datasource.getSales();
+  }
+
+  // --- Implementación de Promociones (NUEVO) ---
+  @override
+  Future<List<Promotion>> getPromotions() async {
+    return await datasource.getPromotions();
+  }
+
+  @override
+  Future<int> insertPromotion(Promotion promotion) async {
+    final model = PromotionModel(
+      name: promotion.name,
+      type: promotion.type,
+      threshold: promotion.threshold,
+      discountValue: promotion.discountValue,
+    );
+    return await datasource.insertPromotion(model);
+  }
+
+  @override
+  Future<int> updatePromotion(Promotion promotion) async {
+    final model = PromotionModel(
+      id: promotion.id,
+      name: promotion.name,
+      type: promotion.type,
+      threshold: promotion.threshold,
+      discountValue: promotion.discountValue,
+    );
+    return await datasource.updatePromotion(model);
+  }
+
+  @override
+  Future<int> deletePromotion(int id) async {
+    return await datasource.deletePromotion(id);
   }
 }

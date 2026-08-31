@@ -4,7 +4,8 @@ class Product {
   final int units;
   final double price;
   final double cost;
-  final String? imagePath; // Nueva propiedad
+  final String? imagePath;
+  final int? promotionId; // NUEVO
 
   Product({
     this.id,
@@ -13,6 +14,7 @@ class Product {
     required this.price,
     required this.cost,
     this.imagePath,
+    this.promotionId,
   });
 
   Product copyWith({
@@ -22,6 +24,7 @@ class Product {
     double? price,
     double? cost,
     String? imagePath,
+    int? promotionId,
   }) {
     return Product(
       id: id ?? this.id,
@@ -30,6 +33,7 @@ class Product {
       price: price ?? this.price,
       cost: cost ?? this.cost,
       imagePath: imagePath ?? this.imagePath,
+      promotionId: promotionId ?? this.promotionId,
     );
   }
 }

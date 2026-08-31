@@ -7,6 +7,7 @@ import 'package:path/path.dart' as path_utils;
 
 import '../shared/app_drawer.dart';
 import '../../domain/entities/product.dart';
+import '../../domain/entities/promotion.dart';
 import '../../data/datasources/local_database_datasource.dart';
 import '../../data/repositories/inventory_repository_impl.dart';
 
@@ -22,6 +23,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
   final ImagePicker _picker = ImagePicker();
 
   List<Product> _products = [];
+  Map<int, Promotion> _promotionsMap =
+      {}; // Mapa para asociar ID de promoción con su nombre
   bool _isLoading = true;
 
   @override
@@ -33,8 +36,13 @@ class _InventoryScreenState extends State<InventoryScreen> {
   Future<void> _loadProducts() async {
     setState(() => _isLoading = true);
     final products = await _repository.getProducts();
+    final promotions = await _repository.getPromotions();
+
+    final Map<int, Promotion> promoMap = {for (var p in promotions) p.id!: p};
+
     setState(() {
       _products = products;
+      _promotionsMap = promoMap;
       _isLoading = false;
     });
   }
@@ -178,6 +186,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
     int units = isEditing ? productToEdit.units : 0;
     double price = isEditing ? productToEdit.price : 0.0;
     double cost = isEditing ? productToEdit.cost : 0.0;
+    int? selectedPromotionId = isEditing ? productToEdit.promotionId : null;
     File? selectedImage = (isEditing && productToEdit.imagePath != null)
         ? File(productToEdit.imagePath!)
         : null;
@@ -308,6 +317,28 @@ class _InventoryScreenState extends State<InventoryScreen> {
                         onSaved: (value) =>
                             cost = double.parse(value!.replaceAll(',', '.')),
                       ),
+                      const SizedBox(height: 16),
+                      DropdownButtonFormField<int?>(
+                        initialValue: selectedPromotionId,
+                        decoration: const InputDecoration(
+                          labelText: 'Promoción Aplicada',
+                        ),
+                        items: [
+                          const DropdownMenuItem(
+                            value: null,
+                            child: Text('Sin promoción'),
+                          ),
+                          ..._promotionsMap.values.map(
+                            (p) => DropdownMenuItem(
+                              value: p.id,
+                              child: Text(p.name),
+                            ),
+                          ),
+                        ],
+                        onChanged: (value) {
+                          setDialogState(() => selectedPromotionId = value);
+                        },
+                      ),
                     ],
                   ),
                 ),
@@ -346,6 +377,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                         price: price,
                         cost: cost,
                         imagePath: savedImagePath,
+                        promotionId: selectedPromotionId,
                       );
 
                       if (isEditing) {
@@ -374,6 +406,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
     String text,
     VoidCallback onTap, {
     bool bold = false,
+    Color? textColor,
   }) {
     return InkWell(
       onTap: onTap,
@@ -393,6 +426,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
           style: TextStyle(
             fontWeight: bold ? FontWeight.bold : FontWeight.normal,
             fontSize: bold ? 16 : 14,
+            color: textColor,
           ),
         ),
       ),
@@ -420,8 +454,19 @@ class _InventoryScreenState extends State<InventoryScreen> {
                     DataColumn(label: Text('Unidades')),
                     DataColumn(label: Text('Precio')),
                     DataColumn(label: Text('Coste')),
+                    DataColumn(
+                      label: Text('Promoción'),
+                    ), // <--- Nueva columna de Promoción
                   ],
                   rows: _products.map((product) {
+                    // Obtenemos el nombre de la promoción asignada
+                    final hasPromo =
+                        product.promotionId != null &&
+                        _promotionsMap.containsKey(product.promotionId);
+                    final promoName = hasPromo
+                        ? _promotionsMap[product.promotionId]!.name
+                        : 'Sin promoción';
+
                     return DataRow(
                       cells: [
                         DataCell(
@@ -614,6 +659,17 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                 }
                               },
                             ),
+                          ),
+                        ),
+                        // NUEVA CELDAS PARA LA PROMOCIÓN
+                        DataCell(
+                          _buildClickableCell(
+                            promoName,
+                            () => _showProductFormDialog(productToEdit: product), // Al pulsar, abre la ficha completa para cambiarla
+                            textColor: hasPromo
+                                ? Colors.amber.shade900
+                                : Colors.grey,
+                            bold: hasPromo,
                           ),
                         ),
                       ],
