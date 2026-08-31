@@ -2,7 +2,6 @@ import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
 class DatabaseHelper {
-  // Patrón Singleton para mantener una única instancia de la base de datos
   static final DatabaseHelper instance = DatabaseHelper._init();
   static Database? _database;
 
@@ -26,7 +25,6 @@ class DatabaseHelper {
     );
   }
 
-  // Activamos las foreign keys en SQLite (están desactivadas por defecto)
   Future<void> _onConfigure(Database db) async {
     await db.execute('PRAGMA foreign_keys = ON');
   }
@@ -37,18 +35,17 @@ class DatabaseHelper {
     const intType = 'INTEGER NOT NULL';
     const realType = 'REAL NOT NULL';
 
-    // 1. Tabla de Productos
     await db.execute('''
       CREATE TABLE products (
         id $idType,
         name $textType,
         units $intType,
         price $realType,
-        cost $realType
+        cost $realType,
+        image_path TEXT
       )
     ''');
 
-    // 2. Tabla de Ventas (Tickets/Comandas)
     await db.execute('''
       CREATE TABLE sales (
         id $idType,
@@ -57,7 +54,6 @@ class DatabaseHelper {
       )
     ''');
 
-    // 3. Tabla de Detalles de Venta (Items dentro de una comanda)
     await db.execute('''
       CREATE TABLE sale_items (
         id $idType,
