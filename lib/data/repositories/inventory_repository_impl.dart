@@ -26,6 +26,7 @@ class InventoryRepositoryImpl implements InventoryRepository {
       units: product.units,
       price: product.price,
       cost: product.cost,
+      imagePath: product.imagePath, // 👈 ¡Faltaba esto!
     );
     return await datasource.insertProduct(model);
   }
@@ -38,6 +39,7 @@ class InventoryRepositoryImpl implements InventoryRepository {
       units: product.units,
       price: product.price,
       cost: product.cost,
+      imagePath: product.imagePath, // 👈 ¡Y esto!
     );
     return await datasource.updateProduct(model);
   }
@@ -54,19 +56,16 @@ class InventoryRepositoryImpl implements InventoryRepository {
 
   @override
   Future<List<Sale>> getSales() {
-    // TODO: Implementar si decides mostrar un historial de ventas en el futuro
     throw UnimplementedError();
   }
 
   @override
   Future<double> getTotalCost() {
-    // TODO: Implementar consulta compleja para sumar costes (ej: unidades en stock * coste)
     throw UnimplementedError();
   }
 
   @override
   Future<double> getTotalRevenue() {
-    // TODO: Implementar consulta compleja para sumar ingresos (suma de total_amount en sales)
     throw UnimplementedError();
   }
 }
