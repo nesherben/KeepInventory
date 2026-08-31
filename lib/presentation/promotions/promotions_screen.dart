@@ -14,6 +14,12 @@ class PromotionsScreen extends StatefulWidget {
 
 class _PromotionsScreenState extends State<PromotionsScreen> {
   final _repository = InventoryRepositoryImpl(LocalDatabaseDatasource());
+
+  // Llave y variables para el gesto global de deslizamiento
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  double? _startX;
+  double? _startY;
+
   List<Promotion> _promotions = [];
   bool _isLoading = true;
 
@@ -170,62 +176,89 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Gestor de Promociones')),
-      drawer: const AppDrawer(),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _promotions.isEmpty
-          ? const Center(
-              child: Text(
-                'No hay promociones creadas. Crea una con el botón +',
-              ),
-            )
-          : ListView.builder(
-              padding: const EdgeInsets.all(12),
-              itemCount: _promotions.length,
-              itemBuilder: (context, index) {
-                final promo = _promotions[index];
-                final isBundle = promo.type == 'bundle_fixed_price';
+    return Listener(
+      onPointerDown: (event) {
+        _startX = event.position.dx;
+        _startY = event.position.dy;
+      },
+      onPointerMove: (event) {
+        if (_startX == null || _startY == null) return;
+        final dx = event.position.dx - _startX!;
+        final dy = event.position.dy - _startY!;
 
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  elevation: 2,
-                  child: ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: Colors.amber[700],
-                      child: const Icon(Icons.local_offer, color: Colors.white),
-                    ),
-                    title: Text(
-                      promo.name,
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    subtitle: Text(
-                      isBundle
-                          ? 'Llevando ${promo.threshold} unidades por ${promo.discountValue.toStringAsFixed(2)} €'
-                          : '${promo.discountValue.toStringAsFixed(0)}% de descuento a partir de ${promo.threshold} uds.',
-                    ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.edit, color: Colors.blue),
-                          onPressed: () =>
-                              _showPromotionFormDialog(promotionToEdit: promo),
+        // Gesto horizontal hacia la derecha de más de 50px sin desviación vertical excesiva
+        if (dx > 50 && dy.abs() < 30) {
+          _startX = null;
+          _startY = null;
+          _scaffoldKey.currentState?.openDrawer();
+        }
+      },
+      onPointerUp: (_) {
+        _startX = null;
+        _startY = null;
+      },
+      child: Scaffold(
+        key: _scaffoldKey,
+        appBar: AppBar(title: const Text('Gestor de Promociones')),
+        drawer: const AppDrawer(),
+        body: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _promotions.isEmpty
+            ? const Center(
+                child: Text(
+                  'No hay promociones creadas. Crea una con el botón +',
+                ),
+              )
+            : ListView.builder(
+                padding: const EdgeInsets.all(12),
+                itemCount: _promotions.length,
+                itemBuilder: (context, index) {
+                  final promo = _promotions[index];
+                  final isBundle = promo.type == 'bundle_fixed_price';
+
+                  return Card(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    elevation: 2,
+                    child: ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor: Colors.amber[700],
+                        child: const Icon(
+                          Icons.local_offer,
+                          color: Colors.white,
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.delete, color: Colors.red),
-                          onPressed: () => _deletePromotion(promo.id!),
-                        ),
-                      ],
+                      ),
+                      title: Text(
+                        promo.name,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      subtitle: Text(
+                        isBundle
+                            ? 'Llevando ${promo.threshold} unidades por ${promo.discountValue.toStringAsFixed(2)} €'
+                            : '${promo.discountValue.toStringAsFixed(0)}% de descuento a partir de ${promo.threshold} uds.',
+                      ),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.edit, color: Colors.blue),
+                            onPressed: () => _showPromotionFormDialog(
+                              promotionToEdit: promo,
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.red),
+                            onPressed: () => _deletePromotion(promo.id!),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                );
-              },
-            ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showPromotionFormDialog(),
-        child: const Icon(Icons.add),
+                  );
+                },
+              ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () => _showPromotionFormDialog(),
+          child: const Icon(Icons.add),
+        ),
       ),
     );
   }

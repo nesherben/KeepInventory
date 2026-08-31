@@ -131,7 +131,17 @@ class InventoryRepositoryImpl implements InventoryRepository {
   }
 
   @override
+  Future<double> getActualNetProfit() async {
+    return await datasource.getActualNetProfit();
+  }
+
+  @override
   Future<Map<String, double>> getDailySales() async {
     return await datasource.getDailySales();
+  }
+
+  @override
+  Future<Map<String, double>> getDailyNetProfits() async {
+    return await datasource.getDailyNetProfits();
   }
 }

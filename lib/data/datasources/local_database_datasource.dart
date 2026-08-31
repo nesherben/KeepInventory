@@ -65,7 +65,7 @@ class LocalDatabaseDatasource {
       final saleId = await txn.insert('sales', {
         'date': sale.date.toIso8601String(),
         'total_amount': sale.totalAmount,
-        'fair_name': sale.fairName, // Guardamos la feria asociada si la tiene
+        'fair_name': sale.fairName,
       });
 
       for (var item in sale.items) {
@@ -108,7 +108,16 @@ class LocalDatabaseDatasource {
     return (result.first['total'] as num?)?.toDouble() ?? 0.0;
   }
 
-  // Obtener ventas agrupadas por Feria (si tiene) o por Día
+  Future<double> getActualNetProfit() async {
+    final database = await db;
+    final result = await database.rawQuery('''
+      SELECT SUM((si.historical_price - COALESCE(p.cost, 0)) * si.quantity) as net_profit 
+      FROM sale_items si 
+      LEFT JOIN products p ON si.product_id = p.id
+    ''');
+    return (result.first['net_profit'] as num?)?.toDouble() ?? 0.0;
+  }
+
   Future<Map<String, double>> getDailySales() async {
     final database = await db;
     final result = await database.rawQuery('''
@@ -129,7 +138,29 @@ class LocalDatabaseDatasource {
     return salesGrouped;
   }
 
-  // Recuperar el historial de tickets con sus ferias y productos
+  // NUEVO: Obtener beneficio neto agrupado por Feria o Día
+  Future<Map<String, double>> getDailyNetProfits() async {
+    final database = await db;
+    final result = await database.rawQuery('''
+      SELECT 
+        COALESCE(s.fair_name, date(s.date)) as group_key, 
+        SUM((si.historical_price - COALESCE(p.cost, 0)) * si.quantity) as net_profit 
+      FROM sales s
+      JOIN sale_items si ON s.id = si.sale_id
+      LEFT JOIN products p ON si.product_id = p.id
+      GROUP BY group_key 
+      ORDER BY s.date ASC
+    ''');
+
+    Map<String, double> netProfits = {};
+    for (var row in result) {
+      final key = row['group_key'] as String;
+      final profit = (row['net_profit'] as num?)?.toDouble() ?? 0.0;
+      netProfits[key] = profit;
+    }
+    return netProfits;
+  }
+
   Future<List<Sale>> getSales() async {
     final database = await db;
 
@@ -169,7 +200,7 @@ class LocalDatabaseDatasource {
           id: saleId,
           date: DateTime.parse(saleMap['date'] as String),
           totalAmount: (saleMap['total_amount'] as num).toDouble(),
-          fairName: saleMap['fair_name'] as String?, // Leemos la feria
+          fairName: saleMap['fair_name'] as String?,
           items: itemsList,
         ),
       );
@@ -178,7 +209,6 @@ class LocalDatabaseDatasource {
     return salesList;
   }
 
-  // Devolución inteligente de tickets
   Future<void> refundSale(Sale sale) async {
     final database = await db;
 
@@ -197,11 +227,7 @@ class LocalDatabaseDatasource {
 
           await txn.update(
             'products',
-            {
-              'units': restoredUnits,
-              'is_active':
-                  1, // Reactiva el producto si estaba borrado lógicamente
-            },
+            {'units': restoredUnits, 'is_active': 1},
             where: 'id = ?',
             whereArgs: [item.productId],
           );
@@ -217,7 +243,6 @@ class LocalDatabaseDatasource {
     });
   }
 
-  // Actualizar el nombre de feria para un día concreto
   Future<void> updateFairNameForDate(
     String datePrefix,
     String? fairName,
@@ -229,7 +254,6 @@ class LocalDatabaseDatasource {
     );
   }
 
-  // Obtener lista de nombres de ferias ya utilizadas anteriormente
   Future<List<String>> getAvailableFairs() async {
     final database = await db;
     final List<Map<String, dynamic>> maps = await database.rawQuery(
