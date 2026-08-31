@@ -9,6 +9,7 @@ class ProductModel extends Product {
     required super.cost,
     super.imagePath,
     super.promotionId,
+    super.isActive,
   });
 
   factory ProductModel.fromMap(Map<String, dynamic> map) {
@@ -19,10 +20,12 @@ class ProductModel extends Product {
       price: (map['price'] as num).toDouble(),
       cost: (map['cost'] as num).toDouble(),
       imagePath: map['image_path'] as String?,
-      promotionId: map['promotion_id'] as int?, // <--- Aquí lee de SQLite
+      promotionId: map['promotion_id'] as int?,
+      isActive: (map['is_active'] as int? ?? 1) == 1, // Lee de SQLite
     );
   }
 
+  @override
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -31,7 +34,8 @@ class ProductModel extends Product {
       'price': price,
       'cost': cost,
       'image_path': imagePath,
-      'promotion_id': promotionId, // <--- Aquí escribe en SQLite
+      'promotion_id': promotionId,
+      'is_active': isActive ? 1 : 0, // Escribe en SQLite
     };
   }
 }

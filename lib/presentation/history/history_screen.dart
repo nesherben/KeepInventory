@@ -26,10 +26,58 @@ class _HistoryScreenState extends State<HistoryScreen> {
   Future<void> _loadSales() async {
     setState(() => _isLoading = true);
     final sales = await _repository.getSales();
+    // Ordenar del más reciente al más antiguo
+    sales.sort((a, b) => b.date.compareTo(a.date));
     setState(() {
       _sales = sales;
       _isLoading = false;
     });
+  }
+
+  // Lógica para anular un ticket y devolver el stock
+  Future<void> _refundSale(Sale sale) async {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Anular y Devolver Venta'),
+        content: Text(
+          '¿Estás seguro de anular el Ticket #${sale.id}?\n\n'
+          'Se restará el importe de la caja y se devolverán las unidades al stock del inventario.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () async {
+              Navigator.pop(context); // Cierra el diálogo
+
+              // Ejecutamos la devolución en el repositorio
+              await _repository.refundSale(sale);
+
+              await _loadSales();
+
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      'Ticket anulado y stock devuelto correctamente.',
+                    ),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              }
+            },
+            child: const Text(
+              'Anular Venta',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   // Formatear la fecha para la feria (Ej: Día 14 - 18:30)
@@ -90,17 +138,39 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         color: Colors.grey[50],
                         padding: const EdgeInsets.symmetric(vertical: 8),
                         child: Column(
-                          children: sale.items.map((item) {
-                            return ListTile(
-                              dense: true,
-                              title: Text(
-                                '${item.quantity}x ${item.productName}',
+                          children: [
+                            ...sale.items.map((item) {
+                              return ListTile(
+                                dense: true,
+                                title: Text(
+                                  '${item.quantity}x ${item.productName}',
+                                ),
+                                trailing: Text(
+                                  '${(item.quantity * item.historicalPrice).toStringAsFixed(2)} €',
+                                ),
+                              );
+                            }),
+                            const Divider(height: 16),
+                            // BOTÓN DE ANULAR / DEVOLVER VENTA
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16.0,
+                                vertical: 8.0,
                               ),
-                              trailing: Text(
-                                '${(item.quantity * item.historicalPrice).toStringAsFixed(2)} €',
+                              child: SizedBox(
+                                width: double.infinity,
+                                child: OutlinedButton.icon(
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: Colors.red,
+                                    side: const BorderSide(color: Colors.red),
+                                  ),
+                                  icon: const Icon(Icons.undo, size: 18),
+                                  label: const Text('Anular y Devolver Venta'),
+                                  onPressed: () => _refundSale(sale),
+                                ),
                               ),
-                            );
-                          }).toList(),
+                            ),
+                          ],
                         ),
                       ),
                     ],

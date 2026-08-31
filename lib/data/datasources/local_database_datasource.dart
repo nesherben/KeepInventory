@@ -12,7 +12,11 @@ class LocalDatabaseDatasource {
 
   Future<List<ProductModel>> getProducts() async {
     final database = await db;
-    final List<Map<String, dynamic>> maps = await database.query('products');
+    final List<Map<String, dynamic>> maps = await database.query(
+      'products',
+      where: 'is_active = ?',
+      whereArgs: [1],
+    );
     return maps.map((map) => ProductModel.fromMap(map)).toList();
   }
 
@@ -46,7 +50,12 @@ class LocalDatabaseDatasource {
 
   Future<int> deleteProduct(int id) async {
     final database = await db;
-    return await database.delete('products', where: 'id = ?', whereArgs: [id]);
+    return await database.update(
+      'products',
+      {'is_active': 0, 'units': 0},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
   }
 
   Future<void> processSale(Sale sale) async {

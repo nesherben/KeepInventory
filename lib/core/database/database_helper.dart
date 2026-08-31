@@ -19,7 +19,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 2, // Subimos la versión para forzar la actualización si ya tenías la v1
+      version: 3,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
       onConfigure: _onConfigure,
@@ -47,7 +47,7 @@ class DatabaseHelper {
       )
     ''');
 
-    // 2. Tabla de Productos (Añadimos promotion_id)
+    // 2. Tabla de Productos (Incluye promotion_id e is_active para borrado lógico)
     await db.execute('''
       CREATE TABLE products (
         id $idType,
@@ -57,6 +57,7 @@ class DatabaseHelper {
         cost $realType,
         image_path TEXT,
         promotion_id INTEGER,
+        is_active INTEGER NOT NULL DEFAULT 1,
         FOREIGN KEY (promotion_id) REFERENCES promotions (id) ON DELETE SET NULL
       )
     ''');
@@ -84,11 +85,11 @@ class DatabaseHelper {
     ''');
   }
 
-  // Por si la app ya estaba instalada en el emulador con la versión anterior
+  // Migrador incremental: asegura que al actualizar la app se adapten las tablas sin perder datos
   Future<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
       await db.execute('''
-        CREATE TABLE promotions (
+        CREATE TABLE IF NOT EXISTS promotions (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           name TEXT NOT NULL,
           type TEXT NOT NULL,
@@ -98,6 +99,12 @@ class DatabaseHelper {
       ''');
       await db.execute(
         'ALTER TABLE products ADD COLUMN promotion_id INTEGER REFERENCES promotions(id) ON DELETE SET NULL',
+      );
+    }
+
+    if (oldVersion < 3) {
+      await db.execute(
+        'ALTER TABLE products ADD COLUMN is_active INTEGER NOT NULL DEFAULT 1',
       );
     }
   }

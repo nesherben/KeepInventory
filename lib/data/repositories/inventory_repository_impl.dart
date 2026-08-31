@@ -1,3 +1,4 @@
+import 'package:keepinventory/core/database/database_helper.dart';
 import 'package:keepinventory/data/models/promotion_model.dart';
 import 'package:keepinventory/domain/entities/promotion.dart';
 
@@ -83,6 +84,47 @@ class InventoryRepositoryImpl implements InventoryRepository {
   @override
   Future<List<Sale>> getSales() async {
     return await datasource.getSales();
+  }
+
+  @override
+  Future<void> refundSale(Sale sale) async {
+    final database = await DatabaseHelper.instance.database;
+
+    await database.transaction((txn) async {
+      for (var item in sale.items) {
+        // Buscamos el producto en la base de datos (incluso si está inactivo/oculto)
+        final List<Map<String, dynamic>> maps = await txn.query(
+          'products',
+          columns: ['units', 'is_active'],
+          where: 'id = ?',
+          whereArgs: [item.productId],
+        );
+
+        if (maps.isNotEmpty) {
+          final currentUnits = maps.first['units'] as int;
+          final restoredUnits = currentUnits + item.quantity;
+
+          // Sumamos stock y reactivamos el producto de forma automática
+          await txn.update(
+            'products',
+            {
+              'units': restoredUnits,
+              'is_active': 1, // Vuelve a aparecer en el inventario y TPV
+            },
+            where: 'id = ?',
+            whereArgs: [item.productId],
+          );
+        }
+      }
+
+      // Borramos los detalles de venta y la venta principal
+      await txn.delete(
+        'sale_items',
+        where: 'sale_id = ?',
+        whereArgs: [sale.id],
+      );
+      await txn.delete('sales', where: 'id = ?', whereArgs: [sale.id]);
+    });
   }
 
   // --- Implementación de Promociones (NUEVO) ---

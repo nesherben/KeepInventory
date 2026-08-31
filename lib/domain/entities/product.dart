@@ -5,7 +5,8 @@ class Product {
   final double price;
   final double cost;
   final String? imagePath;
-  final int? promotionId; // NUEVO
+  final int? promotionId;
+  final bool isActive; // NUEVO: Para el borrado lógico
 
   Product({
     this.id,
@@ -15,6 +16,7 @@ class Product {
     required this.cost,
     this.imagePath,
     this.promotionId,
+    this.isActive = true, // Por defecto siempre está activo
   });
 
   Product copyWith({
@@ -25,6 +27,7 @@ class Product {
     double? cost,
     String? imagePath,
     int? promotionId,
+    bool? isActive, // NUEVO
   }) {
     return Product(
       id: id ?? this.id,
@@ -34,6 +37,7 @@ class Product {
       cost: cost ?? this.cost,
       imagePath: imagePath ?? this.imagePath,
       promotionId: promotionId ?? this.promotionId,
+      isActive: isActive ?? this.isActive, // NUEVO
     );
   }
 }
