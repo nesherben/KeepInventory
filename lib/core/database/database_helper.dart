@@ -19,7 +19,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 4, // Versión 4 con soporte para ferias
+      version: 7, // Versión 7 con soporte para Packs y Bundles
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
       onConfigure: _onConfigure,
@@ -84,6 +84,41 @@ class DatabaseHelper {
         FOREIGN KEY (product_id) REFERENCES products (id) ON DELETE RESTRICT
       )
     ''');
+
+    // 5. Tabla de Packs / Bundles
+    await db.execute('''
+      CREATE TABLE packs (
+        id $idType,
+        name $textType,
+        price $realType,
+        units INTEGER NOT NULL DEFAULT 1,
+        image_path TEXT
+      )
+    ''');
+
+    // 6. Tabla de Detalles de Pack
+    await db.execute('''
+      CREATE TABLE pack_items (
+        id $idType,
+        pack_id $intType,
+        product_id $intType,
+        quantity $intType,
+        FOREIGN KEY (pack_id) REFERENCES packs (id) ON DELETE CASCADE,
+        FOREIGN KEY (product_id) REFERENCES products (id) ON DELETE RESTRICT
+      )
+    ''');
+
+    await db.execute('''
+  CREATE TABLE sale_packs (
+    id $idType,
+    sale_id $intType,
+    pack_id $intType,
+    quantity $intType,
+    historical_price $realType,
+    FOREIGN KEY (sale_id) REFERENCES sales (id) ON DELETE CASCADE,
+    FOREIGN KEY (pack_id) REFERENCES packs (id) ON DELETE CASCADE
+  )
+''');
   }
 
   // Migrador incremental blindado
@@ -110,7 +145,6 @@ class DatabaseHelper {
     }
 
     if (oldVersion < 4) {
-      // Comprobación de seguridad para asegurarnos de que la columna se añade sin errores
       try {
         final result = await db.rawQuery("PRAGMA table_info(sales)");
         final columnExists = result.any((col) => col['name'] == 'fair_name');
@@ -122,6 +156,47 @@ class DatabaseHelper {
           await db.execute('ALTER TABLE sales ADD COLUMN fair_name TEXT');
         } catch (_) {}
       }
+    }
+
+    if (oldVersion < 5) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS packs (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          price REAL NOT NULL,
+          image_path TEXT
+        )
+      ''');
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS pack_items (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          pack_id INTEGER NOT NULL,
+          product_id INTEGER NOT NULL,
+          quantity INTEGER NOT NULL,
+          FOREIGN KEY (pack_id) REFERENCES packs (id) ON DELETE CASCADE,
+          FOREIGN KEY (product_id) REFERENCES products (id) ON DELETE RESTRICT
+        )
+      ''');
+    }
+    if (oldVersion < 6) {
+      await db.execute('''
+    CREATE TABLE IF NOT EXISTS sale_packs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      sale_id INTEGER NOT NULL,
+      pack_id INTEGER NOT NULL,
+      quantity INTEGER NOT NULL,
+      historical_price REAL NOT NULL,
+      FOREIGN KEY (sale_id) REFERENCES sales (id) ON DELETE CASCADE,
+      FOREIGN KEY (pack_id) REFERENCES packs (id) ON DELETE CASCADE
+    )
+  ''');
+    }
+    if (oldVersion < 7) {
+      try {
+        await db.execute(
+          'ALTER TABLE packs ADD COLUMN units INTEGER NOT NULL DEFAULT 1',
+        );
+      } catch (_) {}
     }
   }
 

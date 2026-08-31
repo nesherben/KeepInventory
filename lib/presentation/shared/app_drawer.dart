@@ -91,7 +91,13 @@ class AppDrawer extends StatelessWidget {
               Navigator.pushReplacementNamed(context, '/promotions');
             },
           ),
-
+          ListTile(
+            leading: const Icon(Icons.card_giftcard),
+            title: const Text('Packs y Bundles'),
+            onTap: () {
+              Navigator.pushReplacementNamed(context, '/packs');
+            },
+          ),
           const Divider(height: 24, indent: 16, endIndent: 16),
 
           // --- SECCIÓN 3: HISTORIAL Y REGISTROS ---

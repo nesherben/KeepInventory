@@ -4,7 +4,8 @@ import 'package:keepinventory/presentation/promotions/promotions_screen.dart';
 import 'presentation/dashboard/dashboard_screen.dart';
 import 'presentation/inventory/inventory_screen.dart';
 import 'presentation/sales/sales_screen.dart';
-import 'presentation/history/history_screen.dart'; // NUEVO
+import 'presentation/history/history_screen.dart';
+import 'presentation/packs/packs_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -29,8 +30,9 @@ class KeepInventoryApp extends StatelessWidget {
         '/': (context) => const DashboardScreen(),
         '/inventory': (context) => const InventoryScreen(),
         '/sales': (context) => const SalesScreen(),
-        '/history': (context) => const HistoryScreen(), // NUEVO
+        '/history': (context) => const HistoryScreen(),
         '/promotions': (context) => const PromotionsScreen(),
+        '/packs': (context) => const PacksScreen(),
       },
     );
   }

@@ -16,18 +16,38 @@ class SaleItem {
   });
 }
 
+class SalePackItem {
+  final int? id;
+  final int saleId;
+  final int packId;
+  final String packName;
+  final int quantity;
+  final double historicalPrice;
+
+  SalePackItem({
+    this.id,
+    required this.saleId,
+    required this.packId,
+    required this.packName,
+    required this.quantity,
+    required this.historicalPrice,
+  });
+}
+
 class Sale {
   final int? id;
   final DateTime date;
   final double totalAmount;
-  final String? fairName; // NUEVO: Nombre de la feria opcional para agrupar
+  final String? fairName;
   final List<SaleItem> items;
+  final List<SalePackItem> packItems; // <--- Nuevo para los packs vendidos
 
   Sale({
     this.id,
     required this.date,
     required this.totalAmount,
     this.fairName,
-    this.items = const [],
+    required this.items,
+    this.packItems = const [],
   });
 }
