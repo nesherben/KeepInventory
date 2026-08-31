@@ -24,17 +24,26 @@ class _InventoryScreenState extends State<InventoryScreen> {
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  List<Product> _products = [];
-  Map<int, Promotion> _promotionsMap = {};
-  bool _isLoading = true;
+  // Controlador para detectar si la tabla está al principio o desplazada
+  final ScrollController _horizontalScrollController = ScrollController();
 
   double? _startX;
   double? _startY;
+
+  List<Product> _products = [];
+  Map<int, Promotion> _promotionsMap = {};
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
     _loadProducts();
+  }
+
+  @override
+  void dispose() {
+    _horizontalScrollController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadProducts() async {
@@ -439,7 +448,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // ENVOLVEMOS TODO EL SCAFFOLD EN EL LISTENER PARA QUE SEA 100% GLOBAL EN LA VISTA
     return Listener(
       onPointerDown: (event) {
         _startX = event.position.dx;
@@ -450,8 +458,14 @@ class _InventoryScreenState extends State<InventoryScreen> {
         final dx = event.position.dx - _startX!;
         final dy = event.position.dy - _startY!;
 
-        // Si arrastras hacia la derecha con fuerza (> 50px) y sin desviarte mucho verticalmente
-        if (dx > 50 && dy.abs() < 30) {
+        // Verificamos si la tabla horizontal está al principio (offset <= 0).
+        // Si está al principio y arrastras a la derecha, abrimos el cajón.
+        // Si la tabla está desplazada hacia la derecha, el gesto se lo lleva la tabla para hacer scroll.
+        final bool isAtStartOfTable =
+            !_horizontalScrollController.hasClients ||
+            _horizontalScrollController.offset <= 0;
+
+        if (isAtStartOfTable && dx > 50 && dy.abs() < 30) {
           _startX = null;
           _startY = null;
           _scaffoldKey.currentState?.openDrawer();
@@ -469,241 +483,267 @@ class _InventoryScreenState extends State<InventoryScreen> {
             ? const Center(child: CircularProgressIndicator())
             : _products.isEmpty
             ? const Center(child: Text('No hay productos en el inventario.'))
-            : SingleChildScrollView(
-                scrollDirection: Axis.vertical,
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: DataTable(
-                    columns: const [
-                      DataColumn(label: Text('Acciones')),
-                      DataColumn(label: Text('Foto')),
-                      DataColumn(label: Text('Nombre')),
-                      DataColumn(label: Text('Unidades')),
-                      DataColumn(label: Text('Precio')),
-                      DataColumn(label: Text('Coste')),
-                      DataColumn(label: Text('Promoción')),
-                    ],
-                    rows: _products.map((product) {
-                      final hasPromo =
-                          product.promotionId != null &&
-                          _promotionsMap.containsKey(product.promotionId);
-                      final promoName = hasPromo
-                          ? _promotionsMap[product.promotionId]!.name
-                          : 'Sin promoción';
+            : LayoutBuilder(
+                builder: (context, constraints) {
+                  return SingleChildScrollView(
+                    scrollDirection: Axis.vertical,
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      controller: _horizontalScrollController, // <-- Vinculamos el controlador de scroll
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minWidth: constraints.maxWidth,
+                        ),
+                        child: DataTable(
+                          columns: const [
+                            DataColumn(label: Text('Acciones')),
+                            DataColumn(label: Text('Foto')),
+                            DataColumn(label: Text('Nombre')),
+                            DataColumn(label: Text('Unidades')),
+                            DataColumn(label: Text('Precio')),
+                            DataColumn(label: Text('Coste')),
+                            DataColumn(label: Text('Promoción')),
+                          ],
+                          rows: _products.map((product) {
+                            final hasPromo =
+                                product.promotionId != null &&
+                                _promotionsMap.containsKey(product.promotionId);
+                            final promoName = hasPromo
+                                ? _promotionsMap[product.promotionId]!.name
+                                : 'Sin promoción';
 
-                      return DataRow(
-                        cells: [
-                          DataCell(
-                            PopupMenuButton<String>(
-                              onSelected: (value) {
-                                if (value == 'edit') {
-                                  _showProductFormDialog(
-                                    productToEdit: product,
-                                  );
-                                } else if (value == 'delete') {
-                                  _showDeleteConfirmation(product.id!);
-                                }
-                              },
-                              itemBuilder: (context) => [
-                                const PopupMenuItem(
-                                  value: 'edit',
-                                  child: Row(
-                                    children: [
-                                      Icon(Icons.edit, color: Colors.blue),
-                                      SizedBox(width: 8),
-                                      Text('Editar todo'),
-                                    ],
-                                  ),
-                                ),
-                                const PopupMenuItem(
-                                  value: 'delete',
-                                  child: Row(
-                                    children: [
-                                      Icon(Icons.delete, color: Colors.red),
-                                      SizedBox(width: 8),
-                                      Text('Eliminar'),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          DataCell(
-                            InkWell(
-                              onTap: () => _editSingleImage(product),
-                              child: Container(
-                                padding: const EdgeInsets.all(2.0),
-                                decoration: BoxDecoration(
-                                  border: Border.all(
-                                    color: Theme.of(context).primaryColor
-                                        .withValues(alpha: 0.5),
-                                    width: 1.5,
-                                  ),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: product.imagePath != null
-                                    ? ClipRRect(
-                                        borderRadius: BorderRadius.circular(4),
-                                        child: Image.file(
-                                          File(product.imagePath!),
-                                          width: 40,
-                                          height: 40,
-                                          fit: BoxFit.cover,
-                                        ),
-                                      )
-                                    : const SizedBox(
-                                        width: 40,
-                                        height: 40,
-                                        child: Icon(
-                                          Icons.add_a_photo,
-                                          color: Colors.grey,
-                                          size: 20,
-                                        ),
-                                      ),
-                              ),
-                            ),
-                          ),
-                          DataCell(
-                            _buildClickableCell(
-                              product.name,
-                              () => _showEditSingleFieldDialog(
-                                product: product,
-                                title: 'Nombre',
-                                initialValue: product.name,
-                                keyboardType: TextInputType.text,
-                                onSave: (value) async {
-                                  if (value.isNotEmpty) {
-                                    await _repository.updateProduct(
-                                      product.copyWith(name: value),
-                                    );
-                                    if (context.mounted) {
-                                      Navigator.pop(context);
-                                      _loadProducts();
-                                    }
-                                  }
-                                },
-                              ),
-                            ),
-                          ),
-                          DataCell(
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                IconButton(
-                                  icon: const Icon(
-                                    Icons.remove_circle_outline,
-                                    color: Colors.orange,
-                                  ),
-                                  onPressed: product.units > 0
-                                      ? () => _updateStockQuickly(product, -1)
-                                      : null,
-                                ),
-                                _buildClickableCell(
-                                  product.units.toString(),
-                                  () => _showEditSingleFieldDialog(
-                                    product: product,
-                                    title: 'Unidades',
-                                    initialValue: product.units.toString(),
-                                    keyboardType: TextInputType.number,
-                                    onSave: (value) async {
-                                      final newUnits = int.tryParse(value);
-                                      if (newUnits != null && newUnits >= 0) {
-                                        await _repository.updateProduct(
-                                          product.copyWith(units: newUnits),
+                            return DataRow(
+                              cells: [
+                                DataCell(
+                                  PopupMenuButton<String>(
+                                    onSelected: (value) {
+                                      if (value == 'edit') {
+                                        _showProductFormDialog(
+                                          productToEdit: product,
                                         );
-                                        if (context.mounted) {
-                                          Navigator.pop(context);
-                                          _loadProducts();
-                                        }
+                                      } else if (value == 'delete') {
+                                        _showDeleteConfirmation(product.id!);
                                       }
                                     },
+                                    itemBuilder: (context) => [
+                                      const PopupMenuItem(
+                                        value: 'edit',
+                                        child: Row(
+                                          children: [
+                                            Icon(
+                                              Icons.edit,
+                                              color: Colors.blue,
+                                            ),
+                                            SizedBox(width: 8),
+                                            Text('Editar todo'),
+                                          ],
+                                        ),
+                                      ),
+                                      const PopupMenuItem(
+                                        value: 'delete',
+                                        child: Row(
+                                          children: [
+                                            Icon(
+                                              Icons.delete,
+                                              color: Colors.red,
+                                            ),
+                                            SizedBox(width: 8),
+                                            Text('Eliminar'),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                  bold: true,
                                 ),
-                                IconButton(
-                                  icon: const Icon(
-                                    Icons.add_circle_outline,
-                                    color: Colors.green,
+                                DataCell(
+                                  InkWell(
+                                    onTap: () => _editSingleImage(product),
+                                    child: Container(
+                                      padding: const EdgeInsets.all(2.0),
+                                      decoration: BoxDecoration(
+                                        border: Border.all(
+                                          color: Theme.of(context).primaryColor
+                                              .withValues(alpha: 0.5),
+                                          width: 1.5,
+                                        ),
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: product.imagePath != null
+                                          ? ClipRRect(
+                                              borderRadius:
+                                                  BorderRadius.circular(4),
+                                              child: Image.file(
+                                                File(product.imagePath!),
+                                                width: 40,
+                                                height: 40,
+                                                fit: BoxFit.cover,
+                                              ),
+                                            )
+                                          : const SizedBox(
+                                              width: 40,
+                                              height: 40,
+                                              child: Icon(
+                                                Icons.add_a_photo,
+                                                color: Colors.grey,
+                                                size: 20,
+                                              ),
+                                            ),
+                                    ),
                                   ),
-                                  onPressed: () =>
-                                      _updateStockQuickly(product, 1),
+                                ),
+                                DataCell(
+                                  _buildClickableCell(
+                                    product.name,
+                                    () => _showEditSingleFieldDialog(
+                                      product: product,
+                                      title: 'Nombre',
+                                      initialValue: product.name,
+                                      keyboardType: TextInputType.text,
+                                      onSave: (value) async {
+                                        if (value.isNotEmpty) {
+                                          await _repository.updateProduct(
+                                            product.copyWith(name: value),
+                                          );
+                                          if (context.mounted) {
+                                            Navigator.pop(context);
+                                            _loadProducts();
+                                          }
+                                        }
+                                      },
+                                    ),
+                                  ),
+                                ),
+                                DataCell(
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      IconButton(
+                                        icon: const Icon(
+                                          Icons.remove_circle_outline,
+                                          color: Colors.orange,
+                                        ),
+                                        onPressed: product.units > 0
+                                            ? () => _updateStockQuickly(
+                                                product,
+                                                -1,
+                                              )
+                                            : null,
+                                      ),
+                                      _buildClickableCell(
+                                        product.units.toString(),
+                                        () => _showEditSingleFieldDialog(
+                                          product: product,
+                                          title: 'Unidades',
+                                          initialValue: product.units
+                                              .toString(),
+                                          keyboardType: TextInputType.number,
+                                          onSave: (value) async {
+                                            final newUnits = int.tryParse(
+                                              value,
+                                            );
+                                            if (newUnits != null &&
+                                                newUnits >= 0) {
+                                              await _repository.updateProduct(
+                                                product.copyWith(
+                                                  units: newUnits,
+                                                ),
+                                              );
+                                              if (context.mounted) {
+                                                Navigator.pop(context);
+                                                _loadProducts();
+                                              }
+                                            }
+                                          },
+                                        ),
+                                        bold: true,
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(
+                                          Icons.add_circle_outline,
+                                          color: Colors.green,
+                                        ),
+                                        onPressed: () =>
+                                            _updateStockQuickly(product, 1),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                DataCell(
+                                  _buildClickableCell(
+                                    '${product.price.toStringAsFixed(2)} €',
+                                    () => _showEditSingleFieldDialog(
+                                      product: product,
+                                      title: 'Precio de venta',
+                                      initialValue: product.price.toString(),
+                                      keyboardType:
+                                          const TextInputType.numberWithOptions(
+                                            decimal: true,
+                                          ),
+                                      onSave: (value) async {
+                                        final newPrice = double.tryParse(
+                                          value.replaceAll(',', '.'),
+                                        );
+                                        if (newPrice != null && newPrice >= 0) {
+                                          await _repository.updateProduct(
+                                            product.copyWith(price: newPrice),
+                                          );
+                                          if (context.mounted) {
+                                            Navigator.pop(context);
+                                            _loadProducts();
+                                          }
+                                        }
+                                      },
+                                    ),
+                                  ),
+                                ),
+                                DataCell(
+                                  _buildClickableCell(
+                                    '${product.cost.toStringAsFixed(2)} €',
+                                    () => _showEditSingleFieldDialog(
+                                      product: product,
+                                      title: 'Coste de adquisición',
+                                      initialValue: product.cost.toString(),
+                                      keyboardType:
+                                          const TextInputType.numberWithOptions(
+                                            decimal: true,
+                                          ),
+                                      onSave: (value) async {
+                                        final newCost = double.tryParse(
+                                          value.replaceAll(',', '.'),
+                                        );
+                                        if (newCost != null && newCost >= 0) {
+                                          await _repository.updateProduct(
+                                            product.copyWith(cost: newCost),
+                                          );
+                                          if (context.mounted) {
+                                            Navigator.pop(context);
+                                            _loadProducts();
+                                          }
+                                        }
+                                      },
+                                    ),
+                                  ),
+                                ),
+                                DataCell(
+                                  _buildClickableCell(
+                                    promoName,
+                                    () => _showProductFormDialog(
+                                      productToEdit: product,
+                                    ),
+                                    textColor: hasPromo
+                                        ? Colors.amber.shade900
+                                        : Colors.grey,
+                                    bold: hasPromo,
+                                  ),
                                 ),
                               ],
-                            ),
-                          ),
-                          DataCell(
-                            _buildClickableCell(
-                              '${product.price.toStringAsFixed(2)} €',
-                              () => _showEditSingleFieldDialog(
-                                product: product,
-                                title: 'Precio de venta',
-                                initialValue: product.price.toString(),
-                                keyboardType:
-                                    const TextInputType.numberWithOptions(
-                                      decimal: true,
-                                    ),
-                                onSave: (value) async {
-                                  final newPrice = double.tryParse(
-                                    value.replaceAll(',', '.'),
-                                  );
-                                  if (newPrice != null && newPrice >= 0) {
-                                    await _repository.updateProduct(
-                                      product.copyWith(price: newPrice),
-                                    );
-                                    if (context.mounted) {
-                                      Navigator.pop(context);
-                                      _loadProducts();
-                                    }
-                                  }
-                                },
-                              ),
-                            ),
-                          ),
-                          DataCell(
-                            _buildClickableCell(
-                              '${product.cost.toStringAsFixed(2)} €',
-                              () => _showEditSingleFieldDialog(
-                                product: product,
-                                title: 'Coste de adquisición',
-                                initialValue: product.cost.toString(),
-                                keyboardType:
-                                    const TextInputType.numberWithOptions(
-                                      decimal: true,
-                                    ),
-                                onSave: (value) async {
-                                  final newCost = double.tryParse(
-                                    value.replaceAll(',', '.'),
-                                  );
-                                  if (newCost != null && newCost >= 0) {
-                                    await _repository.updateProduct(
-                                      product.copyWith(cost: newCost),
-                                    );
-                                    if (context.mounted) {
-                                      Navigator.pop(context);
-                                      _loadProducts();
-                                    }
-                                  }
-                                },
-                              ),
-                            ),
-                          ),
-                          DataCell(
-                            _buildClickableCell(
-                              promoName,
-                              () => _showProductFormDialog(
-                                productToEdit: product,
-                              ),
-                              textColor: hasPromo
-                                  ? Colors.amber.shade900
-                                  : Colors.grey,
-                              bold: hasPromo,
-                            ),
-                          ),
-                        ],
-                      );
-                    }).toList(),
-                  ),
-                ),
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
         floatingActionButton: FloatingActionButton(
           onPressed: () => _showProductFormDialog(),

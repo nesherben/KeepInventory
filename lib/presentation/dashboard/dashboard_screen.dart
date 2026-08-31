@@ -129,6 +129,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Detectamos si es una tablet real evaluando el lado más corto (independiente de si está en vertical u horizontal)
+    final shortestSide = MediaQuery.of(context).size.shortestSide;
+    final bool isTablet = shortestSide >= 600;
+
     return Listener(
       onPointerDown: (event) {
         _startX = event.position.dx;
@@ -169,11 +173,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
             : RefreshIndicator(
                 onRefresh: _loadMetrics,
                 child: ListView(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: EdgeInsets.all(isTablet ? 24.0 : 16.0),
                   children: [
                     // 1. TARJETA PRINCIPAL (CAJA / RECAUDACIÓN)
                     Container(
-                      padding: const EdgeInsets.all(24),
+                      padding: EdgeInsets.all(isTablet ? 32 : 24),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [Colors.teal.shade800, Colors.teal.shade500],
@@ -221,9 +225,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           const SizedBox(height: 12),
                           Text(
                             '${_totalRevenue.toStringAsFixed(2)} €',
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: Colors.white,
-                              fontSize: 36,
+                              fontSize: isTablet ? 44 : 36,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -240,41 +244,75 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                     const SizedBox(height: 20),
 
-                    // 2. TARJETAS SECUNDARIAS EN PARRILLA (GRID)
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildMetricCard(
-                            title: 'COSTE ALMACÉN',
-                            value: '${_inventoryCost.toStringAsFixed(2)} €',
-                            icon: Icons.inventory_2_outlined,
-                            color: Colors.orange,
+                    // 2. TARJETAS SECUNDARIAS (RESPONSIVE REAL: Fila de 3 solo en tablets)
+                    if (isTablet)
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildMetricCard(
+                              title: 'COSTE ALMACÉN',
+                              value: '${_inventoryCost.toStringAsFixed(2)} €',
+                              icon: Icons.inventory_2_outlined,
+                              color: Colors.orange,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _buildMetricCard(
-                            title: 'VALOR VENTA',
-                            value: '${_expectedRevenue.toStringAsFixed(2)} €',
-                            icon: Icons.trending_up,
-                            color: Colors.blue,
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _buildMetricCard(
+                              title: 'VALOR VENTA',
+                              value: '${_expectedRevenue.toStringAsFixed(2)} €',
+                              icon: Icons.trending_up,
+                              color: Colors.blue,
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildMetricCard(
-                            title: 'BENEFICIO NETO REAL',
-                            value: '${_actualNetProfit.toStringAsFixed(2)} €',
-                            icon: Icons.savings_outlined,
-                            color: Colors.green,
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _buildMetricCard(
+                              title: 'BENEFICIO NETO REAL',
+                              value: '${_actualNetProfit.toStringAsFixed(2)} €',
+                              icon: Icons.savings_outlined,
+                              color: Colors.green,
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
+                        ],
+                      )
+                    else ...[
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildMetricCard(
+                              title: 'COSTE ALMACÉN',
+                              value: '${_inventoryCost.toStringAsFixed(2)} €',
+                              icon: Icons.inventory_2_outlined,
+                              color: Colors.orange,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _buildMetricCard(
+                              title: 'VALOR VENTA',
+                              value: '${_expectedRevenue.toStringAsFixed(2)} €',
+                              icon: Icons.trending_up,
+                              color: Colors.blue,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildMetricCard(
+                              title: 'BENEFICIO NETO REAL',
+                              value: '${_actualNetProfit.toStringAsFixed(2)} €',
+                              icon: Icons.savings_outlined,
+                              color: Colors.green,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+
                     const SizedBox(height: 24),
 
                     // 3. ACCESO RÁPIDO AL GRÁFICO / BALANCE
@@ -488,7 +526,6 @@ class _FullScreenChartScreenState extends State<FullScreenChartScreen> {
                       ],
                     ),
                   ),
-                  // Leyenda actualizada aclarando Días sueltos, Ferias y el Neto
                   Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16.0,
