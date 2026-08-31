@@ -26,7 +26,7 @@ class InventoryRepositoryImpl implements InventoryRepository {
       units: product.units,
       price: product.price,
       cost: product.cost,
-      imagePath: product.imagePath, // 👈 ¡Faltaba esto!
+      imagePath: product.imagePath,
     );
     return await datasource.insertProduct(model);
   }
@@ -39,7 +39,7 @@ class InventoryRepositoryImpl implements InventoryRepository {
       units: product.units,
       price: product.price,
       cost: product.cost,
-      imagePath: product.imagePath, // 👈 ¡Y esto!
+      imagePath: product.imagePath,
     );
     return await datasource.updateProduct(model);
   }
@@ -55,17 +55,28 @@ class InventoryRepositoryImpl implements InventoryRepository {
   }
 
   @override
-  Future<List<Sale>> getSales() {
-    throw UnimplementedError();
+  Future<double> getTotalRevenue() async {
+    return await datasource.getTotalRevenue();
   }
 
   @override
-  Future<double> getTotalCost() {
-    throw UnimplementedError();
+  Future<double> getInventoryCost() async {
+    return await datasource.getInventoryCost();
   }
 
   @override
-  Future<double> getTotalRevenue() {
-    throw UnimplementedError();
+  Future<double> getExpectedRevenue() async {
+    return await datasource.getExpectedRevenue();
+  }
+
+  @override
+  Future<Map<String, double>> getDailySales() async {
+    return await datasource.getDailySales();
+  }
+
+  // NUEVO
+  @override
+  Future<List<Sale>> getSales() async {
+    return await datasource.getSales();
   }
 }

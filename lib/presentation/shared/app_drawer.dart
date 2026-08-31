@@ -54,6 +54,14 @@ class AppDrawer extends StatelessWidget {
               Navigator.pushReplacementNamed(context, '/sales');
             },
           ),
+          // NUEVO BOTÓN
+          ListTile(
+            leading: const Icon(Icons.history_outlined),
+            title: const Text('Historial de Tickets'),
+            onTap: () {
+              Navigator.pushReplacementNamed(context, '/history');
+            },
+          ),
         ],
       ),
     );
