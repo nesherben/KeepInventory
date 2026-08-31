@@ -23,8 +23,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
   final ImagePicker _picker = ImagePicker();
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-
-  // Controlador para detectar si la tabla está al principio o desplazada
   final ScrollController _horizontalScrollController = ScrollController();
 
   double? _startX;
@@ -420,26 +418,34 @@ class _InventoryScreenState extends State<InventoryScreen> {
     VoidCallback onTap, {
     bool bold = false,
     Color? textColor,
+    int maxLength = 20, // Límite cómodo de caracteres para la tabla
   }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(4),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
-        decoration: BoxDecoration(
-          border: Border(
-            bottom: BorderSide(
-              color: Theme.of(context).primaryColor.withValues(alpha: 0.5),
-              width: 1.5,
-            ),
+    // Truncar texto si supera el límite máximo
+    final displayText = text.length > maxLength
+        ? '${text.substring(0, maxLength - 3)}...'
+        : text;
+
+    return Tooltip(
+      message: text.length > maxLength
+          ? text
+          : '', // Muestra el nombre completo al mantener pulsado
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(6),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade50,
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(color: Colors.grey.shade200),
           ),
-        ),
-        child: Text(
-          text,
-          style: TextStyle(
-            fontWeight: bold ? FontWeight.bold : FontWeight.normal,
-            fontSize: bold ? 16 : 14,
-            color: textColor,
+          child: Text(
+            displayText,
+            style: TextStyle(
+              fontWeight: bold ? FontWeight.bold : FontWeight.w500,
+              fontSize: bold ? 15 : 14,
+              color: textColor ?? Colors.grey.shade800,
+            ),
           ),
         ),
       ),
@@ -458,9 +464,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
         final dx = event.position.dx - _startX!;
         final dy = event.position.dy - _startY!;
 
-        // Verificamos si la tabla horizontal está al principio (offset <= 0).
-        // Si está al principio y arrastras a la derecha, abrimos el cajón.
-        // Si la tabla está desplazada hacia la derecha, el gesto se lo lleva la tabla para hacer scroll.
         final bool isAtStartOfTable =
             !_horizontalScrollController.hasClients ||
             _horizontalScrollController.offset <= 0;
@@ -482,27 +485,46 @@ class _InventoryScreenState extends State<InventoryScreen> {
         body: _isLoading
             ? const Center(child: CircularProgressIndicator())
             : _products.isEmpty
-            ? const Center(child: Text('No hay productos en el inventario.'))
+            ? const Center(
+                child: Text(
+                  'No hay productos en el inventario.',
+                  style: TextStyle(color: Colors.grey, fontSize: 16),
+                ),
+              )
             : LayoutBuilder(
                 builder: (context, constraints) {
                   return SingleChildScrollView(
                     scrollDirection: Axis.vertical,
                     child: SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
-                      controller: _horizontalScrollController, // <-- Vinculamos el controlador de scroll
+                      controller: _horizontalScrollController,
                       child: ConstrainedBox(
                         constraints: BoxConstraints(
                           minWidth: constraints.maxWidth,
                         ),
                         child: DataTable(
+                          headingRowColor: WidgetStateProperty.all(
+                            Theme.of(context).primaryColor
+                                .withValues(alpha: 0.08),
+                          ),
+                          headingTextStyle: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).primaryColor,
+                            fontSize: 13,
+                            letterSpacing: 0.5,
+                          ),
+                          dataRowMinHeight: 60,
+                          dataRowMaxHeight: 65,
+                          horizontalMargin: 16,
+                          columnSpacing: 24,
                           columns: const [
-                            DataColumn(label: Text('Acciones')),
-                            DataColumn(label: Text('Foto')),
-                            DataColumn(label: Text('Nombre')),
-                            DataColumn(label: Text('Unidades')),
-                            DataColumn(label: Text('Precio')),
-                            DataColumn(label: Text('Coste')),
-                            DataColumn(label: Text('Promoción')),
+                            DataColumn(label: Text('ACCIONES')),
+                            DataColumn(label: Text('FOTO')),
+                            DataColumn(label: Text('NOMBRE')),
+                            DataColumn(label: Text('UNIDADES')),
+                            DataColumn(label: Text('PRECIO')),
+                            DataColumn(label: Text('COSTE')),
+                            DataColumn(label: Text('PROMOCIÓN')),
                           ],
                           rows: _products.map((product) {
                             final hasPromo =
@@ -516,6 +538,10 @@ class _InventoryScreenState extends State<InventoryScreen> {
                               cells: [
                                 DataCell(
                                   PopupMenuButton<String>(
+                                    icon: const Icon(
+                                      Icons.more_vert,
+                                      color: Colors.grey,
+                                    ),
                                     onSelected: (value) {
                                       if (value == 'edit') {
                                         _showProductFormDialog(
@@ -533,6 +559,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                             Icon(
                                               Icons.edit,
                                               color: Colors.blue,
+                                              size: 20,
                                             ),
                                             SizedBox(width: 8),
                                             Text('Editar todo'),
@@ -546,6 +573,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                             Icon(
                                               Icons.delete,
                                               color: Colors.red,
+                                              size: 20,
                                             ),
                                             SizedBox(width: 8),
                                             Text('Eliminar'),
@@ -558,31 +586,37 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                 DataCell(
                                   InkWell(
                                     onTap: () => _editSingleImage(product),
+                                    borderRadius: BorderRadius.circular(8),
                                     child: Container(
                                       padding: const EdgeInsets.all(2.0),
                                       decoration: BoxDecoration(
                                         border: Border.all(
                                           color: Theme.of(context).primaryColor
-                                              .withValues(alpha: 0.5),
+                                              .withValues(alpha: 0.3),
                                           width: 1.5,
                                         ),
-                                        borderRadius: BorderRadius.circular(6),
+                                        borderRadius: BorderRadius.circular(8),
                                       ),
                                       child: product.imagePath != null
                                           ? ClipRRect(
                                               borderRadius:
-                                                  BorderRadius.circular(4),
+                                                  BorderRadius.circular(6),
                                               child: Image.file(
                                                 File(product.imagePath!),
-                                                width: 40,
-                                                height: 40,
+                                                width: 42,
+                                                height: 42,
                                                 fit: BoxFit.cover,
                                               ),
                                             )
-                                          : const SizedBox(
-                                              width: 40,
-                                              height: 40,
-                                              child: Icon(
+                                          : Container(
+                                              width: 42,
+                                              height: 42,
+                                              decoration: BoxDecoration(
+                                                color: Colors.grey.shade100,
+                                                borderRadius:
+                                                    BorderRadius.circular(6),
+                                              ),
+                                              child: const Icon(
                                                 Icons.add_a_photo,
                                                 color: Colors.grey,
                                                 size: 20,
@@ -611,6 +645,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                         }
                                       },
                                     ),
+                                    maxLength: 20, // Limita a 20 caracteres y pone "..."
                                   ),
                                 ),
                                 DataCell(
@@ -621,6 +656,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                         icon: const Icon(
                                           Icons.remove_circle_outline,
                                           color: Colors.orange,
+                                          size: 22,
                                         ),
                                         onPressed: product.units > 0
                                             ? () => _updateStockQuickly(
@@ -661,6 +697,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                         icon: const Icon(
                                           Icons.add_circle_outline,
                                           color: Colors.green,
+                                          size: 22,
                                         ),
                                         onPressed: () =>
                                             _updateStockQuickly(product, 1),
@@ -685,7 +722,10 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                         );
                                         if (newPrice != null && newPrice >= 0) {
                                           await _repository.updateProduct(
-                                            product.copyWith(price: newPrice),
+                                            product.copyWith(
+                                              name: product.name,
+                                              price: newPrice,
+                                            ),
                                           );
                                           if (context.mounted) {
                                             Navigator.pop(context);
@@ -732,8 +772,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                     ),
                                     textColor: hasPromo
                                         ? Colors.amber.shade900
-                                        : Colors.grey,
+                                        : Colors.grey.shade600,
                                     bold: hasPromo,
+                                    maxLength: 18,
                                   ),
                                 ),
                               ],
