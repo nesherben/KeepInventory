@@ -53,7 +53,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
     super.dispose();
   }
 
-  // Conversor seguro de Product -> ProductModel
+  // Conversor seguro de Product -> ProductModel (Soporta borrar promoción con clearPromotion)
   ProductModel _toModel(
     Product p, {
     String? name,
@@ -62,6 +62,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
     double? cost,
     String? imagePath,
     int? promotionId,
+    bool clearPromotion = false,
   }) {
     return ProductModel(
       id: p.id,
@@ -70,7 +71,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
       price: price ?? p.price,
       cost: cost ?? p.cost,
       imagePath: imagePath ?? p.imagePath,
-      promotionId: promotionId ?? p.promotionId,
+      promotionId: clearPromotion ? null : (promotionId ?? p.promotionId),
     );
   }
 
@@ -209,6 +210,65 @@ class _InventoryScreenState extends State<InventoryScreen> {
               child: const Text('Guardar'),
             ),
           ],
+        );
+      },
+    );
+  }
+
+  // --- DIÁLOGO RÁPIDO PARA CAMBIAR SOLO LA PROMOCIÓN ---
+  void _showPromotionSelectDialog(Product product) {
+    int? selectedPromotionId = product.promotionId;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text('Seleccionar Promoción'),
+              content: DropdownButtonFormField<int?>(
+                initialValue: selectedPromotionId,
+                decoration: const InputDecoration(
+                  labelText: 'Promoción Aplicada',
+                  border: OutlineInputBorder(),
+                ),
+                items: [
+                  const DropdownMenuItem(
+                    value: null,
+                    child: Text('Sin promoción'),
+                  ),
+                  ..._promotionsMap.values.map(
+                    (p) => DropdownMenuItem(value: p.id, child: Text(p.name)),
+                  ),
+                ],
+                onChanged: (value) {
+                  setDialogState(() => selectedPromotionId = value);
+                },
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancelar'),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    await _repository.updateProduct(
+                      _toModel(
+                        product,
+                        promotionId: selectedPromotionId,
+                        clearPromotion: selectedPromotionId == null,
+                      ),
+                    );
+                    if (context.mounted) {
+                      Navigator.pop(context);
+                      _loadProducts();
+                    }
+                  },
+                  child: const Text('Guardar'),
+                ),
+              ],
+            );
+          },
         );
       },
     );
@@ -831,9 +891,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                 DataCell(
                                   _buildClickableCell(
                                     promoName,
-                                    () => _showProductFormDialog(
-                                      productToEdit: product,
-                                    ),
+                                    () => _showPromotionSelectDialog(
+                                      product,
+                                    ), // <-- AQUÍ SE USA EL NUEVO DIÁLOGO
                                     textColor: hasPromo
                                         ? Colors.amber.shade900
                                         : Colors.grey.shade600,

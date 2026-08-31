@@ -21,6 +21,13 @@ abstract class InventoryRepository {
   Future<void> refundSale(Sale sale);
   Future<void> updateFairNameForDate(String datePrefix, String? fairName);
   Future<List<String>> getAvailableFairs();
+  Future<void> processPartialRefund({
+    required Sale originalSale,
+    required Map<SaleItem, int> itemsToRefund,
+    required Map<SalePackItem, int> packsToRefund,
+    required bool restockPacks,
+    required double customRefundAmount,
+  });
 
   // --- Dashboard / Métricas ---
   Future<double> getTotalRevenue();

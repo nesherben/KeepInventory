@@ -101,6 +101,23 @@ class InventoryRepositoryImpl implements InventoryRepository {
     await datasource.refundSale(sale);
   }
 
+  // NUEVO: Puente para la devolución parcial
+  Future<void> processPartialRefund({
+    required Sale originalSale,
+    required Map<SaleItem, int> itemsToRefund,
+    required Map<SalePackItem, int> packsToRefund,
+    required bool restockPacks,
+    required double customRefundAmount,
+  }) async {
+    await datasource.processPartialRefund(
+      originalSale: originalSale,
+      itemsToRefund: itemsToRefund,
+      packsToRefund: packsToRefund,
+      restockPacks: restockPacks,
+      customRefundAmount: customRefundAmount,
+    );
+  }
+
   @override
   Future<void> updateFairNameForDate(
     String datePrefix,

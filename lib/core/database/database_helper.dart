@@ -19,7 +19,8 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 7, // Versión 7 con soporte para Packs y Bundles
+      version:
+          9, // Versión 9 con soporte de columnas para promociones en el ticket
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
       onConfigure: _onConfigure,
@@ -80,6 +81,8 @@ class DatabaseHelper {
         product_id $intType,
         quantity $intType,
         historical_price $realType,
+        original_price REAL DEFAULT 0.0,
+        promotion_id INTEGER,
         FOREIGN KEY (sale_id) REFERENCES sales (id) ON DELETE CASCADE,
         FOREIGN KEY (product_id) REFERENCES products (id) ON DELETE RESTRICT
       )
@@ -108,17 +111,18 @@ class DatabaseHelper {
       )
     ''');
 
+    // 7. Tabla de Packs vendidos en un ticket
     await db.execute('''
-  CREATE TABLE sale_packs (
-    id $idType,
-    sale_id $intType,
-    pack_id $intType,
-    quantity $intType,
-    historical_price $realType,
-    FOREIGN KEY (sale_id) REFERENCES sales (id) ON DELETE CASCADE,
-    FOREIGN KEY (pack_id) REFERENCES packs (id) ON DELETE CASCADE
-  )
-''');
+      CREATE TABLE sale_packs (
+        id $idType,
+        sale_id $intType,
+        pack_id $intType,
+        quantity $intType,
+        historical_price $realType,
+        FOREIGN KEY (sale_id) REFERENCES sales (id) ON DELETE CASCADE,
+        FOREIGN KEY (pack_id) REFERENCES packs (id) ON DELETE CASCADE
+      )
+    ''');
   }
 
   // Migrador incremental blindado
@@ -195,6 +199,33 @@ class DatabaseHelper {
       try {
         await db.execute(
           'ALTER TABLE packs ADD COLUMN units INTEGER NOT NULL DEFAULT 1',
+        );
+      } catch (_) {}
+    }
+
+    // MIGRACIÓN A VERSIÓN 8 (Añade columnas para la Devolución Inteligente)
+    if (oldVersion < 8) {
+      try {
+        await db.execute(
+          'ALTER TABLE sale_items ADD COLUMN original_price REAL DEFAULT 0.0',
+        );
+      } catch (_) {} // Se ignora si ya existe
+
+      try {
+        await db.execute(
+          'ALTER TABLE sale_items ADD COLUMN promotion_id INTEGER',
+        );
+      } catch (_) {} // Se ignora si ya existe
+    }
+
+    if (oldVersion < 9) {
+      try {
+        await db.execute('ALTER TABLE sale_items ADD COLUMN promo_type TEXT');
+        await db.execute(
+          'ALTER TABLE sale_items ADD COLUMN promo_threshold INTEGER',
+        );
+        await db.execute(
+          'ALTER TABLE sale_items ADD COLUMN promo_discount REAL',
         );
       } catch (_) {}
     }

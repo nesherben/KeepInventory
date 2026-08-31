@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../shared/app_drawer.dart';
 import '../../domain/entities/sale.dart';
+import '../../domain/entities/promotion.dart';
 import '../../data/datasources/local_database_datasource.dart';
 import '../../data/repositories/inventory_repository_impl.dart';
 
@@ -13,6 +14,7 @@ class HistoryScreen extends StatefulWidget {
 }
 
 class _HistoryScreenState extends State<HistoryScreen> {
+  final _datasource = LocalDatabaseDatasource();
   final _repository = InventoryRepositoryImpl(LocalDatabaseDatasource());
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
@@ -21,62 +23,449 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   bool _isLoading = true;
   List<Sale> _sales = [];
+  Map<int, Promotion> _promotionsMap = {};
 
   @override
   void initState() {
     super.initState();
-    _loadSales();
+    _loadSalesAndPromos();
   }
 
-  Future<void> _loadSales() async {
+  Future<void> _loadSalesAndPromos() async {
     setState(() => _isLoading = true);
     final sales = await _repository.getSales();
     sales.sort((a, b) => b.date.compareTo(a.date));
+
+    final promotions = await _repository.getPromotions();
+    _promotionsMap = {for (var p in promotions) p.id!: p};
+
     setState(() {
       _sales = sales;
       _isLoading = false;
     });
   }
 
-  Future<void> _refundSale(Sale sale) async {
+  // --- MATEMÁTICAS DE LA PROMOCIÓN PARA REEMBOLSOS ---
+  double _calculateItemTotal(SaleItem item, int qtyToKeep) {
+    if (item.promoType == null ||
+        item.promoThreshold == null ||
+        item.promoDiscount == null) {
+      return item.originalPrice * qtyToKeep;
+    }
+
+    if (item.promoType == 'bundle_fixed_price') {
+      final int bundles = qtyToKeep ~/ item.promoThreshold!;
+      final int remainder = qtyToKeep % item.promoThreshold!;
+      return (bundles * item.promoDiscount!) + (remainder * item.originalPrice);
+    } else if (item.promoType == 'percentage') {
+      if (qtyToKeep >= item.promoThreshold!) {
+        final discountedPrice =
+            item.originalPrice * (1 - (item.promoDiscount! / 100));
+        return qtyToKeep * discountedPrice;
+      }
+    }
+    return item.originalPrice * qtyToKeep;
+  }
+
+  // --- DIÁLOGO DE DEVOLUCIÓN PARCIAL / SELECTIVA ---
+  void _showPartialRefundDialog(Sale sale) {
+    final Map<SaleItem, int> refundItemQuantities = {
+      for (var item in sale.items) item: 0,
+    };
+    final Map<SalePackItem, int> refundPackQuantities = {
+      for (var pack in sale.packItems) pack: 0,
+    };
+
+    bool restockPacks = false;
+    final TextEditingController refundAmountController = TextEditingController(
+      text: '0.00',
+    );
+
+    // Aquí se recalcula el ticket si se rompe el bundle
+    void recalculateDefaultRefund() {
+      double totalRefund = 0.0;
+
+      refundItemQuantities.forEach((item, refundQty) {
+        if (refundQty > 0) {
+          int keptQty = item.quantity - refundQty;
+
+          double originalPrice = item.originalPrice > 0
+              ? item.originalPrice
+              : item.historicalPrice;
+
+          // Lo que pagó inicialmente por esta línea de producto
+          double originalTotal = item.historicalPrice * item.quantity;
+
+          // Lo que costaría la nueva cantidad (rompiendo o no la promo)
+          double newTotal = 0.0;
+          if (keptQty > 0) {
+            newTotal = _calculateItemTotal(item, keptQty);
+          }
+
+          totalRefund += (originalTotal - newTotal);
+        }
+      });
+
+      // Los packs no tienen promo 3x2, su devolución es proporcional directa
+      refundPackQuantities.forEach((pack, refundQty) {
+        if (refundQty > 0) {
+          totalRefund += pack.historicalPrice * refundQty;
+        }
+      });
+
+      // Si rompes la oferta y el "newTotal" de lo que te quedas es más caro de lo que pagaste por todo, se devuelve 0.
+      if (totalRefund < 0) totalRefund = 0.0;
+
+      refundAmountController.text = totalRefund.toStringAsFixed(2);
+    }
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Anular y Devolver Venta'),
-        content: Text(
-          '¿Estás seguro de anular el Ticket #${sale.id}?\n\n'
-          'Se restará el importe de la caja y se devolverán las unidades tanto de productos como de packs al inventario.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () async {
-              Navigator.pop(context);
-              await _repository.refundSale(sale);
-              await _loadSales();
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            int totalItemsToRefund = 0;
+            refundItemQuantities.forEach((_, qty) => totalItemsToRefund += qty);
+            refundPackQuantities.forEach((_, qty) => totalItemsToRefund += qty);
 
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text(
-                      'Ticket anulado y stock devuelto correctamente.',
-                    ),
-                    backgroundColor: Colors.green,
+            final bool hasPacksSelected = refundPackQuantities.values.any(
+              (qty) => qty > 0,
+            );
+
+            return AlertDialog(
+              title: Text('Devolución Ticket #${sale.id}'),
+              content: SizedBox(
+                width: MediaQuery.of(context).size.width * 0.85,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Indica cuántas unidades devuelves de cada artículo:',
+                        style: TextStyle(fontSize: 13, color: Colors.grey),
+                      ),
+                      const SizedBox(height: 12),
+
+                      // 1. LISTA DE PRODUCTOS
+                      if (sale.items.isNotEmpty) ...[
+                        const Text(
+                          'Productos Sueltos:',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        ...sale.items.map((item) {
+                          final currentRefundQty =
+                              refundItemQuantities[item] ?? 0;
+                          return Card(
+                            margin: const EdgeInsets.symmetric(vertical: 4),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 6,
+                              ),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          item.productName ?? 'Desconocido',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 13,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        Text(
+                                          'Pagado: ${(item.quantity * item.historicalPrice).toStringAsFixed(2)} € (Compradas: ${item.quantity})',
+                                          style: const TextStyle(
+                                            fontSize: 11,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      IconButton(
+                                        icon: const Icon(
+                                          Icons.remove_circle_outline,
+                                          color: Colors.orange,
+                                          size: 20,
+                                        ),
+                                        onPressed: currentRefundQty > 0
+                                            ? () {
+                                                setDialogState(
+                                                  () =>
+                                                      refundItemQuantities[item] =
+                                                          currentRefundQty - 1,
+                                                );
+                                                recalculateDefaultRefund();
+                                              }
+                                            : null,
+                                      ),
+                                      Text(
+                                        '$currentRefundQty',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(
+                                          Icons.add_circle_outline,
+                                          color: Colors.green,
+                                          size: 20,
+                                        ),
+                                        onPressed:
+                                            currentRefundQty < item.quantity
+                                            ? () {
+                                                setDialogState(
+                                                  () =>
+                                                      refundItemQuantities[item] =
+                                                          currentRefundQty + 1,
+                                                );
+                                                recalculateDefaultRefund();
+                                              }
+                                            : null,
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }),
+                      ],
+
+                      // 2. LISTA DE PACKS
+                      if (sale.packItems.isNotEmpty) ...[
+                        const SizedBox(height: 12),
+                        const Text(
+                          'Packs / Bundles:',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                            color: Colors.amber,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        ...sale.packItems.map((pack) {
+                          final currentRefundQty =
+                              refundPackQuantities[pack] ?? 0;
+                          return Card(
+                            margin: const EdgeInsets.symmetric(vertical: 4),
+                            color: Colors.amber.shade50,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 6,
+                              ),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          '${pack.packName} (Pack)',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 13,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        Text(
+                                          '${pack.historicalPrice.toStringAsFixed(2)} €/pack (Comprados: ${pack.quantity})',
+                                          style: const TextStyle(
+                                            fontSize: 11,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      IconButton(
+                                        icon: const Icon(
+                                          Icons.remove_circle_outline,
+                                          color: Colors.orange,
+                                          size: 20,
+                                        ),
+                                        onPressed: currentRefundQty > 0
+                                            ? () {
+                                                setDialogState(
+                                                  () =>
+                                                      refundPackQuantities[pack] =
+                                                          currentRefundQty - 1,
+                                                );
+                                                recalculateDefaultRefund();
+                                              }
+                                            : null,
+                                      ),
+                                      Text(
+                                        '$currentRefundQty',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(
+                                          Icons.add_circle_outline,
+                                          color: Colors.green,
+                                          size: 20,
+                                        ),
+                                        onPressed:
+                                            currentRefundQty < pack.quantity
+                                            ? () {
+                                                setDialogState(
+                                                  () =>
+                                                      refundPackQuantities[pack] =
+                                                          currentRefundQty + 1,
+                                                );
+                                                recalculateDefaultRefund();
+                                              }
+                                            : null,
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }),
+                        if (hasPacksSelected) ...[
+                          const SizedBox(height: 8),
+                          SwitchListTile(
+                            dense: true,
+                            contentPadding: EdgeInsets.zero,
+                            title: const Text(
+                              '¿Reincorporar Pack al stock?',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            subtitle: const Text(
+                              'Desactívalo si era un pack sorpresa abierto.',
+                              style: TextStyle(fontSize: 11),
+                            ),
+                            value: restockPacks,
+                            onChanged: (val) =>
+                                setDialogState(() => restockPacks = val),
+                          ),
+                        ],
+                      ],
+
+                      const Divider(height: 20),
+
+                      // TOTAL A REEMBOLSAR (EDITABLE)
+                      const Text(
+                        'Total a Reembolsar al cliente (€):',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: refundAmountController,
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.red,
+                        ),
+                        decoration: InputDecoration(
+                          border: const OutlineInputBorder(),
+                          isDense: true,
+                          helperText: 'Cálculo automático de ruptura de promoción. Puedes editarlo manualmente.',
+                          helperStyle: TextStyle(color: Colors.grey.shade600),
+                          helperMaxLines: 2,
+                        ),
+                      ),
+                    ],
                   ),
-                );
-              }
-            },
-            child: const Text(
-              'Anular Venta',
-              style: TextStyle(color: Colors.white),
-            ),
-          ),
-        ],
-      ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancelar'),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    foregroundColor: Colors.white,
+                  ),
+                  onPressed: totalItemsToRefund == 0
+                      ? null
+                      : () async {
+                          final double customRefund =
+                              double.tryParse(
+                                refundAmountController.text.replaceAll(
+                                  ',',
+                                  '.',
+                                ),
+                              ) ??
+                              0.0;
+
+                          if (customRefund > sale.totalAmount) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'No puedes devolver más de lo que cobró el ticket.',
+                                ),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                            return;
+                          }
+
+                          Navigator.pop(context);
+                          await _datasource.processPartialRefund(
+                            originalSale: sale,
+                            itemsToRefund: refundItemQuantities,
+                            packsToRefund: refundPackQuantities,
+                            restockPacks: restockPacks,
+                            customRefundAmount: customRefund,
+                          );
+                          await _loadSalesAndPromos();
+
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Devolución procesada y contabilidad rebalanceada.',
+                                ),
+                                backgroundColor: Colors.green,
+                              ),
+                            );
+                          }
+                        },
+                  child: const Text('Confirmar Devolución'),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 
@@ -125,9 +514,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   onChanged: (val) {
                     setDialogState(() {
                       selectedExisting = val;
-                      if (val != null) {
-                        controller.text = val;
-                      }
+                      if (val != null) controller.text = val;
                     });
                   },
                 ),
@@ -152,12 +539,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
               onPressed: () async {
                 final newName = controller.text.trim();
                 Navigator.pop(context);
-
                 await _repository.updateFairNameForDate(
                   datePrefix,
                   newName.isEmpty ? null : newName,
                 );
-                await _loadSales();
+                await _loadSalesAndPromos();
               },
               child: const Text('Guardar'),
             ),
@@ -222,7 +608,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
         appBar: AppBar(
           title: const Text('Historial y Ferias'),
           actions: [
-            IconButton(icon: const Icon(Icons.refresh), onPressed: _loadSales),
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: _loadSalesAndPromos,
+            ),
           ],
         ),
         drawer: const AppDrawer(),
@@ -370,7 +759,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                       ),
                                       child: Column(
                                         children: [
-                                          // 1. PRODUCTOS SUELTOS
+                                          // PRODUCTOS SUELTOS
                                           ...sale.items.map((item) {
                                             return ListTile(
                                               dense: true,
@@ -388,7 +777,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                             );
                                           }),
 
-                                          // 2. PACKS Y BUNDLES
+                                          // PACKS Y BUNDLES
                                           ...sale.packItems.map((packItem) {
                                             return ListTile(
                                               dense: true,
@@ -414,6 +803,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                           }),
 
                                           const Divider(height: 16),
+
+                                          // BOTÓN GESTIÓN DE DEVOLUCIONES
                                           Padding(
                                             padding: const EdgeInsets.symmetric(
                                               horizontal: 16.0,
@@ -433,10 +824,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                                   size: 18,
                                                 ),
                                                 label: const Text(
-                                                  'Anular y Devolver Venta',
+                                                  'Gestionar Devolución',
                                                 ),
                                                 onPressed: () =>
-                                                    _refundSale(sale),
+                                                    _showPartialRefundDialog(
+                                                      sale,
+                                                    ),
                                               ),
                                             ),
                                           ),

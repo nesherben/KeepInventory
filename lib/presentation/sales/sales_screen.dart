@@ -204,13 +204,35 @@ class _SalesScreenState extends State<SalesScreen> {
     if (_cart.isEmpty && _cartPacks.isEmpty) return;
 
     final saleItems = _cart.entries.map((entry) {
-      final finalSubtotal = _calculateItemTotal(entry.key, entry.value);
-      final effectiveUnitPrice = finalSubtotal / entry.value;
+      final product = entry.key;
+      final qty = entry.value;
+      final finalSubtotal = _calculateItemTotal(product, qty);
+      final effectiveUnitPrice = finalSubtotal / qty;
+
+      // Buscar si tiene promo activa
+      String? pType;
+      int? pThresh;
+      double? pDisc;
+
+      if (product.promotionId != null &&
+          _promotionsMap.containsKey(product.promotionId)) {
+        final promo = _promotionsMap[product.promotionId!]!;
+        pType = promo.type;
+        pThresh = promo.threshold;
+        pDisc = promo.discountValue;
+      }
 
       return SaleItem(
-        productId: entry.key.id!,
-        quantity: entry.value,
+        saleId: 0,
+        productId: product.id!,
+        productName: product.name,
+        quantity: qty,
         historicalPrice: effectiveUnitPrice,
+        originalPrice: product.price,
+        promotionId: product.promotionId,
+        promoType: pType, // <-- CONGELAMOS LOS DATOS AQUÍ
+        promoThreshold: pThresh,
+        promoDiscount: pDisc,
       );
     }).toList();
 

@@ -111,7 +111,6 @@ class LocalDatabaseDatasource {
   Future<void> createPack(Pack pack) async {
     final database = await db;
     await database.transaction((txn) async {
-      // 1. Insertar pack principal con sus unidades
       final packId = await txn.insert('packs', {
         'name': pack.name,
         'price': pack.price,
@@ -119,7 +118,6 @@ class LocalDatabaseDatasource {
         'image_path': pack.imagePath,
       });
 
-      // 2. Insertar componentes y descontar del inventario principal (cantidad_item * unidades_pack)
       for (var item in pack.items) {
         await txn.insert('pack_items', {
           'pack_id': packId,
@@ -139,7 +137,6 @@ class LocalDatabaseDatasource {
   Future<void> updatePack(Pack oldPack, Pack newPack) async {
     final database = await db;
     await database.transaction((txn) async {
-      // 1. Devolver el stock antiguo al inventario principal
       for (var oldItem in oldPack.items) {
         final totalReturn = oldItem.quantity * oldPack.units;
         await txn.rawUpdate(
@@ -148,14 +145,12 @@ class LocalDatabaseDatasource {
         );
       }
 
-      // 2. Borrar relaciones de componentes antiguos
       await txn.delete(
         'pack_items',
         where: 'pack_id = ?',
         whereArgs: [oldPack.id],
       );
 
-      // 3. Actualizar datos y nuevas unidades del pack
       await txn.update(
         'packs',
         {
@@ -168,7 +163,6 @@ class LocalDatabaseDatasource {
         whereArgs: [oldPack.id],
       );
 
-      // 4. Insertar nuevos componentes y descontar el nuevo stock requerido
       for (var newItem in newPack.items) {
         await txn.insert('pack_items', {
           'pack_id': oldPack.id,
@@ -188,7 +182,6 @@ class LocalDatabaseDatasource {
   Future<void> deletePack(Pack pack) async {
     final database = await db;
     await database.transaction((txn) async {
-      // Devolver los componentes no vendidos al almacén principal
       for (var item in pack.items) {
         final totalReturn = item.quantity * pack.units;
         await txn.rawUpdate(
@@ -213,13 +206,17 @@ class LocalDatabaseDatasource {
         'fair_name': sale.fairName,
       });
 
-      // 1. Procesar productos individuales (descuenta stock físico)
       for (var item in sale.items) {
         await txn.insert('sale_items', {
           'sale_id': saleId,
           'product_id': item.productId,
           'quantity': item.quantity,
           'historical_price': item.historicalPrice,
+          'original_price': item.originalPrice,
+          'promotion_id': item.promotionId,
+          'promo_type': item.promoType, // <-- NUEVO
+          'promo_threshold': item.promoThreshold, // <-- NUEVO
+          'promo_discount': item.promoDiscount, // <-- NUEVO
         });
 
         await txn.rawUpdate(
@@ -228,7 +225,6 @@ class LocalDatabaseDatasource {
         );
       }
 
-      // 2. Procesar packs vendidos (descuenta unidades montadas del pack)
       for (var packItem in sale.packItems) {
         await txn.insert('sale_packs', {
           'sale_id': saleId,
@@ -254,7 +250,6 @@ class LocalDatabaseDatasource {
     for (var saleMap in salesMaps) {
       final saleId = saleMap['id'] as int;
 
-      // Cargar productos de la venta
       final itemsMaps = await database.rawQuery(
         '''
         SELECT si.*, p.name as product_name 
@@ -275,11 +270,18 @@ class LocalDatabaseDatasource {
                   itemMap['product_name'] as String? ?? 'Desconocido/Eliminado',
               quantity: itemMap['quantity'] as int,
               historicalPrice: (itemMap['historical_price'] as num).toDouble(),
+              originalPrice:
+                  (itemMap['original_price'] as num?)?.toDouble() ??
+                  (itemMap['historical_price'] as num).toDouble(),
+              promotionId: itemMap['promotion_id'] as int?,
+              promoType: itemMap['promo_type'] as String?, // <-- NUEVO
+              promoThreshold: itemMap['promo_threshold'] as int?, // <-- NUEVO
+              promoDiscount: (itemMap['promo_discount'] as num?)
+                  ?.toDouble(), // <-- NUEVO
             ),
           )
           .toList();
 
-      // Cargar packs de la venta
       final packItemsMaps = await database.rawQuery(
         '''
         SELECT sp.*, p.name as pack_name 
@@ -319,11 +321,11 @@ class LocalDatabaseDatasource {
     return salesList;
   }
 
+  // --- DEVOLUCIÓN COMPLETA DEL TICKET ---
   Future<void> refundSale(Sale sale) async {
     final database = await db;
 
     await database.transaction((txn) async {
-      // 1. Restaurar stock de productos individuales
       for (var item in sale.items) {
         final List<Map<String, dynamic>> maps = await txn.query(
           'products',
@@ -335,7 +337,6 @@ class LocalDatabaseDatasource {
         if (maps.isNotEmpty) {
           final currentUnits = maps.first['units'] as int;
           final restoredUnits = currentUnits + item.quantity;
-
           await txn.update(
             'products',
             {'units': restoredUnits, 'is_active': 1},
@@ -345,7 +346,6 @@ class LocalDatabaseDatasource {
         }
       }
 
-      // 2. Restaurar unidades de packs vendidos
       for (var packItem in sale.packItems) {
         final List<Map<String, dynamic>> maps = await txn.query(
           'packs',
@@ -357,7 +357,6 @@ class LocalDatabaseDatasource {
         if (maps.isNotEmpty) {
           final currentUnits = maps.first['units'] as int;
           final restoredUnits = currentUnits + packItem.quantity;
-
           await txn.update(
             'packs',
             {'units': restoredUnits},
@@ -367,7 +366,6 @@ class LocalDatabaseDatasource {
         }
       }
 
-      // 3. Eliminar registros de la venta
       await txn.delete(
         'sale_items',
         where: 'sale_id = ?',
@@ -379,6 +377,144 @@ class LocalDatabaseDatasource {
         whereArgs: [sale.id],
       );
       await txn.delete('sales', where: 'id = ?', whereArgs: [sale.id]);
+    });
+  }
+
+  // --- DEVOLUCIÓN PARCIAL / SELECTIVA CON REBALANCEO DE PROMOCIONES ---
+  Future<void> processPartialRefund({
+    required Sale originalSale,
+    required Map<SaleItem, int> itemsToRefund,
+    required Map<SalePackItem, int> packsToRefund,
+    required bool restockPacks,
+    required double customRefundAmount,
+  }) async {
+    final database = await db;
+
+    await database.transaction((txn) async {
+      // 1. Restaurar stock físico al almacén
+      for (var entry in itemsToRefund.entries) {
+        final item = entry.key;
+        final qtyRefund = entry.value;
+        if (qtyRefund <= 0) continue;
+
+        await txn.rawUpdate(
+          'UPDATE products SET units = units + ? WHERE id = ?',
+          [qtyRefund, item.productId],
+        );
+      }
+
+      for (var entry in packsToRefund.entries) {
+        final packItem = entry.key;
+        final qtyRefund = entry.value;
+        if (qtyRefund <= 0) continue;
+
+        if (restockPacks) {
+          await txn.rawUpdate(
+            'UPDATE packs SET units = units + ? WHERE id = ?',
+            [qtyRefund, packItem.packId],
+          );
+        }
+      }
+
+      // 2. Descontar las unidades devueltas de las líneas del ticket
+      for (var entry in itemsToRefund.entries) {
+        final item = entry.key;
+        final qtyRefund = entry.value;
+        if (qtyRefund <= 0) continue;
+
+        if (qtyRefund >= item.quantity) {
+          await txn.delete('sale_items', where: 'id = ?', whereArgs: [item.id]);
+        } else {
+          await txn.rawUpdate(
+            'UPDATE sale_items SET quantity = quantity - ? WHERE id = ?',
+            [qtyRefund, item.id],
+          );
+        }
+      }
+
+      for (var entry in packsToRefund.entries) {
+        final packItem = entry.key;
+        final qtyRefund = entry.value;
+        if (qtyRefund <= 0) continue;
+
+        if (qtyRefund >= packItem.quantity) {
+          await txn.delete(
+            'sale_packs',
+            where: 'id = ?',
+            whereArgs: [packItem.id],
+          );
+        } else {
+          await txn.rawUpdate(
+            'UPDATE sale_packs SET quantity = quantity - ? WHERE id = ?',
+            [qtyRefund, packItem.id],
+          );
+        }
+      }
+
+      // 3. Comprobar si quedó algo en el ticket y REBALANCEAR CONTABILIDAD
+      final remainingItems = await txn.query(
+        'sale_items',
+        where: 'sale_id = ?',
+        whereArgs: [originalSale.id],
+      );
+      final remainingPacks = await txn.query(
+        'sale_packs',
+        where: 'sale_id = ?',
+        whereArgs: [originalSale.id],
+      );
+
+      if (remainingItems.isEmpty && remainingPacks.isEmpty) {
+        // Se devolvió todo, borrar ticket completo
+        await txn.delete(
+          'sales',
+          where: 'id = ?',
+          whereArgs: [originalSale.id],
+        );
+      } else {
+        // Calcular el nuevo importe total del ticket en base a lo que el cliente realmente devolvió
+        final double newTotalAmount =
+            originalSale.totalAmount - customRefundAmount;
+        await txn.update(
+          'sales',
+          {'total_amount': newTotalAmount > 0 ? newTotalAmount : 0.0},
+          where: 'id = ?',
+          whereArgs: [originalSale.id],
+        );
+
+        // Rebalancear historical_prices
+        double currentRemainingValue = 0.0;
+        for (var row in remainingItems) {
+          currentRemainingValue +=
+              (row['historical_price'] as num) * (row['quantity'] as int);
+        }
+        for (var row in remainingPacks) {
+          currentRemainingValue +=
+              (row['historical_price'] as num) * (row['quantity'] as int);
+        }
+
+        if (currentRemainingValue > 0 && newTotalAmount > 0) {
+          final double ratio = newTotalAmount / currentRemainingValue;
+
+          for (var row in remainingItems) {
+            final double newPrice = (row['historical_price'] as num) * ratio;
+            await txn.update(
+              'sale_items',
+              {'historical_price': newPrice},
+              where: 'id = ?',
+              whereArgs: [row['id']],
+            );
+          }
+          for (var row in remainingPacks) {
+            final double newPrice = (row['historical_price'] as num) * ratio;
+            await txn.update(
+              'sale_packs',
+              {'historical_price': newPrice},
+              where: 'id = ?',
+              whereArgs: [row['id']],
+            );
+          }
+        }
+      }
     });
   }
 
@@ -414,7 +550,6 @@ class LocalDatabaseDatasource {
 
   Future<double> getInventoryCost() async {
     final database = await db;
-    // Coste de productos en almacén + coste de piezas invertidas en packs montados
     final prodCostResult = await database.rawQuery(
       'SELECT SUM(cost * units) as total FROM products',
     );
@@ -435,7 +570,6 @@ class LocalDatabaseDatasource {
 
   Future<double> getExpectedRevenue() async {
     final database = await db;
-    // Ingreso esperado de productos + ingreso esperado de packs
     final prodRevenueResult = await database.rawQuery(
       'SELECT SUM(price * units) as total FROM products',
     );
@@ -453,7 +587,6 @@ class LocalDatabaseDatasource {
 
   Future<double> getActualNetProfit() async {
     final database = await db;
-    // Beneficio de productos sueltos
     final prodProfitResult = await database.rawQuery('''
       SELECT SUM((si.historical_price - COALESCE(p.cost, 0)) * si.quantity) as net_profit 
       FROM sale_items si 
@@ -462,7 +595,6 @@ class LocalDatabaseDatasource {
     final double prodProfit =
         (prodProfitResult.first['net_profit'] as num?)?.toDouble() ?? 0.0;
 
-    // Beneficio de packs vendidos (precio venta del pack - coste de sus componentes)
     final packProfitResult = await database.rawQuery('''
       SELECT SUM(
         sp.quantity * (
@@ -485,12 +617,8 @@ class LocalDatabaseDatasource {
   Future<Map<String, double>> getDailySales() async {
     final database = await db;
     final result = await database.rawQuery('''
-      SELECT 
-        COALESCE(fair_name, date(date)) as group_key, 
-        SUM(total_amount) as total 
-      FROM sales 
-      GROUP BY group_key 
-      ORDER BY date ASC
+      SELECT COALESCE(fair_name, date(date)) as group_key, SUM(total_amount) as total 
+      FROM sales GROUP BY group_key ORDER BY date ASC
     ''');
 
     Map<String, double> salesGrouped = {};
@@ -509,8 +637,6 @@ class LocalDatabaseDatasource {
 
     for (var sale in sales) {
       final key = sale.fairName ?? sale.date.toIso8601String().substring(0, 10);
-
-      // Calcular beneficio neto de esta venta (productos + packs)
       double saleProfit = 0.0;
 
       for (var item in sale.items) {
@@ -520,7 +646,6 @@ class LocalDatabaseDatasource {
       }
 
       for (var packItem in sale.packItems) {
-        // Calcular coste de los componentes del pack
         final itemsResult = await database.rawQuery(
           '''
           SELECT SUM(p.cost * pi.quantity) as pack_unit_cost
@@ -539,7 +664,6 @@ class LocalDatabaseDatasource {
 
       netProfits[key] = (netProfits[key] ?? 0.0) + saleProfit;
     }
-
     return netProfits;
   }
 
