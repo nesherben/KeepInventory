@@ -19,7 +19,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 3,
+      version: 4, // Versión 4 con soporte para ferias
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
       onConfigure: _onConfigure,
@@ -62,12 +62,13 @@ class DatabaseHelper {
       )
     ''');
 
-    // 3. Tabla de Ventas
+    // 3. Tabla de Ventas (Con fair_name para agrupar ferias)
     await db.execute('''
       CREATE TABLE sales (
         id $idType,
         date $textType,
-        total_amount $realType
+        total_amount $realType,
+        fair_name TEXT
       )
     ''');
 
@@ -85,7 +86,7 @@ class DatabaseHelper {
     ''');
   }
 
-  // Migrador incremental: asegura que al actualizar la app se adapten las tablas sin perder datos
+  // Migrador incremental blindado
   Future<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
       await db.execute('''
@@ -106,6 +107,21 @@ class DatabaseHelper {
       await db.execute(
         'ALTER TABLE products ADD COLUMN is_active INTEGER NOT NULL DEFAULT 1',
       );
+    }
+
+    if (oldVersion < 4) {
+      // Comprobación de seguridad para asegurarnos de que la columna se añade sin errores
+      try {
+        final result = await db.rawQuery("PRAGMA table_info(sales)");
+        final columnExists = result.any((col) => col['name'] == 'fair_name');
+        if (!columnExists) {
+          await db.execute('ALTER TABLE sales ADD COLUMN fair_name TEXT');
+        }
+      } catch (_) {
+        try {
+          await db.execute('ALTER TABLE sales ADD COLUMN fair_name TEXT');
+        } catch (_) {}
+      }
     }
   }
 

@@ -65,6 +65,7 @@ class LocalDatabaseDatasource {
       final saleId = await txn.insert('sales', {
         'date': sale.date.toIso8601String(),
         'total_amount': sale.totalAmount,
+        'fair_name': sale.fairName, // Guardamos la feria asociada si la tiene
       });
 
       for (var item in sale.items) {
@@ -107,29 +108,31 @@ class LocalDatabaseDatasource {
     return (result.first['total'] as num?)?.toDouble() ?? 0.0;
   }
 
+  // Obtener ventas agrupadas por Feria (si tiene) o por Día
   Future<Map<String, double>> getDailySales() async {
     final database = await db;
     final result = await database.rawQuery('''
-      SELECT date(date) as day, SUM(total_amount) as total 
+      SELECT 
+        COALESCE(fair_name, date(date)) as group_key, 
+        SUM(total_amount) as total 
       FROM sales 
-      GROUP BY day 
-      ORDER BY day ASC
+      GROUP BY group_key 
+      ORDER BY date ASC
     ''');
 
-    Map<String, double> dailySales = {};
+    Map<String, double> salesGrouped = {};
     for (var row in result) {
-      final day = row['day'] as String;
+      final key = row['group_key'] as String;
       final total = (row['total'] as num).toDouble();
-      dailySales[day] = total;
+      salesGrouped[key] = total;
     }
-    return dailySales;
+    return salesGrouped;
   }
 
-  // NUEVO: Recuperar el historial de tickets con sus horas exactas y productos
+  // Recuperar el historial de tickets con sus ferias y productos
   Future<List<Sale>> getSales() async {
     final database = await db;
 
-    // Obtenemos los tickets de más nuevo a más viejo
     final salesMaps = await database.query('sales', orderBy: 'date DESC');
 
     List<Sale> salesList = [];
@@ -137,7 +140,6 @@ class LocalDatabaseDatasource {
     for (var saleMap in salesMaps) {
       final saleId = saleMap['id'] as int;
 
-      // Unimos la tabla de items de venta con la de productos para sacar el nombre real
       final itemsMaps = await database.rawQuery(
         '''
         SELECT si.*, p.name as product_name 
@@ -167,6 +169,7 @@ class LocalDatabaseDatasource {
           id: saleId,
           date: DateTime.parse(saleMap['date'] as String),
           totalAmount: (saleMap['total_amount'] as num).toDouble(),
+          fairName: saleMap['fair_name'] as String?, // Leemos la feria
           items: itemsList,
         ),
       );
@@ -175,7 +178,67 @@ class LocalDatabaseDatasource {
     return salesList;
   }
 
-  // --- Promociones (NUEVO) ---
+  // Devolución inteligente de tickets
+  Future<void> refundSale(Sale sale) async {
+    final database = await db;
+
+    await database.transaction((txn) async {
+      for (var item in sale.items) {
+        final List<Map<String, dynamic>> maps = await txn.query(
+          'products',
+          columns: ['units', 'is_active'],
+          where: 'id = ?',
+          whereArgs: [item.productId],
+        );
+
+        if (maps.isNotEmpty) {
+          final currentUnits = maps.first['units'] as int;
+          final restoredUnits = currentUnits + item.quantity;
+
+          await txn.update(
+            'products',
+            {
+              'units': restoredUnits,
+              'is_active':
+                  1, // Reactiva el producto si estaba borrado lógicamente
+            },
+            where: 'id = ?',
+            whereArgs: [item.productId],
+          );
+        }
+      }
+
+      await txn.delete(
+        'sale_items',
+        where: 'sale_id = ?',
+        whereArgs: [sale.id],
+      );
+      await txn.delete('sales', where: 'id = ?', whereArgs: [sale.id]);
+    });
+  }
+
+  // Actualizar el nombre de feria para un día concreto
+  Future<void> updateFairNameForDate(
+    String datePrefix,
+    String? fairName,
+  ) async {
+    final database = await db;
+    await database.rawUpdate(
+      'UPDATE sales SET fair_name = ? WHERE date LIKE ?',
+      [fairName, '$datePrefix%'],
+    );
+  }
+
+  // Obtener lista de nombres de ferias ya utilizadas anteriormente
+  Future<List<String>> getAvailableFairs() async {
+    final database = await db;
+    final List<Map<String, dynamic>> maps = await database.rawQuery(
+      'SELECT DISTINCT fair_name FROM sales WHERE fair_name IS NOT NULL AND fair_name != ""',
+    );
+    return maps.map((m) => m['fair_name'] as String).toList();
+  }
+
+  // --- Promociones ---
   Future<List<PromotionModel>> getPromotions() async {
     final database = await db;
     final List<Map<String, dynamic>> maps = await database.query('promotions');

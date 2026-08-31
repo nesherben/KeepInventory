@@ -20,12 +20,14 @@ class Sale {
   final int? id;
   final DateTime date;
   final double totalAmount;
+  final String? fairName; // NUEVO: Nombre de la feria opcional para agrupar
   final List<SaleItem> items;
 
   Sale({
     this.id,
     required this.date,
     required this.totalAmount,
+    this.fairName,
     this.items = const [],
   });
 }

@@ -1,26 +1,20 @@
-import 'package:keepinventory/core/database/database_helper.dart';
-import 'package:keepinventory/data/models/promotion_model.dart';
-import 'package:keepinventory/domain/entities/promotion.dart';
-
 import '../../domain/entities/product.dart';
 import '../../domain/entities/sale.dart';
+import '../../domain/entities/promotion.dart';
 import '../../domain/repositories/inventory_repository.dart';
 import '../datasources/local_database_datasource.dart';
 import '../models/product_model.dart';
+import '../models/promotion_model.dart';
 
 class InventoryRepositoryImpl implements InventoryRepository {
   final LocalDatabaseDatasource datasource;
 
   InventoryRepositoryImpl(this.datasource);
 
+  // --- Productos ---
   @override
   Future<List<Product>> getProducts() async {
     return await datasource.getProducts();
-  }
-
-  @override
-  Future<Product?> getProductById(int id) async {
-    return await datasource.getProductById(id);
   }
 
   @override
@@ -31,7 +25,8 @@ class InventoryRepositoryImpl implements InventoryRepository {
       price: product.price,
       cost: product.cost,
       imagePath: product.imagePath,
-      promotionId: product.promotionId, // <--- Añadir esto
+      promotionId: product.promotionId,
+      isActive: product.isActive,
     );
     return await datasource.insertProduct(model);
   }
@@ -45,7 +40,8 @@ class InventoryRepositoryImpl implements InventoryRepository {
       price: product.price,
       cost: product.cost,
       imagePath: product.imagePath,
-      promotionId: product.promotionId, // <--- Y esto
+      promotionId: product.promotionId,
+      isActive: product.isActive,
     );
     return await datasource.updateProduct(model);
   }
@@ -55,79 +51,7 @@ class InventoryRepositoryImpl implements InventoryRepository {
     return await datasource.deleteProduct(id);
   }
 
-  @override
-  Future<void> processSale(Sale sale) async {
-    await datasource.processSale(sale);
-  }
-
-  @override
-  Future<double> getTotalRevenue() async {
-    return await datasource.getTotalRevenue();
-  }
-
-  @override
-  Future<double> getInventoryCost() async {
-    return await datasource.getInventoryCost();
-  }
-
-  @override
-  Future<double> getExpectedRevenue() async {
-    return await datasource.getExpectedRevenue();
-  }
-
-  @override
-  Future<Map<String, double>> getDailySales() async {
-    return await datasource.getDailySales();
-  }
-
-  // NUEVO
-  @override
-  Future<List<Sale>> getSales() async {
-    return await datasource.getSales();
-  }
-
-  @override
-  Future<void> refundSale(Sale sale) async {
-    final database = await DatabaseHelper.instance.database;
-
-    await database.transaction((txn) async {
-      for (var item in sale.items) {
-        // Buscamos el producto en la base de datos (incluso si está inactivo/oculto)
-        final List<Map<String, dynamic>> maps = await txn.query(
-          'products',
-          columns: ['units', 'is_active'],
-          where: 'id = ?',
-          whereArgs: [item.productId],
-        );
-
-        if (maps.isNotEmpty) {
-          final currentUnits = maps.first['units'] as int;
-          final restoredUnits = currentUnits + item.quantity;
-
-          // Sumamos stock y reactivamos el producto de forma automática
-          await txn.update(
-            'products',
-            {
-              'units': restoredUnits,
-              'is_active': 1, // Vuelve a aparecer en el inventario y TPV
-            },
-            where: 'id = ?',
-            whereArgs: [item.productId],
-          );
-        }
-      }
-
-      // Borramos los detalles de venta y la venta principal
-      await txn.delete(
-        'sale_items',
-        where: 'sale_id = ?',
-        whereArgs: [sale.id],
-      );
-      await txn.delete('sales', where: 'id = ?', whereArgs: [sale.id]);
-    });
-  }
-
-  // --- Implementación de Promociones (NUEVO) ---
+  // --- Promociones ---
   @override
   Future<List<Promotion>> getPromotions() async {
     return await datasource.getPromotions();
@@ -159,5 +83,55 @@ class InventoryRepositoryImpl implements InventoryRepository {
   @override
   Future<int> deletePromotion(int id) async {
     return await datasource.deletePromotion(id);
+  }
+
+  // --- Ventas, Historial y Ferias ---
+  @override
+  Future<void> processSale(Sale sale) async {
+    await datasource.processSale(sale);
+  }
+
+  @override
+  Future<List<Sale>> getSales() async {
+    return await datasource.getSales();
+  }
+
+  @override
+  Future<void> refundSale(Sale sale) async {
+    await datasource.refundSale(sale);
+  }
+
+  @override
+  Future<void> updateFairNameForDate(
+    String datePrefix,
+    String? fairName,
+  ) async {
+    await datasource.updateFairNameForDate(datePrefix, fairName);
+  }
+
+  @override
+  Future<List<String>> getAvailableFairs() async {
+    return await datasource.getAvailableFairs();
+  }
+
+  // --- Dashboard / Métricas ---
+  @override
+  Future<double> getTotalRevenue() async {
+    return await datasource.getTotalRevenue();
+  }
+
+  @override
+  Future<double> getInventoryCost() async {
+    return await datasource.getInventoryCost();
+  }
+
+  @override
+  Future<double> getExpectedRevenue() async {
+    return await datasource.getExpectedRevenue();
+  }
+
+  @override
+  Future<Map<String, double>> getDailySales() async {
+    return await datasource.getDailySales();
   }
 }
