@@ -14,7 +14,6 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   final _repository = InventoryRepositoryImpl(LocalDatabaseDatasource());
 
-  // Llave y variables para el gesto global de deslizamiento
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   double? _startX;
   double? _startY;
@@ -140,7 +139,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
         final dx = event.position.dx - _startX!;
         final dy = event.position.dy - _startY!;
 
-        // Gesto horizontal hacia la derecha de más de 50px sin desviación vertical excesiva
         if (dx > 50 && dy.abs() < 30) {
           _startX = null;
           _startY = null;
@@ -348,7 +346,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 // --------------------------------------------------------------------------
 // PANTALLA COMPLETA: Gráfico con Barra (Ingresos) y Punto (Beneficio Neto)
 // --------------------------------------------------------------------------
-class FullScreenChartScreen extends StatelessWidget {
+class FullScreenChartScreen extends StatefulWidget {
   final Map<String, double> dailySales;
   final Map<String, double> dailyNetProfits;
 
@@ -359,321 +357,390 @@ class FullScreenChartScreen extends StatelessWidget {
   });
 
   @override
+  State<FullScreenChartScreen> createState() => _FullScreenChartScreenState();
+}
+
+class _FullScreenChartScreenState extends State<FullScreenChartScreen> {
+  double? _startX;
+  double? _startY;
+
+  @override
   Widget build(BuildContext context) {
     double maxVal = 0.0;
-    for (var val in dailySales.values) {
+    for (var val in widget.dailySales.values) {
       if (val > maxVal) maxVal = val;
     }
-    for (var val in dailyNetProfits.values) {
+    for (var val in widget.dailyNetProfits.values) {
       if (val > maxVal) maxVal = val;
     }
 
-    final double totalSales = dailySales.values.fold(0.0, (sum, v) => sum + v);
-    final double totalNet = dailyNetProfits.values.fold(
+    final double totalSales = widget.dailySales.values.fold(
+      0.0,
+      (sum, v) => sum + v,
+    );
+    final double totalNet = widget.dailyNetProfits.values.fold(
       0.0,
       (sum, v) => sum + v,
     );
 
-    final Set<String> allKeys = {...dailySales.keys, ...dailyNetProfits.keys};
+    final Set<String> allKeys = {
+      ...widget.dailySales.keys,
+      ...widget.dailyNetProfits.keys,
+    };
     final List<String> sortedKeys = allKeys.toList();
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Balance Detallado (Ingresos y Neto)')),
-      body: sortedKeys.isEmpty
-          ? const Center(
-              child: Text(
-                'Aún no hay ventas para mostrar.',
-                style: TextStyle(fontSize: 16, color: Colors.grey),
-              ),
-            )
-          : Column(
-              children: [
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 20.0,
-                    horizontal: 16.0,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).primaryColor
-                        .withValues(alpha: 0.05),
-                    border: Border(
-                      bottom: BorderSide(color: Colors.grey.shade200),
+    return Listener(
+      onPointerDown: (event) {
+        _startX = event.position.dx;
+        _startY = event.position.dy;
+      },
+      onPointerMove: (event) {
+        if (_startX == null || _startY == null) return;
+        final dx = event.position.dx - _startX!;
+        final dy = event.position.dy - _startY!;
+
+        if (dx > 50 && dy.abs() < 30) {
+          _startX = null;
+          _startY = null;
+          Navigator.pop(context);
+        }
+      },
+      onPointerUp: (_) {
+        _startX = null;
+        _startY = null;
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Balance Detallado (Ingresos y Neto)'),
+        ),
+        body: sortedKeys.isEmpty
+            ? const Center(
+                child: Text(
+                  'Aún no hay ventas para mostrar.',
+                  style: TextStyle(fontSize: 16, color: Colors.grey),
+                ),
+              )
+            : Column(
+                children: [
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 20.0,
+                      horizontal: 16.0,
                     ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      Column(
-                        children: [
-                          const Text(
-                            'TOTAL INGRESOS',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: Colors.grey,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '${totalSales.toStringAsFixed(2)} €',
-                            style: TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(context).primaryColor,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Container(
-                        height: 30,
-                        width: 1,
-                        color: Colors.grey.shade300,
-                      ),
-                      Column(
-                        children: [
-                          const Text(
-                            'TOTAL NETO',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: Colors.grey,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '${totalNet.toStringAsFixed(2)} €',
-                            style: const TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.green,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16.0,
-                    vertical: 8.0,
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        width: 12,
-                        height: 12,
-                        color: Theme.of(context).primaryColor,
-                      ),
-                      const SizedBox(width: 6),
-                      const Text(
-                        'Barra: Ingresos Brutos',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(width: 20),
-                      Container(
-                        width: 10,
-                        height: 10,
-                        decoration: const BoxDecoration(
-                          color: Colors.greenAccent,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      const Text(
-                        'Punto: Beneficio Neto',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  flex: 3,
-                  child: Container(
-                    margin: const EdgeInsets.all(16.0),
-                    padding: const EdgeInsets.fromLTRB(8, 20, 8, 8),
                     decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.04),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
+                      color: Theme.of(context).primaryColor
+                          .withValues(alpha: 0.05),
+                      border: Border(
+                        bottom: BorderSide(color: Colors.grey.shade200),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        Column(
+                          children: [
+                            const Text(
+                              'TOTAL INGRESOS',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Colors.grey,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '${totalSales.toStringAsFixed(2)} €',
+                              style: TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).primaryColor,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Container(
+                          height: 30,
+                          width: 1,
+                          color: Colors.grey.shade300,
+                        ),
+                        Column(
+                          children: [
+                            const Text(
+                              'TOTAL NETO',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Colors.grey,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '${totalNet.toStringAsFixed(2)} €',
+                              style: const TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: sortedKeys.map((key) {
-                        final revenue = dailySales[key] ?? 0.0;
-                        final net = dailyNetProfits[key] ?? 0.0;
-
-                        final revFactor = maxVal == 0 ? 0.0 : revenue / maxVal;
-                        final netFactor = maxVal == 0 ? 0.0 : net / maxVal;
-
-                        final parts = key.split('-');
-                        final shortLabel = parts.length == 3
-                            ? '${parts[2]}/${parts[1]}'
-                            : (key.length > 6
-                                  ? '${key.substring(0, 5)}..'
-                                  : key);
-
-                        final isFair = parts.length != 3;
-
-                        return Expanded(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              Text(
-                                '${revenue.toStringAsFixed(0)}€',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 10,
-                                ),
-                                textAlign: TextAlign.center,
-                                maxLines: 1,
+                  ),
+                  // Leyenda actualizada aclarando Días sueltos, Ferias y el Neto
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16.0,
+                      vertical: 8.0,
+                    ),
+                    child: Wrap(
+                      alignment: WrapAlignment.center,
+                      spacing: 16,
+                      runSpacing: 4,
+                      children: [
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 12,
+                              height: 12,
+                              color: Theme.of(context).primaryColor,
+                            ),
+                            const SizedBox(width: 6),
+                            const Text(
+                              'Días sueltos',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
                               ),
-                              const SizedBox(height: 6),
-                              Expanded(
-                                child: Stack(
-                                  alignment: Alignment.bottomCenter,
-                                  children: [
-                                    Align(
-                                      alignment: Alignment.bottomCenter,
-                                      child: FractionallySizedBox(
-                                        heightFactor: revFactor,
-                                        child: Container(
-                                          width: 16,
-                                          margin: const EdgeInsets.symmetric(
-                                            horizontal: 4,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: isFair
-                                                ? Colors.amber.shade700
-                                                : Theme.of(context)
-                                                      .primaryColor,
-                                            borderRadius:
-                                                const BorderRadius.vertical(
-                                                  top: Radius.circular(6),
-                                                ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    Align(
-                                      alignment: Alignment(
-                                        0,
-                                        1.0 - (2.0 * netFactor),
-                                      ),
-                                      child: Container(
-                                        width: 9,
-                                        height: 9,
-                                        decoration: BoxDecoration(
-                                          color: Colors.greenAccent,
-                                          shape: BoxShape.circle,
-                                          border: Border.all(
-                                            color: Colors.green.shade900,
-                                            width: 1.5,
-                                          ),
-                                          boxShadow: const [
-                                            BoxShadow(
-                                              color: Colors.black26,
-                                              blurRadius: 2,
-                                              offset: Offset(0, 1),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                            ),
+                          ],
+                        ),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 12,
+                              height: 12,
+                              color: Colors.amber.shade700,
+                            ),
+                            const SizedBox(width: 6),
+                            const Text(
+                              'Ferias',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
                               ),
-                              const SizedBox(height: 8),
-                              Text(
-                                shortLabel,
-                                style: TextStyle(
-                                  color: Colors.grey[700],
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 10,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 10,
+                              height: 10,
+                              decoration: const BoxDecoration(
+                                color: Colors.greenAccent,
+                                shape: BoxShape.circle,
                               ),
-                            ],
-                          ),
-                        );
-                      }).toList(),
+                            ),
+                            const SizedBox(width: 6),
+                            const Text(
+                              'Beneficio Neto',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
-                ),
-                Expanded(
-                  flex: 2,
-                  child: ListView.separated(
-                    itemCount: sortedKeys.length,
-                    separatorBuilder: (context, index) =>
-                        const Divider(height: 1),
-                    itemBuilder: (context, index) {
-                      final key = sortedKeys[sortedKeys.length - 1 - index];
-                      final revenue = dailySales[key] ?? 0.0;
-                      final net = dailyNetProfits[key] ?? 0.0;
+                  Expanded(
+                    flex: 3,
+                    child: Container(
+                      margin: const EdgeInsets.all(16.0),
+                      padding: const EdgeInsets.fromLTRB(8, 20, 8, 8),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.04),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: sortedKeys.map((key) {
+                          final revenue = widget.dailySales[key] ?? 0.0;
+                          final net = widget.dailyNetProfits[key] ?? 0.0;
 
-                      final parts = key.split('-');
-                      final isDate = parts.length == 3;
-                      final formattedTitle = isDate
-                          ? 'Día: ${parts[2]}/${parts[1]}/${parts[0]}'
-                          : '🎪 Feria: $key';
+                          final revFactor = maxVal == 0
+                              ? 0.0
+                              : revenue / maxVal;
+                          final netFactor = maxVal == 0 ? 0.0 : net / maxVal;
 
-                      return ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor:
-                              (isDate
-                                      ? Theme.of(context).primaryColor
-                                      : Colors.amber)
-                                  .withValues(alpha: 0.15),
-                          child: Icon(
-                            isDate ? Icons.calendar_month : Icons.store,
-                            color: isDate
-                                ? Theme.of(context).primaryColor
-                                : Colors.amber.shade900,
-                            size: 20,
-                          ),
-                        ),
-                        title: Text(
-                          formattedTitle,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13,
-                          ),
-                        ),
-                        subtitle: Text(
-                          'Ingresos: ${revenue.toStringAsFixed(2)} €',
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                        trailing: Text(
-                          'Neto: ${net.toStringAsFixed(2)} €',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                            color: Colors.green,
-                          ),
-                        ),
-                      );
-                    },
+                          final parts = key.split('-');
+                          final shortLabel = parts.length == 3
+                              ? '${parts[2]}/${parts[1]}'
+                              : (key.length > 6
+                                    ? '${key.substring(0, 5)}..'
+                                    : key);
+
+                          final isFair = parts.length != 3;
+
+                          return Expanded(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                Text(
+                                  '${revenue.toStringAsFixed(0)}€',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 10,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                  maxLines: 1,
+                                ),
+                                const SizedBox(height: 6),
+                                Expanded(
+                                  child: Stack(
+                                    alignment: Alignment.bottomCenter,
+                                    children: [
+                                      Align(
+                                        alignment: Alignment.bottomCenter,
+                                        child: FractionallySizedBox(
+                                          heightFactor: revFactor,
+                                          child: Container(
+                                            width: 16,
+                                            margin: const EdgeInsets.symmetric(
+                                              horizontal: 4,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: isFair
+                                                  ? Colors.amber.shade700
+                                                  : Theme.of(context)
+                                                        .primaryColor,
+                                              borderRadius:
+                                                  const BorderRadius.vertical(
+                                                    top: Radius.circular(6),
+                                                  ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      Align(
+                                        alignment: Alignment(
+                                          0,
+                                          1.0 - (2.0 * netFactor),
+                                        ),
+                                        child: Container(
+                                          width: 9,
+                                          height: 9,
+                                          decoration: BoxDecoration(
+                                            color: Colors.greenAccent,
+                                            shape: BoxShape.circle,
+                                            border: Border.all(
+                                              color: Colors.green.shade900,
+                                              width: 1.5,
+                                            ),
+                                            boxShadow: const [
+                                              BoxShadow(
+                                                color: Colors.black26,
+                                                blurRadius: 2,
+                                                offset: Offset(0, 1),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  shortLabel,
+                                  style: TextStyle(
+                                    color: Colors.grey[700],
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 10,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
                   ),
-                ),
-              ],
-            ),
+                  Expanded(
+                    flex: 2,
+                    child: ListView.separated(
+                      itemCount: sortedKeys.length,
+                      separatorBuilder: (context, index) =>
+                          const Divider(height: 1),
+                      itemBuilder: (context, index) {
+                        final key = sortedKeys[sortedKeys.length - 1 - index];
+                        final revenue = widget.dailySales[key] ?? 0.0;
+                        final net = widget.dailyNetProfits[key] ?? 0.0;
+
+                        final parts = key.split('-');
+                        final isDate = parts.length == 3;
+                        final formattedTitle = isDate
+                            ? 'Día: ${parts[2]}/${parts[1]}/${parts[0]}'
+                            : '🎪 Feria: $key';
+
+                        return ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor:
+                                (isDate
+                                        ? Theme.of(context).primaryColor
+                                        : Colors.amber)
+                                    .withValues(alpha: 0.15),
+                            child: Icon(
+                              isDate ? Icons.calendar_month : Icons.store,
+                              color: isDate
+                                  ? Theme.of(context).primaryColor
+                                  : Colors.amber.shade900,
+                              size: 20,
+                            ),
+                          ),
+                          title: Text(
+                            formattedTitle,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13,
+                            ),
+                          ),
+                          subtitle: Text(
+                            'Ingresos: ${revenue.toStringAsFixed(2)} €',
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                          trailing: Text(
+                            'Neto: ${net.toStringAsFixed(2)} €',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                              color: Colors.green,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+      ),
     );
   }
 }

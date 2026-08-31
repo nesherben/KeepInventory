@@ -33,12 +33,49 @@ class AppDrawer extends StatelessWidget {
               ],
             ),
           ),
+
+          // --- SECCIÓN 1: PRINCIPAL Y VENTAS ---
+          const Padding(
+            padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: Text(
+              'PRINCIPAL',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey,
+                letterSpacing: 0.8,
+              ),
+            ),
+          ),
           ListTile(
             leading: const Icon(Icons.dashboard_outlined),
             title: const Text('Dashboard'),
             onTap: () {
               Navigator.pushReplacementNamed(context, '/');
             },
+          ),
+          ListTile(
+            leading: const Icon(Icons.point_of_sale_outlined),
+            title: const Text('Panel de Ventas (TPV)'),
+            onTap: () {
+              Navigator.pushReplacementNamed(context, '/sales');
+            },
+          ),
+
+          const Divider(height: 24, indent: 16, endIndent: 16),
+
+          // --- SECCIÓN 2: ALMACÉN Y CATÁLOGO ---
+          const Padding(
+            padding: EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: Text(
+              'ALMACÉN Y OFERTAS',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey,
+                letterSpacing: 0.8,
+              ),
+            ),
           ),
           ListTile(
             leading: const Icon(Icons.inventory_2_outlined),
@@ -48,25 +85,33 @@ class AppDrawer extends StatelessWidget {
             },
           ),
           ListTile(
-            leading: const Icon(Icons.point_of_sale_outlined),
-            title: const Text('Panel de Ventas'),
-            onTap: () {
-              Navigator.pushReplacementNamed(context, '/sales');
-            },
-          ),
-          // NUEVO BOTÓN
-          ListTile(
-            leading: const Icon(Icons.history_outlined),
-            title: const Text('Historial de Tickets'),
-            onTap: () {
-              Navigator.pushReplacementNamed(context, '/history');
-            },
-          ),
-          ListTile(
             leading: const Icon(Icons.local_offer_outlined),
             title: const Text('Gestor de Promociones'),
             onTap: () {
               Navigator.pushReplacementNamed(context, '/promotions');
+            },
+          ),
+
+          const Divider(height: 24, indent: 16, endIndent: 16),
+
+          // --- SECCIÓN 3: HISTORIAL Y REGISTROS ---
+          const Padding(
+            padding: EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: Text(
+              'REGISTROS',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey,
+                letterSpacing: 0.8,
+              ),
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.history_outlined),
+            title: const Text('Historial y Ferias'),
+            onTap: () {
+              Navigator.pushReplacementNamed(context, '/history');
             },
           ),
         ],
