@@ -15,7 +15,6 @@ class HistoryScreen extends StatefulWidget {
 class _HistoryScreenState extends State<HistoryScreen> {
   final _repository = InventoryRepositoryImpl(LocalDatabaseDatasource());
 
-  // Llave y variables para el gesto global de deslizamiento
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   double? _startX;
   double? _startY;
@@ -46,7 +45,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
         title: const Text('Anular y Devolver Venta'),
         content: Text(
           '¿Estás seguro de anular el Ticket #${sale.id}?\n\n'
-          'Se restará el importe de la caja y se devolverán las unidades al stock del inventario.',
+          'Se restará el importe de la caja y se devolverán las unidades tanto de productos como de packs al inventario.',
         ),
         actions: [
           TextButton(
@@ -106,7 +105,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 'Selecciona una feria guardada o escribe el nombre de una nueva:',
               ),
               const SizedBox(height: 16),
-
               if (existingFairs.isNotEmpty) ...[
                 DropdownButtonFormField<String>(
                   initialValue: selectedExisting,
@@ -135,7 +133,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 ),
                 const SizedBox(height: 16),
               ],
-
               TextField(
                 controller: controller,
                 decoration: const InputDecoration(
@@ -210,7 +207,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
         final dx = event.position.dx - _startX!;
         final dy = event.position.dy - _startY!;
 
-        // Gesto horizontal hacia la derecha de más de 50px sin desviación vertical excesiva
         if (dx > 50 && dy.abs() < 30) {
           _startX = null;
           _startY = null;
@@ -374,9 +370,15 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                       ),
                                       child: Column(
                                         children: [
+                                          // 1. PRODUCTOS SUELTOS
                                           ...sale.items.map((item) {
                                             return ListTile(
                                               dense: true,
+                                              leading: const Icon(
+                                                Icons.inventory_2_outlined,
+                                                size: 18,
+                                                color: Colors.grey,
+                                              ),
                                               title: Text(
                                                 '${item.quantity}x ${item.productName}',
                                               ),
@@ -385,6 +387,32 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                               ),
                                             );
                                           }),
+
+                                          // 2. PACKS Y BUNDLES
+                                          ...sale.packItems.map((packItem) {
+                                            return ListTile(
+                                              dense: true,
+                                              leading: const Icon(
+                                                Icons.card_giftcard,
+                                                size: 18,
+                                                color: Colors.amber,
+                                              ),
+                                              title: Text(
+                                                '${packItem.quantity}x ${packItem.packName} (Pack)',
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                              trailing: Text(
+                                                '${(packItem.quantity * packItem.historicalPrice).toStringAsFixed(2)} €',
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.w600,
+                                                  color: Colors.amber.shade900,
+                                                ),
+                                              ),
+                                            );
+                                          }),
+
                                           const Divider(height: 16),
                                           Padding(
                                             padding: const EdgeInsets.symmetric(
