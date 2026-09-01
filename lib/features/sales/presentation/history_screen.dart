@@ -509,7 +509,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   onChanged: (val) {
                     setDialogState(() {
                       selectedExisting = val;
-                      if (val != null) controller.text = val;
+                      if (val != null) {
+                        controller.text = val;
+                      } else {
+                        controller.clear(); // <-- ¡AQUÍ ESTÁ EL TRUCO!
+                      }
                     });
                   },
                 ),
