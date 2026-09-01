@@ -2,8 +2,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:path/path.dart' as path_utils;
 
 import '../../../core/shared_widgets/app_drawer.dart';
 
@@ -18,6 +16,10 @@ import '../data/datasources/pack_local_datasource.dart';
 import '../../inventory/domain/product.dart';
 import '../../inventory/data/datasources/product_local_datasource.dart';
 
+// Widget Composition
+import 'widgets/pack_form_dialog.dart';
+import 'widgets/pack_list_item.dart';
+
 class PacksScreen extends StatefulWidget {
   const PacksScreen({super.key});
 
@@ -29,8 +31,6 @@ class _PacksScreenState extends State<PacksScreen> {
   // Instanciamos los repositorios necesarios
   final _packRepository = PackRepositoryImpl(PackLocalDatasource());
   final _productRepository = ProductRepositoryImpl(ProductLocalDatasource());
-
-  final ImagePicker _picker = ImagePicker();
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   double? _startX;
@@ -158,355 +158,36 @@ class _PacksScreenState extends State<PacksScreen> {
       return;
     }
 
-    String packName = existingPack?.name ?? '';
-    double packPrice = existingPack?.price ?? 0.0;
-    int packUnits = existingPack?.units ?? 1;
-    File? selectedImage =
-        (existingPack?.imagePath != null &&
-            File(existingPack!.imagePath!).existsSync())
-        ? File(existingPack.imagePath!)
-        : null;
-
-    final Map<Product, int> selectedItems = {};
-    if (existingPack != null) {
-      for (var item in existingPack.items) {
-        try {
-          final prod = _availableProducts.firstWhere(
-            (p) => p.id == item.productId,
-          );
-          selectedItems[prod] = item.quantity;
-        } catch (_) {}
-      }
-    }
-
     if (!mounted) return;
 
     showDialog(
       context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              title: Text(
-                existingPack == null
-                    ? 'Crear Nuevo Pack / Bundle'
-                    : 'Modificar Pack',
+      builder: (context) => PackFormDialog(
+        existingPack: existingPack,
+        availableProducts: _availableProducts,
+        onSave: (newPack) async {
+          if (existingPack == null) {
+            await _packRepository.createPack(newPack);
+          } else {
+            await _packRepository.updatePack(existingPack, newPack);
+          }
+
+          if (context.mounted) {
+            Navigator.pop(context);
+            _loadData();
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  existingPack == null
+                      ? '¡Pack creado con éxito!'
+                      : '¡Pack modificado con éxito!',
+                ),
+                backgroundColor: Colors.green,
               ),
-              content: SizedBox(
-                width: MediaQuery.of(context).size.width * 0.85,
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      GestureDetector(
-                        onTap: () async {
-                          final picked = await _picker.pickImage(
-                            source: ImageSource.gallery,
-                          );
-                          if (picked != null) {
-                            setDialogState(
-                              () => selectedImage = File(picked.path),
-                            );
-                          }
-                        },
-                        child: Container(
-                          height: 85,
-                          width: 85,
-                          decoration: BoxDecoration(
-                            color: Colors.grey[200],
-                            borderRadius: BorderRadius.circular(12),
-                            image: selectedImage != null
-                                ? DecorationImage(
-                                    image: FileImage(selectedImage!),
-                                    fit: BoxFit.cover,
-                                  )
-                                : null,
-                          ),
-                          child: selectedImage == null
-                              ? const Icon(
-                                  Icons.add_a_photo,
-                                  color: Colors.grey,
-                                  size: 30,
-                                )
-                              : null,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      TextField(
-                        controller: TextEditingController(text: packName),
-                        decoration: const InputDecoration(
-                          labelText: 'Nombre del Pack',
-                          border: OutlineInputBorder(),
-                          isDense: true,
-                        ),
-                        onChanged: (val) => packName = val,
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextField(
-                              controller: TextEditingController(
-                                text: packPrice > 0 ? packPrice.toString() : '',
-                              ),
-                              decoration: const InputDecoration(
-                                labelText: 'Precio (€)',
-                                border: OutlineInputBorder(),
-                                isDense: true,
-                              ),
-                              keyboardType:
-                                  const TextInputType.numberWithOptions(
-                                    decimal: true,
-                                  ),
-                              onChanged: (val) => packPrice =
-                                  double.tryParse(val.replaceAll(',', '.')) ??
-                                  0.0,
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: TextField(
-                              controller: TextEditingController(
-                                text: packUnits.toString(),
-                              ),
-                              decoration: const InputDecoration(
-                                labelText: 'Stock inicial',
-                                border: OutlineInputBorder(),
-                                isDense: true,
-                              ),
-                              keyboardType: TextInputType.number,
-                              onChanged: (val) =>
-                                  packUnits = int.tryParse(val) ?? 1,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      const Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          'Piezas por cada 1 unidad de pack:',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      SizedBox(
-                        height: 220,
-                        child: ListView.builder(
-                          shrinkWrap: true,
-                          itemCount: _availableProducts.length,
-                          itemBuilder: (context, index) {
-                            final product = _availableProducts[index];
-                            final qtyPerPack = selectedItems[product] ?? 0;
-
-                            int previousDeduction = 0;
-                            if (existingPack != null) {
-                              final prevItem = existingPack.items.firstWhere(
-                                (i) => i.productId == product.id,
-                                orElse: () => PackItem(
-                                  productId: 0,
-                                  productName: '',
-                                  quantity: 0,
-                                ),
-                              );
-                              previousDeduction =
-                                  prevItem.quantity * existingPack.units;
-                            }
-                            final effectiveAvailable =
-                                product.units + previousDeduction;
-                            final neededTotal = qtyPerPack * packUnits;
-
-                            return Card(
-                              margin: const EdgeInsets.symmetric(vertical: 4),
-                              child: ListTile(
-                                dense: true,
-                                title: Text(
-                                  product.name,
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                subtitle: Text(
-                                  'Almacén: $effectiveAvailable uds (Total requerido: $neededTotal)',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: neededTotal > effectiveAvailable
-                                        ? Colors.red
-                                        : Colors.grey[700],
-                                  ),
-                                ),
-                                trailing: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    IconButton(
-                                      icon: const Icon(
-                                        Icons.remove_circle_outline,
-                                        color: Colors.orange,
-                                        size: 20,
-                                      ),
-                                      onPressed: qtyPerPack > 0
-                                          ? () => setDialogState(
-                                              () => selectedItems[product] =
-                                                  qtyPerPack - 1,
-                                            )
-                                          : null,
-                                    ),
-                                    Text(
-                                      '$qtyPerPack',
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(
-                                        Icons.add_circle_outline,
-                                        color: Colors.green,
-                                        size: 20,
-                                      ),
-                                      onPressed:
-                                          ((qtyPerPack + 1) * packUnits) <=
-                                              effectiveAvailable
-                                          ? () => setDialogState(
-                                              () => selectedItems[product] =
-                                                  qtyPerPack + 1,
-                                            )
-                                          : null,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancelar'),
-                ),
-                ElevatedButton(
-                  onPressed: () async {
-                    if (packName.isEmpty || packPrice <= 0 || packUnits <= 0) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            'Rellena nombre, precio y unidades válidas.',
-                          ),
-                        ),
-                      );
-                      return;
-                    }
-
-                    for (var entry in selectedItems.entries) {
-                      if (entry.value > 0) {
-                        int previousDeduction = 0;
-                        if (existingPack != null) {
-                          final prevItem = existingPack.items.firstWhere(
-                            (i) => i.productId == entry.key.id,
-                            orElse: () => PackItem(
-                              productId: 0,
-                              productName: '',
-                              quantity: 0,
-                            ),
-                          );
-                          previousDeduction =
-                              prevItem.quantity * existingPack.units;
-                        }
-                        final effectiveAvailable =
-                            entry.key.units + previousDeduction;
-                        if ((entry.value * packUnits) > effectiveAvailable) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Stock insuficiente de "${entry.key.name}" para montar $packUnits unidades.',
-                              ),
-                              backgroundColor: Colors.redAccent,
-                            ),
-                          );
-                          return;
-                        }
-                      }
-                    }
-
-                    String? imagePath = selectedImage?.path;
-                    if (selectedImage != null &&
-                        !selectedImage!.path.contains('app_flutter')) {
-                      final dir = await getApplicationDocumentsDirectory();
-                      final fileName = path_utils.basename(selectedImage!.path);
-                      final saved = await selectedImage!.copy(
-                        '${dir.path}/$fileName',
-                      );
-                      imagePath = saved.path;
-                    }
-
-                    final packItemsList = selectedItems.entries
-                        .where((e) => e.value > 0)
-                        .map(
-                          (e) => PackItem(
-                            productId: e.key.id!,
-                            productName: e.key.name,
-                            quantity: e.value,
-                          ),
-                        )
-                        .toList();
-
-                    if (packItemsList.isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Añade al menos 1 producto por pack.'),
-                        ),
-                      );
-                      return;
-                    }
-
-                    final newPack = Pack(
-                      id: existingPack?.id,
-                      name: packName,
-                      price: packPrice,
-                      units: packUnits,
-                      imagePath: imagePath,
-                      items: packItemsList,
-                    );
-
-                    if (existingPack == null) {
-                      await _packRepository.createPack(newPack);
-                    } else {
-                      await _packRepository.updatePack(existingPack, newPack);
-                    }
-
-                    if (context.mounted) {
-                      Navigator.pop(context);
-                      _loadData();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            existingPack == null
-                                ? '¡Pack creado con éxito!'
-                                : '¡Pack modificado con éxito!',
-                          ),
-                          backgroundColor: Colors.green,
-                        ),
-                      );
-                    }
-                  },
-                  child: Text(existingPack == null ? 'Crear Pack' : 'Guardar'),
-                ),
-              ],
             );
-          },
-        );
-      },
+          }
+        },
+      ),
     );
   }
 
@@ -589,188 +270,12 @@ class _PacksScreenState extends State<PacksScreen> {
                 itemCount: _packs.length,
                 itemBuilder: (context, index) {
                   final pack = _packs[index];
-                  final bool hasValidImage =
-                      pack.imagePath != null &&
-                      File(pack.imagePath!).existsSync();
 
-                  return Card(
-                    elevation: 2,
-                    margin: const EdgeInsets.only(bottom: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: ExpansionTile(
-                      leading: hasValidImage
-                          ? ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: Image.file(
-                                File(pack.imagePath!),
-                                width: 50,
-                                height: 50,
-                                fit: BoxFit.cover,
-                              ),
-                            )
-                          : Container(
-                              width: 50,
-                              height: 50,
-                              decoration: BoxDecoration(
-                                color: Colors.teal.shade50,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: const Icon(
-                                Icons.card_giftcard,
-                                color: Colors.teal,
-                                size: 26,
-                              ),
-                            ),
-                      title: Text(
-                        pack.name,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      subtitle: Padding(
-                        padding: const EdgeInsets.only(top: 4.0),
-                        child: Row(
-                          children: [
-                            Text(
-                              '${pack.price.toStringAsFixed(2)} €',
-                              style: TextStyle(
-                                color: Theme.of(context).primaryColor,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            // CONTROL RÁPIDO DE UNIDADES MONTADAS (+ / -)
-                            Container(
-                              decoration: BoxDecoration(
-                                color: pack.units > 0
-                                    ? Colors.teal.shade50
-                                    : Colors.red.shade50,
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                  color: pack.units > 0
-                                      ? Colors.teal.shade200
-                                      : Colors.red.shade200,
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  InkWell(
-                                    onTap: pack.units > 0
-                                        ? () => _quickAdjustStock(pack, -1)
-                                        : null,
-                                    child: const Padding(
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: 5,
-                                        vertical: 2,
-                                      ),
-                                      child: Icon(
-                                        Icons.remove,
-                                        size: 16,
-                                        color: Colors.orange,
-                                      ),
-                                    ),
-                                  ),
-                                  Text(
-                                    '${pack.units} uds',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                      color: pack.units > 0
-                                          ? Colors.teal.shade900
-                                          : Colors.red.shade900,
-                                    ),
-                                  ),
-                                  InkWell(
-                                    onTap: () => _quickAdjustStock(pack, 1),
-                                    child: const Padding(
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: 5,
-                                        vertical: 2,
-                                      ),
-                                      child: Icon(
-                                        Icons.add,
-                                        size: 16,
-                                        color: Colors.green,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.edit, color: Colors.blue),
-                            onPressed: () =>
-                                _showPackDialog(existingPack: pack),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.delete, color: Colors.red),
-                            onPressed: () => _confirmDelete(pack),
-                          ),
-                        ],
-                      ),
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Divider(),
-                              const Text(
-                                'Componentes de 1 unidad de este pack:',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 12,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              ...pack.items.map(
-                                (item) => Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 2.0,
-                                  ),
-                                  child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          '• ${item.productName}',
-                                          style: const TextStyle(fontSize: 13),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        '${item.quantity} uds/pack',
-                                        style: const TextStyle(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
+                  return PackListItem(
+                    pack: pack,
+                    onEdit: (pack) => _showPackDialog(existingPack: pack),
+                    onDelete: (pack) => _confirmDelete(pack),
+                    onQuickAdjust: _quickAdjustStock,
                   );
                 },
               ),

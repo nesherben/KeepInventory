@@ -25,6 +25,11 @@ import '../../packs/data/datasources/pack_local_datasource.dart';
 import '../../promotions/domain/promotion.dart';
 import '../../promotions/data/datasources/promotion_local_datasource.dart';
 
+// Widget Composition
+import 'widgets/product_grid_widget.dart';
+import 'widgets/packs_grid_widget.dart';
+import 'widgets/cart_items_list_widget.dart';
+
 class SalesScreen extends StatefulWidget {
   const SalesScreen({super.key});
 
@@ -298,498 +303,11 @@ class _SalesScreenState extends State<SalesScreen> {
     }
   }
 
-  // --- CUADRÍCULA DE PRODUCTOS ---
-  Widget _buildProductGrid({
-    required double bottomPadding,
-    required int crossAxisCount,
-  }) {
-    return GridView.builder(
-      padding: EdgeInsets.fromLTRB(12, 12, 12, bottomPadding),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: crossAxisCount,
-        childAspectRatio: 0.75,
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
-      ),
-      itemCount: _products.length,
-      itemBuilder: (context, index) {
-        final product = _products[index];
-        final hasStock = product.units > 0;
-        final qtyInCart = _cart[product] ?? 0;
-        final isInCart = qtyInCart > 0;
-
-        Widget cardContent = Card(
-          elevation: isInCart ? 6 : 2,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-            side: BorderSide(
-              color: isInCart
-                  ? Theme.of(context).primaryColor
-                  : Colors.transparent,
-              width: isInCart ? 3.0 : 0.0,
-            ),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
-                child: product.imagePath != null
-                    ? Image.file(File(product.imagePath!), fit: BoxFit.cover)
-                    : Container(
-                        color: Colors.grey[200],
-                        child: const Icon(
-                          Icons.inventory,
-                          color: Colors.grey,
-                          size: 40,
-                        ),
-                      ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(6.0),
-                child: Column(
-                  children: [
-                    Text(
-                      product.name,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                    ),
-                    Text(
-                      '${product.price.toStringAsFixed(2)} €',
-                      style: TextStyle(
-                        color: Theme.of(context).primaryColor,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
-
-        if (!hasStock) {
-          return GestureDetector(
-            onTap: () {
-              ScaffoldMessenger.of(context).clearSnackBars();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Este producto está sin stock.'),
-                  backgroundColor: Colors.redAccent,
-                  duration: Duration(seconds: 2),
-                ),
-              );
-            },
-            child: ColorFiltered(
-              colorFilter: const ColorFilter.matrix([
-                0.2126,
-                0.7152,
-                0.0722,
-                0,
-                0,
-                0.2126,
-                0.7152,
-                0.0722,
-                0,
-                0,
-                0.2126,
-                0.7152,
-                0.0722,
-                0,
-                0,
-                0,
-                0,
-                0,
-                1,
-                0,
-              ]),
-              child: Opacity(opacity: 0.6, child: cardContent),
-            ),
-          );
-        }
-
-        return InkWell(
-          onTap: () => _addToCart(product),
-          child: Stack(
-            children: [
-              Positioned.fill(child: cardContent),
-              Positioned(
-                top: 4,
-                right: 4,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.7),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    '${product.units}',
-                    style: const TextStyle(color: Colors.white, fontSize: 11),
-                  ),
-                ),
-              ),
-              if (isInCart)
-                Positioned(
-                  top: 4,
-                  left: 4,
-                  child: CircleAvatar(
-                    radius: 13,
-                    backgroundColor: Theme.of(context).primaryColor,
-                    child: Text(
-                      '$qtyInCart',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-              if (isInCart)
-                Positioned(
-                  bottom: 4,
-                  right: 4,
-                  child: Material(
-                    color: Colors.red.shade700,
-                    shape: const CircleBorder(),
-                    child: InkWell(
-                      customBorder: const CircleBorder(),
-                      onTap: () => _removeFromCart(product),
-                      onLongPress: () => _removeAllFromCart(product),
-                      child: const Padding(
-                        padding: EdgeInsets.all(6.0),
-                        child: Icon(
-                          Icons.remove,
-                          size: 16,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  // --- CUADRÍCULA DE PACKS ---
-  Widget _buildPacksGrid({
-    required double bottomPadding,
-    required int crossAxisCount,
-  }) {
-    return GridView.builder(
-      padding: EdgeInsets.fromLTRB(12, 12, 12, bottomPadding),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: crossAxisCount,
-        childAspectRatio: 0.75,
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
-      ),
-      itemCount: _packs.length,
-      itemBuilder: (context, index) {
-        final pack = _packs[index];
-        final hasStock = pack.units > 0;
-        final qtyInCart = _cartPacks[pack] ?? 0;
-        final isInCart = qtyInCart > 0;
-
-        Widget cardContent = Card(
-          elevation: isInCart ? 6 : 2,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-            side: BorderSide(
-              color: isInCart
-                  ? Theme.of(context).primaryColor
-                  : Colors.transparent,
-              width: isInCart ? 3.0 : 0.0,
-            ),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
-                child: pack.imagePath != null
-                    ? Image.file(File(pack.imagePath!), fit: BoxFit.cover)
-                    : Container(
-                        color: Colors.grey[200],
-                        child: const Icon(
-                          Icons.card_giftcard,
-                          color: Colors.grey,
-                          size: 40,
-                        ),
-                      ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(6.0),
-                child: Column(
-                  children: [
-                    Text(
-                      pack.name,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                    ),
-                    Text(
-                      '${pack.price.toStringAsFixed(2)} €',
-                      style: TextStyle(
-                        color: Theme.of(context).primaryColor,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
-
-        if (!hasStock) {
-          return GestureDetector(
-            onTap: () {
-              ScaffoldMessenger.of(context).clearSnackBars();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Este pack no tiene stock montado.'),
-                  backgroundColor: Colors.redAccent,
-                  duration: Duration(seconds: 2),
-                ),
-              );
-            },
-            child: ColorFiltered(
-              colorFilter: const ColorFilter.matrix([
-                0.2126,
-                0.7152,
-                0.0722,
-                0,
-                0,
-                0.2126,
-                0.7152,
-                0.0722,
-                0,
-                0,
-                0.2126,
-                0.7152,
-                0.0722,
-                0,
-                0,
-                0,
-                0,
-                0,
-                1,
-                0,
-              ]),
-              child: Opacity(opacity: 0.6, child: cardContent),
-            ),
-          );
-        }
-
-        return InkWell(
-          onTap: () => _addPackToCart(pack),
-          child: Stack(
-            children: [
-              Positioned.fill(child: cardContent),
-              Positioned(
-                top: 4,
-                right: 4,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.7),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    '${pack.units}',
-                    style: const TextStyle(color: Colors.white, fontSize: 11),
-                  ),
-                ),
-              ),
-              if (isInCart)
-                Positioned(
-                  top: 4,
-                  left: 4,
-                  child: CircleAvatar(
-                    radius: 13,
-                    backgroundColor: Theme.of(context).primaryColor,
-                    child: Text(
-                      '$qtyInCart',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-              if (isInCart)
-                Positioned(
-                  bottom: 4,
-                  right: 4,
-                  child: Material(
-                    color: Colors.red.shade700,
-                    shape: const CircleBorder(),
-                    child: InkWell(
-                      customBorder: const CircleBorder(),
-                      onTap: () => _removePackFromCart(pack),
-                      onLongPress: () => _removeAllPackFromCart(pack),
-                      child: const Padding(
-                        padding: EdgeInsets.all(6.0),
-                        child: Icon(
-                          Icons.remove,
-                          size: 16,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        );
-      },
-    );
-  }
+  // --- CUADRÍCULA DE PRODUCTOS Y PACKS ---
+  // Extraído a ProductGridWidget y PacksGridWidget para mejor composición
 
   // --- LISTA DE ITEMS DEL CARRITO ---
-  Widget _buildCartItemsList() {
-    if (_cart.isEmpty && _cartPacks.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.only(top: 48.0),
-        child: Center(
-          child: Text(
-            'El carrito está vacío',
-            style: TextStyle(color: Colors.grey, fontSize: 15),
-          ),
-        ),
-      );
-    }
-
-    return ListView(
-      children: [
-        // Productos individuales
-        ..._cart.keys.map((product) {
-          final qty = _cart[product]!;
-          final itemTotal = _calculateItemTotal(product, qty);
-
-          String? promoText;
-          bool promoActive = false;
-          if (product.promotionId != null &&
-              _promotionsMap.containsKey(product.promotionId)) {
-            final promo = _promotionsMap[product.promotionId!]!;
-            promoText = promo.name;
-            if ((promo.type == 'bundle_fixed_price' ||
-                    promo.type == 'percentage') &&
-                qty >= promo.threshold) {
-              promoActive = true;
-            }
-          }
-
-          return ListTile(
-            title: Text(
-              product.name,
-              style: const TextStyle(fontWeight: FontWeight.w600),
-            ),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('${product.price.toStringAsFixed(2)} € x $qty uds'),
-                if (promoText != null) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    promoActive
-                        ? 'Oferta: $promoText'
-                        : 'Disponible: $promoText',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                      color: promoActive ? Colors.amber.shade800 : Colors.grey,
-                    ),
-                  ),
-                ],
-              ],
-            ),
-            isThreeLine: promoText != null,
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  '${itemTotal.toStringAsFixed(2)} €',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                IconButton(
-                  icon: const Icon(
-                    Icons.remove_circle,
-                    color: Colors.redAccent,
-                    size: 24,
-                  ),
-                  onPressed: () => _removeFromCart(product),
-                  onLongPress: () => _removeAllFromCart(product),
-                ),
-              ],
-            ),
-          );
-        }),
-
-        // Packs
-        ..._cartPacks.keys.map((pack) {
-          final qty = _cartPacks[pack]!;
-          final itemTotal = pack.price * qty;
-
-          return ListTile(
-            title: Text(
-              pack.name,
-              style: const TextStyle(fontWeight: FontWeight.w600),
-            ),
-            subtitle: Text(
-              '${pack.price.toStringAsFixed(2)} € x $qty uds (Pack)',
-            ),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  '${itemTotal.toStringAsFixed(2)} €',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                IconButton(
-                  icon: const Icon(
-                    Icons.remove_circle,
-                    color: Colors.redAccent,
-                    size: 24,
-                  ),
-                  onPressed: () => _removePackFromCart(pack),
-                  onLongPress: () => _removeAllPackFromCart(pack),
-                ),
-              ],
-            ),
-          );
-        }),
-      ],
-    );
-  }
+  // Extraído a CartItemsListWidget para mejor composición
 
   @override
   Widget build(BuildContext context) {
@@ -841,17 +359,27 @@ class _SalesScreenState extends State<SalesScreen> {
                       flex: 3,
                       child: TabBarView(
                         children: [
-                          _buildProductGrid(
+                          ProductGridWidget(
+                            products: _products,
+                            cart: _cart,
                             bottomPadding: 16,
                             crossAxisCount: 4,
+                            onAddToCart: _addToCart,
+                            onRemoveFromCart: _removeFromCart,
+                            onRemoveAllFromCart: _removeAllFromCart,
                           ),
                           _packs.isEmpty
                               ? const Center(
                                   child: Text('No hay packs creados todavía.'),
                                 )
-                              : _buildPacksGrid(
+                              : PacksGridWidget(
+                                  packs: _packs,
+                                  cartPacks: _cartPacks,
                                   bottomPadding: 16,
                                   crossAxisCount: 4,
+                                  onAddToCart: _addPackToCart,
+                                  onRemoveFromCart: _removePackFromCart,
+                                  onRemoveAllFromCart: _removeAllPackFromCart,
                                 ),
                         ],
                       ),
@@ -887,7 +415,18 @@ class _SalesScreenState extends State<SalesScreen> {
                             ),
                           ),
                           const Divider(height: 1),
-                          Expanded(child: _buildCartItemsList()),
+                          Expanded(
+                            child: CartItemsListWidget(
+                              cart: _cart,
+                              cartPacks: _cartPacks,
+                              promotionsMap: _promotionsMap,
+                              calculateItemTotal: _calculateItemTotal,
+                              onRemoveFromCart: _removeFromCart,
+                              onRemoveAllFromCart: _removeAllFromCart,
+                              onRemovePackFromCart: _removePackFromCart,
+                              onRemoveAllPackFromCart: _removeAllPackFromCart,
+                            ),
+                          ),
                           const Divider(height: 1),
                           Padding(
                             padding: const EdgeInsets.all(16.0),
@@ -927,17 +466,27 @@ class _SalesScreenState extends State<SalesScreen> {
                   children: [
                     TabBarView(
                       children: [
-                        _buildProductGrid(
+                        ProductGridWidget(
+                          products: _products,
+                          cart: _cart,
                           bottomPadding: 120,
                           crossAxisCount: 3,
+                          onAddToCart: _addToCart,
+                          onRemoveFromCart: _removeFromCart,
+                          onRemoveAllFromCart: _removeAllFromCart,
                         ),
                         _packs.isEmpty
                             ? const Center(
                                 child: Text('No hay packs creados todavía.'),
                               )
-                            : _buildPacksGrid(
+                            : PacksGridWidget(
+                                packs: _packs,
+                                cartPacks: _cartPacks,
                                 bottomPadding: 120,
                                 crossAxisCount: 3,
+                                onAddToCart: _addPackToCart,
+                                onRemoveFromCart: _removePackFromCart,
+                                onRemoveAllFromCart: _removeAllPackFromCart,
                               ),
                       ],
                     ),
