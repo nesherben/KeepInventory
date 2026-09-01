@@ -34,11 +34,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Map<String, double> _dailySales = {};
   Map<String, double> _dailyNetProfits = {};
 
+  static bool _hasCheckedForUpdate = false;
+
   @override
   void initState() {
     super.initState();
-    _loadMetrics();
-    _checkForAppUpdates(); // Comprobación de actualizaciones al iniciar
+
+    // 💡 2. COMPROBACIÓN: Solo ejecutamos el update si la bandera está en false
+    if (!_hasCheckedForUpdate) {
+      _hasCheckedForUpdate =
+          true; // La marcamos como vista para el resto de la sesión
+
+      // Es recomendable meter los popups/dialogos en un PostFrameCallback
+      // para que Flutter termine de pintar la pantalla antes de saltar el aviso
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _checkForAppUpdates();
+      });
+    }
   }
 
   // Comprobación automática de actualizaciones al arrancar
