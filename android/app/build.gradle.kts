@@ -26,7 +26,7 @@ android {
     signingConfigs {
         create("release") {
             storeFile = file("../key.jks")
-            storePassword = ""
+            storePassword = "" // Pon tus contraseñas si vas a firmar
             keyAlias = "key"
             keyPassword = ""
         }
@@ -34,17 +34,23 @@ android {
 
     buildTypes {
         release {
+            // 💡 RECUERDA: Si quieres la release SIN FIRMAR como hablamos antes, 
+            // cambia esta línea a: signingConfig = null
             signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = false
             isShrinkResources = false
         }
     }
 
-    androidComponents.onVariants { variant ->
-        val versionName = variant.versionName.get()
-        variant.outputs.forEach { output ->
-            val outputProperty = output as com.android.build.gradle.internal.api.ApkVariantOutputImpl
-            outputProperty.outputFileName = "KeepInventory-v$versionName-${variant.name}.apk"
+    // ✅ BLOQUE CORREGIDO PARA RENOMBRAR EL APK AUTOMÁTICAMENTE
+    applicationVariants.all {
+        val variantName = name
+        outputs.all {
+            val outputImpl = this as? com.android.build.gradle.internal.api.ApkVariantOutputImpl
+            if (outputImpl != null) {
+                // Usa flutter.versionName directamente
+                outputImpl.outputFileName = "KeepInventory-v${flutter.versionName}-${variantName}.apk"
+            }
         }
     }
 }
