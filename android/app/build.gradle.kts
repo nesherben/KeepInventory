@@ -1,5 +1,6 @@
 plugins {
     id("com.android.application")
+    id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
@@ -15,19 +16,27 @@ android {
     }
 
     defaultConfig {
-    // Asegúrate de mantener tu applicationId original si era distinto
-    applicationId = "com.example.keepinventory" 
-    minSdk = flutter.minSdkVersion // Listo para SQLite
-    targetSdk = 36
-    versionCode = flutter.versionCode
-    versionName = flutter.versionName
-}
+        applicationId = "com.example.keepinventory"
+        minSdk = flutter.minSdkVersion
+        targetSdk = flutter.targetSdkVersion
+        versionCode = flutter.versionCode
+        versionName = flutter.versionName
+    }
+
+    signingConfigs {
+        create("release") {
+            storeFile = file("../key.jks")
+            storePassword = ""
+            keyAlias = "key"
+            keyPassword = ""
+        }
+    }
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
+            isMinifyEnabled = false
+            isShrinkResources = false
         }
     }
 }

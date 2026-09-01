@@ -24,12 +24,6 @@
 @import package_info_plus;
 #endif
 
-#if __has_include(<share_plus/FPPSharePlusPlugin.h>)
-#import <share_plus/FPPSharePlusPlugin.h>
-#else
-@import share_plus;
-#endif
-
 #if __has_include(<sqflite_darwin/SqflitePlugin.h>)
 #import <sqflite_darwin/SqflitePlugin.h>
 #else
@@ -48,7 +42,6 @@
   [FLTImagePickerPlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTImagePickerPlugin"]];
   [OpenFilePlugin registerWithRegistrar:[registry registrarForPlugin:@"OpenFilePlugin"]];
   [FPPPackageInfoPlusPlugin registerWithRegistrar:[registry registrarForPlugin:@"FPPPackageInfoPlusPlugin"]];
-  [FPPSharePlusPlugin registerWithRegistrar:[registry registrarForPlugin:@"FPPSharePlusPlugin"]];
   [SqflitePlugin registerWithRegistrar:[registry registrarForPlugin:@"SqflitePlugin"]];
   [URLLauncherPlugin registerWithRegistrar:[registry registrarForPlugin:@"URLLauncherPlugin"]];
 }
