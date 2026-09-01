@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 // Rutas actualizadas a la arquitectura modular
 import '../../../core/shared_widgets/app_drawer.dart';
 import '../data/datasources/dashboard_local_datasource.dart';
-import '../domain/repositories/dashboard_repository_impl.dart';
+import '../data/repositories/dashboard_repository_impl.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});

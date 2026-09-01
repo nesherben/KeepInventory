@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/shared_widgets/app_drawer.dart';
 
 // Imports de la feature SALES
-import '../domain/repositories/sale_repository_imp.dart';
+import '../data/repositories/sale_repository_imp.dart';
 import '../domain/sale.dart';
 import '../data/datasources/sale_local_datasource.dart';
 

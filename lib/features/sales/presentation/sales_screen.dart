@@ -6,10 +6,10 @@ import '../../../core/shared_widgets/app_drawer.dart';
 
 // --- IMPORTS MODULARES ---
 // Sales
-import '../../inventory/domain/repositories/product_repository_impl.dart';
-import '../../packs/domain/repositories/pack_repository_impl.dart';
-import '../../promotions/domain/repositories/promotion_repository_impl.dart';
-import '../domain/repositories/sale_repository_imp.dart';
+import '../../inventory/data/repositories/product_repository_impl.dart';
+import '../../packs/data/repositories/pack_repository_impl.dart';
+import '../../promotions/data/repositories/promotion_repository_impl.dart';
+import '../data/repositories/sale_repository_imp.dart';
 import '../domain/sale.dart';
 import '../data/datasources/sale_local_datasource.dart';
 

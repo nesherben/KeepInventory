@@ -8,14 +8,15 @@ import 'package:path/path.dart' as path_utils;
 import '../../../core/shared_widgets/app_drawer.dart';
 
 // Imports de la feature PACKS
-import '../../inventory/domain/repositories/product_repository_impl.dart';
+import '../../inventory/data/repositories/product_repository_impl.dart';
+
+import '../data/repositories/pack_repository_impl.dart';
 import '../domain/pack.dart';
 import '../data/datasources/pack_local_datasource.dart';
 
 // Imports de la feature INVENTORY
 import '../../inventory/domain/product.dart';
 import '../../inventory/data/datasources/product_local_datasource.dart';
-import '../domain/repositories/pack_repository_impl.dart';
 
 class PacksScreen extends StatefulWidget {
   const PacksScreen({super.key});

@@ -9,7 +9,9 @@ import 'package:path/path.dart' as path_utils;
 import '../../../core/shared_widgets/app_drawer.dart';
 
 // Imports de la feature INVENTORY
-import '../../promotions/domain/repositories/promotion_repository_impl.dart';
+
+import '../../promotions/data/repositories/promotion_repository_impl.dart';
+import '../data/repositories/product_repository_impl.dart';
 import '../domain/product.dart';
 import '../data/product_model.dart';
 import '../data/datasources/product_local_datasource.dart';
@@ -17,7 +19,6 @@ import '../data/datasources/product_local_datasource.dart';
 // Imports de la feature PROMOTIONS
 import '../../promotions/domain/promotion.dart';
 import '../../promotions/data/datasources/promotion_local_datasource.dart';
-import '../domain/repositories/product_repository_impl.dart';
 
 class InventoryScreen extends StatefulWidget {
   const InventoryScreen({super.key});

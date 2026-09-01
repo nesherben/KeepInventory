@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/shared_widgets/app_drawer.dart';
+import '../data/repositories/promotion_repository_impl.dart';
 import '../domain/promotion.dart';
 import '../data/datasources/promotion_local_datasource.dart';
-import '../domain/repositories/promotion_repository_impl.dart';
 
 class PromotionsScreen extends StatefulWidget {
   const PromotionsScreen({super.key});
