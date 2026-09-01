@@ -35,109 +35,119 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Map<String, double> _dailyNetProfits = {};
 
   static bool _hasCheckedForUpdate = false;
-
   @override
   void initState() {
     super.initState();
 
-    // 💡 2. COMPROBACIÓN: Solo ejecutamos el update si la bandera está en false
-    if (!_hasCheckedForUpdate) {
-      _hasCheckedForUpdate =
-          true; // La marcamos como vista para el resto de la sesión
+    // 1. Cargamos las métricas de la base de datos nada más arrancar
+    _loadMetrics();
 
-      // Es recomendable meter los popups/dialogos en un PostFrameCallback
-      // para que Flutter termine de pintar la pantalla antes de saltar el aviso
+    // 2. Comprobación de actualizaciones en segundo plano (solo una vez por sesión)
+    if (!_hasCheckedForUpdate) {
+      _hasCheckedForUpdate = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _checkForAppUpdates();
       });
     }
   }
-
-  // Comprobación automática de actualizaciones al arrancar
+// Comprobación automática de actualizaciones al arrancar
   Future<void> _checkForAppUpdates() async {
-    // Esperamos un par de segundos a que cargue la app para no saturar el inicio
-    await Future.delayed(const Duration(seconds: 2));
-    if (!mounted) return;
+    try {
+      // Esperamos un par de segundos a que cargue la app para no saturar el inicio
+      await Future.delayed(const Duration(seconds: 2));
+      if (!mounted) return;
 
-    final updateInfo = await GithubUpdateService.checkForUpdate();
-    if (updateInfo == null || !mounted) return;
+      final updateInfo = await GithubUpdateService.checkForUpdate();
+      if (updateInfo == null || !mounted) return;
 
-    // Si hay update, mostramos el diálogo de actualización
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) {
-        double progress = 0.0;
-        bool isDownloading = false;
+      // Extraemos los valores de forma segura con valores por defecto
+      final String version = updateInfo['version']?.toString() ?? 'Desconocida';
+      final String notes = updateInfo['notes']?.toString() ?? 'Sin notas de la versión.';
+      final String url = updateInfo['url']?.toString() ?? '';
 
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              title: Text(
-                '¡Nueva versión v${updateInfo['version']} disponible!',
-              ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Hay una actualización lista para instalar con mejoras y correcciones:',
-                    style: TextStyle(fontSize: 13),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    constraints: const BoxConstraints(maxHeight: 120),
-                    child: SingleChildScrollView(
-                      child: Text(
-                        updateInfo['notes'],
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey.shade700,
+      if (url.isEmpty) return;
+
+      // Si hay update, mostramos el diálogo de actualización
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (dialogContext) {
+          double progress = 0.0;
+          bool isDownloading = false;
+
+          return StatefulBuilder(
+            builder: (context, setDialogState) {
+              return AlertDialog(
+                title: Text('¡Nueva versión v$version disponible!'),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Hay una actualización lista para instalar con mejoras y correcciones:',
+                      style: TextStyle(fontSize: 13),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      constraints: const BoxConstraints(maxHeight: 120),
+                      child: SingleChildScrollView(
+                        child: Text(
+                          notes,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade700,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  if (isDownloading) ...[
-                    LinearProgressIndicator(value: progress),
-                    const SizedBox(height: 8),
-                    Center(
-                      child: Text(
-                        'Descargando... ${(progress * 100).toStringAsFixed(0)}%',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
+                    const SizedBox(height: 16),
+                    if (isDownloading) ...[
+                      LinearProgressIndicator(value: progress),
+                      const SizedBox(height: 8),
+                      Center(
+                        child: Text(
+                          'Descargando... ${(progress * 100).toStringAsFixed(0)}%',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
+                    ],
+                  ],
+                ),
+                actions: [
+                  if (!isDownloading) ...[
+                    TextButton(
+                      onPressed: () => Navigator.pop(dialogContext),
+                      child: const Text('Más tarde'),
+                    ),
+                    ElevatedButton(
+                      onPressed: () async {
+                        setDialogState(() => isDownloading = true);
+                        
+                        await GithubUpdateService.downloadAndInstall(
+                          url,
+                          (p) {
+                            if (context.mounted) {
+                              setDialogState(() => progress = p);
+                            }
+                          },
+                        );
+                      },
+                      child: const Text('Actualizar ahora'),
                     ),
                   ],
                 ],
-              ),
-              actions: [
-                if (!isDownloading) ...[
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text('Más tarde'),
-                  ),
-                  ElevatedButton(
-                    onPressed: () async {
-                      setDialogState(() => isDownloading = true);
-                      await GithubUpdateService.downloadAndInstall(
-                        updateInfo['url'],
-                        (p) {
-                          setDialogState(() => progress = p);
-                        },
-                      );
-                    },
-                    child: const Text('Actualizar ahora'),
-                  ),
-                ],
-              ],
-            );
-          },
-        );
-      },
-    );
+              );
+            },
+          );
+        },
+      );
+    } catch (e) {
+      print("❌ Error en _checkForAppUpdates: $e");
+    }
   }
 
   Future<void> _loadMetrics() async {

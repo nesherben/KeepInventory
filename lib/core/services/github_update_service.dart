@@ -1,70 +1,73 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
-import 'package:path_provider/path_provider.dart';
 import 'package:open_filex/open_filex.dart';
-
-import 'dart:convert';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:path_provider/path_provider.dart';
 
 class GithubUpdateService {
-  // Configuración directa de tu repositorio público de GitHub
-  static const String githubOwner = 'nesherben';
-  static const String githubRepo = 'KeepInventory';
-
-  // Fecha de compilación por defecto para desarrollo local (ej: año 2000)
-  // En producción se sobrescribe automáticamente al compilar con --dart-define
-  static const String buildTimestampString = String.fromEnvironment(
-    'BUILD_TIMESTAMP',
-    defaultValue: '2000-01-01T00:00:00Z',
-  );
+  // Tu repositorio de GitHub
+  static const String _repoUrl =
+      'https://api.github.com/repos/nesherben/KeepInventory/releases/latest';
 
   static Future<Map<String, dynamic>?> checkForUpdate() async {
     try {
-      final currentBuildDate = DateTime.parse(buildTimestampString);
+      // 1. Obtenemos la versión local de tu pubspec.yaml (ej: "1.0.0")
+      final packageInfo = await PackageInfo.fromPlatform();
+      final localVersion = packageInfo.version;
 
-      final url = Uri.parse(
-        'https://api.github.com/repos/$githubOwner/$githubRepo/releases/latest',
-      );
-      final response = await http.get(
-        url,
-        headers: {'Accept': 'application/vnd.github.v3+json'},
-      );
+      // 2. Consultamos la última release en GitHub
+      final response = await http.get(Uri.parse(_repoUrl));
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
+        final data = json.decode(response.body);
+        String remoteTag = data['tag_name'];
 
-        // Fecha en la que se publicó la Release en GitHub (ej: "2026-09-01T12:00:00Z")
-        final String publishedAtStr = data['published_at'] ?? '';
-        if (publishedAtStr.isEmpty) return null;
+        // Limpiamos la "v" para que "v1.0.1" se quede en "1.0.1"
+        remoteTag = remoteTag.replaceAll('v', '').replaceAll('V', '').trim();
 
-        final remoteReleaseDate = DateTime.parse(publishedAtStr);
-
-        // Si la release de GitHub es más reciente que la fecha de compilación de la app actual:
-        if (remoteReleaseDate.isAfter(currentBuildDate)) {
-          final assets = data['assets'] as List;
-          String? apkUrl;
-          for (var asset in assets) {
-            if (asset['name'].toString().endsWith('.apk')) {
-              apkUrl = asset['browser_download_url'];
-              break;
-            }
+        // 3. Comparamos matemáticamente si la versión de GitHub es mayor
+        if (_isVersionGreater(localVersion, remoteTag)) {
+          // Buscamos el link directo al APK (.apk) si lo subiste en los assets
+          String downloadUrl = data['html_url']; // Fallback a la web
+          if (data['assets'] != null && data['assets'].isNotEmpty) {
+            downloadUrl = data['assets'][0]['browser_download_url'];
           }
 
-          if (apkUrl != null) {
-            return {
-              'version': data['tag_name'] ?? 'Nueva versión',
-              'notes':
-                  data['body'] ??
-                  'Actualización disponible por fecha de compilación.',
-              'url': apkUrl,
-            };
-          }
+          // Devolvemos los datos justo con las claves que espera tu Dashboard
+          return {
+            'version': remoteTag,
+            'notes': data['body'] ?? 'Mejoras y correcciones.',
+            'url': downloadUrl,
+          };
         }
       }
+      return null; // Si estamos en la última versión, no hace nada
     } catch (e) {
-      // Error silencioso de red
+      print("❌ Error comprobando actualizaciones: $e");
+      return null; // Si no hay internet, falla en silencio y el Dashboard carga normal
     }
-    return null;
+  }
+
+  // Compara "1.0.0" con "1.0.1" a prueba de fallos
+  static bool _isVersionGreater(String local, String remote) {
+    List<int> localParts = local
+        .split('.')
+        .map((e) => int.tryParse(e) ?? 0)
+        .toList();
+    List<int> remoteParts = remote
+        .split('.')
+        .map((e) => int.tryParse(e) ?? 0)
+        .toList();
+
+    for (int i = 0; i < remoteParts.length; i++) {
+      int l = i < localParts.length ? localParts[i] : 0;
+      int r = remoteParts[i];
+      if (r > l) return true;
+      if (r < l) return false;
+    }
+    return false;
   }
 
   static Future<void> downloadAndInstall(
@@ -77,30 +80,42 @@ class GithubUpdateService {
       final response = await client.send(request);
 
       final contentLength = response.contentLength ?? 0;
-      List<int> bytes = [];
       int downloaded = 0;
+
+      // 1. Preparamos el archivo ANTES de empezar a descargar
+      final dir =
+          await getExternalStorageDirectory() ?? await getTemporaryDirectory();
+      final filePath = '${dir.path}/update.apk';
+      final file = File(filePath);
+
+      // 2. Abrimos un "grifo" (sink) para escribir directamente en el disco
+      final sink = file.openWrite();
 
       response.stream.listen(
         (List<int> chunk) {
-          bytes.addAll(chunk);
+          // 3. Escribimos el trozo en el disco instantáneamente (salva la RAM)
+          sink.add(chunk);
           downloaded += chunk.length;
           if (contentLength > 0) {
             onProgress(downloaded / contentLength);
           }
         },
         onDone: () async {
-          final dir =
-              await getExternalStorageDirectory() ??
-              await getTemporaryDirectory();
-          final filePath = '${dir.path}/update.apk';
-          final file = File(filePath);
-          await file.writeAsBytes(bytes);
+          // 4. Cerramos grifos e instalamos
+          await sink.close();
+          client.close();
 
           await OpenFilex.open(filePath);
         },
-        onError: (e) {},
+        onError: (e) async {
+          print("❌ Error en la descarga: $e");
+          await sink.close();
+          client.close();
+        },
         cancelOnError: true,
       );
-    } catch (e) {}
+    } catch (e) {
+      print("❌ Excepción al iniciar descarga: $e");
+    }
   }
 }
