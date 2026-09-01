@@ -58,11 +58,25 @@ class ProductGridWidget extends StatelessWidget {
             children: [
               Expanded(
                 child: product.imagePath != null
-                    ? Image.file(File(product.imagePath!), fit: BoxFit.cover)
+                    ? Image.file(
+                        File(product.imagePath!),
+                        fit: BoxFit.cover,
+                        // 💡 EL PARACAÍDAS PARA EL PRODUCTO
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            color: Colors.grey[200],
+                            child: const Icon(
+                              Icons.image_not_supported_outlined,
+                              color: Colors.grey,
+                              size: 40,
+                            ),
+                          );
+                        },
+                      )
                     : Container(
                         color: Colors.grey[200],
                         child: const Icon(
-                          Icons.inventory,
+                          Icons.inventory, // El icono original de inventario
                           color: Colors.grey,
                           size: 40,
                         ),

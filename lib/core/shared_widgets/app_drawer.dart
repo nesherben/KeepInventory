@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../services/database_backup_service.dart';
+
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
 
@@ -120,6 +122,58 @@ class AppDrawer extends StatelessWidget {
             title: const Text('Historial y Ferias'),
             onTap: () {
               Navigator.pushReplacementNamed(context, '/history');
+            },
+          ),
+          const Divider(height: 24, indent: 16, endIndent: 16),
+          ListTile(
+            leading: const Icon(Icons.backup, color: Colors.teal),
+            title: const Text('Hacer copia de seguridad'),
+            subtitle: const Text('Exporta tu base de datos actual'),
+            onTap: () async {
+              bool success = await DatabaseBackupService.exportDatabase();
+              if (success) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      '¡Copia generada correctamente! Guárdala bien.',
+                    ),
+                  ),
+                );
+              }
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.restore, color: Colors.amber),
+            title: const Text('Restaurar base de datos'),
+            subtitle: const Text('Carga un archivo .db guardado'),
+            onTap: () async {
+              // 1. Guardamos las referencias de forma segura ANTES del await
+              final navigator = Navigator.of(context);
+              final messenger = ScaffoldMessenger.of(context);
+              final currentRoute = ModalRoute.of(context)?.settings.name ?? '/';
+
+              // Cerramos el Drawer
+              navigator.pop();
+
+              // 2. Esperamos a que termine la importación nativa
+              bool success = await DatabaseBackupService.importDatabase();
+
+              // 3. Usamos las referencias guardadas con total seguridad
+              if (success) {
+                messenger.showSnackBar(
+                  const SnackBar(
+                    content: Text('¡Base de datos restaurada con éxito!'),
+                  ),
+                );
+                // Recargamos la ruta actual para refrescar la UI al instante
+                navigator.pushReplacementNamed(currentRoute);
+              } else {
+                messenger.showSnackBar(
+                  const SnackBar(
+                    content: Text('No se seleccionó ningún archivo.'),
+                  ),
+                );
+              }
             },
           ),
         ],

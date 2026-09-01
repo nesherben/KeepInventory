@@ -58,7 +58,21 @@ class PacksGridWidget extends StatelessWidget {
             children: [
               Expanded(
                 child: pack.imagePath != null
-                    ? Image.file(File(pack.imagePath!), fit: BoxFit.cover)
+                    ? Image.file(
+                        File(pack.imagePath!),
+                        fit: BoxFit.cover,
+                        // 💡 EL PARACAÍDAS: Entra aquí si la ruta existe en la BD pero la foto física se ha borrado
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            color: Colors.grey[200],
+                            child: const Icon(
+                              Icons.image_not_supported_outlined, // Le ponemos este para que sepas que la foto se perdió
+                              color: Colors.grey,
+                              size: 40,
+                            ),
+                          );
+                        },
+                      )
                     : Container(
                         color: Colors.grey[200],
                         child: const Icon(
