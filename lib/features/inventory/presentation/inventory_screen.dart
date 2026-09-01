@@ -740,9 +740,23 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                                   BorderRadius.circular(6),
                                               child: Image.file(
                                                 File(product.imagePath!),
-                                                width: 42,
-                                                height: 42,
                                                 fit: BoxFit.cover,
+                                                // 💡 EL PARACAÍDAS: Si el archivo físico no existe, pinta un icono gris en lugar de crashear
+                                                errorBuilder:
+                                                    (
+                                                      context,
+                                                      error,
+                                                      stackTrace,
+                                                    ) {
+                                                      return const Center(
+                                                        child: Icon(
+                                                          Icons
+                                                              .image_not_supported_outlined,
+                                                          color: Colors.grey,
+                                                          size: 40,
+                                                        ),
+                                                      );
+                                                    },
                                               ),
                                             )
                                           : Container(

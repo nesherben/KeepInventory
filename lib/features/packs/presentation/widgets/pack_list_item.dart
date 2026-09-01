@@ -36,6 +36,19 @@ class PackListItem extends StatelessWidget {
                   width: 50,
                   height: 50,
                   fit: BoxFit.cover,
+                  // 💡 EL PARACAÍDAS
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      width: 50,
+                      height: 50,
+                      color: Colors.grey[200], // Fondo gris clarito
+                      child: const Icon(
+                        Icons.image_not_supported,
+                        color: Colors.grey,
+                        size: 24,
+                      ),
+                    );
+                  },
                 ),
               )
             : Container(

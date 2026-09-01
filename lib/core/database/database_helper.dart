@@ -19,8 +19,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version:
-          9, // Versión 9 con soporte de columnas para promociones en el ticket
+      version: 10, // Versión 10 con soporte de columnas para promociones en el ticket
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
       onConfigure: _onConfigure,
@@ -83,6 +82,9 @@ class DatabaseHelper {
         historical_price $realType,
         original_price REAL DEFAULT 0.0,
         promotion_id INTEGER,
+        promo_type TEXT,
+        promo_threshold INTEGER,
+        promo_discount REAL,
         FOREIGN KEY (sale_id) REFERENCES sales (id) ON DELETE CASCADE,
         FOREIGN KEY (product_id) REFERENCES products (id) ON DELETE RESTRICT
       )
@@ -229,10 +231,37 @@ class DatabaseHelper {
         );
       } catch (_) {}
     }
+
+    // MIGRACIÓN A VERSIÓN 10: Fuerza la inserción de las columnas en bases de datos atascadas
+    if (oldVersion < 10) {
+      try {
+        await db.execute('ALTER TABLE sale_items ADD COLUMN promo_type TEXT');
+      } catch (_) {}
+
+      try {
+        await db.execute(
+          'ALTER TABLE sale_items ADD COLUMN promo_threshold INTEGER',
+        );
+      } catch (_) {}
+
+      try {
+        await db.execute(
+          'ALTER TABLE sale_items ADD COLUMN promo_discount REAL',
+        );
+      } catch (_) {}
+    }
+  }
+
+  // Cierra y limpia la memoria de la conexión actual
+  Future<void> resetDatabase() async {
+    if (_database != null) {
+      await _database!.close();
+      _database =
+          null; // 💡 ESTA ES LA CLAVE: Obliga a recargar el archivo nuevo
+    }
   }
 
   Future<void> close() async {
-    final db = await instance.database;
-    db.close();
+    await resetDatabase();
   }
 }
