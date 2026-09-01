@@ -34,9 +34,17 @@ android {
 
     buildTypes {
         release {
-            signingConfig = null //signingConfigs.getByName("release")
+            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = false
             isShrinkResources = false
+        }
+    }
+
+    androidComponents.onVariants { variant ->
+        val versionName = variant.versionName.get()
+        variant.outputs.forEach { output ->
+            val outputProperty = output as com.android.build.gradle.internal.api.ApkVariantOutputImpl
+            outputProperty.outputFileName = "KeepInventory-v$versionName-${variant.name}.apk"
         }
     }
 }
