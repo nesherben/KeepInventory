@@ -49,9 +49,8 @@ dev_dependencies:
 flutter_launcher_icons:
   image_path: "assets/icon/app_icon.png"
   android: true
-  ios: true
-  # Si quieres que el icono sea totalmente cuadrado sin que Android le ponga una máscara redonda por defecto:
-  adaptive_icon_background: "#ffffff" # O el color de fondo que prefieras (ej: "#1E1E1E" o transparente)
+  ios: false
+  adaptive_icon_background: "#1e293b" # El color de fondo oscuro que prefieras
   adaptive_icon_foreground: "assets/icon/app_icon.png"
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
