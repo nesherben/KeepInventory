@@ -15,19 +15,31 @@ android {
     }
 
     defaultConfig {
-    // Asegúrate de mantener tu applicationId original si era distinto
-    applicationId = "com.example.keepinventory" 
-    minSdk = flutter.minSdkVersion // Listo para SQLite
-    targetSdk = flutter.targetSdkVersion
-    versionCode = flutter.versionCode
-    versionName = flutter.versionName
-}
+        // Asegúrate de mantener tu applicationId original si era distinto
+        applicationId = "com.example.keepinventory" 
+        minSdk = flutter.minSdkVersion // Listo para SQLite
+        targetSdk = flutter.targetSdkVersion
+        versionCode = flutter.versionCode
+        versionName = flutter.versionName
+    }
+
+    signingConfigs {
+        release {
+            if (project.hasProperty('myStoreFile')) {
+                storeFile file(myStoreFile)
+                storePassword myStorePassword
+                keyAlias myKeyAlias
+                keyPassword myKeyPassword
+            }
+        }
+    }
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            // Asignamos la firma release aquí
+            signingConfig signingConfigs.release
+            minifyEnabled true // Opcional: ofuscar y reducir código
+            shrinkResources true // Opcional
         }
     }
 }

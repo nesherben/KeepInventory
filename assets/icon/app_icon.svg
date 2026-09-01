@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Fondo con degradado oscuro elegante -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+    
+    <!-- Degradado para la caja / cubo principal -->
+    <linearGradient id="boxGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#14b8a6"/>
+      <stop offset="100%" stop-color="#0d9488"/>
+    </linearGradient>
+    
+    <linearGradient id="boxGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2dd4bf"/>
+      <stop offset="100%" stop-color="#14b8a6"/>
+    </linearGradient>
+
+    <!-- Degradado para el acento de inventario / check -->
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24"/>
+      <stop offset="100%" stop-color="#f59e0b"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Fondo redondeado estilo icono de app moderno -->
+  <rect width="512" height="512" rx="115" fill="url(#bgGrad)"/>
+
+  <!-- Símbolo de Caja / Inventario Isométrico -->
+  <g transform="translate(64, 64)">
+    <!-- Tapa superior de la caja -->
+    <polygon points="192,40 344,115 192,190 40,115" fill="url(#boxGrad2)" stroke="#0f172a" stroke-width="4" stroke-linejoin="round"/>
+    
+    <!-- Lateral izquierdo -->
+    <polygon points="40,135 192,210 192,372 40,297" fill="url(#boxGrad1)" stroke="#0f172a" stroke-width="4" stroke-linejoin="round"/>
+    
+    <!-- Lateral derecho -->
+    <polygon points="344,135 192,210 192,372 344,297" fill="#0f766e" stroke="#0f172a" stroke-width="4" stroke-linejoin="round"/>
+
+    <!-- Detalle interior / Elemento de inventario flotante (Estilo cubo de stock) -->
+    <polygon points="192,110 270,150 192,190 114,150" fill="url(#accentGrad)" stroke="#0f172a" stroke-width="3" stroke-linejoin="round"/>
+  </g>
+</svg>
