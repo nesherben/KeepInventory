@@ -1,5 +1,6 @@
 plugins {
     id("com.android.application")
+    id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
@@ -15,31 +16,27 @@ android {
     }
 
     defaultConfig {
-        // Asegúrate de mantener tu applicationId original si era distinto
-        applicationId = "com.example.keepinventory" 
-        minSdk = flutter.minSdkVersion // Listo para SQLite
+        applicationId = "com.example.keepinventory"
+        minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
 
     signingConfigs {
-        release {
-            if (project.hasProperty('myStoreFile')) {
-                storeFile file(myStoreFile)
-                storePassword myStorePassword
-                keyAlias myKeyAlias
-                keyPassword myKeyPassword
-            }
+        create("release") {
+            storeFile = file("../key.jks")
+            storePassword = ""
+            keyAlias = "key"
+            keyPassword = ""
         }
     }
 
     buildTypes {
         release {
-            // Asignamos la firma release aquí
-            signingConfig signingConfigs.release
-            minifyEnabled true // Opcional: ofuscar y reducir código
-            shrinkResources true // Opcional
+            signingConfig = signingConfigs.getByName("release")
+            isMinifyEnabled = false
+            isShrinkResources = false
         }
     }
 }
