@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '../../domain/entities/promotion.dart';
-import '../../data/datasources/local_database_datasource.dart';
-import '../../data/repositories/inventory_repository_impl.dart';
-import '../shared/app_drawer.dart';
+import '../../../core/shared_widgets/app_drawer.dart';
+import '../domain/promotion.dart';
+import '../data/datasources/promotion_local_datasource.dart';
+import '../domain/repositories/promotion_repository_impl.dart';
 
 class PromotionsScreen extends StatefulWidget {
   const PromotionsScreen({super.key});
@@ -13,7 +13,7 @@ class PromotionsScreen extends StatefulWidget {
 }
 
 class _PromotionsScreenState extends State<PromotionsScreen> {
-  final _repository = InventoryRepositoryImpl(LocalDatabaseDatasource());
+  final _repository = PromotionRepositoryImpl(PromotionLocalDatasource());
 
   // Llave y variables para el gesto global de deslizamiento
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();

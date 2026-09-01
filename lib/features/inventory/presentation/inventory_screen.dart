@@ -6,12 +6,18 @@ import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path_utils;
 
-import '../shared/app_drawer.dart';
-import '../../domain/entities/product.dart';
-import '../../domain/entities/promotion.dart';
-import '../../data/models/product_model.dart';
-import '../../data/datasources/local_database_datasource.dart';
-import '../../data/repositories/inventory_repository_impl.dart';
+import '../../../core/shared_widgets/app_drawer.dart';
+
+// Imports de la feature INVENTORY
+import '../../promotions/domain/repositories/promotion_repository_impl.dart';
+import '../domain/product.dart';
+import '../data/product_model.dart';
+import '../data/datasources/product_local_datasource.dart';
+
+// Imports de la feature PROMOTIONS
+import '../../promotions/domain/promotion.dart';
+import '../../promotions/data/datasources/promotion_local_datasource.dart';
+import '../domain/repositories/product_repository_impl.dart';
 
 class InventoryScreen extends StatefulWidget {
   const InventoryScreen({super.key});
@@ -21,7 +27,12 @@ class InventoryScreen extends StatefulWidget {
 }
 
 class _InventoryScreenState extends State<InventoryScreen> {
-  final _repository = InventoryRepositoryImpl(LocalDatabaseDatasource());
+  // Instanciamos ambos repositorios por separado
+  final _productRepository = ProductRepositoryImpl(ProductLocalDatasource());
+  final _promotionRepository = PromotionRepositoryImpl(
+    PromotionLocalDatasource(),
+  );
+
   final ImagePicker _picker = ImagePicker();
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
@@ -34,7 +45,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
   Map<int, Promotion> _promotionsMap = {};
   bool _isLoading = true;
 
-  // Control de Debounce para ajustes rápidos de stock
   final Map<int, Timer> _debounceTimers = {};
   final Map<int, Product> _baseProducts = {};
 
@@ -77,8 +87,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
 
   Future<void> _loadProducts() async {
     setState(() => _isLoading = true);
-    final products = await _repository.getProducts();
-    final promotions = await _repository.getPromotions();
+    final products = await _productRepository.getProducts();
+    final promotions = await _promotionRepository.getPromotions();
 
     final Map<int, Promotion> promoMap = {for (var p in promotions) p.id!: p};
 
@@ -91,7 +101,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
   }
 
   Future<void> _deleteProduct(int id) async {
-    await _repository.deleteProduct(id);
+    await _productRepository.deleteProduct(id);
     _loadProducts();
   }
 
@@ -157,14 +167,14 @@ class _InventoryScreenState extends State<InventoryScreen> {
         final finalProduct = _products.firstWhere((p) => p.id == productId);
 
         if (baseProduct != null && baseProduct.units != finalProduct.units) {
-          await _repository.updateProduct(_toModel(finalProduct));
+          await _productRepository.updateProduct(_toModel(finalProduct));
         }
 
         _baseProducts.remove(productId);
         _debounceTimers.remove(productId);
 
         if (mounted) {
-          final freshProducts = await _repository.getProducts();
+          final freshProducts = await _productRepository.getProducts();
           setState(() {
             _products = freshProducts;
           });
@@ -252,7 +262,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 ),
                 ElevatedButton(
                   onPressed: () async {
-                    await _repository.updateProduct(
+                    await _productRepository.updateProduct(
                       _toModel(
                         product,
                         promotionId: selectedPromotionId,
@@ -313,7 +323,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
           .copy('${directory.path}/$fileName');
 
       final updatedProduct = _toModel(product, imagePath: permanentFile.path);
-      await _repository.updateProduct(updatedProduct);
+      await _productRepository.updateProduct(updatedProduct);
       _loadProducts();
     }
   }
@@ -521,9 +531,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
                       );
 
                       if (isEditing) {
-                        await _repository.updateProduct(savedProduct);
+                        await _productRepository.updateProduct(savedProduct);
                       } else {
-                        await _repository.insertProduct(savedProduct);
+                        await _productRepository.insertProduct(savedProduct);
                       }
 
                       if (context.mounted) {
@@ -761,9 +771,10 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                       keyboardType: TextInputType.text,
                                       onSave: (value) async {
                                         if (value.isNotEmpty) {
-                                          await _repository.updateProduct(
-                                            _toModel(product, name: value),
-                                          );
+                                          await _productRepository
+                                              .updateProduct(
+                                                _toModel(product, name: value),
+                                              );
                                           if (context.mounted) {
                                             Navigator.pop(context);
                                             _loadProducts();
@@ -805,12 +816,13 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                             );
                                             if (newUnits != null &&
                                                 newUnits >= 0) {
-                                              await _repository.updateProduct(
-                                                _toModel(
-                                                  product,
-                                                  units: newUnits,
-                                                ),
-                                              );
+                                              await _productRepository
+                                                  .updateProduct(
+                                                    _toModel(
+                                                      product,
+                                                      units: newUnits,
+                                                    ),
+                                                  );
                                               if (context.mounted) {
                                                 Navigator.pop(context);
                                                 _loadProducts();
@@ -848,9 +860,13 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                           value.replaceAll(',', '.'),
                                         );
                                         if (newPrice != null && newPrice >= 0) {
-                                          await _repository.updateProduct(
-                                            _toModel(product, price: newPrice),
-                                          );
+                                          await _productRepository
+                                              .updateProduct(
+                                                _toModel(
+                                                  product,
+                                                  price: newPrice,
+                                                ),
+                                              );
                                           if (context.mounted) {
                                             Navigator.pop(context);
                                             _loadProducts();
@@ -876,9 +892,13 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                           value.replaceAll(',', '.'),
                                         );
                                         if (newCost != null && newCost >= 0) {
-                                          await _repository.updateProduct(
-                                            _toModel(product, cost: newCost),
-                                          );
+                                          await _productRepository
+                                              .updateProduct(
+                                                _toModel(
+                                                  product,
+                                                  cost: newCost,
+                                                ),
+                                              );
                                           if (context.mounted) {
                                             Navigator.pop(context);
                                             _loadProducts();

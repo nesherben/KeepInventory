@@ -2,13 +2,28 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
-import '../shared/app_drawer.dart';
-import '../../domain/entities/product.dart';
-import '../../domain/entities/sale.dart';
-import '../../domain/entities/promotion.dart';
-import '../../domain/entities/pack.dart';
-import '../../data/datasources/local_database_datasource.dart';
-import '../../data/repositories/inventory_repository_impl.dart';
+import '../../../core/shared_widgets/app_drawer.dart';
+
+// --- IMPORTS MODULARES ---
+// Sales
+import '../../inventory/domain/repositories/product_repository_impl.dart';
+import '../../packs/domain/repositories/pack_repository_impl.dart';
+import '../../promotions/domain/repositories/promotion_repository_impl.dart';
+import '../domain/repositories/sale_repository_imp.dart';
+import '../domain/sale.dart';
+import '../data/datasources/sale_local_datasource.dart';
+
+// Inventory (Products)
+import '../../inventory/domain/product.dart';
+import '../../inventory/data/datasources/product_local_datasource.dart';
+
+// Packs
+import '../../packs/domain/pack.dart';
+import '../../packs/data/datasources/pack_local_datasource.dart';
+
+// Promotions
+import '../../promotions/domain/promotion.dart';
+import '../../promotions/data/datasources/promotion_local_datasource.dart';
 
 class SalesScreen extends StatefulWidget {
   const SalesScreen({super.key});
@@ -18,7 +33,13 @@ class SalesScreen extends StatefulWidget {
 }
 
 class _SalesScreenState extends State<SalesScreen> {
-  final _repository = InventoryRepositoryImpl(LocalDatabaseDatasource());
+  // Instanciamos los 4 repositorios para poder cruzar los datos en el TPV
+  final _saleRepository = SaleRepositoryImpl(SaleLocalDatasource());
+  final _productRepository = ProductRepositoryImpl(ProductLocalDatasource());
+  final _packRepository = PackRepositoryImpl(PackLocalDatasource());
+  final _promotionRepository = PromotionRepositoryImpl(
+    PromotionLocalDatasource(),
+  );
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   double? _startX;
@@ -40,12 +61,15 @@ class _SalesScreenState extends State<SalesScreen> {
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
-    final products = await _repository.getProducts();
-    final packs = await LocalDatabaseDatasource().getPacks();
-    final promotions = await _repository.getPromotions();
+
+    // Cada repositorio nos trae su parte correspondiente
+    final products = await _productRepository.getProducts();
+    final packs = await _packRepository.getPacks();
+    final promotions = await _promotionRepository.getPromotions();
 
     final Map<int, Promotion> promoMap = {for (var p in promotions) p.id!: p};
 
+    if (!mounted) return;
     setState(() {
       _products = products;
       _packs = packs;
@@ -230,7 +254,7 @@ class _SalesScreenState extends State<SalesScreen> {
         historicalPrice: effectiveUnitPrice,
         originalPrice: product.price,
         promotionId: product.promotionId,
-        promoType: pType, // <-- CONGELAMOS LOS DATOS AQUÍ
+        promoType: pType, // CONGELAMOS LA PROMO
         promoThreshold: pThresh,
         promoDiscount: pDisc,
       );
@@ -253,7 +277,8 @@ class _SalesScreenState extends State<SalesScreen> {
       packItems: salePackItems,
     );
 
-    await _repository.processSale(sale);
+    // Guardamos la venta en el repositorio correspondiente
+    await _saleRepository.processSale(sale);
 
     setState(() {
       _cart.clear();

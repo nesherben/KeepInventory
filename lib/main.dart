@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:keepinventory/presentation/promotions/promotions_screen.dart';
 
-import 'presentation/dashboard/dashboard_screen.dart';
-import 'presentation/inventory/inventory_screen.dart';
-import 'presentation/sales/sales_screen.dart';
-import 'presentation/history/history_screen.dart';
-import 'presentation/packs/packs_screen.dart';
+import 'features/dashboard/presentation/dashboard_screen.dart';
+import 'features/inventory/presentation/inventory_screen.dart';
+import 'features/packs/presentation/packs_screen.dart';
+import 'features/promotions/presentation/promotions_screen.dart';
+import 'features/sales/presentation/history_screen.dart';
+import 'features/sales/presentation/sales_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

@@ -1,4 +1,4 @@
-import '../../domain/entities/promotion.dart';
+import '../domain/promotion.dart';
 
 class PromotionModel extends Promotion {
   PromotionModel({

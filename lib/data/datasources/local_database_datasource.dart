@@ -1,10 +1,10 @@
-import 'package:keepinventory/data/models/promotion_model.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../../core/database/database_helper.dart';
-import '../models/product_model.dart';
-import '../../domain/entities/sale.dart';
-import '../../domain/entities/pack.dart';
+import '../../features/inventory/data/product_model.dart';
+import '../../features/packs/domain/pack.dart';
+import '../../features/promotions/data/promotion_model.dart';
+import '../../features/sales/domain/sale.dart';
 
 class LocalDatabaseDatasource {
   final DatabaseHelper _databaseHelper = DatabaseHelper.instance;

@@ -1,10 +1,10 @@
-import '../../domain/entities/product.dart';
-import '../../domain/entities/sale.dart';
-import '../../domain/entities/promotion.dart';
 import '../../domain/repositories/inventory_repository.dart';
+import '../../features/inventory/data/product_model.dart';
+import '../../features/inventory/domain/product.dart';
+import '../../features/promotions/data/promotion_model.dart';
+import '../../features/promotions/domain/promotion.dart';
+import '../../features/sales/domain/sale.dart';
 import '../datasources/local_database_datasource.dart';
-import '../models/product_model.dart';
-import '../models/promotion_model.dart';
 
 class InventoryRepositoryImpl implements InventoryRepository {
   final LocalDatabaseDatasource datasource;
@@ -102,6 +102,7 @@ class InventoryRepositoryImpl implements InventoryRepository {
   }
 
   // NUEVO: Puente para la devolución parcial
+  @override
   Future<void> processPartialRefund({
     required Sale originalSale,
     required Map<SaleItem, int> itemsToRefund,

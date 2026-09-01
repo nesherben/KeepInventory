@@ -1,6 +1,6 @@
-import '../entities/product.dart';
-import '../entities/sale.dart';
-import '../entities/promotion.dart';
+import '../../features/inventory/domain/product.dart';
+import '../../features/promotions/domain/promotion.dart';
+import '../../features/sales/domain/sale.dart';
 
 abstract class InventoryRepository {
   // --- Productos ---

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '../shared/app_drawer.dart';
-import '../../data/datasources/local_database_datasource.dart';
-import '../../data/repositories/inventory_repository_impl.dart';
+// Rutas actualizadas a la arquitectura modular
+import '../../../core/shared_widgets/app_drawer.dart';
+import '../data/datasources/dashboard_local_datasource.dart';
+import '../domain/repositories/dashboard_repository_impl.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -12,7 +13,10 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  final _repository = InventoryRepositoryImpl(LocalDatabaseDatasource());
+  // Instanciamos el nuevo repositorio optimizado
+  final _dashboardRepository = DashboardRepositoryImpl(
+    DashboardLocalDatasource(),
+  );
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   double? _startX;
@@ -38,13 +42,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final revenue = await _repository.getTotalRevenue();
-      final cost = await _repository.getInventoryCost();
-      final expected = await _repository.getExpectedRevenue();
-      final netProfit = await _repository.getActualNetProfit();
-      final dailySales = await _repository.getDailySales();
-      final dailyNetProfits = await _repository.getDailyNetProfits();
+      // Llamadas actualizadas al nuevo repositorio
+      final revenue = await _dashboardRepository.getTotalRevenue();
+      final cost = await _dashboardRepository.getInventoryCost();
+      final expected = await _dashboardRepository.getExpectedRevenue();
+      final netProfit = await _dashboardRepository.getActualNetProfit();
+      final dailySales = await _dashboardRepository.getDailySales();
+      final dailyNetProfits = await _dashboardRepository.getDailyNetProfits();
 
+      if (!mounted) return;
       setState(() {
         _totalRevenue = revenue;
         _inventoryCost = cost;
@@ -55,6 +61,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _isLoading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() => _isLoading = false);
     }
   }

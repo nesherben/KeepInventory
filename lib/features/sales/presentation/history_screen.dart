@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 
-import '../shared/app_drawer.dart';
-import '../../domain/entities/sale.dart';
-import '../../domain/entities/promotion.dart';
-import '../../data/datasources/local_database_datasource.dart';
-import '../../data/repositories/inventory_repository_impl.dart';
+import '../../../core/shared_widgets/app_drawer.dart';
+
+// Imports de la feature SALES
+import '../domain/repositories/sale_repository_imp.dart';
+import '../domain/sale.dart';
+import '../data/datasources/sale_local_datasource.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -14,8 +15,8 @@ class HistoryScreen extends StatefulWidget {
 }
 
 class _HistoryScreenState extends State<HistoryScreen> {
-  final _datasource = LocalDatabaseDatasource();
-  final _repository = InventoryRepositoryImpl(LocalDatabaseDatasource());
+  // Instanciamos SOLO el repositorio de ventas
+  final _saleRepository = SaleRepositoryImpl(SaleLocalDatasource());
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   double? _startX;
@@ -23,29 +24,26 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   bool _isLoading = true;
   List<Sale> _sales = [];
-  Map<int, Promotion> _promotionsMap = {};
 
   @override
   void initState() {
     super.initState();
-    _loadSalesAndPromos();
+    _loadSales();
   }
 
-  Future<void> _loadSalesAndPromos() async {
+  Future<void> _loadSales() async {
     setState(() => _isLoading = true);
-    final sales = await _repository.getSales();
+    final sales = await _saleRepository.getSales();
     sales.sort((a, b) => b.date.compareTo(a.date));
 
-    final promotions = await _repository.getPromotions();
-    _promotionsMap = {for (var p in promotions) p.id!: p};
-
+    if (!mounted) return;
     setState(() {
       _sales = sales;
       _isLoading = false;
     });
   }
 
-  // --- MATEMÁTICAS DE LA PROMOCIÓN PARA REEMBOLSOS ---
+  // --- MATEMÁTICAS DE LA PROMOCIÓN PARA REEMBOLSOS (Usa el Snapshot del Ticket) ---
   double _calculateItemTotal(SaleItem item, int qtyToKeep) {
     if (item.promoType == null ||
         item.promoThreshold == null ||
@@ -88,10 +86,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
       refundItemQuantities.forEach((item, refundQty) {
         if (refundQty > 0) {
           int keptQty = item.quantity - refundQty;
-
-          double originalPrice = item.originalPrice > 0
-              ? item.originalPrice
-              : item.historicalPrice;
 
           // Lo que pagó inicialmente por esta línea de producto
           double originalTotal = item.historicalPrice * item.quantity;
@@ -439,14 +433,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           }
 
                           Navigator.pop(context);
-                          await _datasource.processPartialRefund(
+                          await _saleRepository.processPartialRefund(
                             originalSale: sale,
                             itemsToRefund: refundItemQuantities,
                             packsToRefund: refundPackQuantities,
                             restockPacks: restockPacks,
                             customRefundAmount: customRefund,
                           );
-                          await _loadSalesAndPromos();
+                          await _loadSales();
 
                           if (mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
@@ -470,7 +464,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   void _showAssignFairDialog(String datePrefix, String currentFairName) async {
-    final List<String> existingFairs = await _repository.getAvailableFairs();
+    final List<String> existingFairs = await _saleRepository
+        .getAvailableFairs();
 
     final TextEditingController controller = TextEditingController(
       text: currentFairName,
@@ -539,11 +534,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
               onPressed: () async {
                 final newName = controller.text.trim();
                 Navigator.pop(context);
-                await _repository.updateFairNameForDate(
+                await _saleRepository.updateFairNameForDate(
                   datePrefix,
                   newName.isEmpty ? null : newName,
                 );
-                await _loadSalesAndPromos();
+                await _loadSales();
               },
               child: const Text('Guardar'),
             ),
@@ -608,10 +603,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
         appBar: AppBar(
           title: const Text('Historial y Ferias'),
           actions: [
-            IconButton(
-              icon: const Icon(Icons.refresh),
-              onPressed: _loadSalesAndPromos,
-            ),
+            IconButton(icon: const Icon(Icons.refresh), onPressed: _loadSales),
           ],
         ),
         drawer: const AppDrawer(),

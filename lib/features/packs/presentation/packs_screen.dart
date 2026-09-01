@@ -5,10 +5,17 @@ import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path_utils;
 
-import '../shared/app_drawer.dart';
-import '../../domain/entities/pack.dart';
-import '../../data/models/product_model.dart';
-import '../../data/datasources/local_database_datasource.dart';
+import '../../../core/shared_widgets/app_drawer.dart';
+
+// Imports de la feature PACKS
+import '../../inventory/domain/repositories/product_repository_impl.dart';
+import '../domain/pack.dart';
+import '../data/datasources/pack_local_datasource.dart';
+
+// Imports de la feature INVENTORY
+import '../../inventory/domain/product.dart';
+import '../../inventory/data/datasources/product_local_datasource.dart';
+import '../domain/repositories/pack_repository_impl.dart';
 
 class PacksScreen extends StatefulWidget {
   const PacksScreen({super.key});
@@ -18,16 +25,19 @@ class PacksScreen extends StatefulWidget {
 }
 
 class _PacksScreenState extends State<PacksScreen> {
-  final LocalDatabaseDatasource _datasource = LocalDatabaseDatasource();
+  // Instanciamos los repositorios necesarios
+  final _packRepository = PackRepositoryImpl(PackLocalDatasource());
+  final _productRepository = ProductRepositoryImpl(ProductLocalDatasource());
+
   final ImagePicker _picker = ImagePicker();
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   double? _startX;
   double? _startY;
 
-  bool _isLoading = true;
   List<Pack> _packs = [];
-  List<ProductModel> _products = [];
+  List<Product> _availableProducts = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -37,11 +47,15 @@ class _PacksScreenState extends State<PacksScreen> {
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
-    final packs = await _datasource.getPacks();
-    final products = await _datasource.getProducts();
+
+    // Llamadas a cada repositorio
+    final packs = await _packRepository.getPacks();
+    final products = await _productRepository.getProducts();
+
+    if (!mounted) return;
     setState(() {
       _packs = packs;
-      _products = products;
+      _availableProducts = products;
       _isLoading = false;
     });
   }
@@ -60,7 +74,7 @@ class _PacksScreenState extends State<PacksScreen> {
         items: pack.items,
       );
 
-      await _datasource.updatePack(pack, updatedPack);
+      await _packRepository.updatePack(pack, updatedPack);
       await _loadData();
 
       if (mounted) {
@@ -77,10 +91,12 @@ class _PacksScreenState extends State<PacksScreen> {
     } else if (delta > 0) {
       // 1. Validar que hay stock de todos los componentes en el almacén
       for (var item in pack.items) {
-        final productInStock = _products.cast<ProductModel?>().firstWhere(
-          (p) => p?.id == item.productId,
-          orElse: () => null,
-        );
+        Product? productInStock;
+        try {
+          productInStock = _availableProducts.firstWhere(
+            (p) => p.id == item.productId,
+          );
+        } catch (_) {}
 
         if (productInStock == null || productInStock.units < item.quantity) {
           final missingQty = item.quantity - (productInStock?.units ?? 0);
@@ -110,7 +126,7 @@ class _PacksScreenState extends State<PacksScreen> {
         items: pack.items,
       );
 
-      await _datasource.updatePack(pack, updatedPack);
+      await _packRepository.updatePack(pack, updatedPack);
       await _loadData();
 
       if (mounted) {
@@ -128,7 +144,7 @@ class _PacksScreenState extends State<PacksScreen> {
 
   // --- DIÁLOGO DE CREACIÓN / EDICIÓN ---
   void _showPackDialog({Pack? existingPack}) async {
-    if (_products.isEmpty) {
+    if (_availableProducts.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -150,11 +166,13 @@ class _PacksScreenState extends State<PacksScreen> {
         ? File(existingPack.imagePath!)
         : null;
 
-    final Map<ProductModel, int> selectedItems = {};
+    final Map<Product, int> selectedItems = {};
     if (existingPack != null) {
       for (var item in existingPack.items) {
         try {
-          final prod = _products.firstWhere((p) => p.id == item.productId);
+          final prod = _availableProducts.firstWhere(
+            (p) => p.id == item.productId,
+          );
           selectedItems[prod] = item.quantity;
         } catch (_) {}
       }
@@ -278,9 +296,9 @@ class _PacksScreenState extends State<PacksScreen> {
                         height: 220,
                         child: ListView.builder(
                           shrinkWrap: true,
-                          itemCount: _products.length,
+                          itemCount: _availableProducts.length,
                           itemBuilder: (context, index) {
-                            final product = _products[index];
+                            final product = _availableProducts[index];
                             final qtyPerPack = selectedItems[product] ?? 0;
 
                             int previousDeduction = 0;
@@ -461,9 +479,9 @@ class _PacksScreenState extends State<PacksScreen> {
                     );
 
                     if (existingPack == null) {
-                      await _datasource.createPack(newPack);
+                      await _packRepository.createPack(newPack);
                     } else {
-                      await _datasource.updatePack(existingPack, newPack);
+                      await _packRepository.updatePack(existingPack, newPack);
                     }
 
                     if (context.mounted) {
@@ -507,7 +525,7 @@ class _PacksScreenState extends State<PacksScreen> {
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () async {
-              await _datasource.deletePack(pack);
+              await _packRepository.deletePack(pack);
               if (context.mounted) {
                 Navigator.pop(context);
                 _loadData();
