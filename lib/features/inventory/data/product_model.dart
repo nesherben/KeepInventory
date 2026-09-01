@@ -1,3 +1,5 @@
+import 'dart:typed_data'; // <-- IMPORTANTE: Necesario para Uint8List
+
 import '../domain/product.dart';
 
 class ProductModel extends Product {
@@ -8,6 +10,7 @@ class ProductModel extends Product {
     required super.price,
     required super.cost,
     super.imagePath,
+    super.imageBytes, // <-- NUEVO
     super.promotionId,
     super.isActive,
   });
@@ -20,6 +23,9 @@ class ProductModel extends Product {
       price: (map['price'] as num).toDouble(),
       cost: (map['cost'] as num).toDouble(),
       imagePath: map['image_path'] as String?,
+      imageBytes:
+          map['image_bytes']
+              as Uint8List?, // <-- NUEVO: Extrae el binario de SQLite
       promotionId: map['promotion_id'] as int?,
       isActive: (map['is_active'] as int? ?? 1) == 1, // Lee de SQLite
     );
@@ -33,6 +39,7 @@ class ProductModel extends Product {
       'price': price,
       'cost': cost,
       'image_path': imagePath,
+      'image_bytes': imageBytes, // <-- NUEVO: Guarda el binario en SQLite
       'promotion_id': promotionId,
       'is_active': isActive ? 1 : 0, // Escribe en SQLite
     };

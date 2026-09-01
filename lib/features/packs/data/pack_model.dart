@@ -1,3 +1,5 @@
+import 'dart:typed_data'; // <-- IMPORTANTE: Necesario para Uint8List
+
 class PackItemModel {
   final int? id;
   final int packId;
@@ -33,6 +35,7 @@ class PackModel {
   final String name;
   final double price;
   final String? imagePath;
+  final Uint8List? imageBytes; // <-- NUEVO: Variable para el binario
   final List<PackItemModel> items;
 
   PackModel({
@@ -40,11 +43,17 @@ class PackModel {
     required this.name,
     required this.price,
     this.imagePath,
+    this.imageBytes, // <-- NUEVO
     required this.items,
   });
 
   Map<String, dynamic> toMap() {
-    return {'name': name, 'price': price, 'image_path': imagePath};
+    return {
+      'name': name,
+      'price': price,
+      'image_path': imagePath,
+      'image_bytes': imageBytes, // <-- NUEVO: Guarda en SQLite
+    };
   }
 
   factory PackModel.fromMap(
@@ -56,6 +65,7 @@ class PackModel {
       name: map['name'],
       price: (map['price'] as num).toDouble(),
       imagePath: map['image_path'],
+      imageBytes: map['image_bytes'] as Uint8List?, // <-- NUEVO: Lee de SQLite
       items: items,
     );
   }

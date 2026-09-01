@@ -20,8 +20,10 @@ class PackListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // ACTUALIZADO: Comprobamos si tiene binario (BLOB) O archivo físico
     final bool hasValidImage =
-        pack.imagePath != null && File(pack.imagePath!).existsSync();
+        (pack.imageBytes != null) ||
+        (pack.imagePath != null && File(pack.imagePath!).existsSync());
 
     return Card(
       elevation: 2,
@@ -31,25 +33,33 @@ class PackListItem extends StatelessWidget {
         leading: hasValidImage
             ? ClipRRect(
                 borderRadius: BorderRadius.circular(8),
-                child: Image.file(
-                  File(pack.imagePath!),
-                  width: 50,
-                  height: 50,
-                  fit: BoxFit.cover,
-                  // 💡 EL PARACAÍDAS
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      width: 50,
-                      height: 50,
-                      color: Colors.grey[200], // Fondo gris clarito
-                      child: const Icon(
-                        Icons.image_not_supported,
-                        color: Colors.grey,
-                        size: 24,
+                // ACTUALIZADO: Lógica de dibujado híbrida
+                child: pack.imageBytes != null
+                    ? Image.memory(
+                        pack.imageBytes!,
+                        width: 50,
+                        height: 50,
+                        fit: BoxFit.cover,
+                      )
+                    : Image.file(
+                        File(pack.imagePath!),
+                        width: 50,
+                        height: 50,
+                        fit: BoxFit.cover,
+                        // 💡 EL PARACAÍDAS
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            width: 50,
+                            height: 50,
+                            color: Colors.grey[200], // Fondo gris clarito
+                            child: const Icon(
+                              Icons.image_not_supported,
+                              color: Colors.grey,
+                              size: 24,
+                            ),
+                          );
+                        },
                       ),
-                    );
-                  },
-                ),
               )
             : Container(
                 width: 50,

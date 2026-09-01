@@ -1,3 +1,5 @@
+import 'dart:typed_data'; // <-- IMPORTANTE: Necesario para usar Uint8List
+
 class PackItem {
   final int productId;
   final String productName;
@@ -16,6 +18,7 @@ class Pack {
   final double price;
   final int units; // <--- Stock de unidades montadas de este pack
   final String? imagePath;
+  final Uint8List? imageBytes; // <-- NUEVO: Para el binario de la foto del pack
   final List<PackItem> items;
 
   Pack({
@@ -24,6 +27,7 @@ class Pack {
     required this.price,
     this.units = 1,
     this.imagePath,
+    this.imageBytes, // <-- NUEVO
     required this.items,
   });
 

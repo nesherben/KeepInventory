@@ -1,15 +1,14 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data'; // <-- NUEVO: Para Uint8List
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:path/path.dart' as path_utils;
+import 'package:flutter_image_compress/flutter_image_compress.dart'; // <-- NUEVO: Para comprimir
 
 import '../../../core/shared_widgets/app_drawer.dart';
 
 // Imports de la feature INVENTORY
-
 import '../../promotions/data/repositories/promotion_repository_impl.dart';
 import '../data/repositories/product_repository_impl.dart';
 import '../domain/product.dart';
@@ -64,7 +63,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
     super.dispose();
   }
 
-  // Conversor seguro de Product -> ProductModel (Soporta borrar promoción con clearPromotion)
+  // Conversor seguro de Product -> ProductModel (Ahora soporta imageBytes)
   ProductModel _toModel(
     Product p, {
     String? name,
@@ -72,6 +71,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
     double? price,
     double? cost,
     String? imagePath,
+    Uint8List? imageBytes, // <-- NUEVO
     int? promotionId,
     bool clearPromotion = false,
   }) {
@@ -82,8 +82,24 @@ class _InventoryScreenState extends State<InventoryScreen> {
       price: price ?? p.price,
       cost: cost ?? p.cost,
       imagePath: imagePath ?? p.imagePath,
+      imageBytes: imageBytes ?? p.imageBytes, // <-- NUEVO
       promotionId: clearPromotion ? null : (promotionId ?? p.promotionId),
     );
+  }
+
+  // --- NUEVO MÉTODO PARA COMPRIMIR ---
+  Future<Uint8List?> _compressImage(File file) async {
+    try {
+      return await FlutterImageCompress.compressWithFile(
+        file.absolute.path,
+        minWidth: 400,
+        minHeight: 400,
+        quality: 70, // Compresión ideal para BD
+      );
+    } catch (e) {
+      print("❌ Error comprimiendo la imagen: $e");
+      return null;
+    }
   }
 
   Future<void> _loadProducts() async {
@@ -137,7 +153,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
     );
   }
 
-  // --- AJUSTE RÁPIDO DE STOCK CON ACTUALIZACIÓN OPTIMISTA Y DEBOUNCE ---
   void _updateStockQuickly(Product product, int amountChange) {
     final productId = product.id!;
     final prodIndex = _products.indexWhere((p) => p.id == productId);
@@ -147,19 +162,16 @@ class _InventoryScreenState extends State<InventoryScreen> {
     final newUnits = currentProduct.units + amountChange;
     if (newUnits < 0) return;
 
-    // 1. Guardar estado base antes de la ráfaga de toques
     if (!_baseProducts.containsKey(productId)) {
       _baseProducts[productId] = currentProduct;
     }
 
     final updatedModel = _toModel(currentProduct, units: newUnits);
 
-    // 2. Actualización instantánea en memoria (0 ms de lag)
     setState(() {
       _products[prodIndex] = updatedModel;
     });
 
-    // 3. Debounce: Espera 600 ms tras la última pulsación para guardar en BD
     _debounceTimers[productId]?.cancel();
     _debounceTimers[productId] = Timer(
       const Duration(milliseconds: 600),
@@ -226,7 +238,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
     );
   }
 
-  // --- DIÁLOGO RÁPIDO PARA CAMBIAR SOLO LA PROMOCIÓN ---
   void _showPromotionSelectDialog(Product product) {
     int? selectedPromotionId = product.promotionId;
 
@@ -312,23 +323,29 @@ class _InventoryScreenState extends State<InventoryScreen> {
     );
   }
 
+  // --- ACTUALIZADO: Comprime y guarda como binario en vez de como archivo local ---
   Future<void> _processAndSaveNewImage(
     Product product,
     ImageSource source,
   ) async {
     final pickedFile = await _picker.pickImage(source: source);
     if (pickedFile != null) {
-      final directory = await getApplicationDocumentsDirectory();
-      final fileName = path_utils.basename(pickedFile.path);
-      final permanentFile = await File(pickedFile.path)
-          .copy('${directory.path}/$fileName');
+      final file = File(pickedFile.path);
+      final compressedBytes = await _compressImage(file);
 
-      final updatedProduct = _toModel(product, imagePath: permanentFile.path);
-      await _productRepository.updateProduct(updatedProduct);
-      _loadProducts();
+      if (compressedBytes != null) {
+        final updatedProduct = _toModel(
+          product,
+          imageBytes: compressedBytes,
+          imagePath: null, // Borramos el rastro del archivo viejo
+        );
+        await _productRepository.updateProduct(updatedProduct);
+        _loadProducts();
+      }
     }
   }
 
+  // --- ACTUALIZADO: Formulario de producto adaptado a binario ---
   void _showProductFormDialog({Product? productToEdit}) {
     final formKey = GlobalKey<FormState>();
     final isEditing = productToEdit != null;
@@ -338,9 +355,10 @@ class _InventoryScreenState extends State<InventoryScreen> {
     double price = isEditing ? productToEdit.price : 0.0;
     double cost = isEditing ? productToEdit.cost : 0.0;
     int? selectedPromotionId = isEditing ? productToEdit.promotionId : null;
-    File? selectedImage = (isEditing && productToEdit.imagePath != null)
-        ? File(productToEdit.imagePath!)
-        : null;
+
+    // Variables para manejar la foto (Híbrido)
+    Uint8List? selectedImageBytes = isEditing ? productToEdit.imageBytes : null;
+    String? oldImagePath = isEditing ? productToEdit.imagePath : null;
 
     showDialog(
       context: context,
@@ -371,11 +389,13 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                       source: ImageSource.camera,
                                     );
                                     if (pickedFile != null) {
-                                      setDialogState(
-                                        () => selectedImage = File(
-                                          pickedFile.path,
-                                        ),
+                                      final bytes = await _compressImage(
+                                        File(pickedFile.path),
                                       );
+                                      setDialogState(() {
+                                        selectedImageBytes = bytes;
+                                        oldImagePath = null;
+                                      });
                                     }
                                   },
                                 ),
@@ -388,11 +408,13 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                       source: ImageSource.gallery,
                                     );
                                     if (pickedFile != null) {
-                                      setDialogState(
-                                        () => selectedImage = File(
-                                          pickedFile.path,
-                                        ),
+                                      final bytes = await _compressImage(
+                                        File(pickedFile.path),
                                       );
+                                      setDialogState(() {
+                                        selectedImageBytes = bytes;
+                                        oldImagePath = null;
+                                      });
                                     }
                                   },
                                 ),
@@ -406,14 +428,21 @@ class _InventoryScreenState extends State<InventoryScreen> {
                           decoration: BoxDecoration(
                             color: Colors.grey[200],
                             borderRadius: BorderRadius.circular(10),
-                            image: selectedImage != null
+                            image: selectedImageBytes != null
                                 ? DecorationImage(
-                                    image: FileImage(selectedImage!),
+                                    image: MemoryImage(selectedImageBytes!),
                                     fit: BoxFit.cover,
                                   )
-                                : null,
+                                : (oldImagePath != null
+                                      ? DecorationImage(
+                                          image: FileImage(File(oldImagePath!)),
+                                          fit: BoxFit.cover,
+                                        )
+                                      : null),
                           ),
-                          child: selectedImage == null
+                          child:
+                              (selectedImageBytes == null &&
+                                  oldImagePath == null)
                               ? const Icon(
                                   Icons.add_a_photo,
                                   size: 40,
@@ -504,30 +533,14 @@ class _InventoryScreenState extends State<InventoryScreen> {
                     if (formKey.currentState!.validate()) {
                       formKey.currentState!.save();
 
-                      String? savedImagePath = isEditing
-                          ? productToEdit.imagePath
-                          : null;
-
-                      if (selectedImage != null &&
-                          selectedImage!.path != productToEdit?.imagePath) {
-                        final directory =
-                            await getApplicationDocumentsDirectory();
-                        final fileName = path_utils.basename(
-                          selectedImage!.path,
-                        );
-                        final permanentFile = await selectedImage!.copy(
-                          '${directory.path}/$fileName',
-                        );
-                        savedImagePath = permanentFile.path;
-                      }
-
                       final savedProduct = ProductModel(
                         id: isEditing ? productToEdit.id : null,
                         name: name,
                         units: units,
                         price: price,
                         cost: cost,
-                        imagePath: savedImagePath,
+                        imagePath: oldImagePath,
+                        imageBytes: selectedImageBytes, // Guardamos el BLOB
                         promotionId: selectedPromotionId,
                       );
 
@@ -720,6 +733,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                     ],
                                   ),
                                 ),
+                                // --- ACTUALIZADO: Pintado híbrido (BLOB o File) ---
                                 DataCell(
                                   InkWell(
                                     onTap: () => _editSingleImage(product),
@@ -734,30 +748,41 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                         ),
                                         borderRadius: BorderRadius.circular(8),
                                       ),
-                                      child: product.imagePath != null
+                                      child:
+                                          (product.imageBytes != null ||
+                                              product.imagePath != null)
                                           ? ClipRRect(
                                               borderRadius:
                                                   BorderRadius.circular(6),
-                                              child: Image.file(
-                                                File(product.imagePath!),
-                                                fit: BoxFit.cover,
-                                                // 💡 EL PARACAÍDAS: Si el archivo físico no existe, pinta un icono gris en lugar de crashear
-                                                errorBuilder:
-                                                    (
-                                                      context,
-                                                      error,
-                                                      stackTrace,
-                                                    ) {
-                                                      return const Center(
-                                                        child: Icon(
-                                                          Icons
-                                                              .image_not_supported_outlined,
-                                                          color: Colors.grey,
-                                                          size: 40,
-                                                        ),
-                                                      );
-                                                    },
-                                              ),
+                                              child: product.imageBytes != null
+                                                  ? Image.memory(
+                                                      product.imageBytes!,
+                                                      fit: BoxFit.cover,
+                                                      width: 42,
+                                                      height: 42,
+                                                    )
+                                                  : Image.file(
+                                                      File(product.imagePath!),
+                                                      fit: BoxFit.cover,
+                                                      width: 42,
+                                                      height: 42,
+                                                      errorBuilder:
+                                                          (
+                                                            context,
+                                                            error,
+                                                            stackTrace,
+                                                          ) {
+                                                            return const Center(
+                                                              child: Icon(
+                                                                Icons
+                                                                    .image_not_supported_outlined,
+                                                                color:
+                                                                    Colors.grey,
+                                                                size: 30,
+                                                              ),
+                                                            );
+                                                          },
+                                                    ),
                                             )
                                           : Container(
                                               width: 42,
@@ -926,9 +951,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                 DataCell(
                                   _buildClickableCell(
                                     promoName,
-                                    () => _showPromotionSelectDialog(
-                                      product,
-                                    ), // <-- AQUÍ SE USA EL NUEVO DIÁLOGO
+                                    () => _showPromotionSelectDialog(product),
                                     textColor: hasPromo
                                         ? Colors.amber.shade900
                                         : Colors.grey.shade600,

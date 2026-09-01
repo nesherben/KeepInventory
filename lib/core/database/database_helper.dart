@@ -19,7 +19,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 10, // Versión 10 con soporte de columnas para promociones en el ticket
+      version: 11, // Versión 11 con soporte de columnas para promociones en el ticket
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
       onConfigure: _onConfigure,
@@ -56,6 +56,7 @@ class DatabaseHelper {
         price $realType,
         cost $realType,
         image_path TEXT,
+        image_bytes BLOB,
         promotion_id INTEGER,
         is_active INTEGER NOT NULL DEFAULT 1,
         FOREIGN KEY (promotion_id) REFERENCES promotions (id) ON DELETE SET NULL
@@ -97,7 +98,8 @@ class DatabaseHelper {
         name $textType,
         price $realType,
         units INTEGER NOT NULL DEFAULT 1,
-        image_path TEXT
+        image_path TEXT,
+        image_bytes BLOB
       )
     ''');
 
@@ -248,6 +250,17 @@ class DatabaseHelper {
         await db.execute(
           'ALTER TABLE sale_items ADD COLUMN promo_discount REAL',
         );
+      } catch (_) {}
+    }
+
+    // MIGRACIÓN A VERSIÓN 11 (Soporte para fotos incrustadas)
+    if (oldVersion < 11) {
+      try {
+        await db.execute('ALTER TABLE products ADD COLUMN image_bytes BLOB');
+      } catch (_) {}
+
+      try {
+        await db.execute('ALTER TABLE packs ADD COLUMN image_bytes BLOB');
       } catch (_) {}
     }
   }

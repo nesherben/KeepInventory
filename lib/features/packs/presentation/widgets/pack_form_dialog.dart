@@ -1,9 +1,9 @@
 import 'dart:io';
+import 'dart:typed_data'; // <-- NUEVO: Para Uint8List
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:path/path.dart' as path_utils;
+import 'package:flutter_image_compress/flutter_image_compress.dart'; // <-- NUEVO: Para comprimir
 
 import '../../../inventory/domain/product.dart';
 import '../../domain/pack.dart';
@@ -30,7 +30,10 @@ class _PackFormDialogState extends State<PackFormDialog> {
   late String packName;
   late double packPrice;
   late int packUnits;
-  late File? selectedImage;
+
+  // <-- ACTUALIZADO: Variables híbridas para la foto
+  Uint8List? selectedImageBytes;
+  String? oldImagePath;
 
   // Mapa con los productos añadidos dinámicamente al pack
   late Map<Product, int> selectedItems;
@@ -46,10 +49,13 @@ class _PackFormDialogState extends State<PackFormDialog> {
     packName = widget.existingPack?.name ?? '';
     packPrice = widget.existingPack?.price ?? 0.0;
     packUnits = widget.existingPack?.units ?? 1;
-    selectedImage =
+
+    // <-- ACTUALIZADO: Cargamos los bytes o el path viejo
+    selectedImageBytes = widget.existingPack?.imageBytes;
+    oldImagePath =
         (widget.existingPack?.imagePath != null &&
             File(widget.existingPack!.imagePath!).existsSync())
-        ? File(widget.existingPack!.imagePath!)
+        ? widget.existingPack!.imagePath
         : null;
 
     selectedItems = {};
@@ -62,6 +68,21 @@ class _PackFormDialogState extends State<PackFormDialog> {
           selectedItems[prod] = item.quantity;
         } catch (_) {}
       }
+    }
+  }
+
+  // --- NUEVO: Método de compresión ---
+  Future<Uint8List?> _compressImage(File file) async {
+    try {
+      return await FlutterImageCompress.compressWithFile(
+        file.absolute.path,
+        minWidth: 400,
+        minHeight: 400,
+        quality: 70,
+      );
+    } catch (e) {
+      print("❌ Error comprimiendo la imagen: $e");
+      return null;
     }
   }
 
@@ -109,15 +130,6 @@ class _PackFormDialogState extends State<PackFormDialog> {
       }
     }
 
-    // Procesar imagen
-    String? imagePath = selectedImage?.path;
-    if (selectedImage != null && !selectedImage!.path.contains('app_flutter')) {
-      final dir = await getApplicationDocumentsDirectory();
-      final fileName = path_utils.basename(selectedImage!.path);
-      final saved = await selectedImage!.copy('${dir.path}/$fileName');
-      imagePath = saved.path;
-    }
-
     // Crear lista final de items
     final packItemsList = selectedItems.entries
         .where((e) => e.value > 0)
@@ -130,12 +142,14 @@ class _PackFormDialogState extends State<PackFormDialog> {
         )
         .toList();
 
+    // <-- ACTUALIZADO: Pasamos los bytes y la vieja ruta al modelo
     final newPack = Pack(
       id: widget.existingPack?.id,
       name: packName,
       price: packPrice,
       units: packUnits,
-      imagePath: imagePath,
+      imagePath: oldImagePath,
+      imageBytes: selectedImageBytes, // El binario comprimido
       items: packItemsList,
     );
 
@@ -179,9 +193,14 @@ class _PackFormDialogState extends State<PackFormDialog> {
                                 source: ImageSource.camera,
                               );
                               if (pickedFile != null) {
-                                setState(
-                                  () => selectedImage = File(pickedFile.path),
+                                final bytes = await _compressImage(
+                                  File(pickedFile.path),
                                 );
+                                setState(() {
+                                  selectedImageBytes = bytes;
+                                  oldImagePath =
+                                      null; // Borramos rastro del archivo viejo
+                                });
                               }
                             },
                           ),
@@ -194,9 +213,13 @@ class _PackFormDialogState extends State<PackFormDialog> {
                                 source: ImageSource.gallery,
                               );
                               if (pickedFile != null) {
-                                setState(
-                                  () => selectedImage = File(pickedFile.path),
+                                final bytes = await _compressImage(
+                                  File(pickedFile.path),
                                 );
+                                setState(() {
+                                  selectedImageBytes = bytes;
+                                  oldImagePath = null;
+                                });
                               }
                             },
                           ),
@@ -210,14 +233,20 @@ class _PackFormDialogState extends State<PackFormDialog> {
                     decoration: BoxDecoration(
                       color: Colors.grey[200],
                       borderRadius: BorderRadius.circular(12),
-                      image: selectedImage != null
+                      // <-- ACTUALIZADO: Pintado híbrido
+                      image: selectedImageBytes != null
                           ? DecorationImage(
-                              image: FileImage(selectedImage!),
+                              image: MemoryImage(selectedImageBytes!),
                               fit: BoxFit.cover,
                             )
-                          : null,
+                          : (oldImagePath != null
+                                ? DecorationImage(
+                                    image: FileImage(File(oldImagePath!)),
+                                    fit: BoxFit.cover,
+                                  )
+                                : null),
                     ),
-                    child: selectedImage == null
+                    child: (selectedImageBytes == null && oldImagePath == null)
                         ? const Icon(
                             Icons.add_a_photo,
                             color: Colors.grey,
