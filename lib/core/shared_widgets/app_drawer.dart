@@ -5,6 +5,8 @@ class AppDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final iconColor = Theme.of(context).colorScheme.primary;
+
     return Drawer(
       child: ListView(
         padding: EdgeInsets.zero,
@@ -48,14 +50,14 @@ class AppDrawer extends StatelessWidget {
             ),
           ),
           ListTile(
-            leading: const Icon(Icons.dashboard_outlined),
+            leading: Icon(Icons.dashboard_outlined, color: iconColor),
             title: const Text('Dashboard'),
             onTap: () {
               Navigator.pushReplacementNamed(context, '/');
             },
           ),
           ListTile(
-            leading: const Icon(Icons.point_of_sale_outlined),
+            leading: Icon(Icons.point_of_sale_outlined, color: iconColor),
             title: const Text('Panel de Ventas (TPV)'),
             onTap: () {
               Navigator.pushReplacementNamed(context, '/sales');
@@ -78,21 +80,21 @@ class AppDrawer extends StatelessWidget {
             ),
           ),
           ListTile(
-            leading: const Icon(Icons.inventory_2_outlined),
+            leading: Icon(Icons.inventory_2_outlined, color: iconColor),
             title: const Text('Gestión de Inventario'),
             onTap: () {
               Navigator.pushReplacementNamed(context, '/inventory');
             },
           ),
           ListTile(
-            leading: const Icon(Icons.local_offer_outlined),
+            leading: Icon(Icons.local_offer_outlined, color: iconColor),
             title: const Text('Gestor de Promociones'),
             onTap: () {
               Navigator.pushReplacementNamed(context, '/promotions');
             },
           ),
           ListTile(
-            leading: const Icon(Icons.card_giftcard),
+            leading: Icon(Icons.card_giftcard, color: iconColor),
             title: const Text('Packs y Bundles'),
             onTap: () {
               Navigator.pushReplacementNamed(context, '/packs');
@@ -114,7 +116,7 @@ class AppDrawer extends StatelessWidget {
             ),
           ),
           ListTile(
-            leading: const Icon(Icons.history_outlined),
+            leading: Icon(Icons.history_outlined, color: iconColor),
             title: const Text('Historial y Ferias'),
             onTap: () {
               Navigator.pushReplacementNamed(context, '/history');
