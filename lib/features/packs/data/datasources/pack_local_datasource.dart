@@ -1,7 +1,6 @@
 import 'package:sqflite/sqflite.dart';
 
 import '../../../../core/database/database_helper.dart';
-import '../pack_model.dart';
 import '../../domain/pack.dart'; // Importamos para la clase PackItem (asumiendo que está ahí)
 
 class PackLocalDatasource {

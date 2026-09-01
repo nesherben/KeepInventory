@@ -25,7 +25,6 @@ class ProductModel extends Product {
     );
   }
 
-  @override
   Map<String, dynamic> toMap() {
     return {
       'id': id,

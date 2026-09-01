@@ -501,8 +501,6 @@ class FullScreenChartScreen extends StatefulWidget {
 }
 
 class _FullScreenChartScreenState extends State<FullScreenChartScreen> {
-  double? _startX;
-  double? _startY;
   late bool _privacyActive;
 
   @override
@@ -844,16 +842,13 @@ class _FullScreenChartScreenState extends State<FullScreenChartScreen> {
 
     return Listener(
       onPointerDown: (event) {
-        _startX = event.position.dx;
-        _startY = event.position.dy;
+        // Placeholder para future implementation
       },
       onPointerMove: (event) {
-        _startX = null;
-        _startY = null;
+        // Placeholder para future implementation
       },
       onPointerUp: (_) {
-        _startX = null;
-        _startY = null;
+        // Placeholder para future implementation
       },
       child: Scaffold(
         appBar: AppBar(
