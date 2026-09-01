@@ -5,6 +5,8 @@ import '../../../core/shared_widgets/app_drawer.dart';
 import '../data/datasources/dashboard_local_datasource.dart';
 import '../data/repositories/dashboard_repository_impl.dart';
 
+import '../../../../core/services/github_update_service.dart';
+
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
@@ -36,6 +38,94 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void initState() {
     super.initState();
     _loadMetrics();
+    _checkForAppUpdates(); // Comprobación de actualizaciones al iniciar
+  }
+
+  // Comprobación automática de actualizaciones al arrancar
+  Future<void> _checkForAppUpdates() async {
+    // Esperamos un par de segundos a que cargue la app para no saturar el inicio
+    await Future.delayed(const Duration(seconds: 2));
+    if (!mounted) return;
+
+    final updateInfo = await GithubUpdateService.checkForUpdate();
+    if (updateInfo == null || !mounted) return;
+
+    // Si hay update, mostramos el diálogo de actualización
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        double progress = 0.0;
+        bool isDownloading = false;
+
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: Text(
+                '¡Nueva versión v${updateInfo['version']} disponible!',
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Hay una actualización lista para instalar con mejoras y correcciones:',
+                    style: TextStyle(fontSize: 13),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    constraints: const BoxConstraints(maxHeight: 120),
+                    child: SingleChildScrollView(
+                      child: Text(
+                        updateInfo['notes'],
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade700,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  if (isDownloading) ...[
+                    LinearProgressIndicator(value: progress),
+                    const SizedBox(height: 8),
+                    Center(
+                      child: Text(
+                        'Descargando... ${(progress * 100).toStringAsFixed(0)}%',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+              actions: [
+                if (!isDownloading) ...[
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Más tarde'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () async {
+                      setDialogState(() => isDownloading = true);
+                      await GithubUpdateService.downloadAndInstall(
+                        updateInfo['url'],
+                        (p) {
+                          setDialogState(() => progress = p);
+                        },
+                      );
+                    },
+                    child: const Text('Actualizar ahora'),
+                  ),
+                ],
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   Future<void> _loadMetrics() async {

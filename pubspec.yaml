@@ -30,14 +30,15 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-
-  # The following adds the Cupertino Icons font to your application.
-  # Use with the CupertinoIcons class for iOS style icons.
+  http: ^1.2.0            # Para consultar la API de GitHub
+  package_info_plus: ^8.0.0 # Para leer la versión actual (ej: 1.0.0)
+  url_launcher: ^6.2.6     # Para abrir la descarga o el APK
+  open_filex: ^4.4.0       # Para abrir e iniciar la instalación del APK descargado
+  path_provider: ^2.1.2    # Para guardar temporalmente el APK
   cupertino_icons: ^1.0.8
   sqflite: ^2.4.3
   path: ^1.9.1
   image_picker: ^1.2.3
-  path_provider: ^2.1.6
 
 dev_dependencies:
   flutter_test:
