@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.example.keepinventory"
-    compileSdk = 36
+    compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -23,34 +23,12 @@ android {
         versionName = flutter.versionName
     }
 
-    signingConfigs {
-        create("release") {
-            storeFile = file("../key.jks")
-            storePassword = "" // Pon tus contraseñas si vas a firmar
-            keyAlias = "key"
-            keyPassword = ""
-        }
-    }
+    // 💡 Hemos borrado por completo el bloque 'signingConfigs'
 
     buildTypes {
         release {
-            // 💡 RECUERDA: Si quieres la release SIN FIRMAR como hablamos antes, 
-            // cambia esta línea a: signingConfig = null
-            signingConfig = signingConfigs.getByName("release")
-            isMinifyEnabled = false
-            isShrinkResources = false
-        }
-    }
-
-    // ✅ BLOQUE CORREGIDO PARA RENOMBRAR EL APK AUTOMÁTICAMENTE
-    applicationVariants.all {
-        val variantName = name
-        outputs.all {
-            val outputImpl = this as? com.android.build.gradle.internal.api.ApkVariantOutputImpl
-            if (outputImpl != null) {
-                // Usa flutter.versionName directamente
-                outputImpl.outputFileName = "KeepInventory-v${flutter.versionName}-${variantName}.apk"
-            }
+            // 💡 Usamos la sintaxis correcta de Kotlin para asignar la firma de debug
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
 }
