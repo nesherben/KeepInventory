@@ -69,6 +69,7 @@ class _PacksScreenState extends State<PacksScreen> {
         price: pack.price,
         units: pack.units - 1,
         imagePath: pack.imagePath,
+        imageBytes: pack.imageBytes,
         items: pack.items,
       );
 
@@ -121,6 +122,7 @@ class _PacksScreenState extends State<PacksScreen> {
         price: pack.price,
         units: pack.units + 1,
         imagePath: pack.imagePath,
+        imageBytes: pack.imageBytes,
         items: pack.items,
       );
 

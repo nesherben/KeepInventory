@@ -57,11 +57,10 @@ class ProductGridWidget extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Expanded(
-                child: product.imagePath != null
-                    ? Image.file(
-                        File(product.imagePath!),
+                child: product.imageBytes != null
+                    ? Image.memory(
+                        product.imageBytes!,
                         fit: BoxFit.cover,
-                        // 💡 EL PARACAÍDAS PARA EL PRODUCTO
                         errorBuilder: (context, error, stackTrace) {
                           return Container(
                             color: Colors.grey[200],
@@ -73,14 +72,29 @@ class ProductGridWidget extends StatelessWidget {
                           );
                         },
                       )
-                    : Container(
-                        color: Colors.grey[200],
-                        child: const Icon(
-                          Icons.inventory, // El icono original de inventario
-                          color: Colors.grey,
-                          size: 40,
-                        ),
-                      ),
+                    : (product.imagePath != null
+                          ? Image.file(
+                              File(product.imagePath!),
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  color: Colors.grey[200],
+                                  child: const Icon(
+                                    Icons.image_not_supported_outlined,
+                                    color: Colors.grey,
+                                    size: 40,
+                                  ),
+                                );
+                              },
+                            )
+                          : Container(
+                              color: Colors.grey[200],
+                              child: const Icon(
+                                Icons.inventory,
+                                color: Colors.grey,
+                                size: 40,
+                              ),
+                            )),
               ),
               Padding(
                 padding: const EdgeInsets.all(6.0),

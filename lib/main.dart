@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import 'core/database/database_helper.dart';
+import 'core/services/image_migration_service.dart';
+
 import 'features/dashboard/presentation/dashboard_screen.dart';
 import 'features/inventory/presentation/inventory_screen.dart';
 import 'features/packs/presentation/packs_screen.dart';
@@ -9,6 +12,13 @@ import 'features/sales/presentation/sales_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // 1. Forzamos la inicialización de la base de datos
+  await DatabaseHelper.instance.database;
+
+  // 2. Ejecutamos el script que comprime y guarda las imágenes en BLOB
+  await ImageMigrationService.migrateImagesToDb();
+
   runApp(const KeepInventoryApp());
 }
 

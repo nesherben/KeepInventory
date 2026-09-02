@@ -23,9 +23,7 @@ class ProductModel extends Product {
       price: (map['price'] as num).toDouble(),
       cost: (map['cost'] as num).toDouble(),
       imagePath: map['image_path'] as String?,
-      imageBytes:
-          map['image_bytes']
-              as Uint8List?, // <-- NUEVO: Extrae el binario de SQLite
+      imageBytes: map['image_bytes'] as Uint8List?,
       promotionId: map['promotion_id'] as int?,
       isActive: (map['is_active'] as int? ?? 1) == 1, // Lee de SQLite
     );
@@ -39,9 +37,9 @@ class ProductModel extends Product {
       'price': price,
       'cost': cost,
       'image_path': imagePath,
-      'image_bytes': imageBytes, // <-- NUEVO: Guarda el binario en SQLite
+      'image_bytes': imageBytes, // <--- ¿Estás seguro de que aquí dice exactamente 'image_bytes'?
       'promotion_id': promotionId,
-      'is_active': isActive ? 1 : 0, // Escribe en SQLite
+      'is_active': isActive ? 1 : 0,
     };
   }
 }

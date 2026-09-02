@@ -26,6 +26,7 @@ class ProductRepositoryImpl implements ProductRepository {
       price: product.price,
       cost: product.cost,
       imagePath: product.imagePath,
+      imageBytes: product.imageBytes, // 💡 ¡FALTABA ESTO AQUÍ!
       promotionId: product.promotionId,
       isActive: product.isActive,
     );
@@ -41,6 +42,7 @@ class ProductRepositoryImpl implements ProductRepository {
       price: product.price,
       cost: product.cost,
       imagePath: product.imagePath,
+      imageBytes: product.imageBytes, // 💡 ¡Y AQUÍ TAMBIÉN!
       promotionId: product.promotionId,
       isActive: product.isActive,
     );

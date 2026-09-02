@@ -57,30 +57,44 @@ class PacksGridWidget extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Expanded(
-                child: pack.imagePath != null
-                    ? Image.file(
-                        File(pack.imagePath!),
+                child: pack.imageBytes != null
+                    ? Image.memory(
+                        pack.imageBytes!,
                         fit: BoxFit.cover,
-                        // 💡 EL PARACAÍDAS: Entra aquí si la ruta existe en la BD pero la foto física se ha borrado
                         errorBuilder: (context, error, stackTrace) {
                           return Container(
                             color: Colors.grey[200],
                             child: const Icon(
-                              Icons.image_not_supported_outlined, // Le ponemos este para que sepas que la foto se perdió
+                              Icons.image_not_supported_outlined,
                               color: Colors.grey,
                               size: 40,
                             ),
                           );
                         },
                       )
-                    : Container(
-                        color: Colors.grey[200],
-                        child: const Icon(
-                          Icons.card_giftcard,
-                          color: Colors.grey,
-                          size: 40,
-                        ),
-                      ),
+                    : (pack.imagePath != null
+                          ? Image.file(
+                              File(pack.imagePath!),
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  color: Colors.grey[200],
+                                  child: const Icon(
+                                    Icons.image_not_supported_outlined,
+                                    color: Colors.grey,
+                                    size: 40,
+                                  ),
+                                );
+                              },
+                            )
+                          : Container(
+                              color: Colors.grey[200],
+                              child: const Icon(
+                                Icons.card_giftcard,
+                                color: Colors.grey,
+                                size: 40,
+                              ),
+                            )),
               ),
               Padding(
                 padding: const EdgeInsets.all(6.0),

@@ -1,37 +1,41 @@
-name: Build Flutter APK
+name: Build KeepInventory APK
 
 on:
   push:
-    branches: [ "main", "master" ] # Se ejecutará cada vez que subas cambios a estas ramas
+    branches:
+      - main
+      - master # Por si tu rama principal se llama master
 
 jobs:
   build:
+    name: Build APK Release
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: 📥 Descargar código
         uses: actions/checkout@v4
 
-      - name: Set up Java
+      - name: ☕ Configurar Java 17
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
 
-      - name: Set up Flutter
+      - name: 🐦 Configurar Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.x' # Usa tu versión actual de Flutter
-          cache: true
+          channel: 'stable'
+          cache: true # Acelera compilaciones futuras
 
-      - name: Install dependencies
+      - name: 📦 Instalar dependencias
         run: flutter pub get
 
-      - name: Build APK (Release)
+      - name: 🔨 Compilar APK
         run: flutter build apk --release
 
-      - name: Upload APK artifact
+      - name: 🚀 Guardar APK como Artefacto
         uses: actions/upload-artifact@v4
         with:
-          name: app-release
-          path: build/app/outputs/flutter-apk/app-release.apk
+          name: KeepInventory-APK
+          # El asterisco pilla automáticamente tu APK renombrado
+          path: build/app/outputs/flutter-apk/*.apk

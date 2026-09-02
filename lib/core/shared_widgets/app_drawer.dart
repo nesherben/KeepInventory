@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart'; // 💡 NUEVO IMPORT
 
 import '../services/database_backup_service.dart';
 
@@ -17,20 +18,50 @@ class AppDrawer extends StatelessWidget {
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.primary,
             ),
-            child: const Column(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                Text(
-                  'KeepInventory',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
+                // 💡 AQUÍ ESTÁ LA MAGIA: Un Row para poner la versión junto al nombre
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    const Text(
+                      'KeepInventory',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    FutureBuilder<PackageInfo>(
+                      future: PackageInfo.fromPlatform(),
+                      builder: (context, snapshot) {
+                        final version = snapshot.hasData
+                            ? snapshot.data!.version
+                            : '';
+                        if (version.isEmpty) return const SizedBox.shrink();
+
+                        return Padding(
+                          padding: const EdgeInsets.only(
+                            bottom: 4.0,
+                          ), // Lo alineamos a la base del texto grande
+                          child: Text(
+                            'v$version',
+                            style: const TextStyle(
+                              color: Colors
+                                  .white70, // Discreto y un poco translúcido
+                              fontSize: 12,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
                 ),
-                SizedBox(height: 8),
-                Text(
+                const SizedBox(height: 8),
+                const Text(
                   'Gestión y POS',
                   style: TextStyle(color: Colors.white70, fontSize: 14),
                 ),

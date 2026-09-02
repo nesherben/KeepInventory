@@ -1,7 +1,9 @@
+import 'dart:typed_data'; // 💡 IMPORTANTE: Necesario para Uint8List
+
 import 'package:sqflite/sqflite.dart';
 
 import '../../../../core/database/database_helper.dart';
-import '../../domain/pack.dart'; // Importamos para la clase PackItem (asumiendo que está ahí)
+import '../../domain/pack.dart';
 
 class PackLocalDatasource {
   final DatabaseHelper _databaseHelper = DatabaseHelper.instance;
@@ -43,6 +45,9 @@ class PackLocalDatasource {
           price: (pMap['price'] as num).toDouble(),
           units: pMap['units'] as int? ?? 1,
           imagePath: pMap['image_path'] as String?,
+          imageBytes:
+              pMap['image_bytes']
+                  as Uint8List?, // 💡 ¡AÑADIDO AQUÍ: Lee el BLOB!
           items: items,
         ),
       );
@@ -54,15 +59,16 @@ class PackLocalDatasource {
   Future<void> createPack(Pack pack) async {
     final database = await db;
     await database.transaction((txn) async {
-      // 1. Insertar pack principal con sus unidades
+      // 1. Insertar pack principal incluyendo image_bytes
       final packId = await txn.insert('packs', {
         'name': pack.name,
         'price': pack.price,
         'units': pack.units,
         'image_path': pack.imagePath,
+        'image_bytes': pack.imageBytes, // 💡 ¡AÑADIDO AQUÍ: Guarda el BLOB!
       });
 
-      // 2. Insertar componentes y descontar del inventario principal (cantidad_item * unidades_pack)
+      // 2. Insertar componentes y descontar del inventario principal
       for (var item in pack.items) {
         await txn.insert('pack_items', {
           'pack_id': packId,
@@ -98,7 +104,7 @@ class PackLocalDatasource {
         whereArgs: [oldPack.id],
       );
 
-      // 3. Actualizar datos y nuevas unidades del pack
+      // 3. Actualizar datos, unidades e image_bytes del pack
       await txn.update(
         'packs',
         {
@@ -106,6 +112,8 @@ class PackLocalDatasource {
           'price': newPack.price,
           'units': newPack.units,
           'image_path': newPack.imagePath,
+          'image_bytes':
+              newPack.imageBytes, // 💡 ¡AÑADIDO AQUÍ: Actualiza el BLOB!
         },
         where: 'id = ?',
         whereArgs: [oldPack.id],

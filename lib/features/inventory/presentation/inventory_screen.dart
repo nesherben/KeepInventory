@@ -63,7 +63,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
     super.dispose();
   }
 
-  // Conversor seguro de Product -> ProductModel (Ahora soporta imageBytes)
+  // Conversor seguro de Product -> ProductModel (Actualizado)
   ProductModel _toModel(
     Product p, {
     String? name,
@@ -71,7 +71,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
     double? price,
     double? cost,
     String? imagePath,
-    Uint8List? imageBytes, // <-- NUEVO
+    bool clearImagePath = false, // <-- NUEVO: Obliga a borrar la ruta
+    Uint8List? imageBytes,
     int? promotionId,
     bool clearPromotion = false,
   }) {
@@ -81,24 +82,65 @@ class _InventoryScreenState extends State<InventoryScreen> {
       units: units ?? p.units,
       price: price ?? p.price,
       cost: cost ?? p.cost,
-      imagePath: imagePath ?? p.imagePath,
-      imageBytes: imageBytes ?? p.imageBytes, // <-- NUEVO
+      // Si clearImagePath es true, guardamos null. Si no, usamos el nuevo o mantenemos el viejo
+      imagePath: clearImagePath ? null : (imagePath ?? p.imagePath),
+      imageBytes: imageBytes ?? p.imageBytes,
       promotionId: clearPromotion ? null : (promotionId ?? p.promotionId),
     );
   }
 
-  // --- NUEVO MÉTODO PARA COMPRIMIR ---
+  // Guardado rápido desde la tabla (Actualizado)
+  Future<void> _processAndSaveNewImage(
+    Product product,
+    ImageSource source,
+  ) async {
+    final pickedFile = await _picker.pickImage(source: source);
+    if (pickedFile != null) {
+      final file = File(pickedFile.path);
+      final compressedBytes = await _compressImage(file);
+
+      if (compressedBytes != null) {
+        final updatedProduct = _toModel(
+          product,
+          imageBytes: compressedBytes,
+          clearImagePath:
+              true, // <-- Ahora sí borra el rastro del archivo viejo
+        );
+        await _productRepository.updateProduct(updatedProduct);
+        _loadProducts();
+      }
+    }
+  }
+
+  // --- ACTUALIZADO: Compresión blindada con "salvavidas" ---
   Future<Uint8List?> _compressImage(File file) async {
     try {
-      return await FlutterImageCompress.compressWithFile(
-        file.absolute.path,
+      // 1. Leemos los bytes puros de la cámara/galería (Esto NUNCA falla)
+      final bytes = await file.readAsBytes();
+      print("📸 Tamaño original de la foto: ${bytes.lengthInBytes} bytes");
+
+      // 2. Intentamos comprimir
+      final compressed = await FlutterImageCompress.compressWithList(
+        bytes,
         minWidth: 400,
         minHeight: 400,
-        quality: 70, // Compresión ideal para BD
+        quality: 70,
       );
+
+      // 3. Comprobamos si el compresor hizo su trabajo
+      if (compressed.isNotEmpty) {
+        print(
+          "✅ Compresión exitosa. Nuevo tamaño: ${compressed.lengthInBytes} bytes",
+        );
+        return compressed;
+      } else {
+        print("⚠️ El compresor devolvió vacío. Usando los bytes originales.");
+        return bytes; // Salvavidas: usamos la foto sin comprimir
+      }
     } catch (e) {
-      print("❌ Error comprimiendo la imagen: $e");
-      return null;
+      print("❌ Error crítico en el compresor: $e");
+      // Salvavidas extremo: leemos el archivo original y lo devolvemos
+      return await file.readAsBytes();
     }
   }
 
@@ -323,28 +365,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
     );
   }
 
-  // --- ACTUALIZADO: Comprime y guarda como binario en vez de como archivo local ---
-  Future<void> _processAndSaveNewImage(
-    Product product,
-    ImageSource source,
-  ) async {
-    final pickedFile = await _picker.pickImage(source: source);
-    if (pickedFile != null) {
-      final file = File(pickedFile.path);
-      final compressedBytes = await _compressImage(file);
-
-      if (compressedBytes != null) {
-        final updatedProduct = _toModel(
-          product,
-          imageBytes: compressedBytes,
-          imagePath: null, // Borramos el rastro del archivo viejo
-        );
-        await _productRepository.updateProduct(updatedProduct);
-        _loadProducts();
-      }
-    }
-  }
-
   // --- ACTUALIZADO: Formulario de producto adaptado a binario ---
   void _showProductFormDialog({Product? productToEdit}) {
     final formKey = GlobalKey<FormState>();
@@ -543,7 +563,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
                         imageBytes: selectedImageBytes, // Guardamos el BLOB
                         promotionId: selectedPromotionId,
                       );
-
+                      print(
+                        "🔍 DEBUG - ¿Se van a guardar bytes?: ${selectedImageBytes != null ? 'SÍ (${selectedImageBytes!.length} bytes)' : 'NO (es null)'}",
+                      );
                       if (isEditing) {
                         await _productRepository.updateProduct(savedProduct);
                       } else {
@@ -748,41 +770,44 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                         ),
                                         borderRadius: BorderRadius.circular(8),
                                       ),
+                                      // 💡 LÓGICA BLINDADA: Comprobamos != null y también .isNotEmpty
                                       child:
-                                          (product.imageBytes != null ||
-                                              product.imagePath != null)
+                                          (product.imageBytes != null &&
+                                              product.imageBytes!.isNotEmpty)
                                           ? ClipRRect(
                                               borderRadius:
                                                   BorderRadius.circular(6),
-                                              child: product.imageBytes != null
-                                                  ? Image.memory(
-                                                      product.imageBytes!,
-                                                      fit: BoxFit.cover,
-                                                      width: 42,
-                                                      height: 42,
-                                                    )
-                                                  : Image.file(
-                                                      File(product.imagePath!),
-                                                      fit: BoxFit.cover,
-                                                      width: 42,
-                                                      height: 42,
-                                                      errorBuilder:
-                                                          (
-                                                            context,
-                                                            error,
-                                                            stackTrace,
-                                                          ) {
-                                                            return const Center(
-                                                              child: Icon(
-                                                                Icons
-                                                                    .image_not_supported_outlined,
-                                                                color:
-                                                                    Colors.grey,
-                                                                size: 30,
-                                                              ),
-                                                            );
-                                                          },
-                                                    ),
+                                              child: Image.memory(
+                                                product.imageBytes!,
+                                                fit: BoxFit.cover,
+                                                width: 42,
+                                                height: 42,
+                                              ),
+                                            )
+                                          : (product.imagePath != null &&
+                                                product.imagePath!.isNotEmpty)
+                                          ? ClipRRect(
+                                              borderRadius:
+                                                  BorderRadius.circular(6),
+                                              child: Image.file(
+                                                File(product.imagePath!),
+                                                fit: BoxFit.cover,
+                                                width: 42,
+                                                height: 42,
+                                                errorBuilder:
+                                                    (
+                                                      context,
+                                                      error,
+                                                      stackTrace,
+                                                    ) {
+                                                      return const Icon(
+                                                        Icons
+                                                            .image_not_supported_outlined,
+                                                        color: Colors.grey,
+                                                        size: 30,
+                                                      );
+                                                    },
+                                              ),
                                             )
                                           : Container(
                                               width: 42,

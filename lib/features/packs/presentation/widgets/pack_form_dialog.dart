@@ -71,18 +71,23 @@ class _PackFormDialogState extends State<PackFormDialog> {
     }
   }
 
-  // --- NUEVO: Método de compresión ---
   Future<Uint8List?> _compressImage(File file) async {
     try {
-      return await FlutterImageCompress.compressWithFile(
-        file.absolute.path,
+      final bytes = await file.readAsBytes();
+      final compressed = await FlutterImageCompress.compressWithList(
+        bytes,
         minWidth: 400,
         minHeight: 400,
         quality: 70,
       );
+      if (compressed.isNotEmpty) {
+        return compressed;
+      } else {
+        return bytes;
+      }
     } catch (e) {
       print("❌ Error comprimiendo la imagen: $e");
-      return null;
+      return await file.readAsBytes();
     }
   }
 
@@ -189,6 +194,10 @@ class _PackFormDialogState extends State<PackFormDialog> {
                             title: const Text('Cámara'),
                             onTap: () async {
                               Navigator.pop(context);
+                              await Future.delayed(
+                                const Duration(milliseconds: 200),
+                              );
+
                               final pickedFile = await _picker.pickImage(
                                 source: ImageSource.camera,
                               );
@@ -209,6 +218,12 @@ class _PackFormDialogState extends State<PackFormDialog> {
                             title: const Text('Galería'),
                             onTap: () async {
                               Navigator.pop(context);
+
+                              // 💡 Evita el bloqueo del hilo nativo en Android
+                              await Future.delayed(
+                                const Duration(milliseconds: 200),
+                              );
+
                               final pickedFile = await _picker.pickImage(
                                 source: ImageSource.gallery,
                               );
