@@ -301,16 +301,11 @@ class _SalesScreenState extends State<SalesScreen> {
     }
   }
 
-  // --- CUADRÍCULA DE PRODUCTOS Y PACKS ---
-  // Extraído a ProductGridWidget y PacksGridWidget para mejor composición
-
-  // --- LISTA DE ITEMS DEL CARRITO ---
-  // Extraído a CartItemsListWidget para mejor composición
-
   @override
   Widget build(BuildContext context) {
-    final shortestSide = MediaQuery.of(context).size.shortestSide;
-    final bool isTablet = shortestSide >= 600;
+    // 💡 CAMBIO CLAVE: Detecta si la pantalla está en horizontal (Ancho mayor que Alto)
+    final screenSize = MediaQuery.of(context).size;
+    final bool isLandscape = screenSize.width > screenSize.height;
 
     return Listener(
       onPointerDown: (event) {
@@ -348,9 +343,9 @@ class _SalesScreenState extends State<SalesScreen> {
           drawer: const AppDrawer(),
           body: _isLoading
               ? const Center(child: CircularProgressIndicator())
-              : isTablet
+              : isLandscape
               ?
-                // --- DISEÑO TABLET: TPV DE DOBLE PANEL (SPLIT VIEW) ---
+                // --- DISEÑO HORIZONTAL (SPLIT VIEW) ---
                 Row(
                   children: [
                     Expanded(
@@ -459,7 +454,7 @@ class _SalesScreenState extends State<SalesScreen> {
                   ],
                 )
               :
-                // --- DISEÑO MÓVIL: GRID + CARRITO FLOTANTE DESPLEGABLE ---
+                // --- DISEÑO VERTICAL (GRID + CARRITO FLOTANTE) ---
                 Stack(
                   children: [
                     TabBarView(
