@@ -317,7 +317,8 @@ class _SalesScreenState extends State<SalesScreen> {
         final dx = event.position.dx - _startX!;
         final dy = event.position.dy - _startY!;
 
-        if (dx > 50 && dy.abs() < 30) {
+        // El drawer solo responde a swipes iniciados desde el borde izquierdo.
+        if (_startX! <= 80 && dx > 50 && dy.abs() < 30) {
           _startX = null;
           _startY = null;
           _scaffoldKey.currentState?.openDrawer();
