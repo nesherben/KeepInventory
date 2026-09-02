@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.example.keepinventory"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -23,12 +23,24 @@ android {
         versionName = flutter.versionName
     }
 
-    // 💡 Hemos borrado por completo el bloque 'signingConfigs'
-
     buildTypes {
         release {
-            // 💡 Usamos la sintaxis correcta de Kotlin para asignar la firma de debug
+            // 💡 Asignamos la firma por defecto de debug para esquivar el error de instalación
             signingConfig = signingConfigs.getByName("debug")
+            isMinifyEnabled = false
+            isShrinkResources = false
+        }
+    }
+
+    // ✅ TU BLOQUE RECUPERADO PARA RENOMBRAR EL APK AUTOMÁTICAMENTE
+    applicationVariants.all {
+        val variantName = name
+        outputs.all {
+            val outputImpl = this as? com.android.build.gradle.internal.api.ApkVariantOutputImpl
+            if (outputImpl != null) {
+                // Usa flutter.versionName directamente
+                outputImpl.outputFileName = "KeepInventory-v${flutter.versionName}-${variantName}.apk"
+            }
         }
     }
 }
