@@ -17,8 +17,11 @@ class GithubUpdateService {
       final packageInfo = await PackageInfo.fromPlatform();
       final localVersion = packageInfo.version;
 
-      // 2. Consultamos la última release en GitHub
-      final response = await http.get(Uri.parse(_repoUrl));
+      // 2. Consultamos la última release en GitHub (Añadido User-Agent obligatorio)
+      final response = await http.get(
+        Uri.parse(_repoUrl),
+        headers: {'User-Agent': 'KeepInventory-App'},
+      );
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -35,7 +38,7 @@ class GithubUpdateService {
             downloadUrl = data['assets'][0]['browser_download_url'];
           }
 
-          // Devolvemos los datos justo con las claves que espera tu Dashboard
+          // Devolvemos los datos con las claves que espera tu Dashboard
           return {
             'version': remoteTag,
             'notes': data['body'] ?? 'Mejoras y correcciones.',
@@ -75,47 +78,55 @@ class GithubUpdateService {
     Function(double) onProgress,
   ) async {
     try {
+      print("📥 Iniciando descarga desde: $apkUrl");
       final client = http.Client();
       final request = http.Request('GET', Uri.parse(apkUrl));
       final response = await client.send(request);
 
+      print("📡 Respuesta recibida. Status: ${response.statusCode}");
+
       final contentLength = response.contentLength ?? 0;
       int downloaded = 0;
 
-      // 1. Preparamos el archivo ANTES de empezar a descargar
-      final dir =
-          await getExternalStorageDirectory() ?? await getTemporaryDirectory();
+      // 💡 USAMOS DIRECTAMENTE EL DIRECTORIO TEMPORAL (Evita el fallo de ContextImpl)
+      final dir = await getTemporaryDirectory();
       final filePath = '${dir.path}/update.apk';
       final file = File(filePath);
 
-      // 2. Abrimos un "grifo" (sink) para escribir directamente en el disco
+      if (await file.exists()) {
+        await file.delete();
+      }
+
       final sink = file.openWrite();
 
       response.stream.listen(
         (List<int> chunk) {
-          // 3. Escribimos el trozo en el disco instantáneamente (salva la RAM)
           sink.add(chunk);
           downloaded += chunk.length;
           if (contentLength > 0) {
             onProgress(downloaded / contentLength);
+          } else {
+            onProgress(0.5);
           }
         },
         onDone: () async {
-          // 4. Cerramos grifos e instalamos
+          print("✅ Descarga completada al 100%. Guardando archivo...");
           await sink.close();
           client.close();
 
-          await OpenFilex.open(filePath);
+          print("📦 Abriendo instalador en: $filePath");
+          final result = await OpenFilex.open(filePath);
+          print("📱 Resultado de OpenFilex: ${result.message}");
         },
         onError: (e) async {
-          print("❌ Error en la descarga: $e");
+          print("❌ Error en el stream de descarga: $e");
           await sink.close();
           client.close();
         },
         cancelOnError: true,
       );
     } catch (e) {
-      print("❌ Excepción al iniciar descarga: $e");
+      print("❌ Excepción crítica al iniciar descarga: $e");
     }
   }
 }
