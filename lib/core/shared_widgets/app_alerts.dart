@@ -4,11 +4,10 @@ import 'dart:collection';
 import 'package:flutter/material.dart';
 
 abstract final class AppAlerts {
-  // --- 💡 COLA Y ESTADO DE CONTROL DE ALERTAS ---
   static final Queue<_AlertTask> _queue = Queue<_AlertTask>();
   static bool _isShowing = false;
+  static Timer? _dismissTimer; // 💡 Timer de control absoluto
 
-  // --- ALERTAS DE ÉXITO ---
   static void showSuccess(
     BuildContext context,
     String message, {
@@ -24,7 +23,6 @@ abstract final class AppAlerts {
     );
   }
 
-  // --- ALERTAS DE ERROR ---
   static void showError(
     BuildContext context,
     String message, {
@@ -40,7 +38,6 @@ abstract final class AppAlerts {
     );
   }
 
-  // --- ALERTAS DE ADVERTENCIA / AVISOS ---
   static void showWarning(
     BuildContext context,
     String message, {
@@ -56,7 +53,6 @@ abstract final class AppAlerts {
     );
   }
 
-  // --- ALERTAS DE INFORMACIÓN ---
   static void showInfo(
     BuildContext context,
     String message, {
@@ -72,7 +68,6 @@ abstract final class AppAlerts {
     );
   }
 
-  // --- 💡 GESTOR DE COLA (ENQUEUE) ---
   static void _enqueueAlert({
     required BuildContext context,
     required String message,
@@ -95,7 +90,6 @@ abstract final class AppAlerts {
     _processQueue();
   }
 
-  // --- 💡 PROCESADOR SECUENCIAL DE LA COLA ---
   static void _processQueue() async {
     if (_isShowing || _queue.isEmpty) return;
 
@@ -111,7 +105,7 @@ abstract final class AppAlerts {
     final messenger = ScaffoldMessenger.of(task.context);
 
     // Mostramos el SnackBar
-    final snackBarController = messenger.showSnackBar(
+    messenger.showSnackBar(
       SnackBar(
         elevation: 4,
         behavior: SnackBarBehavior.floating,
@@ -140,29 +134,30 @@ abstract final class AppAlerts {
           label: 'OK',
           textColor: task.textColor.withValues(alpha: 0.7),
           onPressed: () {
+            _dismissTimer?.cancel();
             messenger.hideCurrentSnackBar();
           },
         ),
       ),
     );
 
-    // Esperamos exactamente lo que dura el snackbar (más una pequeña pausa para la animación de salida)
-    try {
-      await snackBarController.closed;
-    } catch (_) {
-      // Por seguridad si el controlador se destruye de forma abrupta
-      await Future.delayed(task.duration);
-    }
+    // 💡 FORZAMOS EL AUTO-DISMISS EXACTO:
+    // Creamos un temporizador estricto que oculta el snackbar por las malas al cumplirse la duración
+    _dismissTimer?.cancel();
+    _dismissTimer = Timer(task.duration, () {
+      try {
+        messenger.hideCurrentSnackBar();
+      } catch (_) {}
+    });
 
-    // Pequeño respiro entre snackbars consecutivos
-    await Future.delayed(const Duration(milliseconds: 150));
+    // Esperamos a que termine el tiempo de la tarea actual antes de liberar la cola
+    await Future.delayed(task.duration + const Duration(milliseconds: 200));
 
     _isShowing = false;
-    _processQueue(); // Llamamos al siguiente elemento de la cola
+    _processQueue();
   }
 }
 
-// --- 💡 CLASE AUXILIAR PARA GUARDAR LOS DATOS DE LA TAREA ---
 class _AlertTask {
   final BuildContext context;
   final String message;
