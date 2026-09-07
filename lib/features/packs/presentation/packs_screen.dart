@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/shared_widgets/app_drawer.dart';
-import '../../../core/shared_widgets/app_alerts.dart'; // 💡 Importamos las nuevas Alertas
+import '../../../core/shared_widgets/app_alerts.dart';
 
 // Imports de la feature PACKS
 import '../../inventory/data/repositories/product_repository_impl.dart';
@@ -31,6 +31,8 @@ class _PacksScreenState extends State<PacksScreen> {
   final _productRepository = ProductRepositoryImpl(ProductLocalDatasource());
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  final TextEditingController _searchController = TextEditingController();
+
   double? _startX;
   double? _startY;
 
@@ -38,16 +40,24 @@ class _PacksScreenState extends State<PacksScreen> {
   List<Product> _availableProducts = [];
   bool _isLoading = true;
 
+  // 💡 Variable para el texto de búsqueda
+  String _searchQuery = '';
+
   @override
   void initState() {
     super.initState();
     _loadData();
   }
 
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
 
-    // Llamadas a cada repositorio
     final packs = await _packRepository.getPacks();
     final products = await _productRepository.getProducts();
 
@@ -78,14 +88,12 @@ class _PacksScreenState extends State<PacksScreen> {
       await _loadData();
 
       if (mounted) {
-        // 💡 Reemplazado por AppAlerts
         AppAlerts.showInfo(
           context,
           '1 unidad de "${pack.name}" desmontada. Componentes devueltos al almacén.',
         );
       }
     } else if (delta > 0) {
-      // 1. Validar que hay stock de todos los componentes en el almacén
       for (var item in pack.items) {
         Product? productInStock;
         try {
@@ -97,7 +105,6 @@ class _PacksScreenState extends State<PacksScreen> {
         if (productInStock == null || productInStock.units < item.quantity) {
           final missingQty = item.quantity - (productInStock?.units ?? 0);
           if (mounted) {
-            // 💡 Reemplazado por AppAlerts de Error
             AppAlerts.showError(
               context,
               'Falta stock de "${item.productName}" (necesitas $missingQty uds más en almacén).',
@@ -107,7 +114,6 @@ class _PacksScreenState extends State<PacksScreen> {
         }
       }
 
-      // 2. Incrementar 1 unidad y recalcular stock en BD
       final updatedPack = Pack(
         id: pack.id,
         name: pack.name,
@@ -122,7 +128,6 @@ class _PacksScreenState extends State<PacksScreen> {
       await _loadData();
 
       if (mounted) {
-        // 💡 Reemplazado por AppAlerts de Éxito
         AppAlerts.showSuccess(
           context,
           '¡1 unidad montada añadida a "${pack.name}"!',
@@ -135,7 +140,6 @@ class _PacksScreenState extends State<PacksScreen> {
   void _showPackDialog({Pack? existingPack}) async {
     if (_availableProducts.isEmpty) {
       if (mounted) {
-        // 💡 Reemplazado por AppAlerts
         AppAlerts.showWarning(
           context,
           'Primero necesitas productos activos en el inventario.',
@@ -161,7 +165,6 @@ class _PacksScreenState extends State<PacksScreen> {
           if (context.mounted) {
             Navigator.pop(context);
             _loadData();
-            // 💡 Reemplazado por AppAlerts
             AppAlerts.showSuccess(
               context,
               existingPack == null
@@ -188,7 +191,6 @@ class _PacksScreenState extends State<PacksScreen> {
             child: const Text('Cancelar'),
           ),
           ElevatedButton(
-            // 💡 Adaptado al theme (modo claro y oscuro)
             style: ElevatedButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.error,
               foregroundColor: Theme.of(context).colorScheme.onError,
@@ -198,7 +200,6 @@ class _PacksScreenState extends State<PacksScreen> {
               if (context.mounted) {
                 Navigator.pop(context);
                 _loadData();
-                // 💡 Usamos showWarning ya que antes el color era naranja
                 AppAlerts.showWarning(
                   context,
                   'Pack eliminado y componentes devueltos al almacén.',
@@ -214,6 +215,21 @@ class _PacksScreenState extends State<PacksScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // 💡 Lógica de filtrado inteligente: Busca por nombre del pack O por nombre de sus componentes internos
+    final filteredPacks = _packs.where((pack) {
+      final query = _searchQuery.toLowerCase();
+
+      // 1. ¿El pack coincide por su propio nombre?
+      final matchesPackName = pack.name.toLowerCase().contains(query);
+
+      // 2. ¿Algún producto dentro del pack coincide con la búsqueda?
+      final matchesItemName = pack.items.any(
+        (item) => item.productName.toLowerCase().contains(query),
+      );
+
+      return matchesPackName || matchesItemName;
+    }).toList();
+
     return Listener(
       onPointerDown: (event) {
         _startX = event.position.dx;
@@ -239,30 +255,72 @@ class _PacksScreenState extends State<PacksScreen> {
         drawer: const AppDrawer(),
         body: _isLoading
             ? const Center(child: CircularProgressIndicator())
-            : _packs.isEmpty
-            ? Center(
-                child: Text(
-                  'No hay packs creados todavía.',
-                  style: TextStyle(
-                    // 💡 Color dinámico para el texto
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    fontSize: 16,
+            : Column(
+                children: [
+                  // --- 💡 BARRA DE BÚSQUEDA ---
+                  Container(
+                    padding: const EdgeInsets.all(12.0),
+                    color: Theme.of(context).colorScheme.surfaceContainerHighest
+                        .withValues(alpha: 0.3),
+                    child: TextField(
+                      controller: _searchController,
+                      onChanged: (value) =>
+                          setState(() => _searchQuery = value),
+                      decoration: InputDecoration(
+                        hintText:
+                            'Buscar pack o producto dentro de los packs...',
+                        prefixIcon: const Icon(Icons.search),
+                        suffixIcon: _searchQuery.isNotEmpty
+                            ? IconButton(
+                                icon: const Icon(Icons.clear),
+                                onPressed: () {
+                                  _searchController.clear();
+                                  setState(() => _searchQuery = '');
+                                },
+                              )
+                            : null,
+                        isDense: true,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        filled: true,
+                        fillColor: Theme.of(context).cardColor,
+                      ),
+                    ),
                   ),
-                ),
-              )
-            : ListView.builder(
-                padding: const EdgeInsets.all(16),
-                itemCount: _packs.length,
-                itemBuilder: (context, index) {
-                  final pack = _packs[index];
 
-                  return PackListItem(
-                    pack: pack,
-                    onEdit: (pack) => _showPackDialog(existingPack: pack),
-                    onDelete: (pack) => _confirmDelete(pack),
-                    onQuickAdjust: _quickAdjustStock,
-                  );
-                },
+                  // --- LISTADO DE PACKS ---
+                  Expanded(
+                    child: filteredPacks.isEmpty
+                        ? Center(
+                            child: Text(
+                              _packs.isEmpty ? 'No hay packs creados todavía.' : 'No se encontraron packs o componentes con ese nombre.',
+                              style: TextStyle(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant,
+                                fontSize: 16,
+                              ),
+                            ),
+                          )
+                        : ListView.builder(
+                            padding: const EdgeInsets.all(16),
+                            itemCount: filteredPacks.length,
+                            itemBuilder: (context, index) {
+                              final pack = filteredPacks[index];
+
+                              return PackListItem(
+                                pack: pack,
+                                onEdit: (pack) =>
+                                    _showPackDialog(existingPack: pack),
+                                onDelete: (pack) => _confirmDelete(pack),
+                                onQuickAdjust: _quickAdjustStock,
+                              );
+                            },
+                          ),
+                  ),
+                ],
               ),
         floatingActionButton: FloatingActionButton(
           onPressed: () => _showPackDialog(),

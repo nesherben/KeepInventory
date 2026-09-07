@@ -357,17 +357,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildMainCard(bool isWideScreen) {
+    // 💡 Obtenemos el color primario actual dinámicamente desde el tema aplicado
+    final primaryColor = Theme.of(context).colorScheme.primary;
+
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [AppColors.primaryDark, AppColors.primary],
+          // Creamos un degradado elegante usando el color primario del tema actual
+          colors: [
+            HSLColor.fromColor(primaryColor)
+                .withLightness(0.35)
+                .toColor(), // Tono más oscuro para el degradado
+            primaryColor, // Color primario actual del tema
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.35),
+            color: primaryColor.withValues(alpha: 0.35),
             blurRadius: 12,
             offset: const Offset(0, 6),
           ),
