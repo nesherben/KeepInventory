@@ -385,161 +385,204 @@ class _InventoryScreenState extends State<InventoryScreen> {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setDialogState) {
-            return AlertDialog(
-              title: Text(isEditing ? 'Editar Producto' : 'Nuevo Producto'),
-              content: Form(
-                key: formKey,
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      GestureDetector(
-                        onTap: () async {
-                          showModalBottomSheet(
-                            context: context,
-                            builder: (context) => Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                ListTile(
-                                  leading: const Icon(Icons.camera_alt),
-                                  title: const Text('Cámara'),
-                                  onTap: () async {
-                                    Navigator.pop(context);
-                                    final pickedFile = await _picker.pickImage(
-                                      source: ImageSource.camera,
-                                    );
-                                    if (pickedFile != null) {
-                                      final bytes = await _compressImage(
-                                        File(pickedFile.path),
-                                      );
-                                      setDialogState(() {
-                                        selectedImageBytes = bytes;
-                                        oldImagePath = null;
-                                      });
-                                    }
-                                  },
-                                ),
-                                ListTile(
-                                  leading: const Icon(Icons.photo_library),
-                                  title: const Text('Galería'),
-                                  onTap: () async {
-                                    Navigator.pop(context);
-                                    final pickedFile = await _picker.pickImage(
-                                      source: ImageSource.gallery,
-                                    );
-                                    if (pickedFile != null) {
-                                      final bytes = await _compressImage(
-                                        File(pickedFile.path),
-                                      );
-                                      setDialogState(() {
-                                        selectedImageBytes = bytes;
-                                        oldImagePath = null;
-                                      });
-                                    }
-                                  },
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                        child: Container(
-                          height: 100,
-                          width: 100,
-                          decoration: BoxDecoration(
-                            color: Colors.grey[200],
-                            borderRadius: BorderRadius.circular(10),
-                            image: selectedImageBytes != null
-                                ? DecorationImage(
-                                    image: MemoryImage(selectedImageBytes!),
-                                    fit: BoxFit.cover,
-                                  )
-                                : (oldImagePath != null
-                                      ? DecorationImage(
-                                          image: FileImage(File(oldImagePath!)),
-                                          fit: BoxFit.cover,
-                                        )
-                                      : null),
+            final isLandscape =
+                MediaQuery.of(context).size.width >
+                MediaQuery.of(context).size.height;
+            final fieldWidth = isLandscape ? 320.0 : 520.0;
+
+            final imagePicker = SizedBox(
+              width: 120,
+              child: Center(
+                child: GestureDetector(
+                  onTap: () async {
+                    showModalBottomSheet(
+                      context: context,
+                      builder: (context) => Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          ListTile(
+                            leading: const Icon(Icons.camera_alt),
+                            title: const Text('Cámara'),
+                            onTap: () async {
+                              Navigator.pop(context);
+                              final pickedFile = await _picker.pickImage(
+                                source: ImageSource.camera,
+                              );
+                              if (pickedFile != null) {
+                                final bytes = await _compressImage(
+                                  File(pickedFile.path),
+                                );
+                                setDialogState(() {
+                                  selectedImageBytes = bytes;
+                                  oldImagePath = null;
+                                });
+                              }
+                            },
                           ),
-                          child:
-                              (selectedImageBytes == null &&
-                                  oldImagePath == null)
-                              ? const Icon(
-                                  Icons.add_a_photo,
-                                  size: 40,
-                                  color: Colors.grey,
-                                )
-                              : null,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        initialValue: name,
-                        decoration: const InputDecoration(
-                          labelText: 'Nombre del producto',
-                        ),
-                        validator: (value) =>
-                            value == null || value.isEmpty ? 'Requerido' : null,
-                        onSaved: (value) => name = value!,
-                      ),
-                      TextFormField(
-                        initialValue: units.toString(),
-                        decoration: const InputDecoration(
-                          labelText: 'Unidades en stock',
-                        ),
-                        keyboardType: TextInputType.number,
-                        validator: (value) =>
-                            value == null || value.isEmpty ? 'Requerido' : null,
-                        onSaved: (value) => units = int.parse(value!),
-                      ),
-                      TextFormField(
-                        initialValue: price == 0.0 ? '' : price.toString(),
-                        decoration: const InputDecoration(
-                          labelText: 'Precio de venta (€)',
-                        ),
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        validator: (value) =>
-                            value == null || value.isEmpty ? 'Requerido' : null,
-                        onSaved: (value) =>
-                            price = double.parse(value!.replaceAll(',', '.')),
-                      ),
-                      TextFormField(
-                        initialValue: cost == 0.0 ? '' : cost.toString(),
-                        decoration: const InputDecoration(
-                          labelText: 'Coste de adquisición (€)',
-                        ),
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        validator: (value) =>
-                            value == null || value.isEmpty ? 'Requerido' : null,
-                        onSaved: (value) =>
-                            cost = double.parse(value!.replaceAll(',', '.')),
-                      ),
-                      const SizedBox(height: 16),
-                      DropdownButtonFormField<int?>(
-                        initialValue: selectedPromotionId,
-                        decoration: const InputDecoration(
-                          labelText: 'Promoción Aplicada',
-                        ),
-                        items: [
-                          const DropdownMenuItem(
-                            value: null,
-                            child: Text('Sin promoción'),
-                          ),
-                          ..._promotionsMap.values.map(
-                            (p) => DropdownMenuItem(
-                              value: p.id,
-                              child: Text(p.name),
-                            ),
+                          ListTile(
+                            leading: const Icon(Icons.photo_library),
+                            title: const Text('Galería'),
+                            onTap: () async {
+                              Navigator.pop(context);
+                              final pickedFile = await _picker.pickImage(
+                                source: ImageSource.gallery,
+                              );
+                              if (pickedFile != null) {
+                                final bytes = await _compressImage(
+                                  File(pickedFile.path),
+                                );
+                                setDialogState(() {
+                                  selectedImageBytes = bytes;
+                                  oldImagePath = null;
+                                });
+                              }
+                            },
                           ),
                         ],
-                        onChanged: (value) {
-                          setDialogState(() => selectedPromotionId = value);
-                        },
                       ),
-                    ],
+                    );
+                  },
+                  child: Container(
+                    height: 100,
+                    width: 100,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[200],
+                      borderRadius: BorderRadius.circular(10),
+                      image: selectedImageBytes != null
+                          ? DecorationImage(
+                              image: MemoryImage(selectedImageBytes!),
+                              fit: BoxFit.cover,
+                            )
+                          : (oldImagePath != null
+                                ? DecorationImage(
+                                    image: FileImage(File(oldImagePath!)),
+                                    fit: BoxFit.cover,
+                                  )
+                                : null),
+                    ),
+                    child: selectedImageBytes == null && oldImagePath == null
+                        ? const Icon(
+                            Icons.add_a_photo,
+                            size: 40,
+                            color: Colors.grey,
+                          )
+                        : null,
+                  ),
+                ),
+              ),
+            );
+            final nameField = TextFormField(
+              initialValue: name,
+              decoration: const InputDecoration(
+                labelText: 'Nombre del producto',
+              ),
+              validator: (value) =>
+                  value == null || value.isEmpty ? 'Requerido' : null,
+              onSaved: (value) => name = value!,
+            );
+
+            return AlertDialog(
+              title: Text(isEditing ? 'Editar Producto' : 'Nuevo Producto'),
+              content: SizedBox(
+                width: isLandscape ? 760 : 520,
+                child: Form(
+                  key: formKey,
+                  child: SingleChildScrollView(
+                    child: Wrap(
+                      alignment: WrapAlignment.center,
+                      spacing: 12,
+                      runSpacing: 12,
+                      children: [
+                        if (isLandscape)
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              imagePicker,
+                              const SizedBox(width: 16),
+                              SizedBox(width: 320, child: nameField),
+                            ],
+                          )
+                        else ...[
+                          SizedBox(width: fieldWidth, child: imagePicker),
+                          SizedBox(width: fieldWidth, child: nameField),
+                        ],
+                        SizedBox(
+                          width: fieldWidth,
+                          child: TextFormField(
+                            initialValue: units.toString(),
+                            decoration: const InputDecoration(
+                              labelText: 'Unidades en stock',
+                            ),
+                            keyboardType: TextInputType.number,
+                            validator: (value) => value == null || value.isEmpty
+                                ? 'Requerido'
+                                : null,
+                            onSaved: (value) => units = int.parse(value!),
+                          ),
+                        ),
+                        SizedBox(
+                          width: fieldWidth,
+                          child: TextFormField(
+                            initialValue: price == 0.0 ? '' : price.toString(),
+                            decoration: const InputDecoration(
+                              labelText: 'Precio de venta (€)',
+                            ),
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            validator: (value) => value == null || value.isEmpty
+                                ? 'Requerido'
+                                : null,
+                            onSaved: (value) => price = double.parse(
+                              value!.replaceAll(',', '.'),
+                            ),
+                          ),
+                        ),
+                        SizedBox(
+                          width: fieldWidth,
+                          child: TextFormField(
+                            initialValue: cost == 0.0 ? '' : cost.toString(),
+                            decoration: const InputDecoration(
+                              labelText: 'Coste de adquisición (€)',
+                            ),
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            validator: (value) => value == null || value.isEmpty
+                                ? 'Requerido'
+                                : null,
+                            onSaved: (value) => cost = double.parse(
+                              value!.replaceAll(',', '.'),
+                            ),
+                          ),
+                        ),
+                        SizedBox(
+                          width: fieldWidth,
+                          child: DropdownButtonFormField<int?>(
+                            initialValue: selectedPromotionId,
+                            decoration: const InputDecoration(
+                              labelText: 'Promoción Aplicada',
+                            ),
+                            items: [
+                              const DropdownMenuItem(
+                                value: null,
+                                child: Text('Sin promoción'),
+                              ),
+                              ..._promotionsMap.values.map(
+                                (p) => DropdownMenuItem(
+                                  value: p.id,
+                                  child: Text(p.name),
+                                ),
+                              ),
+                            ],
+                            onChanged: (value) {
+                              setDialogState(() => selectedPromotionId = value);
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),

@@ -52,80 +52,102 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setDialogState) {
+            final isLandscape =
+                MediaQuery.of(context).size.width >
+                MediaQuery.of(context).size.height;
+            final fieldWidth = isLandscape ? 320.0 : 520.0;
+
             return AlertDialog(
               title: Text(isEditing ? 'Editar Promoción' : 'Nueva Promoción'),
-              content: Form(
-                key: formKey,
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      TextFormField(
-                        initialValue: name,
-                        decoration: const InputDecoration(
-                          labelText: 'Nombre de la oferta (ej: Pack 3x12€)',
-                        ),
-                        validator: (value) =>
-                            value == null || value.isEmpty ? 'Requerido' : null,
-                        onSaved: (value) => name = value!,
-                      ),
-                      const SizedBox(height: 16),
-                      DropdownButtonFormField<String>(
-                        initialValue: type,
-                        decoration: const InputDecoration(
-                          labelText: 'Tipo de Promoción',
-                        ),
-                        items: const [
-                          DropdownMenuItem(
-                            value: 'bundle_fixed_price',
-                            child: Text('Precio fijo por lote (Ej: 3 por 12€)'),
+              content: SizedBox(
+                width: isLandscape ? 680 : 520,
+                child: Form(
+                  key: formKey,
+                  child: SingleChildScrollView(
+                    child: Wrap(
+                      alignment: WrapAlignment.center,
+                      spacing: 12,
+                      runSpacing: 12,
+                      children: [
+                        SizedBox(
+                          width: fieldWidth,
+                          child: TextFormField(
+                            initialValue: name,
+                            decoration: const InputDecoration(
+                              labelText: 'Nombre de la oferta',
+                            ),
+                            validator: (value) => value == null || value.isEmpty
+                                ? 'Requerido'
+                                : null,
+                            onSaved: (value) => name = value!,
                           ),
-                          DropdownMenuItem(
-                            value: 'percentage',
-                            child: Text('Descuento porcentual (%)'),
+                        ),
+                        SizedBox(
+                          width: fieldWidth,
+                          child: DropdownButtonFormField<String>(
+                            initialValue: type,
+                            decoration: const InputDecoration(
+                              labelText: 'Tipo de Promoción',
+                            ),
+                            items: const [
+                              DropdownMenuItem(
+                                value: 'bundle_fixed_price',
+                                child: Text('Precio fijo por lote'),
+                              ),
+                              DropdownMenuItem(
+                                value: 'percentage',
+                                child: Text('Descuento porcentual (%)'),
+                              ),
+                            ],
+                            onChanged: (value) {
+                              setDialogState(() => type = value!);
+                            },
                           ),
-                        ],
-                        onChanged: (value) {
-                          setDialogState(() => type = value!);
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        initialValue: threshold.toString(),
-                        decoration: const InputDecoration(
-                          labelText: 'Cantidad mínima (Unidades a llevar)',
                         ),
-                        keyboardType: TextInputType.number,
-                        validator: (value) =>
-                            value == null || int.tryParse(value) == null
-                            ? 'Número válido requerido'
-                            : null,
-                        onSaved: (value) => threshold = int.parse(value!),
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        initialValue: discountValue == 0.0
-                            ? ''
-                            : discountValue.toString(),
-                        decoration: InputDecoration(
-                          labelText: type == 'bundle_fixed_price'
-                              ? 'Precio total del lote (€)'
-                              : 'Porcentaje de descuento (%)',
+                        SizedBox(
+                          width: fieldWidth,
+                          child: TextFormField(
+                            initialValue: threshold.toString(),
+                            decoration: const InputDecoration(
+                              labelText: 'Cantidad mínima (Unidades a llevar)',
+                            ),
+                            keyboardType: TextInputType.number,
+                            validator: (value) =>
+                                value == null || int.tryParse(value) == null
+                                ? 'Número válido requerido'
+                                : null,
+                            onSaved: (value) => threshold = int.parse(value!),
+                          ),
                         ),
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
+                        SizedBox(
+                          width: fieldWidth,
+                          child: TextFormField(
+                            initialValue: discountValue == 0.0
+                                ? ''
+                                : discountValue.toString(),
+                            decoration: InputDecoration(
+                              labelText: type == 'bundle_fixed_price'
+                                  ? 'Precio total del lote (€)'
+                                  : 'Porcentaje de descuento (%)',
+                            ),
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            validator: (value) =>
+                                value == null ||
+                                    double.tryParse(
+                                          value.replaceAll(',', '.'),
+                                        ) ==
+                                        null
+                                ? 'Valor válido requerido'
+                                : null,
+                            onSaved: (value) => discountValue = double.parse(
+                              value!.replaceAll(',', '.'),
+                            ),
+                          ),
                         ),
-                        validator: (value) =>
-                            value == null ||
-                                double.tryParse(value.replaceAll(',', '.')) ==
-                                    null
-                            ? 'Valor válido requerido'
-                            : null,
-                        onSaved: (value) => discountValue = double.parse(
-                          value!.replaceAll(',', '.'),
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
