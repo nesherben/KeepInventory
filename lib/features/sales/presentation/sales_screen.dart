@@ -45,9 +45,6 @@ class _SalesScreenState extends State<SalesScreen> {
   );
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  double? _startX;
-  double? _startY;
-
   List<Product> _products = [];
   List<Pack> _packs = [];
   Map<int, Promotion> _promotionsMap = {};
@@ -301,173 +298,90 @@ class _SalesScreenState extends State<SalesScreen> {
     }
   }
 
+  Widget _buildProductsGrid({
+    required double bottomPadding,
+    required int crossAxisCount,
+  }) {
+    double horizontalDistance = 0;
+    double verticalDistance = 0;
+
+    return Builder(
+      builder: (context) {
+        final salesMenu = DefaultTabController.of(context);
+
+        return Listener(
+          onPointerDown: (_) {
+            horizontalDistance = 0;
+            verticalDistance = 0;
+          },
+          onPointerMove: (event) {
+            horizontalDistance += event.delta.dx;
+            verticalDistance += event.delta.dy;
+
+            if (salesMenu.index == 0 &&
+                horizontalDistance > 50 &&
+                verticalDistance.abs() < 30) {
+              horizontalDistance = 0;
+              verticalDistance = 0;
+              _scaffoldKey.currentState?.openDrawer();
+            }
+          },
+          onPointerUp: (_) {
+            horizontalDistance = 0;
+            verticalDistance = 0;
+          },
+          onPointerCancel: (_) {
+            horizontalDistance = 0;
+            verticalDistance = 0;
+          },
+          child: ProductGridWidget(
+            products: _products,
+            cart: _cart,
+            bottomPadding: bottomPadding,
+            crossAxisCount: crossAxisCount,
+            onAddToCart: _addToCart,
+            onRemoveFromCart: _removeFromCart,
+            onRemoveAllFromCart: _removeAllFromCart,
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     // 💡 CAMBIO CLAVE: Detecta si la pantalla está en horizontal (Ancho mayor que Alto)
     final screenSize = MediaQuery.of(context).size;
     final bool isLandscape = screenSize.width > screenSize.height;
 
-    return Listener(
-      onPointerDown: (event) {
-        _startX = event.position.dx;
-        _startY = event.position.dy;
-      },
-      onPointerMove: (event) {
-        if (_startX == null || _startY == null) return;
-        final dx = event.position.dx - _startX!;
-        final dy = event.position.dy - _startY!;
-
-        // El drawer solo responde a swipes iniciados desde el borde izquierdo.
-        if (_startX! <= 80 && dx > 50 && dy.abs() < 30) {
-          _startX = null;
-          _startY = null;
-          _scaffoldKey.currentState?.openDrawer();
-        }
-      },
-      onPointerUp: (_) {
-        _startX = null;
-        _startY = null;
-      },
-      child: DefaultTabController(
-        length: 2,
-        child: Scaffold(
-          key: _scaffoldKey,
-          appBar: AppBar(
-            title: const Text('Panel de Ventas (TPV)'),
-            bottom: const TabBar(
-              tabs: [
-                Tab(icon: Icon(Icons.inventory_2), text: 'Productos Sueltos'),
-                Tab(icon: Icon(Icons.card_giftcard), text: 'Packs y Bundles'),
-              ],
-            ),
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        key: _scaffoldKey,
+        appBar: AppBar(
+          title: const Text('Panel de Ventas (TPV)'),
+          bottom: const TabBar(
+            tabs: [
+              Tab(icon: Icon(Icons.inventory_2), text: 'Productos Sueltos'),
+              Tab(icon: Icon(Icons.card_giftcard), text: 'Packs y Bundles'),
+            ],
           ),
-          drawer: const AppDrawer(),
-          body: _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : isLandscape
-              ?
-                // --- DISEÑO HORIZONTAL (SPLIT VIEW) ---
-                Row(
-                  children: [
-                    Expanded(
-                      flex: 3,
-                      child: TabBarView(
-                        children: [
-                          ProductGridWidget(
-                            products: _products,
-                            cart: _cart,
-                            bottomPadding: 16,
-                            crossAxisCount: 4,
-                            onAddToCart: _addToCart,
-                            onRemoveFromCart: _removeFromCart,
-                            onRemoveAllFromCart: _removeAllFromCart,
-                          ),
-                          _packs.isEmpty
-                              ? const Center(
-                                  child: Text('No hay packs creados todavía.'),
-                                )
-                              : PacksGridWidget(
-                                  packs: _packs,
-                                  cartPacks: _cartPacks,
-                                  bottomPadding: 16,
-                                  crossAxisCount: 4,
-                                  onAddToCart: _addPackToCart,
-                                  onRemoveFromCart: _removePackFromCart,
-                                  onRemoveAllFromCart: _removeAllPackFromCart,
-                                ),
-                        ],
-                      ),
-                    ),
-                    const VerticalDivider(width: 1, thickness: 1),
-                    Container(
-                      width: 380,
-                      color: Colors.white,
-                      child: Column(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(16.0),
-                            color: Colors.grey.shade50,
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  'Items: $_cartItemCount',
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                Text(
-                                  'Total: ${_cartTotal.toStringAsFixed(2)} €',
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                    color: Theme.of(context).primaryColor,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const Divider(height: 1),
-                          Expanded(
-                            child: CartItemsListWidget(
-                              cart: _cart,
-                              cartPacks: _cartPacks,
-                              promotionsMap: _promotionsMap,
-                              calculateItemTotal: _calculateItemTotal,
-                              onRemoveFromCart: _removeFromCart,
-                              onRemoveAllFromCart: _removeAllFromCart,
-                              onRemovePackFromCart: _removePackFromCart,
-                              onRemoveAllPackFromCart: _removeAllPackFromCart,
-                            ),
-                          ),
-                          const Divider(height: 1),
-                          Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: SizedBox(
-                              width: double.infinity,
-                              child: ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 16,
-                                  ),
-                                  backgroundColor: Theme.of(context)
-                                      .primaryColor,
-                                  foregroundColor: Colors.white,
-                                  elevation: 0,
-                                ),
-                                onPressed: (_cart.isEmpty && _cartPacks.isEmpty)
-                                    ? null
-                                    : _processSale,
-                                child: const Text(
-                                  'COBRAR',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                )
-              :
-                // --- DISEÑO VERTICAL (GRID + CARRITO FLOTANTE) ---
-                Stack(
-                  children: [
-                    TabBarView(
+        ),
+        drawer: const AppDrawer(),
+        body: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : isLandscape
+            ?
+              // --- DISEÑO HORIZONTAL (SPLIT VIEW) ---
+              Row(
+                children: [
+                  Expanded(
+                    flex: 3,
+                    child: TabBarView(
                       children: [
-                        ProductGridWidget(
-                          products: _products,
-                          cart: _cart,
-                          bottomPadding: 120,
-                          crossAxisCount: 3,
-                          onAddToCart: _addToCart,
-                          onRemoveFromCart: _removeFromCart,
-                          onRemoveAllFromCart: _removeAllFromCart,
+                        _buildProductsGrid(
+                          bottomPadding: 16,
+                          crossAxisCount: 4,
                         ),
                         _packs.isEmpty
                             ? const Center(
@@ -476,302 +390,395 @@ class _SalesScreenState extends State<SalesScreen> {
                             : PacksGridWidget(
                                 packs: _packs,
                                 cartPacks: _cartPacks,
-                                bottomPadding: 120,
-                                crossAxisCount: 3,
+                                bottomPadding: 16,
+                                crossAxisCount: 4,
                                 onAddToCart: _addPackToCart,
                                 onRemoveFromCart: _removePackFromCart,
                                 onRemoveAllFromCart: _removeAllPackFromCart,
                               ),
                       ],
                     ),
-                    DraggableScrollableSheet(
-                      initialChildSize: 0.12,
-                      minChildSize: 0.12,
-                      maxChildSize: 0.7,
-                      builder: (BuildContext context, ScrollController scrollController) {
-                        return LayoutBuilder(
-                          builder: (context, constraints) {
-                            final bool isExpanded = constraints.maxHeight > 150;
-
-                            return Container(
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: const BorderRadius.vertical(
-                                  top: Radius.circular(24),
+                  ),
+                  const VerticalDivider(width: 1, thickness: 1),
+                  Container(
+                    width: 380,
+                    color: Colors.white,
+                    child: Column(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(16.0),
+                          color: Colors.grey.shade50,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Items: $_cartItemCount',
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
                                 ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.2),
-                                    blurRadius: 10,
-                                    spreadRadius: 2,
-                                    offset: const Offset(0, -2),
-                                  ),
-                                ],
                               ),
-                              child: ClipRRect(
-                                borderRadius: const BorderRadius.vertical(
-                                  top: Radius.circular(24),
+                              Text(
+                                'Total: ${_cartTotal.toStringAsFixed(2)} €',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Theme.of(context).primaryColor,
                                 ),
-                                child: Stack(
-                                  children: [
-                                    ListView(
-                                      controller: scrollController,
-                                      padding: EdgeInsets.only(
-                                        top: 75,
-                                        bottom:
-                                            (isExpanded &&
-                                                (_cart.isNotEmpty ||
-                                                    _cartPacks.isNotEmpty))
-                                            ? 90
-                                            : 20,
-                                      ),
-                                      children: [
-                                        (_cart.isEmpty && _cartPacks.isEmpty)
-                                            ? const Padding(
-                                                padding: EdgeInsets.only(
-                                                  top: 32.0,
-                                                ),
-                                                child: Center(
-                                                  child: Text(
-                                                    'El carrito está vacío',
-                                                    style: TextStyle(
-                                                      color: Colors.grey,
-                                                    ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Divider(height: 1),
+                        Expanded(
+                          child: CartItemsListWidget(
+                            cart: _cart,
+                            cartPacks: _cartPacks,
+                            promotionsMap: _promotionsMap,
+                            calculateItemTotal: _calculateItemTotal,
+                            onRemoveFromCart: _removeFromCart,
+                            onRemoveAllFromCart: _removeAllFromCart,
+                            onRemovePackFromCart: _removePackFromCart,
+                            onRemoveAllPackFromCart: _removeAllPackFromCart,
+                          ),
+                        ),
+                        const Divider(height: 1),
+                        Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 16,
+                                ),
+                                backgroundColor: Theme.of(context).primaryColor,
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                              ),
+                              onPressed: (_cart.isEmpty && _cartPacks.isEmpty)
+                                  ? null
+                                  : _processSale,
+                              child: const Text(
+                                'COBRAR',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              )
+            :
+              // --- DISEÑO VERTICAL (GRID + CARRITO FLOTANTE) ---
+              Stack(
+                children: [
+                  TabBarView(
+                    children: [
+                      _buildProductsGrid(bottomPadding: 120, crossAxisCount: 3),
+                      _packs.isEmpty
+                          ? const Center(
+                              child: Text('No hay packs creados todavía.'),
+                            )
+                          : PacksGridWidget(
+                              packs: _packs,
+                              cartPacks: _cartPacks,
+                              bottomPadding: 120,
+                              crossAxisCount: 3,
+                              onAddToCart: _addPackToCart,
+                              onRemoveFromCart: _removePackFromCart,
+                              onRemoveAllFromCart: _removeAllPackFromCart,
+                            ),
+                    ],
+                  ),
+                  DraggableScrollableSheet(
+                    initialChildSize: 0.12,
+                    minChildSize: 0.12,
+                    maxChildSize: 0.7,
+                    builder: (BuildContext context, ScrollController scrollController) {
+                      return LayoutBuilder(
+                        builder: (context, constraints) {
+                          final bool isExpanded = constraints.maxHeight > 150;
+
+                          return Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: const BorderRadius.vertical(
+                                top: Radius.circular(24),
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.2),
+                                  blurRadius: 10,
+                                  spreadRadius: 2,
+                                  offset: const Offset(0, -2),
+                                ),
+                              ],
+                            ),
+                            child: ClipRRect(
+                              borderRadius: const BorderRadius.vertical(
+                                top: Radius.circular(24),
+                              ),
+                              child: Stack(
+                                children: [
+                                  ListView(
+                                    controller: scrollController,
+                                    padding: EdgeInsets.only(
+                                      top: 75,
+                                      bottom:
+                                          (isExpanded &&
+                                              (_cart.isNotEmpty ||
+                                                  _cartPacks.isNotEmpty))
+                                          ? 90
+                                          : 20,
+                                    ),
+                                    children: [
+                                      (_cart.isEmpty && _cartPacks.isEmpty)
+                                          ? const Padding(
+                                              padding: EdgeInsets.only(
+                                                top: 32.0,
+                                              ),
+                                              child: Center(
+                                                child: Text(
+                                                  'El carrito está vacío',
+                                                  style: TextStyle(
+                                                    color: Colors.grey,
                                                   ),
                                                 ),
-                                              )
-                                            : Column(
+                                              ),
+                                            )
+                                          : Column(
+                                              children: [
+                                                // Productos
+                                                ..._cart.keys.map((product) {
+                                                  final qty = _cart[product]!;
+                                                  final itemTotal =
+                                                      _calculateItemTotal(
+                                                        product,
+                                                        qty,
+                                                      );
+                                                  return ListTile(
+                                                    title: Text(product.name),
+                                                    subtitle: Text(
+                                                      '${product.price.toStringAsFixed(2)} € x $qty uds',
+                                                    ),
+                                                    trailing: Row(
+                                                      mainAxisSize:
+                                                          MainAxisSize.min,
+                                                      children: [
+                                                        Text(
+                                                          '${itemTotal.toStringAsFixed(2)} €',
+                                                          style:
+                                                              const TextStyle(
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                                fontSize: 16,
+                                                              ),
+                                                        ),
+                                                        const SizedBox(
+                                                          width: 8,
+                                                        ),
+                                                        GestureDetector(
+                                                          onTap: () =>
+                                                              _removeFromCart(
+                                                                product,
+                                                              ),
+                                                          onLongPress: () =>
+                                                              _removeAllFromCart(
+                                                                product,
+                                                              ),
+                                                          child: const Padding(
+                                                            padding:
+                                                                EdgeInsets.all(
+                                                                  8.0,
+                                                                ),
+                                                            child: Icon(
+                                                              Icons
+                                                                  .remove_circle,
+                                                              color: Colors
+                                                                  .redAccent,
+                                                              size: 28,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  );
+                                                }),
+                                                // Packs
+                                                ..._cartPacks.keys.map((pack) {
+                                                  final qty = _cartPacks[pack]!;
+                                                  final itemTotal =
+                                                      pack.price * qty;
+                                                  return ListTile(
+                                                    title: Text(pack.name),
+                                                    subtitle: Text(
+                                                      '${pack.price.toStringAsFixed(2)} € x $qty uds (Pack)',
+                                                    ),
+                                                    trailing: Row(
+                                                      mainAxisSize:
+                                                          MainAxisSize.min,
+                                                      children: [
+                                                        Text(
+                                                          '${itemTotal.toStringAsFixed(2)} €',
+                                                          style:
+                                                              const TextStyle(
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                                fontSize: 16,
+                                                              ),
+                                                        ),
+                                                        const SizedBox(
+                                                          width: 8,
+                                                        ),
+                                                        GestureDetector(
+                                                          onTap: () =>
+                                                              _removePackFromCart(
+                                                                pack,
+                                                              ),
+                                                          onLongPress: () =>
+                                                              _removeAllPackFromCart(
+                                                                pack,
+                                                              ),
+                                                          child: const Padding(
+                                                            padding:
+                                                                EdgeInsets.all(
+                                                                  8.0,
+                                                                ),
+                                                            child: Icon(
+                                                              Icons
+                                                                  .remove_circle,
+                                                              color: Colors
+                                                                  .redAccent,
+                                                              size: 28,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  );
+                                                }),
+                                              ],
+                                            ),
+                                    ],
+                                  ),
+                                  Positioned(
+                                    top: 0,
+                                    left: 0,
+                                    right: 0,
+                                    child: IgnorePointer(
+                                      child: Container(
+                                        color: Colors.white,
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const SizedBox(height: 8),
+                                            Container(
+                                              width: 40,
+                                              height: 5,
+                                              decoration: BoxDecoration(
+                                                color: Colors.grey[400],
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                              ),
+                                            ),
+                                            Padding(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 24.0,
+                                                    vertical: 12.0,
+                                                  ),
+                                              child: Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceBetween,
                                                 children: [
-                                                  // Productos
-                                                  ..._cart.keys.map((product) {
-                                                    final qty = _cart[product]!;
-                                                    final itemTotal =
-                                                        _calculateItemTotal(
-                                                          product,
-                                                          qty,
-                                                        );
-                                                    return ListTile(
-                                                      title: Text(product.name),
-                                                      subtitle: Text(
-                                                        '${product.price.toStringAsFixed(2)} € x $qty uds',
-                                                      ),
-                                                      trailing: Row(
-                                                        mainAxisSize:
-                                                            MainAxisSize.min,
-                                                        children: [
-                                                          Text(
-                                                            '${itemTotal.toStringAsFixed(2)} €',
-                                                            style:
-                                                                const TextStyle(
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .bold,
-                                                                  fontSize: 16,
-                                                                ),
-                                                          ),
-                                                          const SizedBox(
-                                                            width: 8,
-                                                          ),
-                                                          GestureDetector(
-                                                            onTap: () =>
-                                                                _removeFromCart(
-                                                                  product,
-                                                                ),
-                                                            onLongPress: () =>
-                                                                _removeAllFromCart(
-                                                                  product,
-                                                                ),
-                                                            child: const Padding(
-                                                              padding:
-                                                                  EdgeInsets.all(
-                                                                    8.0,
-                                                                  ),
-                                                              child: Icon(
-                                                                Icons
-                                                                    .remove_circle,
-                                                                color: Colors
-                                                                    .redAccent,
-                                                                size: 28,
-                                                              ),
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    );
-                                                  }),
-                                                  // Packs
-                                                  ..._cartPacks.keys.map((
-                                                    pack,
-                                                  ) {
-                                                    final qty =
-                                                        _cartPacks[pack]!;
-                                                    final itemTotal =
-                                                        pack.price * qty;
-                                                    return ListTile(
-                                                      title: Text(pack.name),
-                                                      subtitle: Text(
-                                                        '${pack.price.toStringAsFixed(2)} € x $qty uds (Pack)',
-                                                      ),
-                                                      trailing: Row(
-                                                        mainAxisSize:
-                                                            MainAxisSize.min,
-                                                        children: [
-                                                          Text(
-                                                            '${itemTotal.toStringAsFixed(2)} €',
-                                                            style:
-                                                                const TextStyle(
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .bold,
-                                                                  fontSize: 16,
-                                                                ),
-                                                          ),
-                                                          const SizedBox(
-                                                            width: 8,
-                                                          ),
-                                                          GestureDetector(
-                                                            onTap: () =>
-                                                                _removePackFromCart(
-                                                                  pack,
-                                                                ),
-                                                            onLongPress: () =>
-                                                                _removeAllPackFromCart(
-                                                                  pack,
-                                                                ),
-                                                            child: const Padding(
-                                                              padding:
-                                                                  EdgeInsets.all(
-                                                                    8.0,
-                                                                  ),
-                                                              child: Icon(
-                                                                Icons
-                                                                    .remove_circle,
-                                                                color: Colors
-                                                                    .redAccent,
-                                                                size: 28,
-                                                              ),
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    );
-                                                  }),
+                                                  Text(
+                                                    'Items: $_cartItemCount',
+                                                    style: const TextStyle(
+                                                      fontSize: 18,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                  Text(
+                                                    'Total: ${_cartTotal.toStringAsFixed(2)} €',
+                                                    style: TextStyle(
+                                                      fontSize: 22,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      color: Theme.of(context)
+                                                          .primaryColor,
+                                                    ),
+                                                  ),
                                                 ],
                                               ),
-                                      ],
+                                            ),
+                                            const Divider(height: 1),
+                                          ],
+                                        ),
+                                      ),
                                     ),
+                                  ),
+                                  if (isExpanded &&
+                                      (_cart.isNotEmpty ||
+                                          _cartPacks.isNotEmpty))
                                     Positioned(
-                                      top: 0,
+                                      bottom: 0,
                                       left: 0,
                                       right: 0,
-                                      child: IgnorePointer(
-                                        child: Container(
+                                      child: Container(
+                                        padding: const EdgeInsets.all(16.0),
+                                        decoration: BoxDecoration(
                                           color: Colors.white,
-                                          child: Column(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              const SizedBox(height: 8),
-                                              Container(
-                                                width: 40,
-                                                height: 5,
-                                                decoration: BoxDecoration(
-                                                  color: Colors.grey[400],
-                                                  borderRadius:
-                                                      BorderRadius.circular(10),
-                                                ),
+                                          border: Border(
+                                            top: BorderSide(
+                                              color: Colors.grey.shade300,
+                                            ),
+                                          ),
+                                        ),
+                                        child: SizedBox(
+                                          width: double.infinity,
+                                          child: ElevatedButton(
+                                            style: ElevatedButton.styleFrom(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    vertical: 16,
+                                                  ),
+                                              backgroundColor: Theme.of(context)
+                                                  .primaryColor,
+                                              foregroundColor: Colors.white,
+                                              elevation: 0,
+                                            ),
+                                            onPressed: _processSale,
+                                            child: const Text(
+                                              'COBRAR',
+                                              style: TextStyle(
+                                                fontSize: 20,
+                                                fontWeight: FontWeight.bold,
                                               ),
-                                              Padding(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                      horizontal: 24.0,
-                                                      vertical: 12.0,
-                                                    ),
-                                                child: Row(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment
-                                                          .spaceBetween,
-                                                  children: [
-                                                    Text(
-                                                      'Items: $_cartItemCount',
-                                                      style: const TextStyle(
-                                                        fontSize: 18,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                      ),
-                                                    ),
-                                                    Text(
-                                                      'Total: ${_cartTotal.toStringAsFixed(2)} €',
-                                                      style: TextStyle(
-                                                        fontSize: 22,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        color: Theme.of(context)
-                                                            .primaryColor,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                              const Divider(height: 1),
-                                            ],
+                                            ),
                                           ),
                                         ),
                                       ),
                                     ),
-                                    if (isExpanded &&
-                                        (_cart.isNotEmpty ||
-                                            _cartPacks.isNotEmpty))
-                                      Positioned(
-                                        bottom: 0,
-                                        left: 0,
-                                        right: 0,
-                                        child: Container(
-                                          padding: const EdgeInsets.all(16.0),
-                                          decoration: BoxDecoration(
-                                            color: Colors.white,
-                                            border: Border(
-                                              top: BorderSide(
-                                                color: Colors.grey.shade300,
-                                              ),
-                                            ),
-                                          ),
-                                          child: SizedBox(
-                                            width: double.infinity,
-                                            child: ElevatedButton(
-                                              style: ElevatedButton.styleFrom(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                      vertical: 16,
-                                                    ),
-                                                backgroundColor: Theme.of(
-                                                  context,
-                                                ).primaryColor,
-                                                foregroundColor: Colors.white,
-                                                elevation: 0,
-                                              ),
-                                              onPressed: _processSale,
-                                              child: const Text(
-                                                'COBRAR',
-                                                style: TextStyle(
-                                                  fontSize: 20,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                  ],
-                                ),
+                                ],
                               ),
-                            );
-                          },
-                        );
-                      },
-                    ),
-                  ],
-                ),
-        ),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ],
+              ),
       ),
     );
   }
