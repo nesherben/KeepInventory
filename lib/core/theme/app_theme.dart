@@ -5,56 +5,96 @@ import 'app_colors.dart';
 export 'app_colors.dart';
 
 abstract final class AppTheme {
-  static ThemeData get light {
-    final colorScheme =
+  static ThemeData light({Color? dynamicPrimary}) =>
+      _buildTheme(Brightness.light, dynamicPrimary: dynamicPrimary);
+
+  static ThemeData dark({Color? dynamicPrimary}) =>
+      _buildTheme(Brightness.dark, dynamicPrimary: dynamicPrimary);
+
+  static ThemeData _buildTheme(Brightness brightness, {Color? dynamicPrimary}) {
+    final isDark = brightness == Brightness.dark;
+    final fallbackPrimary =
+        dynamicPrimary ?? (isDark ? AppColors.darkPrimary : AppColors.primary);
+
+    final fallbackScheme =
         ColorScheme.fromSeed(
-          seedColor: AppColors.primary,
-          brightness: Brightness.light,
+          seedColor: fallbackPrimary,
+          brightness: brightness,
         ).copyWith(
-          primary: AppColors.primary,
-          onPrimary: AppColors.onPrimary,
-          secondary: AppColors.accent,
+          primary: fallbackPrimary,
+          // 💡 SOLUCIÓN HIGHLIGHT: Forzamos el color de selección para los Grids
+          primaryContainer: isDark
+              ? AppColors.darkPrimary.withValues(alpha: 0.2)
+              : AppColors.primarySoft,
+          onPrimary: isDark ? AppColors.darkOnPrimary : AppColors.onPrimary,
+          secondary: isDark ? AppColors.darkAccent : AppColors.accent,
+          tertiary: AppColors.success,
           error: AppColors.danger,
-          surface: AppColors.surface,
-          onSurface: AppColors.onSurface,
+          surface: isDark ? AppColors.darkSurface : AppColors.surface,
+          onSurface: isDark ? AppColors.darkText : AppColors.text,
+          onSurfaceVariant: isDark
+              ? AppColors.darkTextMuted
+              : AppColors.textMuted,
+          outline: isDark ? AppColors.darkOutline : AppColors.outline,
+          outlineVariant: isDark
+              ? AppColors.darkOutlineSoft
+              : AppColors.outlineSoft,
         );
+
+    final colorScheme = fallbackScheme;
+    final surface = colorScheme.surface;
+    final text = colorScheme.onSurface;
+    final textMuted = colorScheme.onSurfaceVariant;
+    final outline = colorScheme.outline;
+    final background = isDark ? AppColors.darkBackground : AppColors.background;
+    final danger = colorScheme.error;
 
     return ThemeData(
       colorScheme: colorScheme,
+      brightness: brightness,
       useMaterial3: true,
-      scaffoldBackgroundColor: AppColors.background,
-      appBarTheme: const AppBarTheme(centerTitle: true, elevation: 2),
+      scaffoldBackgroundColor: background,
+      canvasColor: background,
+      textTheme: ThemeData(
+        brightness: brightness,
+        colorScheme: colorScheme,
+      ).textTheme.apply(bodyColor: text, displayColor: text),
+      cardTheme: CardThemeData(color: surface, surfaceTintColor: surface),
+      dividerTheme: DividerThemeData(color: outline),
+      appBarTheme: AppBarTheme(
+        centerTitle: true,
+        elevation: 2,
+        backgroundColor: surface,
+        foregroundColor: text,
+      ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.surface,
+        fillColor: colorScheme.surfaceContainerHighest,
         isDense: true,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 15,
         ),
-        border: _inputBorder(AppColors.outline),
-        enabledBorder: _inputBorder(AppColors.outline),
-        focusedBorder: _inputBorder(AppColors.primary, width: 2),
-        errorBorder: _inputBorder(AppColors.danger),
-        focusedErrorBorder: _inputBorder(AppColors.danger, width: 2),
-        floatingLabelStyle: const TextStyle(
-          color: AppColors.primary,
+        border: _inputBorder(outline),
+        enabledBorder: _inputBorder(outline),
+        focusedBorder: _inputBorder(colorScheme.primary, width: 2),
+        errorBorder: _inputBorder(danger),
+        focusedErrorBorder: _inputBorder(danger, width: 2),
+        floatingLabelStyle: TextStyle(
+          color: colorScheme.primary,
           fontWeight: FontWeight.w600,
         ),
       ),
       dialogTheme: DialogThemeData(
-        backgroundColor: AppColors.surface,
-        surfaceTintColor: AppColors.surface,
+        backgroundColor: surface,
+        surfaceTintColor: surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        titleTextStyle: const TextStyle(
-          color: AppColors.text,
+        titleTextStyle: TextStyle(
+          color: text,
           fontSize: 21,
           fontWeight: FontWeight.w700,
         ),
-        contentTextStyle: const TextStyle(
-          color: AppColors.textMuted,
-          fontSize: 14,
-        ),
+        contentTextStyle: TextStyle(color: textMuted, fontSize: 14),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(

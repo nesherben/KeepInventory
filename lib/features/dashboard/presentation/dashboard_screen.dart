@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 import '../../../core/shared_widgets/app_drawer.dart';
 import '../data/datasources/dashboard_local_datasource.dart';
 import '../data/repositories/dashboard_repository_impl.dart';
-
 import '../../../../core/services/github_update_service.dart';
+
+// Importa tu paleta de colores
+import '../../../core/theme/app_colors.dart'; // Ajusta esta ruta si es distinta
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -15,17 +17,18 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  // Instanciamos el nuevo repositorio optimizado
   final _dashboardRepository = DashboardRepositoryImpl(
     DashboardLocalDatasource(),
   );
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  // 💡 Restauradas las variables para controlar el gesto táctil
   double? _startX;
   double? _startY;
 
   bool _isLoading = true;
-  bool _isPrivacyModeEnabled = false; // Estado del modo privacidad
+  bool _isPrivacyModeEnabled = false;
 
   double _totalRevenue = 0;
   double _inventoryCost = 0;
@@ -35,14 +38,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Map<String, double> _dailyNetProfits = {};
 
   static bool _hasCheckedForUpdate = false;
+
   @override
   void initState() {
     super.initState();
-
-    // 1. Cargamos las métricas de la base de datos nada más arrancar
     _loadMetrics();
 
-    // 2. Comprobación de actualizaciones en segundo plano (solo una vez por sesión)
     if (!_hasCheckedForUpdate) {
       _hasCheckedForUpdate = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -50,24 +51,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
       });
     }
   }
-// Comprobación automática de actualizaciones al arrancar
+
   Future<void> _checkForAppUpdates() async {
     try {
-      // Esperamos un par de segundos a que cargue la app para no saturar el inicio
       await Future.delayed(const Duration(seconds: 2));
       if (!mounted) return;
 
       final updateInfo = await GithubUpdateService.checkForUpdate();
       if (updateInfo == null || !mounted) return;
 
-      // Extraemos los valores de forma segura con valores por defecto
       final String version = updateInfo['version']?.toString() ?? 'Desconocida';
-      final String notes = updateInfo['notes']?.toString() ?? 'Sin notas de la versión.';
+      final String notes =
+          updateInfo['notes']?.toString() ?? 'Sin notas de la versión.';
       final String url = updateInfo['url']?.toString() ?? '';
 
       if (url.isEmpty) return;
 
-      // Si hay update, mostramos el diálogo de actualización
       if (!mounted) return;
       showDialog(
         context: context,
@@ -126,15 +125,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ElevatedButton(
                       onPressed: () async {
                         setDialogState(() => isDownloading = true);
-                        
-                        await GithubUpdateService.downloadAndInstall(
-                          url,
-                          (p) {
-                            if (context.mounted) {
-                              setDialogState(() => progress = p);
-                            }
-                          },
-                        );
+
+                        await GithubUpdateService.downloadAndInstall(url, (p) {
+                          if (context.mounted) {
+                            setDialogState(() => progress = p);
+                          }
+                        });
                       },
                       child: const Text('Actualizar ahora'),
                     ),
@@ -154,7 +150,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // Llamadas actualizadas al nuevo repositorio
       final revenue = await _dashboardRepository.getTotalRevenue();
       final cost = await _dashboardRepository.getInventoryCost();
       final expected = await _dashboardRepository.getExpectedRevenue();
@@ -185,13 +180,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
         builder: (context) => FullScreenChartScreen(
           dailySales: _dailySales,
           dailyNetProfits: _dailyNetProfits,
-          isPrivacyModeEnabled: _isPrivacyModeEnabled, // Pasamos el modo privacidad al gráfico también por seguridad
+          isPrivacyModeEnabled: _isPrivacyModeEnabled,
         ),
       ),
     );
   }
 
-  // Formateador inteligente para censurar datos si el modo privacidad está activo
   String _formatCurrency(double amount) {
     if (_isPrivacyModeEnabled) {
       return '•••••• €';
@@ -199,7 +193,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return '${amount.toStringAsFixed(2)} €';
   }
 
-  // Tarjeta de métricas secundaria
   Widget _buildMetricCard({
     required String title,
     required String value,
@@ -209,7 +202,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -218,7 +211,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             offset: const Offset(0, 3),
           ),
         ],
-        border: Border.all(color: Colors.grey.shade100),
+        border: Border.all(color: Theme.of(context).dividerColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -242,7 +235,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             title,
             style: TextStyle(
               fontSize: 11,
-              color: Colors.grey.shade600,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
               fontWeight: FontWeight.bold,
               letterSpacing: 0.5,
             ),
@@ -259,7 +252,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  // Botón de acceso al balance y gráfico
   Widget _buildChartButton() {
     return Card(
       elevation: 2,
@@ -275,37 +267,45 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Colors.amber.shade100,
+                  color: Theme.of(context).colorScheme.secondary
+                      .withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
                   Icons.bar_chart,
-                  color: Colors.amber.shade900,
+                  color: Theme.of(context).colorScheme.secondary,
                   size: 24,
                 ),
               ),
               const SizedBox(width: 16),
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
+                    const Text(
                       'Balance por Ferias y Días',
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    SizedBox(height: 2),
+                    const SizedBox(height: 2),
                     Text(
-                      'Ver gráfico con barra y punto neto',
-                      style: TextStyle(fontSize: 12, color: Colors.grey),
+                      'Ver gráfico de barras y beneficio neto',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),
               ),
-              const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+              Icon(
+                Icons.arrow_forward_ios,
+                size: 16,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ],
           ),
         ),
@@ -313,19 +313,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  // Tarjeta de recaudación principal
   Widget _buildMainCard(bool isWideScreen) {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Colors.teal.shade900, Colors.teal.shade600],
+          colors: [AppColors.primaryDark, AppColors.primary],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.teal.withValues(alpha: 0.35),
+            color: AppColors.primary.withValues(alpha: 0.35),
             blurRadius: 12,
             offset: const Offset(0, 6),
           ),
@@ -399,7 +398,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   const SizedBox(height: 18),
                   Text(
-                    _formatCurrency(_totalRevenue), // Aplicando modo privacidad
+                    _formatCurrency(_totalRevenue),
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: isWideScreen ? 40 : 36,
@@ -436,6 +435,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final screenWidth = MediaQuery.of(context).size.width;
     final bool isWideScreen = screenWidth >= 600;
 
+    // 💡 Restaurado el Listener para que al deslizar se abra el menú lateral en el Dashboard
     return Listener(
       onPointerDown: (event) {
         _startX = event.position.dx;
@@ -462,11 +462,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
           title: const Text('Panel de Control'),
           elevation: 0,
           actions: [
-            // Botón de Modo Privacidad en la barra superior
             IconButton(
               icon: Icon(
                 _isPrivacyModeEnabled ? Icons.visibility_off : Icons.visibility,
-                color: _isPrivacyModeEnabled ? Colors.amberAccent : null,
+                color: _isPrivacyModeEnabled
+                    ? Theme.of(context).colorScheme.secondary
+                    : null,
               ),
               onPressed: () {
                 setState(() {
@@ -518,7 +519,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                       title: 'COSTE ALMACÉN',
                                       value: _formatCurrency(_inventoryCost),
                                       icon: Icons.inventory_2_outlined,
-                                      color: Colors.orange,
+                                      color: AppColors.warning,
                                     ),
                                   ),
                                   const SizedBox(height: 10),
@@ -527,7 +528,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                       title: 'VALOR VENTA',
                                       value: _formatCurrency(_expectedRevenue),
                                       icon: Icons.trending_up,
-                                      color: Colors.blue,
+                                      color: AppColors.info,
                                     ),
                                   ),
                                   const SizedBox(height: 10),
@@ -536,7 +537,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                       title: 'BENEFICIO NETO REAL',
                                       value: _formatCurrency(_actualNetProfit),
                                       icon: Icons.savings_outlined,
-                                      color: Colors.green,
+                                      color: AppColors.success,
                                     ),
                                   ),
                                 ],
@@ -557,7 +558,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               title: 'COSTE ALMACÉN',
                               value: _formatCurrency(_inventoryCost),
                               icon: Icons.inventory_2_outlined,
-                              color: Colors.orange,
+                              color: AppColors.warning,
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -566,7 +567,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               title: 'VALOR VENTA',
                               value: _formatCurrency(_expectedRevenue),
                               icon: Icons.trending_up,
-                              color: Colors.blue,
+                              color: AppColors.info,
                             ),
                           ),
                         ],
@@ -579,7 +580,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               title: 'BENEFICIO NETO REAL',
                               value: _formatCurrency(_actualNetProfit),
                               icon: Icons.savings_outlined,
-                              color: Colors.green,
+                              color: AppColors.success,
                             ),
                           ),
                         ],
@@ -631,6 +632,8 @@ class _FullScreenChartScreenState extends State<FullScreenChartScreen> {
     final screenWidth = MediaQuery.of(context).size.width;
     final bool isWideScreen = screenWidth >= 600;
 
+    final cardBgColor = Theme.of(context).cardColor;
+
     double maxVal = 0.0;
     for (var val in widget.dailySales.values) {
       if (val > maxVal) maxVal = val;
@@ -659,7 +662,7 @@ class _FullScreenChartScreenState extends State<FullScreenChartScreen> {
         margin: const EdgeInsets.all(16.0),
         padding: const EdgeInsets.fromLTRB(8, 20, 8, 8),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: cardBgColor,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
@@ -686,6 +689,10 @@ class _FullScreenChartScreenState extends State<FullScreenChartScreen> {
 
             final isFair = parts.length != 3;
 
+            final barColor = isFair
+                ? Theme.of(context).colorScheme.secondary
+                : Theme.of(context).colorScheme.primary;
+
             return Expanded(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.end,
@@ -701,57 +708,63 @@ class _FullScreenChartScreenState extends State<FullScreenChartScreen> {
                   ),
                   const SizedBox(height: 6),
                   Expanded(
-                    child: Stack(
-                      alignment: Alignment.bottomCenter,
-                      children: [
-                        Align(
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final barHeight = constraints.maxHeight * revFactor;
+                        final dotBottom = constraints.maxHeight * netFactor;
+
+                        return Stack(
                           alignment: Alignment.bottomCenter,
-                          child: FractionallySizedBox(
-                            heightFactor: revFactor,
-                            child: Container(
-                              width: 16,
-                              margin: const EdgeInsets.symmetric(horizontal: 4),
-                              decoration: BoxDecoration(
-                                color: isFair
-                                    ? Colors.amber.shade700
-                                    : Theme.of(context).primaryColor,
-                                borderRadius: const BorderRadius.vertical(
-                                  top: Radius.circular(6),
+                          clipBehavior: Clip.none,
+                          children: [
+                            Align(
+                              alignment: Alignment.bottomCenter,
+                              child: Container(
+                                height: barHeight,
+                                width: 18,
+                                decoration: BoxDecoration(
+                                  color: barColor,
+                                  borderRadius: const BorderRadius.vertical(
+                                    top: Radius.circular(6),
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                        ),
-                        Align(
-                          alignment: Alignment(0, 1.0 - (2.0 * netFactor)),
-                          child: Container(
-                            width: 9,
-                            height: 9,
-                            decoration: BoxDecoration(
-                              color: Colors.greenAccent,
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: Colors.green.shade900,
-                                width: 1.5,
-                              ),
-                              boxShadow: const [
-                                BoxShadow(
-                                  color: Colors.black26,
-                                  blurRadius: 2,
-                                  offset: Offset(0, 1),
+                            Positioned(
+                              bottom: dotBottom > 0 ? dotBottom - 6 : 0,
+                              child: Container(
+                                width: 12,
+                                height: 12,
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).colorScheme.tertiary,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: cardBgColor,
+                                    width: 2.5,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .shadow
+                                          .withValues(alpha: 0.2),
+                                      blurRadius: 2,
+                                      offset: const Offset(0, 1),
+                                    ),
+                                  ],
                                 ),
-                              ],
+                              ),
                             ),
-                          ),
-                        ),
-                      ],
+                          ],
+                        );
+                      },
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     shortLabel,
                     style: TextStyle(
-                      color: Colors.grey[700],
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                       fontWeight: FontWeight.bold,
                       fontSize: 10,
                     ),
@@ -777,19 +790,24 @@ class _FullScreenChartScreenState extends State<FullScreenChartScreen> {
               horizontal: 16.0,
             ),
             decoration: BoxDecoration(
-              color: Theme.of(context).primaryColor.withValues(alpha: 0.05),
-              border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
+              color: Theme.of(context).colorScheme.primary
+                  .withValues(alpha: 0.05),
+              border: Border(
+                bottom: BorderSide(
+                  color: Theme.of(context).colorScheme.outlineVariant,
+                ),
+              ),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 Column(
                   children: [
-                    const Text(
+                    Text(
                       'TOTAL INGRESOS',
                       style: TextStyle(
                         fontSize: 11,
-                        color: Colors.grey,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -799,29 +817,33 @@ class _FullScreenChartScreenState extends State<FullScreenChartScreen> {
                       style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
-                        color: Theme.of(context).primaryColor,
+                        color: Theme.of(context).colorScheme.primary,
                       ),
                     ),
                   ],
                 ),
-                Container(height: 30, width: 1, color: Colors.grey.shade300),
+                Container(
+                  height: 30,
+                  width: 1,
+                  color: Theme.of(context).colorScheme.outlineVariant,
+                ),
                 Column(
                   children: [
-                    const Text(
+                    Text(
                       'TOTAL NETO',
                       style: TextStyle(
                         fontSize: 11,
-                        color: Colors.grey,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       _formatCurrency(totalNet),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
-                        color: Colors.green,
+                        color: Theme.of(context).colorScheme.tertiary,
                       ),
                     ),
                   ],
@@ -832,7 +854,7 @@ class _FullScreenChartScreenState extends State<FullScreenChartScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(
               horizontal: 16.0,
-              vertical: 8.0,
+              vertical: 12.0,
             ),
             child: Wrap(
               alignment: WrapAlignment.center,
@@ -845,7 +867,10 @@ class _FullScreenChartScreenState extends State<FullScreenChartScreen> {
                     Container(
                       width: 12,
                       height: 12,
-                      color: Theme.of(context).primaryColor,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primary,
+                        borderRadius: BorderRadius.circular(3),
+                      ),
                     ),
                     const SizedBox(width: 6),
                     const Text(
@@ -863,7 +888,10 @@ class _FullScreenChartScreenState extends State<FullScreenChartScreen> {
                     Container(
                       width: 12,
                       height: 12,
-                      color: Colors.amber.shade700,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.secondary,
+                        borderRadius: BorderRadius.circular(3),
+                      ),
                     ),
                     const SizedBox(width: 6),
                     const Text(
@@ -881,9 +909,10 @@ class _FullScreenChartScreenState extends State<FullScreenChartScreen> {
                     Container(
                       width: 10,
                       height: 10,
-                      decoration: const BoxDecoration(
-                        color: Colors.greenAccent,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.tertiary,
                         shape: BoxShape.circle,
+                        border: Border.all(color: cardBgColor, width: 1.5),
                       ),
                     ),
                     const SizedBox(width: 6),
@@ -921,13 +950,15 @@ class _FullScreenChartScreenState extends State<FullScreenChartScreen> {
           return ListTile(
             leading: CircleAvatar(
               backgroundColor:
-                  (isDate ? Theme.of(context).primaryColor : Colors.amber)
+                  (isDate
+                          ? Theme.of(context).colorScheme.primary
+                          : Theme.of(context).colorScheme.secondary)
                       .withValues(alpha: 0.15),
               child: Icon(
                 isDate ? Icons.calendar_month : Icons.store,
                 color: isDate
-                    ? Theme.of(context).primaryColor
-                    : Colors.amber.shade900,
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context).colorScheme.secondary,
                 size: 20,
               ),
             ),
@@ -941,10 +972,10 @@ class _FullScreenChartScreenState extends State<FullScreenChartScreen> {
             ),
             trailing: Text(
               'Neto: ${_formatCurrency(net)}',
-              style: const TextStyle(
+              style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 14,
-                color: Colors.green,
+                color: Theme.of(context).colorScheme.tertiary,
               ),
             ),
           );
@@ -952,73 +983,66 @@ class _FullScreenChartScreenState extends State<FullScreenChartScreen> {
       );
     }
 
-    return Listener(
-      onPointerDown: (event) {
-        // Placeholder para future implementation
-      },
-      onPointerMove: (event) {
-        // Placeholder para future implementation
-      },
-      onPointerUp: (_) {
-        // Placeholder para future implementation
-      },
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Balance Detallado'),
-          actions: [
-            // Botón de privacidad también en el detalle del gráfico
-            IconButton(
-              icon: Icon(
-                _privacyActive ? Icons.visibility_off : Icons.visibility,
-                color: _privacyActive ? Colors.amberAccent : null,
-              ),
-              onPressed: () {
-                setState(() {
-                  _privacyActive = !_privacyActive;
-                });
-              },
-              tooltip: _privacyActive
-                  ? 'Desactivar privacidad'
-                  : 'Activar privacidad',
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Balance Detallado'),
+        actions: [
+          IconButton(
+            icon: Icon(
+              _privacyActive ? Icons.visibility_off : Icons.visibility,
+              color: _privacyActive
+                  ? Theme.of(context).colorScheme.secondary
+                  : null,
             ),
-            const SizedBox(width: 8),
-          ],
-        ),
-        body: sortedKeys.isEmpty
-            ? const Center(
-                child: Text(
-                  'Aún no hay ventas para mostrar.',
-                  style: TextStyle(fontSize: 16, color: Colors.grey),
-                ),
-              )
-            : isWideScreen
-            ? Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      color: Colors.white,
-                      child: buildListView(),
-                    ),
-                  ),
-                  const VerticalDivider(width: 1, thickness: 1),
-                  Expanded(
-                    child: Column(
-                      children: [
-                        buildHeaderAndLegend(),
-                        Expanded(child: buildChartContent()),
-                      ],
-                    ),
-                  ),
-                ],
-              )
-            : Column(
-                children: [
-                  buildHeaderAndLegend(),
-                  Expanded(flex: 3, child: buildChartContent()),
-                  Expanded(flex: 2, child: buildListView()),
-                ],
-              ),
+            onPressed: () {
+              setState(() {
+                _privacyActive = !_privacyActive;
+              });
+            },
+            tooltip: _privacyActive
+                ? 'Desactivar privacidad'
+                : 'Activar privacidad',
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
+      body: sortedKeys.isEmpty
+          ? Center(
+              child: Text(
+                'Aún no hay ventas para mostrar.',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            )
+          : isWideScreen
+          ? Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    color: Theme.of(context).cardColor,
+                    child: buildListView(),
+                  ),
+                ),
+                const VerticalDivider(width: 1, thickness: 1),
+                Expanded(
+                  child: Column(
+                    children: [
+                      buildHeaderAndLegend(),
+                      Expanded(child: buildChartContent()),
+                    ],
+                  ),
+                ),
+              ],
+            )
+          : Column(
+              children: [
+                buildHeaderAndLegend(),
+                Expanded(flex: 3, child: buildChartContent()),
+                Expanded(flex: 2, child: buildListView()),
+              ],
+            ),
     );
   }
 }

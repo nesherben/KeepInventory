@@ -1,12 +1,13 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data'; // <-- NUEVO: Para Uint8List
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:flutter_image_compress/flutter_image_compress.dart'; // <-- NUEVO: Para comprimir
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 
 import '../../../core/shared_widgets/app_drawer.dart';
+import '../../../../core/theme/app_colors.dart'; // 💡 Aseguramos importar tu paleta
 
 // Imports de la feature INVENTORY
 import '../../promotions/data/repositories/promotion_repository_impl.dart';
@@ -27,7 +28,6 @@ class InventoryScreen extends StatefulWidget {
 }
 
 class _InventoryScreenState extends State<InventoryScreen> {
-  // Instanciamos ambos repositorios por separado
   final _productRepository = ProductRepositoryImpl(ProductLocalDatasource());
   final _promotionRepository = PromotionRepositoryImpl(
     PromotionLocalDatasource(),
@@ -63,7 +63,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
     super.dispose();
   }
 
-  // Conversor seguro de Product -> ProductModel (Actualizado)
   ProductModel _toModel(
     Product p, {
     String? name,
@@ -71,7 +70,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
     double? price,
     double? cost,
     String? imagePath,
-    bool clearImagePath = false, // <-- NUEVO: Obliga a borrar la ruta
+    bool clearImagePath = false,
     Uint8List? imageBytes,
     int? promotionId,
     bool clearPromotion = false,
@@ -82,14 +81,12 @@ class _InventoryScreenState extends State<InventoryScreen> {
       units: units ?? p.units,
       price: price ?? p.price,
       cost: cost ?? p.cost,
-      // Si clearImagePath es true, guardamos null. Si no, usamos el nuevo o mantenemos el viejo
       imagePath: clearImagePath ? null : (imagePath ?? p.imagePath),
       imageBytes: imageBytes ?? p.imageBytes,
       promotionId: clearPromotion ? null : (promotionId ?? p.promotionId),
     );
   }
 
-  // Guardado rápido desde la tabla (Actualizado)
   Future<void> _processAndSaveNewImage(
     Product product,
     ImageSource source,
@@ -103,8 +100,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
         final updatedProduct = _toModel(
           product,
           imageBytes: compressedBytes,
-          clearImagePath:
-              true, // <-- Ahora sí borra el rastro del archivo viejo
+          clearImagePath: true,
         );
         await _productRepository.updateProduct(updatedProduct);
         _loadProducts();
@@ -112,14 +108,11 @@ class _InventoryScreenState extends State<InventoryScreen> {
     }
   }
 
-  // --- ACTUALIZADO: Compresión blindada con "salvavidas" ---
   Future<Uint8List?> _compressImage(File file) async {
     try {
-      // 1. Leemos los bytes puros de la cámara/galería (Esto NUNCA falla)
       final bytes = await file.readAsBytes();
       print("📸 Tamaño original de la foto: ${bytes.lengthInBytes} bytes");
 
-      // 2. Intentamos comprimir
       final compressed = await FlutterImageCompress.compressWithList(
         bytes,
         minWidth: 400,
@@ -127,7 +120,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
         quality: 70,
       );
 
-      // 3. Comprobamos si el compresor hizo su trabajo
       if (compressed.isNotEmpty) {
         print(
           "✅ Compresión exitosa. Nuevo tamaño: ${compressed.lengthInBytes} bytes",
@@ -135,11 +127,10 @@ class _InventoryScreenState extends State<InventoryScreen> {
         return compressed;
       } else {
         print("⚠️ El compresor devolvió vacío. Usando los bytes originales.");
-        return bytes; // Salvavidas: usamos la foto sin comprimir
+        return bytes;
       }
     } catch (e) {
       print("❌ Error crítico en el compresor: $e");
-      // Salvavidas extremo: leemos el archivo original y lo devolvemos
       return await file.readAsBytes();
     }
   }
@@ -179,15 +170,16 @@ class _InventoryScreenState extends State<InventoryScreen> {
               child: const Text('Cancelar'),
             ),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              // 💡 Adaptado al error color del theme
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.error,
+                foregroundColor: Theme.of(context).colorScheme.onError,
+              ),
               onPressed: () {
                 Navigator.pop(context);
                 _deleteProduct(id);
               },
-              child: const Text(
-                'Eliminar',
-                style: TextStyle(color: Colors.white),
-              ),
+              child: const Text('Eliminar'),
             ),
           ],
         );
@@ -365,7 +357,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
     );
   }
 
-  // --- ACTUALIZADO: Formulario de producto adaptado a binario ---
   void _showProductFormDialog({Product? productToEdit}) {
     final formKey = GlobalKey<FormState>();
     final isEditing = productToEdit != null;
@@ -376,7 +367,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
     double cost = isEditing ? productToEdit.cost : 0.0;
     int? selectedPromotionId = isEditing ? productToEdit.promotionId : null;
 
-    // Variables para manejar la foto (Híbrido)
     Uint8List? selectedImageBytes = isEditing ? productToEdit.imageBytes : null;
     String? oldImagePath = isEditing ? productToEdit.imagePath : null;
 
@@ -446,7 +436,10 @@ class _InventoryScreenState extends State<InventoryScreen> {
                     height: 100,
                     width: 100,
                     decoration: BoxDecoration(
-                      color: Colors.grey[200],
+                      // 💡 Fondo adaptado al color scheme
+                      color: Theme.of(context)
+                          .colorScheme
+                          .surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(10),
                       image: selectedImageBytes != null
                           ? DecorationImage(
@@ -461,10 +454,12 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                 : null),
                     ),
                     child: selectedImageBytes == null && oldImagePath == null
-                        ? const Icon(
+                        ? Icon(
                             Icons.add_a_photo,
                             size: 40,
-                            color: Colors.grey,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant, // 💡 Color dinámico
                           )
                         : null,
                   ),
@@ -603,7 +598,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                         price: price,
                         cost: cost,
                         imagePath: oldImagePath,
-                        imageBytes: selectedImageBytes, // Guardamos el BLOB
+                        imageBytes: selectedImageBytes,
                         promotionId: selectedPromotionId,
                       );
                       print(
@@ -650,16 +645,20 @@ class _InventoryScreenState extends State<InventoryScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0),
           decoration: BoxDecoration(
-            color: Colors.grey.shade50,
+            // 💡 Fondo y bordes enlazados al Theme
+            color: Theme.of(context).colorScheme.surfaceContainerHighest
+                .withValues(alpha: 0.3),
             borderRadius: BorderRadius.circular(6),
-            border: Border.all(color: Colors.grey.shade200),
+            border: Border.all(
+              color: Theme.of(context).colorScheme.outlineVariant,
+            ),
           ),
           child: Text(
             displayText,
             style: TextStyle(
               fontWeight: bold ? FontWeight.bold : FontWeight.w500,
               fontSize: bold ? 15 : 14,
-              color: textColor ?? Colors.grey.shade800,
+              color: textColor ?? Theme.of(context).colorScheme.onSurface,
             ),
           ),
         ),
@@ -700,10 +699,15 @@ class _InventoryScreenState extends State<InventoryScreen> {
         body: _isLoading
             ? const Center(child: CircularProgressIndicator())
             : _products.isEmpty
-            ? const Center(
+            ? Center(
                 child: Text(
                   'No hay productos en el inventario.',
-                  style: TextStyle(color: Colors.grey, fontSize: 16),
+                  style: TextStyle(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurfaceVariant, // 💡 Color dinámico
+                    fontSize: 16,
+                  ),
                 ),
               )
             : LayoutBuilder(
@@ -718,13 +722,16 @@ class _InventoryScreenState extends State<InventoryScreen> {
                           minWidth: constraints.maxWidth,
                         ),
                         child: DataTable(
+                          // 💡 Ahora usamos colorScheme.primary para la cabecera
                           headingRowColor: WidgetStateProperty.all(
-                            Theme.of(context).primaryColor
+                            Theme.of(context).colorScheme.primary
                                 .withValues(alpha: 0.08),
                           ),
                           headingTextStyle: TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: Theme.of(context).primaryColor,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .primary, // 💡 Adaptado al theme
                             fontSize: 13,
                             letterSpacing: 0.5,
                           ),
@@ -753,9 +760,12 @@ class _InventoryScreenState extends State<InventoryScreen> {
                               cells: [
                                 DataCell(
                                   PopupMenuButton<String>(
-                                    icon: const Icon(
+                                    icon: Icon(
                                       Icons.more_vert,
-                                      color: Colors.grey,
+                                      // 💡 Color dinámico para el icono
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant,
                                     ),
                                     onSelected: (value) {
                                       if (value == 'edit') {
@@ -767,38 +777,42 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                       }
                                     },
                                     itemBuilder: (context) => [
-                                      const PopupMenuItem(
+                                      PopupMenuItem(
                                         value: 'edit',
                                         child: Row(
                                           children: [
                                             Icon(
                                               Icons.edit,
-                                              color: Colors.blue,
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .primary, // 💡 Color del theme
                                               size: 20,
                                             ),
-                                            SizedBox(width: 8),
-                                            Text('Editar todo'),
+                                            const SizedBox(width: 8),
+                                            const Text('Editar todo'),
                                           ],
                                         ),
                                       ),
-                                      const PopupMenuItem(
+                                      PopupMenuItem(
                                         value: 'delete',
                                         child: Row(
                                           children: [
                                             Icon(
                                               Icons.delete,
-                                              color: Colors.red,
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .error, // 💡 Color del theme
                                               size: 20,
                                             ),
-                                            SizedBox(width: 8),
-                                            Text('Eliminar'),
+                                            const SizedBox(width: 8),
+                                            const Text('Eliminar'),
                                           ],
                                         ),
                                       ),
                                     ],
                                   ),
                                 ),
-                                // --- ACTUALIZADO: Pintado híbrido (BLOB o File) ---
+                                // --- Pintado híbrido (BLOB o File) ---
                                 DataCell(
                                   InkWell(
                                     onTap: () => _editSingleImage(product),
@@ -807,13 +821,14 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                       padding: const EdgeInsets.all(2.0),
                                       decoration: BoxDecoration(
                                         border: Border.all(
-                                          color: Theme.of(context).primaryColor
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .primary
                                               .withValues(alpha: 0.3),
                                           width: 1.5,
                                         ),
                                         borderRadius: BorderRadius.circular(8),
                                       ),
-                                      // 💡 LÓGICA BLINDADA: Comprobamos != null y también .isNotEmpty
                                       child:
                                           (product.imageBytes != null &&
                                               product.imageBytes!.isNotEmpty)
@@ -843,10 +858,12 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                                       error,
                                                       stackTrace,
                                                     ) {
-                                                      return const Icon(
+                                                      return Icon(
                                                         Icons
                                                             .image_not_supported_outlined,
-                                                        color: Colors.grey,
+                                                        color: Theme.of(context)
+                                                            .colorScheme
+                                                            .onSurfaceVariant,
                                                         size: 30,
                                                       );
                                                     },
@@ -856,13 +873,18 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                               width: 42,
                                               height: 42,
                                               decoration: BoxDecoration(
-                                                color: Colors.grey.shade100,
+                                                // 💡 Adaptado al theme
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .surfaceContainerHighest,
                                                 borderRadius:
                                                     BorderRadius.circular(6),
                                               ),
-                                              child: const Icon(
+                                              child: Icon(
                                                 Icons.add_a_photo,
-                                                color: Colors.grey,
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .onSurfaceVariant,
                                                 size: 20,
                                               ),
                                             ),
@@ -898,9 +920,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       IconButton(
-                                        icon: const Icon(
+                                        icon: Icon(
                                           Icons.remove_circle_outline,
-                                          color: Colors.orange,
+                                          color: AppColors.warning, // 💡 Color naranja del theme
                                           size: 22,
                                         ),
                                         onPressed: product.units > 0
@@ -941,9 +963,11 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                         bold: true,
                                       ),
                                       IconButton(
-                                        icon: const Icon(
+                                        icon: Icon(
                                           Icons.add_circle_outline,
-                                          color: Colors.green,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .tertiary, // 💡 Verde éxito
                                           size: 22,
                                         ),
                                         onPressed: () =>
@@ -1020,9 +1044,12 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                   _buildClickableCell(
                                     promoName,
                                     () => _showPromotionSelectDialog(product),
+                                    // 💡 Adaptado al theme (color secundario/acento si tiene promo)
                                     textColor: hasPromo
-                                        ? Colors.amber.shade900
-                                        : Colors.grey.shade600,
+                                        ? Theme.of(context).colorScheme.tertiary
+                                        : Theme.of(context)
+                                              .colorScheme
+                                              .onSurfaceVariant,
                                     bold: hasPromo,
                                     maxLength: 18,
                                   ),

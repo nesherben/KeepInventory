@@ -3,6 +3,7 @@ import 'package:package_info_plus/package_info_plus.dart'; // 💡 NUEVO IMPORT
 
 import '../services/database_backup_service.dart';
 import '../theme/app_colors.dart';
+import 'app_alerts.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -163,12 +164,9 @@ class AppDrawer extends StatelessWidget {
             onTap: () async {
               bool success = await DatabaseBackupService.exportDatabase();
               if (success) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text(
-                      '¡Copia generada correctamente! Guárdala bien.',
-                    ),
-                  ),
+                AppAlerts.showSuccess(
+                  context,
+                  '¡Copia generada correctamente! Guárdala bien.',
                 );
               }
             },
@@ -180,7 +178,6 @@ class AppDrawer extends StatelessWidget {
             onTap: () async {
               // 1. Guardamos las referencias de forma segura ANTES del await
               final navigator = Navigator.of(context);
-              final messenger = ScaffoldMessenger.of(context);
               final currentRoute = ModalRoute.of(context)?.settings.name ?? '/';
 
               // Cerramos el Drawer
@@ -191,18 +188,16 @@ class AppDrawer extends StatelessWidget {
 
               // 3. Usamos las referencias guardadas con total seguridad
               if (success) {
-                messenger.showSnackBar(
-                  const SnackBar(
-                    content: Text('¡Base de datos restaurada con éxito!'),
-                  ),
+                AppAlerts.showSuccess(
+                  context,
+                  '¡Base de datos restaurada con éxito!',
                 );
                 // Recargamos la ruta actual para refrescar la UI al instante
                 navigator.pushReplacementNamed(currentRoute);
               } else {
-                messenger.showSnackBar(
-                  const SnackBar(
-                    content: Text('No se seleccionó ningún archivo.'),
-                  ),
+                AppAlerts.showError(
+                  context,
+                  'No se seleccionó ningún archivo.',
                 );
               }
             },

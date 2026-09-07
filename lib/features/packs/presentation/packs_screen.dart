@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/shared_widgets/app_drawer.dart';
+import '../../../core/shared_widgets/app_alerts.dart'; // 💡 Importamos las nuevas Alertas
 
 // Imports de la feature PACKS
 import '../../inventory/data/repositories/product_repository_impl.dart';
@@ -77,14 +78,10 @@ class _PacksScreenState extends State<PacksScreen> {
       await _loadData();
 
       if (mounted) {
-        ScaffoldMessenger.of(context).clearSnackBars();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              '1 unidad de "${pack.name}" desmontada. Componentes devueltos al almacén.',
-            ),
-            duration: const Duration(seconds: 1),
-          ),
+        // 💡 Reemplazado por AppAlerts
+        AppAlerts.showInfo(
+          context,
+          '1 unidad de "${pack.name}" desmontada. Componentes devueltos al almacén.',
         );
       }
     } else if (delta > 0) {
@@ -100,15 +97,10 @@ class _PacksScreenState extends State<PacksScreen> {
         if (productInStock == null || productInStock.units < item.quantity) {
           final missingQty = item.quantity - (productInStock?.units ?? 0);
           if (mounted) {
-            ScaffoldMessenger.of(context).clearSnackBars();
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  'Falta stock de "${item.productName}" (necesitas $missingQty uds más en almacén).',
-                ),
-                backgroundColor: Colors.redAccent,
-                duration: const Duration(seconds: 2),
-              ),
+            // 💡 Reemplazado por AppAlerts de Error
+            AppAlerts.showError(
+              context,
+              'Falta stock de "${item.productName}" (necesitas $missingQty uds más en almacén).',
             );
           }
           return;
@@ -130,13 +122,10 @@ class _PacksScreenState extends State<PacksScreen> {
       await _loadData();
 
       if (mounted) {
-        ScaffoldMessenger.of(context).clearSnackBars();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('¡1 unidad montada añadida a "${pack.name}"!'),
-            backgroundColor: Colors.green,
-            duration: const Duration(seconds: 1),
-          ),
+        // 💡 Reemplazado por AppAlerts de Éxito
+        AppAlerts.showSuccess(
+          context,
+          '¡1 unidad montada añadida a "${pack.name}"!',
         );
       }
     }
@@ -146,12 +135,10 @@ class _PacksScreenState extends State<PacksScreen> {
   void _showPackDialog({Pack? existingPack}) async {
     if (_availableProducts.isEmpty) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Primero necesitas productos activos en el inventario.',
-            ),
-          ),
+        // 💡 Reemplazado por AppAlerts
+        AppAlerts.showWarning(
+          context,
+          'Primero necesitas productos activos en el inventario.',
         );
       }
       return;
@@ -174,15 +161,12 @@ class _PacksScreenState extends State<PacksScreen> {
           if (context.mounted) {
             Navigator.pop(context);
             _loadData();
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  existingPack == null
-                      ? '¡Pack creado con éxito!'
-                      : '¡Pack modificado con éxito!',
-                ),
-                backgroundColor: Colors.green,
-              ),
+            // 💡 Reemplazado por AppAlerts
+            AppAlerts.showSuccess(
+              context,
+              existingPack == null
+                  ? '¡Pack creado con éxito!'
+                  : '¡Pack modificado con éxito!',
             );
           }
         },
@@ -204,26 +188,24 @@ class _PacksScreenState extends State<PacksScreen> {
             child: const Text('Cancelar'),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            // 💡 Adaptado al theme (modo claro y oscuro)
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+              foregroundColor: Theme.of(context).colorScheme.onError,
+            ),
             onPressed: () async {
               await _packRepository.deletePack(pack);
               if (context.mounted) {
                 Navigator.pop(context);
                 _loadData();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text(
-                      'Pack eliminado y componentes devueltos al almacén.',
-                    ),
-                    backgroundColor: Colors.orange,
-                  ),
+                // 💡 Usamos showWarning ya que antes el color era naranja
+                AppAlerts.showWarning(
+                  context,
+                  'Pack eliminado y componentes devueltos al almacén.',
                 );
               }
             },
-            child: const Text(
-              'Eliminar',
-              style: TextStyle(color: Colors.white),
-            ),
+            child: const Text('Eliminar'),
           ),
         ],
       ),
@@ -258,10 +240,14 @@ class _PacksScreenState extends State<PacksScreen> {
         body: _isLoading
             ? const Center(child: CircularProgressIndicator())
             : _packs.isEmpty
-            ? const Center(
+            ? Center(
                 child: Text(
                   'No hay packs creados todavía.',
-                  style: TextStyle(color: Colors.grey, fontSize: 16),
+                  style: TextStyle(
+                    // 💡 Color dinámico para el texto
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontSize: 16,
+                  ),
                 ),
               )
             : ListView.builder(

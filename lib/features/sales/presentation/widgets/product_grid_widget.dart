@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/shared_widgets/app_alerts.dart'; // 💡 Importamos las Alertas
 import '../../../inventory/domain/product.dart';
 
 class ProductGridWidget extends StatelessWidget {
@@ -44,11 +45,16 @@ class ProductGridWidget extends StatelessWidget {
 
         Widget cardContent = Card(
           elevation: isInCart ? 6 : 2,
+          // 💡 Fondo suave para la tarjeta si está seleccionada
+          color: isInCart
+              ? Theme.of(context).colorScheme.primaryContainer
+              : Theme.of(context).cardColor,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
             side: BorderSide(
+              // 💡 Usamos colorScheme.primary para el modo oscuro
               color: isInCart
-                  ? Theme.of(context).primaryColor
+                  ? Theme.of(context).colorScheme.primary
                   : Colors.transparent,
               width: isInCart ? 3.0 : 0.0,
             ),
@@ -114,7 +120,7 @@ class ProductGridWidget extends StatelessWidget {
                     Text(
                       '${product.price.toStringAsFixed(2)} €',
                       style: TextStyle(
-                        color: Theme.of(context).primaryColor,
+                        color: Theme.of(context).colorScheme.primary,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -128,14 +134,8 @@ class ProductGridWidget extends StatelessWidget {
         if (!hasStock) {
           return GestureDetector(
             onTap: () {
-              ScaffoldMessenger.of(context).clearSnackBars();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Este producto está sin stock.'),
-                  backgroundColor: AppColors.danger,
-                  duration: Duration(seconds: 2),
-                ),
-              );
+              // 💡 ¡Mucho más limpio usando AppAlerts!
+              AppAlerts.showError(context, 'Este producto está sin stock.');
             },
             child: ColorFiltered(
               colorFilter: const ColorFilter.matrix([
@@ -194,11 +194,11 @@ class ProductGridWidget extends StatelessWidget {
                   left: 4,
                   child: CircleAvatar(
                     radius: 13,
-                    backgroundColor: Theme.of(context).primaryColor,
+                    backgroundColor: Theme.of(context).colorScheme.primary,
                     child: Text(
                       '$qtyInCart',
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onPrimary,
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
                       ),
@@ -210,7 +210,7 @@ class ProductGridWidget extends StatelessWidget {
                   bottom: 4,
                   right: 4,
                   child: Material(
-                    color: AppColors.danger,
+                    color: Theme.of(context).colorScheme.error,
                     shape: const CircleBorder(),
                     child: InkWell(
                       customBorder: const CircleBorder(),

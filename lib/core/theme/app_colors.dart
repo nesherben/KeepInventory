@@ -23,4 +23,16 @@ abstract final class AppColors {
 
   static const onPrimary = Colors.white;
   static const onSurface = text;
+
+  static const darkBackground = Color(0xFF101816);
+  static const darkSurface = Color(0xFF18221F);
+  static const darkSurfaceMuted = Color(0xFF22302B);
+  static const darkText = Color(0xFFE7F0EC);
+  static const darkTextMuted = Color(0xFFB8C8C2);
+  static const darkTextSubtle = Color(0xFF93A49E);
+  static const darkOutline = Color(0xFF40504A);
+  static const darkOutlineSoft = Color(0xFF2C3A35);
+  static const darkPrimary = Color(0xFF80CBC4);
+  static const darkOnPrimary = Color(0xFF003731);
+  static const darkAccent = Color(0xFFFFCA58);
 }

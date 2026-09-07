@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:dynamic_color/dynamic_color.dart';
 
 import 'core/database/database_helper.dart';
 import 'core/services/image_migration_service.dart';
@@ -28,18 +29,24 @@ class KeepInventoryApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'KeepInventory',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.light,
-      initialRoute: '/',
-      routes: {
-        '/': (context) => const DashboardScreen(),
-        '/inventory': (context) => const InventoryScreen(),
-        '/sales': (context) => const SalesScreen(),
-        '/history': (context) => const HistoryScreen(),
-        '/promotions': (context) => const PromotionsScreen(),
-        '/packs': (context) => const PacksScreen(),
+    return DynamicColorBuilder(
+      builder: (lightDynamic, darkDynamic) {
+        return MaterialApp(
+          title: 'KeepInventory',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.light(dynamicPrimary: lightDynamic?.primary),
+          darkTheme: AppTheme.dark(dynamicPrimary: darkDynamic?.primary),
+          themeMode: ThemeMode.system,
+          initialRoute: '/',
+          routes: {
+            '/': (context) => const DashboardScreen(),
+            '/inventory': (context) => const InventoryScreen(),
+            '/sales': (context) => const SalesScreen(),
+            '/history': (context) => const HistoryScreen(),
+            '/promotions': (context) => const PromotionsScreen(),
+            '/packs': (context) => const PacksScreen(),
+          },
+        );
       },
     );
   }

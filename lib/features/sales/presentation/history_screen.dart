@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/shared_widgets/app_drawer.dart';
+import '../../../core/shared_widgets/app_alerts.dart'; // 💡 Nuestras nuevas alertas
 
 // Imports de la feature SALES
 import '../data/repositories/sale_repository_imp.dart';
@@ -79,37 +80,28 @@ class _HistoryScreenState extends State<HistoryScreen> {
       text: '0.00',
     );
 
-    // Aquí se recalcula el ticket si se rompe el bundle
     void recalculateDefaultRefund() {
       double totalRefund = 0.0;
 
       refundItemQuantities.forEach((item, refundQty) {
         if (refundQty > 0) {
           int keptQty = item.quantity - refundQty;
-
-          // Lo que pagó inicialmente por esta línea de producto
           double originalTotal = item.historicalPrice * item.quantity;
-
-          // Lo que costaría la nueva cantidad (rompiendo o no la promo)
           double newTotal = 0.0;
           if (keptQty > 0) {
             newTotal = _calculateItemTotal(item, keptQty);
           }
-
           totalRefund += (originalTotal - newTotal);
         }
       });
 
-      // Los packs no tienen promo 3x2, su devolución es proporcional directa
       refundPackQuantities.forEach((pack, refundQty) {
         if (refundQty > 0) {
           totalRefund += pack.historicalPrice * refundQty;
         }
       });
 
-      // Si rompes la oferta y el "newTotal" de lo que te quedas es más caro de lo que pagaste por todo, se devuelve 0.
       if (totalRefund < 0) totalRefund = 0.0;
-
       refundAmountController.text = totalRefund.toStringAsFixed(2);
     }
 
@@ -135,13 +127,16 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Indica cuántas unidades devuelves de cada artículo:',
-                        style: TextStyle(fontSize: 13, color: Colors.grey),
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                       ),
                       const SizedBox(height: 12),
 
-                      // 1. LISTA DE PRODUCTOS
+                      // 1. PRODUCTOS SUELTOS
                       if (sale.items.isNotEmpty) ...[
                         const Text(
                           'Productos Sueltos:',
@@ -179,9 +174,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                         ),
                                         Text(
                                           'Pagado: ${(item.quantity * item.historicalPrice).toStringAsFixed(2)} € (Compradas: ${item.quantity})',
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                             fontSize: 11,
-                                            color: Colors.grey,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onSurfaceVariant,
                                           ),
                                         ),
                                       ],
@@ -191,9 +188,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       IconButton(
-                                        icon: const Icon(
+                                        icon: Icon(
                                           Icons.remove_circle_outline,
-                                          color: Colors.orange,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .error,
                                           size: 20,
                                         ),
                                         onPressed: currentRefundQty > 0
@@ -215,9 +214,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                         ),
                                       ),
                                       IconButton(
-                                        icon: const Icon(
+                                        icon: Icon(
                                           Icons.add_circle_outline,
-                                          color: Colors.green,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .tertiary,
                                           size: 20,
                                         ),
                                         onPressed:
@@ -241,15 +242,15 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         }),
                       ],
 
-                      // 2. LISTA DE PACKS
+                      // 2. PACKS
                       if (sale.packItems.isNotEmpty) ...[
                         const SizedBox(height: 12),
-                        const Text(
+                        Text(
                           'Packs / Bundles:',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 13,
-                            color: Colors.amber,
+                            color: Theme.of(context).colorScheme.secondary,
                           ),
                         ),
                         const SizedBox(height: 6),
@@ -258,7 +259,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
                               refundPackQuantities[pack] ?? 0;
                           return Card(
                             margin: const EdgeInsets.symmetric(vertical: 4),
-                            color: Colors.amber.shade50,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .surfaceContainerHighest
+                                .withValues(alpha: 0.5),
                             child: Padding(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 10,
@@ -282,9 +286,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                         ),
                                         Text(
                                           '${pack.historicalPrice.toStringAsFixed(2)} €/pack (Comprados: ${pack.quantity})',
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                             fontSize: 11,
-                                            color: Colors.grey,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onSurfaceVariant,
                                           ),
                                         ),
                                       ],
@@ -294,9 +300,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       IconButton(
-                                        icon: const Icon(
+                                        icon: Icon(
                                           Icons.remove_circle_outline,
-                                          color: Colors.orange,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .error,
                                           size: 20,
                                         ),
                                         onPressed: currentRefundQty > 0
@@ -318,9 +326,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                         ),
                                       ),
                                       IconButton(
-                                        icon: const Icon(
+                                        icon: Icon(
                                           Icons.add_circle_outline,
-                                          color: Colors.green,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .tertiary,
                                           size: 20,
                                         ),
                                         onPressed:
@@ -354,9 +364,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            subtitle: const Text(
+                            subtitle: Text(
                               'Desactívalo si era un pack sorpresa abierto.',
-                              style: TextStyle(fontSize: 11),
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant,
+                              ),
                             ),
                             value: restockPacks,
                             onChanged: (val) =>
@@ -367,7 +382,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
                       const Divider(height: 20),
 
-                      // TOTAL A REEMBOLSAR (EDITABLE)
                       const Text(
                         'Total a Reembolsar al cliente (€):',
                         style: TextStyle(
@@ -381,16 +395,20 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         keyboardType: const TextInputType.numberWithOptions(
                           decimal: true,
                         ),
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
-                          color: Colors.red,
+                          color: Theme.of(context).colorScheme.error,
                         ),
                         decoration: InputDecoration(
                           border: const OutlineInputBorder(),
                           isDense: true,
                           helperText: 'Cálculo automático de ruptura de promoción. Puedes editarlo manualmente.',
-                          helperStyle: TextStyle(color: Colors.grey.shade600),
+                          helperStyle: TextStyle(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
+                          ),
                           helperMaxLines: 2,
                         ),
                       ),
@@ -405,8 +423,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    foregroundColor: Colors.white,
+                    backgroundColor: Theme.of(context).colorScheme.error,
+                    foregroundColor: Theme.of(context).colorScheme.onError,
                   ),
                   onPressed: totalItemsToRefund == 0
                       ? null
@@ -421,13 +439,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
                               0.0;
 
                           if (customRefund > sale.totalAmount) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'No puedes devolver más de lo que cobró el ticket.',
-                                ),
-                                backgroundColor: Colors.red,
-                              ),
+                            // 💡 ¡AQUÍ ESTÁ NUESTRA NUEVA ALERTA!
+                            AppAlerts.showError(
+                              context,
+                              'No puedes devolver más de lo que cobró el ticket.',
                             );
                             return;
                           }
@@ -443,13 +458,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           await _loadSales();
 
                           if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Devolución procesada y contabilidad rebalanceada.',
-                                ),
-                                backgroundColor: Colors.green,
-                              ),
+                            // 💡 ¡Y AQUÍ LA DE ÉXITO!
+                            AppAlerts.showSuccess(
+                              context,
+                              'Devolución procesada y contabilidad rebalanceada.',
                             );
                           }
                         },
@@ -512,7 +524,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       if (val != null) {
                         controller.text = val;
                       } else {
-                        controller.clear(); // <-- ¡AQUÍ ESTÁ EL TRUCO!
+                        controller.clear();
                       }
                     });
                   },
@@ -580,7 +592,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
       groupDatePrefix[groupKey] = datePrefix;
     }
 
-    final groupKeys = groupedSales.keys.toList();
+    final List<String> groupKeys = groupedSales.keys.toList();
 
     return Listener(
       onPointerDown: (event) {
@@ -614,7 +626,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
         body: _isLoading
             ? const Center(child: CircularProgressIndicator())
             : _sales.isEmpty
-            ? const Center(child: Text('No hay ventas registradas aún.'))
+            ? Center(
+                child: Text(
+                  'No hay ventas registradas aún.',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              )
             : ListView.builder(
                 padding: const EdgeInsets.all(12),
                 itemCount: groupKeys.length,
@@ -632,6 +651,16 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       ? groupKey.replaceFirst('🎪 Feria: ', '')
                       : '';
 
+                  final groupHeaderColor = isFair
+                      ? Theme.of(context).colorScheme.secondary
+                            .withValues(alpha: 0.15)
+                      : Theme.of(context).colorScheme.primary
+                            .withValues(alpha: 0.12);
+
+                  final groupHeaderTextColor = isFair
+                      ? Theme.of(context).colorScheme.secondary
+                      : Theme.of(context).colorScheme.primary;
+
                   return Card(
                     margin: const EdgeInsets.only(bottom: 12),
                     elevation: 2,
@@ -640,12 +669,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     ),
                     child: ExpansionTile(
                       initiallyExpanded: true,
-                      collapsedBackgroundColor: isFair
-                          ? Colors.amber.shade50
-                          : Colors.teal.shade50,
-                      backgroundColor:
-                          (isFair ? Colors.amber.shade50 : Colors.teal.shade50)
-                              .withValues(alpha: 0.3),
+                      collapsedBackgroundColor: groupHeaderColor,
+                      backgroundColor: groupHeaderColor.withValues(alpha: 0.5),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -661,9 +686,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,
-                                color: isFair
-                                    ? Colors.amber.shade900
-                                    : Colors.teal,
+                                color: groupHeaderTextColor,
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -673,16 +696,21 @@ class _HistoryScreenState extends State<HistoryScreen> {
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
-                              color: isFair
-                                  ? Colors.amber.shade900
-                                  : Colors.teal,
+                              color: groupHeaderTextColor,
                             ),
                           ),
                         ],
                       ),
                       subtitle: Row(
                         children: [
-                          Text('${groupSales.length} tickets'),
+                          Text(
+                            '${groupSales.length} tickets',
+                            style: TextStyle(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                            ),
+                          ),
                           const SizedBox(width: 12),
                           InkWell(
                             onTap: () => _showAssignFairDialog(
@@ -698,7 +726,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                     ? '[Cambiar Feria]'
                                     : '[+ Agrupar en Feria]',
                                 style: TextStyle(
-                                  color: Colors.blue.shade700,
+                                  color: Theme.of(context).colorScheme.primary,
                                   fontWeight: FontWeight.bold,
                                   fontSize: 12,
                                 ),
@@ -721,14 +749,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                 ),
                                 child: ExpansionTile(
                                   leading: CircleAvatar(
-                                    backgroundColor: isFair
-                                        ? Colors.amber.shade100
-                                        : Colors.teal.shade100,
+                                    backgroundColor: groupHeaderColor,
                                     child: Icon(
                                       Icons.receipt_long,
-                                      color: isFair
-                                          ? Colors.amber.shade900
-                                          : Colors.teal.shade800,
+                                      color: groupHeaderTextColor,
                                     ),
                                   ),
                                   title: Text(
@@ -740,16 +764,21 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                   subtitle: Text(_formatDateTime(sale.date)),
                                   trailing: Text(
                                     '${sale.totalAmount.toStringAsFixed(2)} €',
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 16,
-                                      color: Colors.teal,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .primary,
                                     ),
                                   ),
                                   children: [
                                     const Divider(height: 1),
                                     Container(
-                                      color: Colors.grey[50],
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .surfaceContainerHighest
+                                          .withValues(alpha: 0.3),
                                       padding: const EdgeInsets.symmetric(
                                         vertical: 8,
                                       ),
@@ -759,10 +788,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                           ...sale.items.map((item) {
                                             return ListTile(
                                               dense: true,
-                                              leading: const Icon(
+                                              leading: Icon(
                                                 Icons.inventory_2_outlined,
                                                 size: 18,
-                                                color: Colors.grey,
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .onSurfaceVariant,
                                               ),
                                               title: Text(
                                                 '${item.quantity}x ${item.productName}',
@@ -777,10 +808,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                           ...sale.packItems.map((packItem) {
                                             return ListTile(
                                               dense: true,
-                                              leading: const Icon(
+                                              leading: Icon(
                                                 Icons.card_giftcard,
                                                 size: 18,
-                                                color: Colors.amber,
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .secondary,
                                               ),
                                               title: Text(
                                                 '${packItem.quantity}x ${packItem.packName} (Pack)',
@@ -792,7 +825,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                                 '${(packItem.quantity * packItem.historicalPrice).toStringAsFixed(2)} €',
                                                 style: TextStyle(
                                                   fontWeight: FontWeight.w600,
-                                                  color: Colors.amber.shade900,
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .secondary,
                                                 ),
                                               ),
                                             );
@@ -810,9 +845,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                               width: double.infinity,
                                               child: OutlinedButton.icon(
                                                 style: OutlinedButton.styleFrom(
-                                                  foregroundColor: Colors.red,
-                                                  side: const BorderSide(
-                                                    color: Colors.red,
+                                                  foregroundColor: Theme.of(
+                                                    context,
+                                                  ).colorScheme.error,
+                                                  side: BorderSide(
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .error,
                                                   ),
                                                 ),
                                                 icon: const Icon(

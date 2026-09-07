@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/shared_widgets/app_drawer.dart';
+import '../../../core/shared_widgets/app_alerts.dart'; // 💡 Importamos las Alertas
 
 // --- IMPORTS MODULARES ---
 // Sales
@@ -35,8 +36,10 @@ class SalesScreen extends StatefulWidget {
   State<SalesScreen> createState() => _SalesScreenState();
 }
 
-class _SalesScreenState extends State<SalesScreen> {
-  // Instanciamos los 4 repositorios para poder cruzar los datos en el TPV
+class _SalesScreenState extends State<SalesScreen>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
   final _saleRepository = SaleRepositoryImpl(SaleLocalDatasource());
   final _productRepository = ProductRepositoryImpl(ProductLocalDatasource());
   final _packRepository = PackRepositoryImpl(PackLocalDatasource());
@@ -45,6 +48,11 @@ class _SalesScreenState extends State<SalesScreen> {
   );
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  // 💡 Restauradas las variables del gesto táctil
+  double? _startX;
+  double? _startY;
+
   List<Product> _products = [];
   List<Pack> _packs = [];
   Map<int, Promotion> _promotionsMap = {};
@@ -56,13 +64,24 @@ class _SalesScreenState extends State<SalesScreen> {
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+
+    _tabController.addListener(() {
+      if (mounted) setState(() {});
+    });
+
     _loadData();
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
 
-    // Cada repositorio nos trae su parte correspondiente
     final products = await _productRepository.getProducts();
     final packs = await _packRepository.getPacks();
     final promotions = await _promotionRepository.getPromotions();
@@ -78,17 +97,14 @@ class _SalesScreenState extends State<SalesScreen> {
     });
   }
 
-  // --- MÉTODOS PRODUCTOS ---
   void _addToCart(Product product) {
     final currentQtyInCart = _cart[product] ?? 0;
 
     if (currentQtyInCart >= product.units) {
-      ScaffoldMessenger.of(context).clearSnackBars();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No hay más stock disponible de este producto.'),
-          duration: Duration(seconds: 2),
-        ),
+      // 💡 Migrado a AppAlerts
+      AppAlerts.showError(
+        context,
+        'No hay más stock disponible de este producto.',
       );
       return;
     }
@@ -117,26 +133,18 @@ class _SalesScreenState extends State<SalesScreen> {
       _cart.remove(product);
     });
 
-    ScaffoldMessenger.of(context).clearSnackBars();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${product.name} eliminado del carrito'),
-        duration: const Duration(seconds: 1),
-      ),
-    );
+    // 💡 Migrado a AppAlerts
+    AppAlerts.showInfo(context, '${product.name} eliminado del carrito');
   }
 
-  // --- MÉTODOS PACKS ---
   void _addPackToCart(Pack pack) {
     final currentQtyInCart = _cartPacks[pack] ?? 0;
 
     if (currentQtyInCart >= pack.units) {
-      ScaffoldMessenger.of(context).clearSnackBars();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No hay más unidades en stock de este pack.'),
-          duration: Duration(seconds: 2),
-        ),
+      // 💡 Migrado a AppAlerts
+      AppAlerts.showError(
+        context,
+        'No hay más unidades en stock de este pack.',
       );
       return;
     }
@@ -165,16 +173,10 @@ class _SalesScreenState extends State<SalesScreen> {
       _cartPacks.remove(pack);
     });
 
-    ScaffoldMessenger.of(context).clearSnackBars();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Pack ${pack.name} eliminado del carrito'),
-        duration: const Duration(seconds: 1),
-      ),
-    );
+    // 💡 Migrado a AppAlerts
+    AppAlerts.showInfo(context, 'Pack ${pack.name} eliminado del carrito');
   }
 
-  // --- TOTALES Y CÁLCULOS ---
   double _calculateItemTotal(Product product, int qty) {
     if (product.promotionId == null ||
         !_promotionsMap.containsKey(product.promotionId)) {
@@ -233,7 +235,6 @@ class _SalesScreenState extends State<SalesScreen> {
       final finalSubtotal = _calculateItemTotal(product, qty);
       final effectiveUnitPrice = finalSubtotal / qty;
 
-      // Buscar si tiene promo activa
       String? pType;
       int? pThresh;
       double? pDisc;
@@ -254,7 +255,7 @@ class _SalesScreenState extends State<SalesScreen> {
         historicalPrice: effectiveUnitPrice,
         originalPrice: product.price,
         promotionId: product.promotionId,
-        promoType: pType, // CONGELAMOS LA PROMO
+        promoType: pType,
         promoThreshold: pThresh,
         promoDiscount: pDisc,
       );
@@ -277,7 +278,6 @@ class _SalesScreenState extends State<SalesScreen> {
       packItems: salePackItems,
     );
 
-    // Guardamos la venta en el repositorio correspondiente
     await _saleRepository.processSale(sale);
 
     setState(() {
@@ -288,80 +288,48 @@ class _SalesScreenState extends State<SalesScreen> {
     await _loadData();
 
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('¡Cobro realizado con éxito!'),
-          backgroundColor: Colors.green,
-          duration: Duration(seconds: 2),
-        ),
-      );
+      // 💡 Migrado a AppAlerts de Éxito
+      AppAlerts.showSuccess(context, '¡Cobro realizado con éxito!');
     }
-  }
-
-  Widget _buildProductsGrid({
-    required double bottomPadding,
-    required int crossAxisCount,
-  }) {
-    double horizontalDistance = 0;
-    double verticalDistance = 0;
-
-    return Builder(
-      builder: (context) {
-        final salesMenu = DefaultTabController.of(context);
-
-        return Listener(
-          onPointerDown: (_) {
-            horizontalDistance = 0;
-            verticalDistance = 0;
-          },
-          onPointerMove: (event) {
-            horizontalDistance += event.delta.dx;
-            verticalDistance += event.delta.dy;
-
-            if (salesMenu.index == 0 &&
-                horizontalDistance > 50 &&
-                verticalDistance.abs() < 30) {
-              horizontalDistance = 0;
-              verticalDistance = 0;
-              _scaffoldKey.currentState?.openDrawer();
-            }
-          },
-          onPointerUp: (_) {
-            horizontalDistance = 0;
-            verticalDistance = 0;
-          },
-          onPointerCancel: (_) {
-            horizontalDistance = 0;
-            verticalDistance = 0;
-          },
-          child: ProductGridWidget(
-            products: _products,
-            cart: _cart,
-            bottomPadding: bottomPadding,
-            crossAxisCount: crossAxisCount,
-            onAddToCart: _addToCart,
-            onRemoveFromCart: _removeFromCart,
-            onRemoveAllFromCart: _removeAllFromCart,
-          ),
-        );
-      },
-    );
   }
 
   @override
   Widget build(BuildContext context) {
-    // 💡 CAMBIO CLAVE: Detecta si la pantalla está en horizontal (Ancho mayor que Alto)
     final screenSize = MediaQuery.of(context).size;
     final bool isLandscape = screenSize.width > screenSize.height;
 
-    return DefaultTabController(
-      length: 2,
+    return Listener(
+      onPointerDown: (event) {
+        _startX = event.position.dx;
+        _startY = event.position.dy;
+      },
+      onPointerMove: (event) {
+        if (_startX == null || _startY == null) return;
+        final dx = event.position.dx - _startX!;
+        final dy = event.position.dy - _startY!;
+
+        if (_tabController.index == 0 && dx > 50 && dy.abs() < 30) {
+          _startX = null;
+          _startY = null;
+          _scaffoldKey.currentState?.openDrawer();
+        }
+      },
+      onPointerUp: (_) {
+        _startX = null;
+        _startY = null;
+      },
+      onPointerCancel: (_) {
+        _startX = null;
+        _startY = null;
+      },
       child: Scaffold(
         key: _scaffoldKey,
+        drawerEnableOpenDragGesture: _tabController.index == 0,
         appBar: AppBar(
           title: const Text('Panel de Ventas (TPV)'),
-          bottom: const TabBar(
-            tabs: [
+          bottom: TabBar(
+            controller: _tabController,
+            tabs: const [
               Tab(icon: Icon(Icons.inventory_2), text: 'Productos Sueltos'),
               Tab(icon: Icon(Icons.card_giftcard), text: 'Packs y Bundles'),
             ],
@@ -371,21 +339,32 @@ class _SalesScreenState extends State<SalesScreen> {
         body: _isLoading
             ? const Center(child: CircularProgressIndicator())
             : isLandscape
-            ?
-              // --- DISEÑO HORIZONTAL (SPLIT VIEW) ---
-              Row(
+            ? Row(
                 children: [
                   Expanded(
                     flex: 3,
                     child: TabBarView(
+                      controller: _tabController,
                       children: [
-                        _buildProductsGrid(
+                        ProductGridWidget(
+                          products: _products,
+                          cart: _cart,
                           bottomPadding: 16,
                           crossAxisCount: 4,
+                          onAddToCart: _addToCart,
+                          onRemoveFromCart: _removeFromCart,
+                          onRemoveAllFromCart: _removeAllFromCart,
                         ),
                         _packs.isEmpty
-                            ? const Center(
-                                child: Text('No hay packs creados todavía.'),
+                            ? Center(
+                                child: Text(
+                                  'No hay packs creados todavía.',
+                                  style: TextStyle(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
+                                  ),
+                                ),
                               )
                             : PacksGridWidget(
                                 packs: _packs,
@@ -402,12 +381,14 @@ class _SalesScreenState extends State<SalesScreen> {
                   const VerticalDivider(width: 1, thickness: 1),
                   Container(
                     width: 380,
-                    color: Colors.white,
+                    color: Theme.of(context).cardColor,
                     child: Column(
                       children: [
                         Container(
                           padding: const EdgeInsets.all(16.0),
-                          color: Colors.grey.shade50,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .surfaceContainerHighest,
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
@@ -423,7 +404,7 @@ class _SalesScreenState extends State<SalesScreen> {
                                 style: TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
-                                  color: Theme.of(context).primaryColor,
+                                  color: Theme.of(context).colorScheme.primary,
                                 ),
                               ),
                             ],
@@ -452,8 +433,12 @@ class _SalesScreenState extends State<SalesScreen> {
                                 padding: const EdgeInsets.symmetric(
                                   vertical: 16,
                                 ),
-                                backgroundColor: Theme.of(context).primaryColor,
-                                foregroundColor: Colors.white,
+                                backgroundColor: Theme.of(context)
+                                    .colorScheme
+                                    .primary,
+                                foregroundColor: Theme.of(context)
+                                    .colorScheme
+                                    .onPrimary,
                                 elevation: 0,
                               ),
                               onPressed: (_cart.isEmpty && _cartPacks.isEmpty)
@@ -474,16 +459,30 @@ class _SalesScreenState extends State<SalesScreen> {
                   ),
                 ],
               )
-            :
-              // --- DISEÑO VERTICAL (GRID + CARRITO FLOTANTE) ---
-              Stack(
+            : Stack(
                 children: [
                   TabBarView(
+                    controller: _tabController,
                     children: [
-                      _buildProductsGrid(bottomPadding: 120, crossAxisCount: 3),
+                      ProductGridWidget(
+                        products: _products,
+                        cart: _cart,
+                        bottomPadding: 120,
+                        crossAxisCount: 3,
+                        onAddToCart: _addToCart,
+                        onRemoveFromCart: _removeFromCart,
+                        onRemoveAllFromCart: _removeAllFromCart,
+                      ),
                       _packs.isEmpty
-                          ? const Center(
-                              child: Text('No hay packs creados todavía.'),
+                          ? Center(
+                              child: Text(
+                                'No hay packs creados todavía.',
+                                style: TextStyle(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant,
+                                ),
+                              ),
                             )
                           : PacksGridWidget(
                               packs: _packs,
@@ -507,7 +506,7 @@ class _SalesScreenState extends State<SalesScreen> {
 
                           return Container(
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: Theme.of(context).cardColor,
                               borderRadius: const BorderRadius.vertical(
                                 top: Radius.circular(24),
                               ),
@@ -539,22 +538,24 @@ class _SalesScreenState extends State<SalesScreen> {
                                     ),
                                     children: [
                                       (_cart.isEmpty && _cartPacks.isEmpty)
-                                          ? const Padding(
-                                              padding: EdgeInsets.only(
+                                          ? Padding(
+                                              padding: const EdgeInsets.only(
                                                 top: 32.0,
                                               ),
                                               child: Center(
                                                 child: Text(
                                                   'El carrito está vacío',
                                                   style: TextStyle(
-                                                    color: Colors.grey,
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .onSurfaceVariant,
                                                   ),
                                                 ),
                                               ),
                                             )
                                           : Column(
                                               children: [
-                                                // Productos
+                                                // PRODUCTOS (CON PROMOS)
                                                 ..._cart.keys.map((product) {
                                                   final qty = _cart[product]!;
                                                   final itemTotal =
@@ -562,10 +563,52 @@ class _SalesScreenState extends State<SalesScreen> {
                                                         product,
                                                         qty,
                                                       );
+
+                                                  final hasPromo =
+                                                      product.promotionId !=
+                                                          null &&
+                                                      _promotionsMap
+                                                          .containsKey(
+                                                            product.promotionId,
+                                                          );
+                                                  final promoName = hasPromo
+                                                      ? _promotionsMap[product
+                                                                .promotionId!]!
+                                                            .name
+                                                      : '';
+
                                                   return ListTile(
                                                     title: Text(product.name),
-                                                    subtitle: Text(
-                                                      '${product.price.toStringAsFixed(2)} € x $qty uds',
+                                                    subtitle: Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      mainAxisSize:
+                                                          MainAxisSize.min,
+                                                      children: [
+                                                        Text(
+                                                          '${product.price.toStringAsFixed(2)} € x $qty uds',
+                                                        ),
+                                                        if (hasPromo)
+                                                          Padding(
+                                                            padding:
+                                                                const EdgeInsets.only(
+                                                                  top: 2.0,
+                                                                ),
+                                                            child: Text(
+                                                              '🏷️ $promoName',
+                                                              style: TextStyle(
+                                                                color: Theme.of(
+                                                                  context,
+                                                                ).colorScheme.tertiary,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                                fontSize: 12,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                      ],
                                                     ),
                                                     trailing: Row(
                                                       mainAxisSize:
@@ -593,16 +636,17 @@ class _SalesScreenState extends State<SalesScreen> {
                                                               _removeAllFromCart(
                                                                 product,
                                                               ),
-                                                          child: const Padding(
+                                                          child: Padding(
                                                             padding:
-                                                                EdgeInsets.all(
+                                                                const EdgeInsets.all(
                                                                   8.0,
                                                                 ),
                                                             child: Icon(
                                                               Icons
                                                                   .remove_circle,
-                                                              color: Colors
-                                                                  .redAccent,
+                                                              color: Theme.of(
+                                                                context,
+                                                              ).colorScheme.error,
                                                               size: 28,
                                                             ),
                                                           ),
@@ -611,7 +655,7 @@ class _SalesScreenState extends State<SalesScreen> {
                                                     ),
                                                   );
                                                 }),
-                                                // Packs
+                                                // PACKS
                                                 ..._cartPacks.keys.map((pack) {
                                                   final qty = _cartPacks[pack]!;
                                                   final itemTotal =
@@ -647,16 +691,17 @@ class _SalesScreenState extends State<SalesScreen> {
                                                               _removeAllPackFromCart(
                                                                 pack,
                                                               ),
-                                                          child: const Padding(
+                                                          child: Padding(
                                                             padding:
-                                                                EdgeInsets.all(
+                                                                const EdgeInsets.all(
                                                                   8.0,
                                                                 ),
                                                             child: Icon(
                                                               Icons
                                                                   .remove_circle,
-                                                              color: Colors
-                                                                  .redAccent,
+                                                              color: Theme.of(
+                                                                context,
+                                                              ).colorScheme.error,
                                                               size: 28,
                                                             ),
                                                           ),
@@ -675,7 +720,7 @@ class _SalesScreenState extends State<SalesScreen> {
                                     right: 0,
                                     child: IgnorePointer(
                                       child: Container(
-                                        color: Colors.white,
+                                        color: Theme.of(context).cardColor,
                                         child: Column(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
@@ -684,7 +729,9 @@ class _SalesScreenState extends State<SalesScreen> {
                                               width: 40,
                                               height: 5,
                                               decoration: BoxDecoration(
-                                                color: Colors.grey[400],
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .outlineVariant,
                                                 borderRadius:
                                                     BorderRadius.circular(10),
                                               ),
@@ -715,7 +762,8 @@ class _SalesScreenState extends State<SalesScreen> {
                                                       fontWeight:
                                                           FontWeight.bold,
                                                       color: Theme.of(context)
-                                                          .primaryColor,
+                                                          .colorScheme
+                                                          .primary,
                                                     ),
                                                   ),
                                                 ],
@@ -737,10 +785,11 @@ class _SalesScreenState extends State<SalesScreen> {
                                       child: Container(
                                         padding: const EdgeInsets.all(16.0),
                                         decoration: BoxDecoration(
-                                          color: Colors.white,
+                                          color: Theme.of(context).cardColor,
                                           border: Border(
                                             top: BorderSide(
-                                              color: Colors.grey.shade300,
+                                              color: Theme.of(context)
+                                                  .dividerColor,
                                             ),
                                           ),
                                         ),
@@ -753,8 +802,11 @@ class _SalesScreenState extends State<SalesScreen> {
                                                     vertical: 16,
                                                   ),
                                               backgroundColor: Theme.of(context)
-                                                  .primaryColor,
-                                              foregroundColor: Colors.white,
+                                                  .colorScheme
+                                                  .primary,
+                                              foregroundColor: Theme.of(context)
+                                                  .colorScheme
+                                                  .onPrimary,
                                               elevation: 0,
                                             ),
                                             onPressed: _processSale,

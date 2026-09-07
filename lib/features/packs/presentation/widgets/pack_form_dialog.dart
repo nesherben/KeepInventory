@@ -5,6 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 
+// 💡 Importamos las alertas y tu paleta de colores
+import '../../../../core/shared_widgets/app_alerts.dart';
+import '../../../../core/theme/app_colors.dart';
+
 import '../../../inventory/domain/product.dart';
 import '../../domain/pack.dart';
 
@@ -93,13 +97,10 @@ class _PackFormDialogState extends State<PackFormDialog> {
     _formKey.currentState!.save();
 
     if (selectedItems.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Añade al menos 1 producto al pack usando el desplegable.',
-          ),
-          backgroundColor: Colors.orange,
-        ),
+      // 💡 Reemplazado por AppAlerts de advertencia
+      AppAlerts.showWarning(
+        context,
+        'Añade al menos 1 producto al pack usando el desplegable.',
       );
       return;
     }
@@ -116,13 +117,10 @@ class _PackFormDialogState extends State<PackFormDialog> {
         }
         final effectiveAvailable = entry.key.units + previousDeduction;
         if ((entry.value * packUnits) > effectiveAvailable) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Stock insuficiente de "${entry.key.name}" para montar $packUnits unidades.',
-              ),
-              backgroundColor: Colors.redAccent,
-            ),
+          // 💡 Reemplazado por AppAlerts de error
+          AppAlerts.showError(
+            context,
+            'Stock insuficiente de "${entry.key.name}" para montar $packUnits unidades.',
           );
           return;
         }
@@ -205,7 +203,8 @@ class _PackFormDialogState extends State<PackFormDialog> {
         height: 85,
         width: 85,
         decoration: BoxDecoration(
-          color: Colors.grey[200],
+          // 💡 Color dinámico para la caja de la imagen
+          color: Theme.of(context).colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(12),
           image: selectedImageBytes != null
               ? DecorationImage(
@@ -220,7 +219,13 @@ class _PackFormDialogState extends State<PackFormDialog> {
                     : null),
         ),
         child: (selectedImageBytes == null && oldImagePath == null)
-            ? const Icon(Icons.add_a_photo, color: Colors.grey, size: 30)
+            ? Icon(
+                Icons.add_a_photo,
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurfaceVariant, // 💡 Color dinámico
+                size: 30,
+              )
             : null,
       ),
     );
@@ -237,6 +242,7 @@ class _PackFormDialogState extends State<PackFormDialog> {
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      backgroundColor: Theme.of(context).cardColor, // 💡 Fondo adaptado
       child: ConstrainedBox(
         constraints: BoxConstraints(
           maxWidth: isLandscape ? 850 : screenSize.width * 0.90,
@@ -248,7 +254,7 @@ class _PackFormDialogState extends State<PackFormDialog> {
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
-              mainAxisSize: MainAxisSize.min, // 💡 El diálogo se ajustará a sus hijos sin forzar el máximo si no es necesario
+              mainAxisSize: MainAxisSize.min,
               children: [
                 // --- TÍTULO FIJO ---
                 Text(
@@ -268,7 +274,7 @@ class _PackFormDialogState extends State<PackFormDialog> {
                       ? Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // 💡 HORIZONTAL IZQUIERDA: Items (Con Scroll propio)
+                            // 💡 HORIZONTAL IZQUIERDA: Items
                             Expanded(
                               flex: 11,
                               child: Column(
@@ -319,9 +325,13 @@ class _PackFormDialogState extends State<PackFormDialog> {
                                       const SizedBox(width: 8),
                                       ElevatedButton(
                                         style: ElevatedButton.styleFrom(
+                                          // 💡 Adaptado al theme (modo claro y oscuro)
                                           backgroundColor: Theme.of(context)
-                                              .primaryColor,
-                                          foregroundColor: Colors.white,
+                                              .colorScheme
+                                              .primary,
+                                          foregroundColor: Theme.of(context)
+                                              .colorScheme
+                                              .onPrimary,
                                           padding: const EdgeInsets.symmetric(
                                             horizontal: 12,
                                             vertical: 12,
@@ -349,13 +359,15 @@ class _PackFormDialogState extends State<PackFormDialog> {
                                             child: Text(
                                               'No hay productos en este pack.',
                                               style: TextStyle(
-                                                color: Colors.grey.shade500,
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .onSurfaceVariant, // 💡 Color dinámico
                                                 fontSize: 13,
                                               ),
                                             ),
                                           )
                                         : ListView(
-                                            shrinkWrap: true, // Importante para que no expanda hasta el infinito
+                                            shrinkWrap: true,
                                             children: _buildItemsList(
                                               parsedUnits:
                                                   int.tryParse(
@@ -453,9 +465,13 @@ class _PackFormDialogState extends State<PackFormDialog> {
                                 const SizedBox(width: 8),
                                 ElevatedButton(
                                   style: ElevatedButton.styleFrom(
+                                    // 💡 Adaptado al theme
                                     backgroundColor: Theme.of(context)
-                                        .primaryColor,
-                                    foregroundColor: Colors.white,
+                                        .colorScheme
+                                        .primary,
+                                    foregroundColor: Theme.of(context)
+                                        .colorScheme
+                                        .onPrimary,
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 12,
                                       vertical: 12,
@@ -483,7 +499,9 @@ class _PackFormDialogState extends State<PackFormDialog> {
                                       child: Text(
                                         'No hay productos en este pack.',
                                         style: TextStyle(
-                                          color: Colors.grey.shade500,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurfaceVariant, // 💡 Color dinámico
                                           fontSize: 13,
                                         ),
                                       ),
@@ -587,9 +605,12 @@ class _PackFormDialogState extends State<PackFormDialog> {
 
       return Card(
         margin: const EdgeInsets.symmetric(vertical: 4),
+        color: Theme.of(context).cardColor, // 💡 Fondo de tarjeta adaptativo
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
-          side: BorderSide(color: Colors.grey.shade200),
+          side: BorderSide(
+            color: Theme.of(context).colorScheme.outlineVariant,
+          ), // 💡 Borde adaptativo
         ),
         elevation: 0,
         child: ListTile(
@@ -605,9 +626,10 @@ class _PackFormDialogState extends State<PackFormDialog> {
             'Almacén: $effectiveAvailable (Req: $neededTotal)',
             style: TextStyle(
               fontSize: 11,
+              // 💡 Lógica de color dinámica
               color: neededTotal > effectiveAvailable
-                  ? Colors.red
-                  : Colors.grey[700],
+                  ? Theme.of(context).colorScheme.error
+                  : Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
           trailing: Row(
@@ -616,9 +638,9 @@ class _PackFormDialogState extends State<PackFormDialog> {
               IconButton(
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
-                icon: const Icon(
+                icon: Icon(
                   Icons.remove_circle_outline,
-                  color: Colors.orange,
+                  color: AppColors.warning, // 💡 Naranja de la paleta
                   size: 20,
                 ),
                 onPressed: qtyPerPack > 1
@@ -639,9 +661,11 @@ class _PackFormDialogState extends State<PackFormDialog> {
               IconButton(
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
-                icon: const Icon(
+                icon: Icon(
                   Icons.add_circle_outline,
-                  color: Colors.green,
+                  color: Theme.of(context)
+                      .colorScheme
+                      .tertiary, // 💡 Verde éxito
                   size: 20,
                 ),
                 onPressed:
@@ -655,9 +679,9 @@ class _PackFormDialogState extends State<PackFormDialog> {
               IconButton(
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
-                icon: const Icon(
+                icon: Icon(
                   Icons.delete_outline,
-                  color: Colors.red,
+                  color: Theme.of(context).colorScheme.error, // 💡 Rojo error
                   size: 20,
                 ),
                 onPressed: () {
