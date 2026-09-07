@@ -7,7 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 
 import '../../../core/shared_widgets/app_drawer.dart';
-import '../../../../core/theme/app_colors.dart'; // 💡 Aseguramos importar tu paleta
+import '../../../../core/theme/app_colors.dart';
 
 // Imports de la feature INVENTORY
 import '../../promotions/data/repositories/promotion_repository_impl.dart';
@@ -19,6 +19,10 @@ import '../data/datasources/product_local_datasource.dart';
 // Imports de la feature PROMOTIONS
 import '../../promotions/domain/promotion.dart';
 import '../../promotions/data/datasources/promotion_local_datasource.dart';
+
+// 💡 Widgets extraídos para modularizar
+import 'widgets/inventory_form_dialog.dart';
+import 'widgets/inventory_table_cell.dart';
 
 class InventoryScreen extends StatefulWidget {
   const InventoryScreen({super.key});
@@ -111,24 +115,13 @@ class _InventoryScreenState extends State<InventoryScreen> {
   Future<Uint8List?> _compressImage(File file) async {
     try {
       final bytes = await file.readAsBytes();
-      print("📸 Tamaño original de la foto: ${bytes.lengthInBytes} bytes");
-
       final compressed = await FlutterImageCompress.compressWithList(
         bytes,
         minWidth: 400,
         minHeight: 400,
         quality: 70,
       );
-
-      if (compressed.isNotEmpty) {
-        print(
-          "✅ Compresión exitosa. Nuevo tamaño: ${compressed.lengthInBytes} bytes",
-        );
-        return compressed;
-      } else {
-        print("⚠️ El compresor devolvió vacío. Usando los bytes originales.");
-        return bytes;
-      }
+      return compressed.isNotEmpty ? compressed : bytes;
     } catch (e) {
       print("❌ Error crítico en el compresor: $e");
       return await file.readAsBytes();
@@ -170,7 +163,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
               child: const Text('Cancelar'),
             ),
             ElevatedButton(
-              // 💡 Adaptado al error color del theme
               style: ElevatedButton.styleFrom(
                 backgroundColor: Theme.of(context).colorScheme.error,
                 foregroundColor: Theme.of(context).colorScheme.onError,
@@ -357,312 +349,27 @@ class _InventoryScreenState extends State<InventoryScreen> {
     );
   }
 
+  // 💡 Apertura del formulario modularizado
   void _showProductFormDialog({Product? productToEdit}) {
-    final formKey = GlobalKey<FormState>();
-    final isEditing = productToEdit != null;
-
-    String name = isEditing ? productToEdit.name : '';
-    int units = isEditing ? productToEdit.units : 0;
-    double price = isEditing ? productToEdit.price : 0.0;
-    double cost = isEditing ? productToEdit.cost : 0.0;
-    int? selectedPromotionId = isEditing ? productToEdit.promotionId : null;
-
-    Uint8List? selectedImageBytes = isEditing ? productToEdit.imageBytes : null;
-    String? oldImagePath = isEditing ? productToEdit.imagePath : null;
-
     showDialog(
       context: context,
       builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            final isLandscape =
-                MediaQuery.of(context).size.width >
-                MediaQuery.of(context).size.height;
-            final fieldWidth = isLandscape ? 320.0 : 520.0;
-
-            final imagePicker = SizedBox(
-              width: 120,
-              child: Center(
-                child: GestureDetector(
-                  onTap: () async {
-                    showModalBottomSheet(
-                      context: context,
-                      builder: (context) => Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          ListTile(
-                            leading: const Icon(Icons.camera_alt),
-                            title: const Text('Cámara'),
-                            onTap: () async {
-                              Navigator.pop(context);
-                              final pickedFile = await _picker.pickImage(
-                                source: ImageSource.camera,
-                              );
-                              if (pickedFile != null) {
-                                final bytes = await _compressImage(
-                                  File(pickedFile.path),
-                                );
-                                setDialogState(() {
-                                  selectedImageBytes = bytes;
-                                  oldImagePath = null;
-                                });
-                              }
-                            },
-                          ),
-                          ListTile(
-                            leading: const Icon(Icons.photo_library),
-                            title: const Text('Galería'),
-                            onTap: () async {
-                              Navigator.pop(context);
-                              final pickedFile = await _picker.pickImage(
-                                source: ImageSource.gallery,
-                              );
-                              if (pickedFile != null) {
-                                final bytes = await _compressImage(
-                                  File(pickedFile.path),
-                                );
-                                setDialogState(() {
-                                  selectedImageBytes = bytes;
-                                  oldImagePath = null;
-                                });
-                              }
-                            },
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                  child: Container(
-                    height: 100,
-                    width: 100,
-                    decoration: BoxDecoration(
-                      // 💡 Fondo adaptado al color scheme
-                      color: Theme.of(context)
-                          .colorScheme
-                          .surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(10),
-                      image: selectedImageBytes != null
-                          ? DecorationImage(
-                              image: MemoryImage(selectedImageBytes!),
-                              fit: BoxFit.cover,
-                            )
-                          : (oldImagePath != null
-                                ? DecorationImage(
-                                    image: FileImage(File(oldImagePath!)),
-                                    fit: BoxFit.cover,
-                                  )
-                                : null),
-                    ),
-                    child: selectedImageBytes == null && oldImagePath == null
-                        ? Icon(
-                            Icons.add_a_photo,
-                            size: 40,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurfaceVariant, // 💡 Color dinámico
-                          )
-                        : null,
-                  ),
-                ),
-              ),
-            );
-            final nameField = TextFormField(
-              initialValue: name,
-              decoration: const InputDecoration(
-                labelText: 'Nombre del producto',
-              ),
-              validator: (value) =>
-                  value == null || value.isEmpty ? 'Requerido' : null,
-              onSaved: (value) => name = value!,
-            );
-
-            return AlertDialog(
-              title: Text(isEditing ? 'Editar Producto' : 'Nuevo Producto'),
-              content: SizedBox(
-                width: isLandscape ? 760 : 520,
-                child: Form(
-                  key: formKey,
-                  child: SingleChildScrollView(
-                    child: Wrap(
-                      alignment: WrapAlignment.center,
-                      spacing: 12,
-                      runSpacing: 12,
-                      children: [
-                        if (isLandscape)
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              imagePicker,
-                              const SizedBox(width: 16),
-                              SizedBox(width: 320, child: nameField),
-                            ],
-                          )
-                        else ...[
-                          SizedBox(width: fieldWidth, child: imagePicker),
-                          SizedBox(width: fieldWidth, child: nameField),
-                        ],
-                        SizedBox(
-                          width: fieldWidth,
-                          child: TextFormField(
-                            initialValue: units.toString(),
-                            decoration: const InputDecoration(
-                              labelText: 'Unidades en stock',
-                            ),
-                            keyboardType: TextInputType.number,
-                            validator: (value) => value == null || value.isEmpty
-                                ? 'Requerido'
-                                : null,
-                            onSaved: (value) => units = int.parse(value!),
-                          ),
-                        ),
-                        SizedBox(
-                          width: fieldWidth,
-                          child: TextFormField(
-                            initialValue: price == 0.0 ? '' : price.toString(),
-                            decoration: const InputDecoration(
-                              labelText: 'Precio de venta (€)',
-                            ),
-                            keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true,
-                            ),
-                            validator: (value) => value == null || value.isEmpty
-                                ? 'Requerido'
-                                : null,
-                            onSaved: (value) => price = double.parse(
-                              value!.replaceAll(',', '.'),
-                            ),
-                          ),
-                        ),
-                        SizedBox(
-                          width: fieldWidth,
-                          child: TextFormField(
-                            initialValue: cost == 0.0 ? '' : cost.toString(),
-                            decoration: const InputDecoration(
-                              labelText: 'Coste de adquisición (€)',
-                            ),
-                            keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true,
-                            ),
-                            validator: (value) => value == null || value.isEmpty
-                                ? 'Requerido'
-                                : null,
-                            onSaved: (value) => cost = double.parse(
-                              value!.replaceAll(',', '.'),
-                            ),
-                          ),
-                        ),
-                        SizedBox(
-                          width: fieldWidth,
-                          child: DropdownButtonFormField<int?>(
-                            initialValue: selectedPromotionId,
-                            decoration: const InputDecoration(
-                              labelText: 'Promoción Aplicada',
-                            ),
-                            items: [
-                              const DropdownMenuItem(
-                                value: null,
-                                child: Text('Sin promoción'),
-                              ),
-                              ..._promotionsMap.values.map(
-                                (p) => DropdownMenuItem(
-                                  value: p.id,
-                                  child: Text(p.name),
-                                ),
-                              ),
-                            ],
-                            onChanged: (value) {
-                              setDialogState(() => selectedPromotionId = value);
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancelar'),
-                ),
-                ElevatedButton(
-                  onPressed: () async {
-                    if (formKey.currentState!.validate()) {
-                      formKey.currentState!.save();
-
-                      final savedProduct = ProductModel(
-                        id: isEditing ? productToEdit.id : null,
-                        name: name,
-                        units: units,
-                        price: price,
-                        cost: cost,
-                        imagePath: oldImagePath,
-                        imageBytes: selectedImageBytes,
-                        promotionId: selectedPromotionId,
-                      );
-                      print(
-                        "🔍 DEBUG - ¿Se van a guardar bytes?: ${selectedImageBytes != null ? 'SÍ (${selectedImageBytes!.length} bytes)' : 'NO (es null)'}",
-                      );
-                      if (isEditing) {
-                        await _productRepository.updateProduct(savedProduct);
-                      } else {
-                        await _productRepository.insertProduct(savedProduct);
-                      }
-
-                      if (context.mounted) {
-                        Navigator.pop(context);
-                        _loadProducts();
-                      }
-                    }
-                  },
-                  child: Text(isEditing ? 'Actualizar' : 'Guardar'),
-                ),
-              ],
-            );
+        return ProductFormDialog(
+          productToEdit: productToEdit,
+          promotionsMap: _promotionsMap,
+          onSave: (productModel, isEditing) async {
+            if (isEditing) {
+              await _productRepository.updateProduct(productModel);
+            } else {
+              await _productRepository.insertProduct(productModel);
+            }
+            if (context.mounted) {
+              Navigator.pop(context);
+              _loadProducts();
+            }
           },
         );
       },
-    );
-  }
-
-  Widget _buildClickableCell(
-    String text,
-    VoidCallback onTap, {
-    bool bold = false,
-    Color? textColor,
-    int maxLength = 20,
-  }) {
-    final displayText = text.length > maxLength
-        ? '${text.substring(0, maxLength - 3)}...'
-        : text;
-
-    return Tooltip(
-      message: text.length > maxLength ? text : '',
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(6),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0),
-          decoration: BoxDecoration(
-            // 💡 Fondo y bordes enlazados al Theme
-            color: Theme.of(context).colorScheme.surfaceContainerHighest
-                .withValues(alpha: 0.3),
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(
-              color: Theme.of(context).colorScheme.outlineVariant,
-            ),
-          ),
-          child: Text(
-            displayText,
-            style: TextStyle(
-              fontWeight: bold ? FontWeight.bold : FontWeight.w500,
-              fontSize: bold ? 15 : 14,
-              color: textColor ?? Theme.of(context).colorScheme.onSurface,
-            ),
-          ),
-        ),
-      ),
     );
   }
 
@@ -703,9 +410,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 child: Text(
                   'No hay productos en el inventario.',
                   style: TextStyle(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurfaceVariant, // 💡 Color dinámico
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                     fontSize: 16,
                   ),
                 ),
@@ -722,16 +427,13 @@ class _InventoryScreenState extends State<InventoryScreen> {
                           minWidth: constraints.maxWidth,
                         ),
                         child: DataTable(
-                          // 💡 Ahora usamos colorScheme.primary para la cabecera
                           headingRowColor: WidgetStateProperty.all(
                             Theme.of(context).colorScheme.primary
                                 .withValues(alpha: 0.08),
                           ),
                           headingTextStyle: TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .primary, // 💡 Adaptado al theme
+                            color: Theme.of(context).colorScheme.primary,
                             fontSize: 13,
                             letterSpacing: 0.5,
                           ),
@@ -762,7 +464,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                   PopupMenuButton<String>(
                                     icon: Icon(
                                       Icons.more_vert,
-                                      // 💡 Color dinámico para el icono
                                       color: Theme.of(context)
                                           .colorScheme
                                           .onSurfaceVariant,
@@ -785,7 +486,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                               Icons.edit,
                                               color: Theme.of(context)
                                                   .colorScheme
-                                                  .primary, // 💡 Color del theme
+                                                  .primary,
                                               size: 20,
                                             ),
                                             const SizedBox(width: 8),
@@ -801,7 +502,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                               Icons.delete,
                                               color: Theme.of(context)
                                                   .colorScheme
-                                                  .error, // 💡 Color del theme
+                                                  .error,
                                               size: 20,
                                             ),
                                             const SizedBox(width: 8),
@@ -812,7 +513,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                     ],
                                   ),
                                 ),
-                                // --- Pintado híbrido (BLOB o File) ---
                                 DataCell(
                                   InkWell(
                                     onTap: () => _editSingleImage(product),
@@ -873,7 +573,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                               width: 42,
                                               height: 42,
                                               decoration: BoxDecoration(
-                                                // 💡 Adaptado al theme
                                                 color: Theme.of(context)
                                                     .colorScheme
                                                     .surfaceContainerHighest,
@@ -892,9 +591,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                   ),
                                 ),
                                 DataCell(
-                                  _buildClickableCell(
-                                    product.name,
-                                    () => _showEditSingleFieldDialog(
+                                  InventoryTableCell(
+                                    text: product.name,
+                                    onTap: () => _showEditSingleFieldDialog(
                                       product: product,
                                       title: 'Nombre',
                                       initialValue: product.name,
@@ -922,7 +621,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                       IconButton(
                                         icon: Icon(
                                           Icons.remove_circle_outline,
-                                          color: AppColors.warning, // 💡 Color naranja del theme
+                                          color: AppColors.warning,
                                           size: 22,
                                         ),
                                         onPressed: product.units > 0
@@ -932,9 +631,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                               )
                                             : null,
                                       ),
-                                      _buildClickableCell(
-                                        product.units.toString(),
-                                        () => _showEditSingleFieldDialog(
+                                      InventoryTableCell(
+                                        text: product.units.toString(),
+                                        onTap: () => _showEditSingleFieldDialog(
                                           product: product,
                                           title: 'Unidades',
                                           initialValue: product.units
@@ -967,7 +666,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                           Icons.add_circle_outline,
                                           color: Theme.of(context)
                                               .colorScheme
-                                              .tertiary, // 💡 Verde éxito
+                                              .tertiary,
                                           size: 22,
                                         ),
                                         onPressed: () =>
@@ -977,9 +676,10 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                   ),
                                 ),
                                 DataCell(
-                                  _buildClickableCell(
-                                    '${product.price.toStringAsFixed(2)} €',
-                                    () => _showEditSingleFieldDialog(
+                                  InventoryTableCell(
+                                    text:
+                                        '${product.price.toStringAsFixed(2)} €',
+                                    onTap: () => _showEditSingleFieldDialog(
                                       product: product,
                                       title: 'Precio de venta',
                                       initialValue: product.price.toString(),
@@ -1009,9 +709,10 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                   ),
                                 ),
                                 DataCell(
-                                  _buildClickableCell(
-                                    '${product.cost.toStringAsFixed(2)} €',
-                                    () => _showEditSingleFieldDialog(
+                                  InventoryTableCell(
+                                    text:
+                                        '${product.cost.toStringAsFixed(2)} €',
+                                    onTap: () => _showEditSingleFieldDialog(
                                       product: product,
                                       title: 'Coste de adquisición',
                                       initialValue: product.cost.toString(),
@@ -1041,10 +742,10 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                   ),
                                 ),
                                 DataCell(
-                                  _buildClickableCell(
-                                    promoName,
-                                    () => _showPromotionSelectDialog(product),
-                                    // 💡 Adaptado al theme (color secundario/acento si tiene promo)
+                                  InventoryTableCell(
+                                    text: promoName,
+                                    onTap: () =>
+                                        _showPromotionSelectDialog(product),
                                     textColor: hasPromo
                                         ? Theme.of(context).colorScheme.tertiary
                                         : Theme.of(context)

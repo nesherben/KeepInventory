@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:package_info_plus/package_info_plus.dart'; // 💡 NUEVO IMPORT
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // 💡 NUEVO
 
 import '../services/database_backup_service.dart';
 import '../theme/app_colors.dart';
@@ -7,6 +8,52 @@ import 'app_alerts.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
+
+  // Lista de colores del huevo de pascua (guardamos un identificador único en 'key')
+  static final List<Map<String, dynamic>> _themeColors = [
+    {'name': 'Por defecto / Sistema', 'color': null, 'key': 'default'},
+    {'name': 'Azul Eléctrico', 'color': Colors.blue, 'key': 'blue'},
+    {'name': 'Verde Esmeralda', 'color': Colors.teal, 'key': 'teal'},
+    {'name': 'Púrpura Ciber', 'color': Colors.deepPurple, 'key': 'purple'},
+    {'name': 'Rojo Carmesí', 'color': Colors.redAccent, 'key': 'red'},
+    {'name': 'Naranja Épico', 'color': Colors.orangeAccent, 'key': 'orange'},
+  ];
+
+  static final ValueNotifier<Color?> customThemeNotifier =
+      ValueNotifier<Color?>(null);
+  static int _currentColorIndex = 0;
+
+  // 💡 NUEVO: Método para cargar el tema guardado al iniciar la app
+  static Future<void> loadSavedTheme() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedKey = prefs.getString('selected_theme_key') ?? 'default';
+
+    // Buscamos qué índice corresponde a la clave guardada
+    final index = _themeColors.indexWhere((item) => item['key'] == savedKey);
+    if (index != -1) {
+      _currentColorIndex = index;
+      customThemeNotifier.value =
+          _themeColors[_currentColorIndex]['color'] as Color?;
+    }
+  }
+
+  void _cycleTheme(BuildContext context) async {
+    _currentColorIndex = (_currentColorIndex + 1) % _themeColors.length;
+    final selectedTheme = _themeColors[_currentColorIndex];
+
+    // Cambiamos el color en caliente
+    customThemeNotifier.value = selectedTheme['color'] as Color?;
+
+    // Guardamos la preferencia en el dispositivo de forma permanente
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('selected_theme_key', selectedTheme['key']);
+
+    AppAlerts.showSuccess(
+      context,
+      '🎨 ¡Tema cambiado a: ${selectedTheme['name']}!',
+      duration: const Duration(seconds: 2),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,56 +67,64 @@ class AppDrawer extends StatelessWidget {
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.primary,
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                // 💡 AQUÍ ESTÁ LA MAGIA: Un Row para poner la versión junto al nombre
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+            // 💡 HUEVO DE PASCUA: GestureDetector en todo el contenedor de la cabecera
+            child: InkWell(
+              onTap: () => _cycleTheme(context),
+              splashColor: Colors.white.withValues(alpha: 0.2),
+              highlightColor: Colors.transparent,
+              child: SizedBox(
+                width: double.infinity,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.end,
                   children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        const Text(
+                          'KeepInventory',
+                          style: TextStyle(
+                            color: AppColors.onPrimary,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        FutureBuilder<PackageInfo>(
+                          future: PackageInfo.fromPlatform(),
+                          builder: (context, snapshot) {
+                            final version = snapshot.hasData
+                                ? snapshot.data!.version
+                                : '';
+                            if (version.isEmpty) return const SizedBox.shrink();
+
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 4.0),
+                              child: Text(
+                                'v$version',
+                                style: const TextStyle(
+                                  color: AppColors.onPrimary,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
                     const Text(
-                      'KeepInventory',
+                      'Gestión y POS', // Opcional: una pista sutil para el cliente
                       style: TextStyle(
                         color: AppColors.onPrimary,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    FutureBuilder<PackageInfo>(
-                      future: PackageInfo.fromPlatform(),
-                      builder: (context, snapshot) {
-                        final version = snapshot.hasData
-                            ? snapshot.data!.version
-                            : '';
-                        if (version.isEmpty) return const SizedBox.shrink();
-
-                        return Padding(
-                          padding: const EdgeInsets.only(
-                            bottom: 4.0,
-                          ), // Lo alineamos a la base del texto grande
-                          child: Text(
-                            'v$version',
-                            style: const TextStyle(
-                              color: AppColors.onPrimary,
-                              fontSize: 12,
-                            ),
-                          ),
-                        );
-                      },
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Gestión y POS',
-                  style: TextStyle(color: AppColors.onPrimary, fontSize: 14),
-                ),
-              ],
+              ),
             ),
           ),
-
           // --- SECCIÓN 1: PRINCIPAL Y VENTAS ---
           const Padding(
             padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
@@ -176,23 +231,18 @@ class AppDrawer extends StatelessWidget {
             title: const Text('Restaurar base de datos'),
             subtitle: const Text('Carga un archivo .db guardado'),
             onTap: () async {
-              // 1. Guardamos las referencias de forma segura ANTES del await
               final navigator = Navigator.of(context);
               final currentRoute = ModalRoute.of(context)?.settings.name ?? '/';
 
-              // Cerramos el Drawer
               navigator.pop();
 
-              // 2. Esperamos a que termine la importación nativa
               bool success = await DatabaseBackupService.importDatabase();
 
-              // 3. Usamos las referencias guardadas con total seguridad
               if (success) {
                 AppAlerts.showSuccess(
                   context,
                   '¡Base de datos restaurada con éxito!',
                 );
-                // Recargamos la ruta actual para refrescar la UI al instante
                 navigator.pushReplacementNamed(currentRoute);
               } else {
                 AppAlerts.showError(
