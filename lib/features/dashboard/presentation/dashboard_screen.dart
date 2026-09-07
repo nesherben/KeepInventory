@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 // Rutas actualizadas a la arquitectura modular
 import '../../../core/shared_widgets/app_drawer.dart';
+import '../../../core/shared_widgets/app_alerts.dart'; // 💡 Importamos tus AppAlerts
 import '../data/datasources/dashboard_local_datasource.dart';
 import '../data/repositories/dashboard_repository_impl.dart';
 import '../../../../core/services/github_update_service.dart';
@@ -47,18 +48,41 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (!_hasCheckedForUpdate) {
       _hasCheckedForUpdate = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _checkForAppUpdates();
+        _checkForAppUpdates(); // Comprobación automática silenciosa
       });
     }
   }
 
-  Future<void> _checkForAppUpdates() async {
+  // 💡 Añadido el parámetro 'manual' para distinguir si pulsaste el botón
+  Future<void> _checkForAppUpdates({bool manual = false}) async {
     try {
-      await Future.delayed(const Duration(seconds: 2));
+      if (!manual) {
+        await Future.delayed(const Duration(seconds: 2));
+      } else {
+        // Aviso visual rápido si el usuario le dio al botón
+        AppAlerts.showInfo(
+          context,
+          'Buscando actualizaciones en GitHub...',
+          duration: const Duration(seconds: 2),
+        );
+      }
+
       if (!mounted) return;
 
       final updateInfo = await GithubUpdateService.checkForUpdate();
-      if (updateInfo == null || !mounted) return;
+
+      // Si no hay actualizaciones o falló la conexión
+      if (updateInfo == null) {
+        if (manual && mounted) {
+          AppAlerts.showSuccess(
+            context,
+            '¡La aplicación ya está en la última versión!',
+          );
+        }
+        return;
+      }
+
+      if (!mounted) return;
 
       final String version = updateInfo['version']?.toString() ?? 'Desconocida';
       final String notes =
@@ -67,7 +91,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
       if (url.isEmpty) return;
 
-      if (!mounted) return;
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -95,7 +118,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           notes,
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.grey.shade700,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
                           ),
                         ),
                       ),
@@ -126,11 +151,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       onPressed: () async {
                         setDialogState(() => isDownloading = true);
 
-                        await GithubUpdateService.downloadAndInstall(url, (p) {
-                          if (context.mounted) {
-                            setDialogState(() => progress = p);
+                        final success =
+                            await GithubUpdateService.downloadAndInstall(url, (
+                              p,
+                            ) {
+                              if (context.mounted) {
+                                setDialogState(() => progress = p);
+                              }
+                            });
+
+                        if (dialogContext.mounted) {
+                          Navigator.pop(dialogContext); // Cerramos el diálogo
+
+                          if (!success && mounted) {
+                            AppAlerts.showError(
+                              context,
+                              'Error al descargar la actualización. Revisa tu conexión a internet.',
+                            );
                           }
-                        });
+                        }
                       },
                       child: const Text('Actualizar ahora'),
                     ),
@@ -143,6 +182,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
       );
     } catch (e) {
       print("❌ Error en _checkForAppUpdates: $e");
+      if (manual && mounted) {
+        AppAlerts.showError(context, 'No se pudo conectar con el servidor.');
+      }
     }
   }
 
@@ -435,7 +477,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final screenWidth = MediaQuery.of(context).size.width;
     final bool isWideScreen = screenWidth >= 600;
 
-    // 💡 Restaurado el Listener para que al deslizar se abra el menú lateral en el Dashboard
     return Listener(
       onPointerDown: (event) {
         _startX = event.position.dx;
@@ -478,10 +519,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ? 'Desactivar modo privacidad'
                   : 'Activar modo privacidad',
             ),
+            // 💡 REEMPLAZADO: Ahora es el botón de buscar actualizaciones
             IconButton(
-              icon: const Icon(Icons.refresh),
-              onPressed: _loadMetrics,
-              tooltip: 'Actualizar datos',
+              icon: const Icon(Icons.system_update_alt), // Icono más intuitivo
+              onPressed: () => _checkForAppUpdates(manual: true),
+              tooltip: 'Buscar actualizaciones',
             ),
             const SizedBox(width: 8),
           ],
