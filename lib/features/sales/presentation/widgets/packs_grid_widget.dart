@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/app_colors.dart';
 import '../../../packs/domain/pack.dart';
 
 class PacksGridWidget extends StatelessWidget {
@@ -63,10 +64,10 @@ class PacksGridWidget extends StatelessWidget {
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
                           return Container(
-                            color: Colors.grey[200],
+                            color: AppColors.surfaceMuted,
                             child: const Icon(
                               Icons.image_not_supported_outlined,
-                              color: Colors.grey,
+                              color: AppColors.textSubtle,
                               size: 40,
                             ),
                           );
@@ -78,20 +79,20 @@ class PacksGridWidget extends StatelessWidget {
                               fit: BoxFit.cover,
                               errorBuilder: (context, error, stackTrace) {
                                 return Container(
-                                  color: Colors.grey[200],
+                                  color: AppColors.surfaceMuted,
                                   child: const Icon(
                                     Icons.image_not_supported_outlined,
-                                    color: Colors.grey,
+                                    color: AppColors.textSubtle,
                                     size: 40,
                                   ),
                                 );
                               },
                             )
                           : Container(
-                              color: Colors.grey[200],
+                              color: AppColors.surfaceMuted,
                               child: const Icon(
                                 Icons.card_giftcard,
-                                color: Colors.grey,
+                                color: AppColors.textSubtle,
                                 size: 40,
                               ),
                             )),
@@ -131,7 +132,7 @@ class PacksGridWidget extends StatelessWidget {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   content: Text('Este pack no tiene stock montado.'),
-                  backgroundColor: Colors.redAccent,
+                  backgroundColor: AppColors.danger,
                   duration: Duration(seconds: 2),
                 ),
               );
@@ -209,7 +210,7 @@ class PacksGridWidget extends StatelessWidget {
                   bottom: 4,
                   right: 4,
                   child: Material(
-                    color: Colors.red.shade700,
+                    color: AppColors.danger,
                     shape: const CircleBorder(),
                     child: InkWell(
                       customBorder: const CircleBorder(),

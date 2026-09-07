@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart'; // 💡 NUEVO IMPORT
 
 import '../services/database_backup_service.dart';
+import '../theme/app_colors.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -29,7 +30,7 @@ class AppDrawer extends StatelessWidget {
                     const Text(
                       'KeepInventory',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: AppColors.onPrimary,
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
                       ),
@@ -50,8 +51,7 @@ class AppDrawer extends StatelessWidget {
                           child: Text(
                             'v$version',
                             style: const TextStyle(
-                              color: Colors
-                                  .white70, // Discreto y un poco translúcido
+                              color: AppColors.onPrimary,
                               fontSize: 12,
                             ),
                           ),
@@ -63,7 +63,7 @@ class AppDrawer extends StatelessWidget {
                 const SizedBox(height: 8),
                 const Text(
                   'Gestión y POS',
-                  style: TextStyle(color: Colors.white70, fontSize: 14),
+                  style: TextStyle(color: AppColors.onPrimary, fontSize: 14),
                 ),
               ],
             ),
@@ -77,7 +77,7 @@ class AppDrawer extends StatelessWidget {
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.bold,
-                color: Colors.grey,
+                color: AppColors.textSubtle,
                 letterSpacing: 0.8,
               ),
             ),
@@ -107,7 +107,7 @@ class AppDrawer extends StatelessWidget {
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.bold,
-                color: Colors.grey,
+                color: AppColors.textSubtle,
                 letterSpacing: 0.8,
               ),
             ),
@@ -143,7 +143,7 @@ class AppDrawer extends StatelessWidget {
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.bold,
-                color: Colors.grey,
+                color: AppColors.textSubtle,
                 letterSpacing: 0.8,
               ),
             ),
@@ -157,7 +157,7 @@ class AppDrawer extends StatelessWidget {
           ),
           const Divider(height: 24, indent: 16, endIndent: 16),
           ListTile(
-            leading: const Icon(Icons.backup, color: Colors.teal),
+            leading: const Icon(Icons.backup, color: AppColors.primary),
             title: const Text('Hacer copia de seguridad'),
             subtitle: const Text('Exporta tu base de datos actual'),
             onTap: () async {
@@ -174,7 +174,7 @@ class AppDrawer extends StatelessWidget {
             },
           ),
           ListTile(
-            leading: const Icon(Icons.restore, color: Colors.amber),
+            leading: const Icon(Icons.restore, color: AppColors.warning),
             title: const Text('Restaurar base de datos'),
             subtitle: const Text('Carga un archivo .db guardado'),
             onTap: () async {
