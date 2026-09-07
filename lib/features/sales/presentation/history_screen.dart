@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/shared_widgets/app_drawer.dart';
-import '../../../core/shared_widgets/app_alerts.dart'; // 💡 Nuestras nuevas alertas
+import '../../../core/shared_widgets/app_alerts.dart';
 
 // Imports de la feature SALES
 import '../data/repositories/sale_repository_imp.dart';
@@ -20,16 +20,26 @@ class _HistoryScreenState extends State<HistoryScreen> {
   final _saleRepository = SaleRepositoryImpl(SaleLocalDatasource());
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  final TextEditingController _searchController = TextEditingController();
+
   double? _startX;
   double? _startY;
 
   bool _isLoading = true;
   List<Sale> _sales = [];
+  String _searchQuery =
+      ''; // 💡 Variable para el buscador de tickets/ferias/productos
 
   @override
   void initState() {
     super.initState();
     _loadSales();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadSales() async {
@@ -44,7 +54,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     });
   }
 
-  // --- MATEMÁTICAS DE LA PROMOCIÓN PARA REEMBOLSOS (Usa el Snapshot del Ticket) ---
+  // --- MATEMÁTICAS DE LA PROMOCIÓN PARA REEMBOLSOS ---
   double _calculateItemTotal(SaleItem item, int qtyToKeep) {
     if (item.promoType == null ||
         item.promoThreshold == null ||
@@ -439,7 +449,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
                               0.0;
 
                           if (customRefund > sale.totalAmount) {
-                            // 💡 ¡AQUÍ ESTÁ NUESTRA NUEVA ALERTA!
                             AppAlerts.showError(
                               context,
                               'No puedes devolver más de lo que cobró el ticket.',
@@ -458,7 +467,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           await _loadSales();
 
                           if (mounted) {
-                            // 💡 ¡Y AQUÍ LA DE ÉXITO!
                             AppAlerts.showSuccess(
                               context,
                               'Devolución procesada y contabilidad rebalanceada.',
@@ -555,6 +563,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   newName.isEmpty ? null : newName,
                 );
                 await _loadSales();
+                if (mounted) {
+                  AppAlerts.showSuccess(
+                    context,
+                    newName.isEmpty
+                        ? 'Feria desasignada correctamente.'
+                        : 'Ventas agrupadas en "$newName" con éxito.',
+                  );
+                }
               },
               child: const Text('Guardar'),
             ),
@@ -574,10 +590,28 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // 💡 Lógica de filtrado inteligente: busca en nombre de feria, ID de ticket y nombres de artículos o packs
+    final filteredSales = _sales.where((sale) {
+      final query = _searchQuery.toLowerCase();
+
+      final matchesFair =
+          sale.fairName != null && sale.fairName!.toLowerCase().contains(query);
+      final matchesTicketId = sale.id.toString().contains(query);
+
+      final matchesItem = sale.items.any(
+        (item) => (item.productName ?? '').toLowerCase().contains(query),
+      );
+      final matchesPack = sale.packItems.any(
+        (pack) => pack.packName.toLowerCase().contains(query),
+      );
+
+      return matchesFair || matchesTicketId || matchesItem || matchesPack;
+    }).toList();
+
     final Map<String, List<Sale>> groupedSales = {};
     final Map<String, String> groupDatePrefix = {};
 
-    for (var sale in _sales) {
+    for (var sale in filteredSales) {
       final day = sale.date.day.toString().padLeft(2, '0');
       final month = sale.date.month.toString().padLeft(2, '0');
       final year = sale.date.year.toString();
@@ -625,262 +659,335 @@ class _HistoryScreenState extends State<HistoryScreen> {
         drawer: const AppDrawer(),
         body: _isLoading
             ? const Center(child: CircularProgressIndicator())
-            : _sales.isEmpty
-            ? Center(
-                child: Text(
-                  'No hay ventas registradas aún.',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              )
-            : ListView.builder(
-                padding: const EdgeInsets.all(12),
-                itemCount: groupKeys.length,
-                itemBuilder: (context, index) {
-                  final groupKey = groupKeys[index];
-                  final groupSales = groupedSales[groupKey]!;
-                  final datePrefix = groupDatePrefix[groupKey]!;
-
-                  final groupTotal = groupSales.fold(
-                    0.0,
-                    (sum, sale) => sum + sale.totalAmount,
-                  );
-                  final isFair = groupKey.startsWith('🎪 Feria:');
-                  final currentFairName = isFair
-                      ? groupKey.replaceFirst('🎪 Feria: ', '')
-                      : '';
-
-                  final groupHeaderColor = isFair
-                      ? Theme.of(context).colorScheme.secondary
-                            .withValues(alpha: 0.15)
-                      : Theme.of(context).colorScheme.primary
-                            .withValues(alpha: 0.12);
-
-                  final groupHeaderTextColor = isFair
-                      ? Theme.of(context).colorScheme.secondary
-                      : Theme.of(context).colorScheme.primary;
-
-                  return Card(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    elevation: 2,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+            : Column(
+                children: [
+                  // --- 💡 BARRA DE BÚSQUEDA DE TICKETS Y FERIAS ---
+                  Container(
+                    padding: const EdgeInsets.all(12.0),
+                    color: Theme.of(context).colorScheme.surfaceContainerHighest
+                        .withValues(alpha: 0.3),
+                    child: TextField(
+                      controller: _searchController,
+                      onChanged: (value) =>
+                          setState(() => _searchQuery = value),
+                      decoration: InputDecoration(
+                        hintText:
+                            'Buscar por feria, ID de ticket o artículo...',
+                        prefixIcon: const Icon(Icons.search),
+                        suffixIcon: _searchQuery.isNotEmpty
+                            ? IconButton(
+                                icon: const Icon(Icons.clear),
+                                onPressed: () {
+                                  _searchController.clear();
+                                  setState(() => _searchQuery = '');
+                                },
+                              )
+                            : null,
+                        isDense: true,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        filled: true,
+                        fillColor: Theme.of(context).cardColor,
+                      ),
                     ),
-                    child: ExpansionTile(
-                      initiallyExpanded: true,
-                      collapsedBackgroundColor: groupHeaderColor,
-                      backgroundColor: groupHeaderColor.withValues(alpha: 0.5),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      collapsedShape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      title: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
+                  ),
+
+                  // --- LISTADO DE HISTORIAL Y FERIAS ---
+                  Expanded(
+                    child: groupKeys.isEmpty
+                        ? Center(
                             child: Text(
-                              groupKey,
+                              _sales.isEmpty
+                                  ? 'No hay ventas registradas aún.'
+                                  : 'No se encontraron tickets con esa búsqueda.',
                               style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                                color: groupHeaderTextColor,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          Text(
-                            '${groupTotal.toStringAsFixed(2)} €',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                              color: groupHeaderTextColor,
-                            ),
-                          ),
-                        ],
-                      ),
-                      subtitle: Row(
-                        children: [
-                          Text(
-                            '${groupSales.length} tickets',
-                            style: TextStyle(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurfaceVariant,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          InkWell(
-                            onTap: () => _showAssignFairDialog(
-                              datePrefix,
-                              currentFairName,
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 4.0,
-                              ),
-                              child: Text(
-                                isFair
-                                    ? '[Cambiar Feria]'
-                                    : '[+ Agrupar en Feria]',
-                                style: TextStyle(
-                                  color: Theme.of(context).colorScheme.primary,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 12,
-                                ),
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant,
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                      children: [
-                        const Divider(height: 1),
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Column(
-                            children: groupSales.map((sale) {
+                          )
+                        : ListView.builder(
+                            padding: const EdgeInsets.all(12),
+                            itemCount: groupKeys.length,
+                            itemBuilder: (context, index) {
+                              final groupKey = groupKeys[index];
+                              final groupSales = groupedSales[groupKey]!;
+                              final datePrefix = groupDatePrefix[groupKey]!;
+
+                              final groupTotal = groupSales.fold(
+                                0.0,
+                                (sum, sale) => sum + sale.totalAmount,
+                              );
+                              final isFair = groupKey.startsWith('🎪 Feria:');
+                              final currentFairName = isFair
+                                  ? groupKey.replaceFirst('🎪 Feria: ', '')
+                                  : '';
+
+                              final baseThemeColor = isFair
+                                  ? Theme.of(context).colorScheme.secondary
+                                  : Theme.of(context).colorScheme.primary;
+
+                              final groupHeaderColor = baseThemeColor
+                                  .withValues(alpha: 0.12);
+                              final groupHeaderTextColor = baseThemeColor;
+
                               return Card(
-                                margin: const EdgeInsets.only(bottom: 8),
-                                elevation: 1,
+                                margin: const EdgeInsets.only(bottom: 12),
+                                elevation: 2,
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: ExpansionTile(
-                                  leading: CircleAvatar(
-                                    backgroundColor: groupHeaderColor,
-                                    child: Icon(
-                                      Icons.receipt_long,
-                                      color: groupHeaderTextColor,
-                                    ),
+                                  initiallyExpanded: true,
+                                  collapsedBackgroundColor: groupHeaderColor,
+                                  backgroundColor: groupHeaderColor.withValues(
+                                    alpha: 0.5,
                                   ),
-                                  title: Text(
-                                    'Ticket #${sale.id}',
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
                                   ),
-                                  subtitle: Text(_formatDateTime(sale.date)),
-                                  trailing: Text(
-                                    '${sale.totalAmount.toStringAsFixed(2)} €',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .primary,
-                                    ),
+                                  collapsedShape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  title: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          groupKey,
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                            color: groupHeaderTextColor,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                      Text(
+                                        '${groupTotal.toStringAsFixed(2)} €',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                          color: groupHeaderTextColor,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  subtitle: Row(
+                                    children: [
+                                      Text(
+                                        '${groupSales.length} tickets',
+                                        style: TextStyle(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurfaceVariant,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      InkWell(
+                                        onTap: () => _showAssignFairDialog(
+                                          datePrefix,
+                                          currentFairName,
+                                        ),
+                                        borderRadius: BorderRadius.circular(6),
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 6.0,
+                                            vertical: 4.0,
+                                          ),
+                                          child: Text(
+                                            isFair
+                                                ? '[Cambiar Feria]'
+                                                : '[+ Agrupar en Feria]',
+                                            style: TextStyle(
+                                              color: groupHeaderTextColor,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                   children: [
                                     const Divider(height: 1),
-                                    Container(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .surfaceContainerHighest
-                                          .withValues(alpha: 0.3),
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 8,
-                                      ),
+                                    Padding(
+                                      padding: const EdgeInsets.all(8.0),
                                       child: Column(
-                                        children: [
-                                          // PRODUCTOS SUELTOS
-                                          ...sale.items.map((item) {
-                                            return ListTile(
-                                              dense: true,
-                                              leading: Icon(
-                                                Icons.inventory_2_outlined,
-                                                size: 18,
-                                                color: Theme.of(context)
-                                                    .colorScheme
-                                                    .onSurfaceVariant,
-                                              ),
-                                              title: Text(
-                                                '${item.quantity}x ${item.productName}',
-                                              ),
-                                              trailing: Text(
-                                                '${(item.quantity * item.historicalPrice).toStringAsFixed(2)} €',
-                                              ),
-                                            );
-                                          }),
-
-                                          // PACKS Y BUNDLES
-                                          ...sale.packItems.map((packItem) {
-                                            return ListTile(
-                                              dense: true,
-                                              leading: Icon(
-                                                Icons.card_giftcard,
-                                                size: 18,
-                                                color: Theme.of(context)
-                                                    .colorScheme
-                                                    .secondary,
-                                              ),
-                                              title: Text(
-                                                '${packItem.quantity}x ${packItem.packName} (Pack)',
-                                                style: const TextStyle(
-                                                  fontWeight: FontWeight.w600,
+                                        children: groupSales.map((sale) {
+                                          return Card(
+                                            margin: const EdgeInsets.only(
+                                              bottom: 8,
+                                            ),
+                                            elevation: 1,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                            ),
+                                            child: ExpansionTile(
+                                              leading: CircleAvatar(
+                                                backgroundColor:
+                                                    groupHeaderColor,
+                                                child: Icon(
+                                                  Icons.receipt_long,
+                                                  color: groupHeaderTextColor,
                                                 ),
                                               ),
+                                              title: Text(
+                                                'Ticket #${sale.id}',
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                              subtitle: Text(
+                                                _formatDateTime(sale.date),
+                                              ),
                                               trailing: Text(
-                                                '${(packItem.quantity * packItem.historicalPrice).toStringAsFixed(2)} €',
+                                                '${sale.totalAmount.toStringAsFixed(2)} €',
                                                 style: TextStyle(
-                                                  fontWeight: FontWeight.w600,
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 16,
                                                   color: Theme.of(context)
                                                       .colorScheme
-                                                      .secondary,
+                                                      .primary,
                                                 ),
                                               ),
-                                            );
-                                          }),
+                                              children: [
+                                                const Divider(height: 1),
+                                                Container(
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .surfaceContainerHighest
+                                                      .withValues(alpha: 0.3),
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        vertical: 8,
+                                                      ),
+                                                  child: Column(
+                                                    children: [
+                                                      // PRODUCTOS SUELTOS
+                                                      ...sale.items.map((item) {
+                                                        return ListTile(
+                                                          dense: true,
+                                                          leading: Icon(
+                                                            Icons
+                                                                .inventory_2_outlined,
+                                                            size: 18,
+                                                            color: Theme.of(context)
+                                                                .colorScheme
+                                                                .onSurfaceVariant,
+                                                          ),
+                                                          title: Text(
+                                                            '${item.quantity}x ${item.productName}',
+                                                          ),
+                                                          trailing: Text(
+                                                            '${(item.quantity * item.historicalPrice).toStringAsFixed(2)} €',
+                                                          ),
+                                                        );
+                                                      }),
 
-                                          const Divider(height: 16),
+                                                      // PACKS Y BUNDLES
+                                                      ...sale.packItems.map((
+                                                        packItem,
+                                                      ) {
+                                                        return ListTile(
+                                                          dense: true,
+                                                          leading: Icon(
+                                                            Icons.card_giftcard,
+                                                            size: 18,
+                                                            color:
+                                                                Theme.of(
+                                                                      context,
+                                                                    )
+                                                                    .colorScheme
+                                                                    .secondary,
+                                                          ),
+                                                          title: Text(
+                                                            '${packItem.quantity}x ${packItem.packName} (Pack)',
+                                                            style:
+                                                                const TextStyle(
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .w600,
+                                                                ),
+                                                          ),
+                                                          trailing: Text(
+                                                            '${(packItem.quantity * packItem.historicalPrice).toStringAsFixed(2)} €',
+                                                            style: TextStyle(
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                              color:
+                                                                  Theme.of(
+                                                                        context,
+                                                                      )
+                                                                      .colorScheme
+                                                                      .secondary,
+                                                            ),
+                                                          ),
+                                                        );
+                                                      }),
 
-                                          // BOTÓN GESTIÓN DE DEVOLUCIONES
-                                          Padding(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 16.0,
-                                              vertical: 8.0,
-                                            ),
-                                            child: SizedBox(
-                                              width: double.infinity,
-                                              child: OutlinedButton.icon(
-                                                style: OutlinedButton.styleFrom(
-                                                  foregroundColor: Theme.of(
-                                                    context,
-                                                  ).colorScheme.error,
-                                                  side: BorderSide(
-                                                    color: Theme.of(context)
-                                                        .colorScheme
-                                                        .error,
+                                                      const Divider(height: 16),
+
+                                                      // BOTÓN GESTIÓN DE DEVOLUCIONES
+                                                      Padding(
+                                                        padding:
+                                                            const EdgeInsets.symmetric(
+                                                              horizontal: 16.0,
+                                                              vertical: 8.0,
+                                                            ),
+                                                        child: SizedBox(
+                                                          width:
+                                                              double.infinity,
+                                                          child: OutlinedButton.icon(
+                                                            style: OutlinedButton.styleFrom(
+                                                              foregroundColor:
+                                                                  Theme.of(
+                                                                        context,
+                                                                      )
+                                                                      .colorScheme
+                                                                      .error,
+                                                              side: BorderSide(
+                                                                color: Theme.of(
+                                                                  context,
+                                                                ).colorScheme.error,
+                                                              ),
+                                                            ),
+                                                            icon: const Icon(
+                                                              Icons.undo,
+                                                              size: 18,
+                                                            ),
+                                                            label: const Text(
+                                                              'Gestionar Devolución',
+                                                            ),
+                                                            onPressed: () =>
+                                                                _showPartialRefundDialog(
+                                                                  sale,
+                                                                ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ],
                                                   ),
                                                 ),
-                                                icon: const Icon(
-                                                  Icons.undo,
-                                                  size: 18,
-                                                ),
-                                                label: const Text(
-                                                  'Gestionar Devolución',
-                                                ),
-                                                onPressed: () =>
-                                                    _showPartialRefundDialog(
-                                                      sale,
-                                                    ),
-                                              ),
+                                              ],
                                             ),
-                                          ),
-                                        ],
+                                          );
+                                        }).toList(),
                                       ),
                                     ),
                                   ],
                                 ),
                               );
-                            }).toList(),
+                            },
                           ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
+                  ),
+                ],
               ),
       ),
     );

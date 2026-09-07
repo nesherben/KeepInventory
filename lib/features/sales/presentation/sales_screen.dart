@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/shared_widgets/app_drawer.dart';
-import '../../../core/shared_widgets/app_alerts.dart'; // 💡 Importamos las Alertas
+import '../../../core/shared_widgets/app_alerts.dart';
 
 // --- IMPORTS MODULARES ---
 // Sales
@@ -49,7 +49,11 @@ class _SalesScreenState extends State<SalesScreen>
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  // 💡 Restauradas las variables del gesto táctil
+  // 💡 Controladores de búsqueda independientes para cada pestaña
+  final TextEditingController _productSearchController =
+      TextEditingController();
+  final TextEditingController _packSearchController = TextEditingController();
+
   double? _startX;
   double? _startY;
 
@@ -57,6 +61,10 @@ class _SalesScreenState extends State<SalesScreen>
   List<Pack> _packs = [];
   Map<int, Promotion> _promotionsMap = {};
   bool _isLoading = true;
+
+  // 💡 Textos de búsqueda actuales
+  String _productSearchQuery = '';
+  String _packSearchQuery = '';
 
   final Map<Product, int> _cart = {};
   final Map<Pack, int> _cartPacks = {};
@@ -76,6 +84,8 @@ class _SalesScreenState extends State<SalesScreen>
   @override
   void dispose() {
     _tabController.dispose();
+    _productSearchController.dispose();
+    _packSearchController.dispose();
     super.dispose();
   }
 
@@ -101,7 +111,6 @@ class _SalesScreenState extends State<SalesScreen>
     final currentQtyInCart = _cart[product] ?? 0;
 
     if (currentQtyInCart >= product.units) {
-      // 💡 Migrado a AppAlerts
       AppAlerts.showError(
         context,
         'No hay más stock disponible de este producto.',
@@ -133,7 +142,6 @@ class _SalesScreenState extends State<SalesScreen>
       _cart.remove(product);
     });
 
-    // 💡 Migrado a AppAlerts
     AppAlerts.showInfo(context, '${product.name} eliminado del carrito');
   }
 
@@ -141,7 +149,6 @@ class _SalesScreenState extends State<SalesScreen>
     final currentQtyInCart = _cartPacks[pack] ?? 0;
 
     if (currentQtyInCart >= pack.units) {
-      // 💡 Migrado a AppAlerts
       AppAlerts.showError(
         context,
         'No hay más unidades en stock de este pack.',
@@ -173,7 +180,6 @@ class _SalesScreenState extends State<SalesScreen>
       _cartPacks.remove(pack);
     });
 
-    // 💡 Migrado a AppAlerts
     AppAlerts.showInfo(context, 'Pack ${pack.name} eliminado del carrito');
   }
 
@@ -288,7 +294,6 @@ class _SalesScreenState extends State<SalesScreen>
     await _loadData();
 
     if (mounted) {
-      // 💡 Migrado a AppAlerts de Éxito
       AppAlerts.showSuccess(context, '¡Cobro realizado con éxito!');
     }
   }
@@ -297,6 +302,20 @@ class _SalesScreenState extends State<SalesScreen>
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
     final bool isLandscape = screenSize.width > screenSize.height;
+
+    // 💡 Filtrado dinámico de productos y packs según la búsqueda
+    final filteredProducts = _products.where((p) {
+      return p.name.toLowerCase().contains(_productSearchQuery.toLowerCase());
+    }).toList();
+
+    final filteredPacks = _packs.where((pack) {
+      final query = _packSearchQuery.toLowerCase();
+      final matchesPackName = pack.name.toLowerCase().contains(query);
+      final matchesItemName = pack.items.any(
+        (item) => item.productName.toLowerCase().contains(query),
+      );
+      return matchesPackName || matchesItemName;
+    }).toList();
 
     return Listener(
       onPointerDown: (event) {
@@ -343,38 +362,80 @@ class _SalesScreenState extends State<SalesScreen>
                 children: [
                   Expanded(
                     flex: 3,
-                    child: TabBarView(
-                      controller: _tabController,
+                    child: Column(
                       children: [
-                        ProductGridWidget(
-                          products: _products,
-                          cart: _cart,
-                          bottomPadding: 16,
-                          crossAxisCount: 4,
-                          onAddToCart: _addToCart,
-                          onRemoveFromCart: _removeFromCart,
-                          onRemoveAllFromCart: _removeAllFromCart,
+                        // 💡 Barra de búsqueda superior para Landscape según pestaña activa
+                        Container(
+                          padding: const EdgeInsets.all(8.0),
+                          color: Theme.of(context)
+                              .colorScheme
+                              .surfaceContainerHighest
+                              .withValues(alpha: 0.3),
+                          child: TextField(
+                            controller: _tabController.index == 0
+                                ? _productSearchController
+                                : _packSearchController,
+                            onChanged: (value) => setState(() {
+                              if (_tabController.index == 0) {
+                                _productSearchQuery = value;
+                              } else {
+                                _packSearchQuery = value;
+                              }
+                            }),
+                            decoration: InputDecoration(
+                              hintText: _tabController.index == 0
+                                  ? 'Buscar producto...'
+                                  : 'Buscar pack o componente...',
+                              prefixIcon: const Icon(Icons.search, size: 20),
+                              isDense: true,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: BorderSide.none,
+                              ),
+                              filled: true,
+                              fillColor: Theme.of(context).cardColor,
+                            ),
+                          ),
                         ),
-                        _packs.isEmpty
-                            ? Center(
-                                child: Text(
-                                  'No hay packs creados todavía.',
-                                  style: TextStyle(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onSurfaceVariant,
-                                  ),
-                                ),
-                              )
-                            : PacksGridWidget(
-                                packs: _packs,
-                                cartPacks: _cartPacks,
+                        Expanded(
+                          child: TabBarView(
+                            controller: _tabController,
+                            children: [
+                              ProductGridWidget(
+                                products: filteredProducts,
+                                cart: _cart,
                                 bottomPadding: 16,
                                 crossAxisCount: 4,
-                                onAddToCart: _addPackToCart,
-                                onRemoveFromCart: _removePackFromCart,
-                                onRemoveAllFromCart: _removeAllPackFromCart,
+                                onAddToCart: _addToCart,
+                                onRemoveFromCart: _removeFromCart,
+                                onRemoveAllFromCart: _removeAllFromCart,
                               ),
+                              filteredPacks.isEmpty
+                                  ? Center(
+                                      child: Text(
+                                        _packs.isEmpty
+                                            ? 'No hay packs creados todavía.'
+                                            : 'No se encontraron packs.',
+                                        style: TextStyle(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurfaceVariant,
+                                        ),
+                                      ),
+                                    )
+                                  : PacksGridWidget(
+                                      packs: filteredPacks,
+                                      cartPacks: _cartPacks,
+                                      bottomPadding: 16,
+                                      crossAxisCount: 4,
+                                      onAddToCart: _addPackToCart,
+                                      onRemoveFromCart: _removePackFromCart,
+                                      onRemoveAllFromCart:
+                                          _removeAllPackFromCart,
+                                    ),
+                            ],
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -461,38 +522,79 @@ class _SalesScreenState extends State<SalesScreen>
               )
             : Stack(
                 children: [
-                  TabBarView(
-                    controller: _tabController,
+                  Column(
                     children: [
-                      ProductGridWidget(
-                        products: _products,
-                        cart: _cart,
-                        bottomPadding: 120,
-                        crossAxisCount: 3,
-                        onAddToCart: _addToCart,
-                        onRemoveFromCart: _removeFromCart,
-                        onRemoveAllFromCart: _removeAllFromCart,
+                      // 💡 Barra de búsqueda superior en Portrait
+                      Container(
+                        padding: const EdgeInsets.all(8.0),
+                        color: Theme.of(context)
+                            .colorScheme
+                            .surfaceContainerHighest
+                            .withValues(alpha: 0.3),
+                        child: TextField(
+                          controller: _tabController.index == 0
+                              ? _productSearchController
+                              : _packSearchController,
+                          onChanged: (value) => setState(() {
+                            if (_tabController.index == 0) {
+                              _productSearchQuery = value;
+                            } else {
+                              _packSearchQuery = value;
+                            }
+                          }),
+                          decoration: InputDecoration(
+                            hintText: _tabController.index == 0
+                                ? 'Buscar producto...'
+                                : 'Buscar pack o componente...',
+                            prefixIcon: const Icon(Icons.search, size: 20),
+                            isDense: true,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: BorderSide.none,
+                            ),
+                            filled: true,
+                            fillColor: Theme.of(context).cardColor,
+                          ),
+                        ),
                       ),
-                      _packs.isEmpty
-                          ? Center(
-                              child: Text(
-                                'No hay packs creados todavía.',
-                                style: TextStyle(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onSurfaceVariant,
-                                ),
-                              ),
-                            )
-                          : PacksGridWidget(
-                              packs: _packs,
-                              cartPacks: _cartPacks,
+                      Expanded(
+                        child: TabBarView(
+                          controller: _tabController,
+                          children: [
+                            ProductGridWidget(
+                              products: filteredProducts,
+                              cart: _cart,
                               bottomPadding: 120,
                               crossAxisCount: 3,
-                              onAddToCart: _addPackToCart,
-                              onRemoveFromCart: _removePackFromCart,
-                              onRemoveAllFromCart: _removeAllPackFromCart,
+                              onAddToCart: _addToCart,
+                              onRemoveFromCart: _removeFromCart,
+                              onRemoveAllFromCart: _removeAllFromCart,
                             ),
+                            filteredPacks.isEmpty
+                                ? Center(
+                                    child: Text(
+                                      _packs.isEmpty
+                                          ? 'No hay packs creados todavía.'
+                                          : 'No se encontraron packs.',
+                                      style: TextStyle(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurfaceVariant,
+                                      ),
+                                    ),
+                                  )
+                                : PacksGridWidget(
+                                    packs: filteredPacks,
+                                    cartPacks: _cartPacks,
+                                    bottomPadding: 120,
+                                    crossAxisCount: 3,
+                                    onAddToCart: _addPackToCart,
+                                    onRemoveFromCart: _removePackFromCart,
+                                    onRemoveAllFromCart: _removeAllPackFromCart,
+                                  ),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                   DraggableScrollableSheet(

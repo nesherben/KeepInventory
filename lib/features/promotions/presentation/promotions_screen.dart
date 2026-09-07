@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/shared_widgets/app_drawer.dart';
+import '../../../core/shared_widgets/app_alerts.dart'; // 💡 Sistema de alertas en cola
+
 import '../data/repositories/promotion_repository_impl.dart';
 import '../domain/promotion.dart';
 import '../data/datasources/promotion_local_datasource.dart';
@@ -17,11 +19,14 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
 
   // Llave y variables para el gesto global de deslizamiento
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  final TextEditingController _searchController = TextEditingController();
+
   double? _startX;
   double? _startY;
 
   List<Promotion> _promotions = [];
   bool _isLoading = true;
+  String _searchQuery = ''; // 💡 Variable para el buscador
 
   @override
   void initState() {
@@ -29,9 +34,16 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
     _loadPromotions();
   }
 
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
   Future<void> _loadPromotions() async {
     setState(() => _isLoading = true);
     final promotions = await _repository.getPromotions();
+    if (!mounted) return;
     setState(() {
       _promotions = promotions;
       _isLoading = false;
@@ -178,6 +190,13 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
                       if (context.mounted) {
                         Navigator.pop(context);
                         _loadPromotions();
+                        // 💡 Alerta de éxito unificada
+                        AppAlerts.showSuccess(
+                          context,
+                          isEditing
+                              ? '✨ ¡Promoción actualizada con éxito!'
+                              : '🎉 ¡Promoción creada con éxito!',
+                        );
                       }
                     }
                   },
@@ -191,13 +210,51 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
     );
   }
 
-  Future<void> _deletePromotion(int id) async {
-    await _repository.deletePromotion(id);
-    _loadPromotions();
+  // --- DIÁLOGO DE CONFIRMACIÓN DE BORRADO ---
+  void _confirmDelete(Promotion promotion) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Eliminar Promoción'),
+        content: Text(
+          '¿Seguro que deseas eliminar la promoción "${promotion.name}"? Los productos vinculados se quedarán sin promoción.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+              foregroundColor: Theme.of(context).colorScheme.onError,
+            ),
+            onPressed: () async {
+              await _repository.deletePromotion(promotion.id!);
+              if (context.mounted) {
+                Navigator.pop(context);
+                _loadPromotions();
+                // 💡 Alerta de advertencia/borrado
+                AppAlerts.showWarning(
+                  context,
+                  '🗑️ Promoción eliminada correctamente.',
+                );
+              }
+            },
+            child: const Text('Eliminar'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    // 💡 Filtrado instantáneo por texto
+    final filteredPromotions = _promotions.where((promo) {
+      return promo.name.toLowerCase().contains(_searchQuery.toLowerCase());
+    }).toList();
+
     return Listener(
       onPointerDown: (event) {
         _startX = event.position.dx;
@@ -225,57 +282,114 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
         drawer: const AppDrawer(),
         body: _isLoading
             ? const Center(child: CircularProgressIndicator())
-            : _promotions.isEmpty
-            ? const Center(
-                child: Text(
-                  'No hay promociones creadas. Crea una con el botón +',
-                ),
-              )
-            : ListView.builder(
-                padding: const EdgeInsets.all(12),
-                itemCount: _promotions.length,
-                itemBuilder: (context, index) {
-                  final promo = _promotions[index];
-                  final isBundle = promo.type == 'bundle_fixed_price';
-
-                  return Card(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    elevation: 2,
-                    child: ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: Colors.amber[700],
-                        child: const Icon(
-                          Icons.local_offer,
-                          color: Colors.white,
+            : Column(
+                children: [
+                  // --- 💡 BARRA DE BÚSQUEDA ---
+                  Container(
+                    padding: const EdgeInsets.all(12.0),
+                    color: Theme.of(context).colorScheme.surfaceContainerHighest
+                        .withValues(alpha: 0.3),
+                    child: TextField(
+                      controller: _searchController,
+                      onChanged: (value) =>
+                          setState(() => _searchQuery = value),
+                      decoration: InputDecoration(
+                        hintText: 'Buscar promoción por nombre...',
+                        prefixIcon: const Icon(Icons.search),
+                        suffixIcon: _searchQuery.isNotEmpty
+                            ? IconButton(
+                                icon: const Icon(Icons.clear),
+                                onPressed: () {
+                                  _searchController.clear();
+                                  setState(() => _searchQuery = '');
+                                },
+                              )
+                            : null,
+                        isDense: true,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
                         ),
-                      ),
-                      title: Text(
-                        promo.name,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: Text(
-                        isBundle
-                            ? 'Llevando ${promo.threshold} unidades por ${promo.discountValue.toStringAsFixed(2)} €'
-                            : '${promo.discountValue.toStringAsFixed(0)}% de descuento a partir de ${promo.threshold} uds.',
-                      ),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.edit, color: Colors.blue),
-                            onPressed: () => _showPromotionFormDialog(
-                              promotionToEdit: promo,
-                            ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.delete, color: Colors.red),
-                            onPressed: () => _deletePromotion(promo.id!),
-                          ),
-                        ],
+                        filled: true,
+                        fillColor: Theme.of(context).cardColor,
                       ),
                     ),
-                  );
-                },
+                  ),
+
+                  // --- LISTADO DE PROMOCIONES ---
+                  Expanded(
+                    child: filteredPromotions.isEmpty
+                        ? Center(
+                            child: Text(
+                              _promotions.isEmpty
+                                  ? 'No hay promociones creadas. Crea una con el botón +'
+                                  : 'No se encontraron promociones con ese nombre.',
+                              style: TextStyle(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant,
+                                fontSize: 16,
+                              ),
+                            ),
+                          )
+                        : ListView.builder(
+                            padding: const EdgeInsets.all(12),
+                            itemCount: filteredPromotions.length,
+                            itemBuilder: (context, index) {
+                              final promo = filteredPromotions[index];
+                              final isBundle =
+                                  promo.type == 'bundle_fixed_price';
+
+                              return Card(
+                                margin: const EdgeInsets.only(bottom: 12),
+                                elevation: 2,
+                                child: ListTile(
+                                  leading: CircleAvatar(
+                                    backgroundColor: Colors.amber[700],
+                                    child: const Icon(
+                                      Icons.local_offer,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  title: Text(
+                                    promo.name,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  subtitle: Text(
+                                    isBundle
+                                        ? 'Llevando ${promo.threshold} unidades por ${promo.discountValue.toStringAsFixed(2)} €'
+                                        : '${promo.discountValue.toStringAsFixed(0)}% de descuento a partir de ${promo.threshold} uds.',
+                                  ),
+                                  trailing: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      IconButton(
+                                        icon: const Icon(
+                                          Icons.edit,
+                                          color: Colors.blue,
+                                        ),
+                                        onPressed: () =>
+                                            _showPromotionFormDialog(
+                                              promotionToEdit: promo,
+                                            ),
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(
+                                          Icons.delete,
+                                          color: Colors.red,
+                                        ),
+                                        onPressed: () => _confirmDelete(promo),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+                ],
               ),
         floatingActionButton: FloatingActionButton(
           onPressed: () => _showPromotionFormDialog(),

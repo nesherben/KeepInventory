@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 
 import '../../../core/shared_widgets/app_drawer.dart';
+import '../../../core/shared_widgets/app_alerts.dart'; // 💡 Importante para las alertas en cola
 import '../../../../core/theme/app_colors.dart';
 
 // Imports de la feature INVENTORY
@@ -50,7 +51,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
   Map<int, Promotion> _promotionsMap = {};
   bool _isLoading = true;
 
-  // 💡 Solo conservamos el query de búsqueda
   String _searchQuery = '';
 
   final Map<int, Timer> _debounceTimers = {};
@@ -113,6 +113,10 @@ class _InventoryScreenState extends State<InventoryScreen> {
         );
         await _productRepository.updateProduct(updatedProduct);
         _loadProducts();
+
+        if (mounted) {
+          AppAlerts.showSuccess(context, '📸 ¡Foto actualizada con éxito!');
+        }
       }
     }
   }
@@ -151,6 +155,10 @@ class _InventoryScreenState extends State<InventoryScreen> {
   Future<void> _deleteProduct(int id) async {
     await _productRepository.deleteProduct(id);
     _loadProducts();
+
+    if (mounted) {
+      AppAlerts.showWarning(context, '🗑️ Producto eliminado permanentemente.');
+    }
   }
 
   void _showDeleteConfirmation(int id) {
@@ -315,6 +323,10 @@ class _InventoryScreenState extends State<InventoryScreen> {
                     if (context.mounted) {
                       Navigator.pop(context);
                       _loadProducts();
+                      AppAlerts.showSuccess(
+                        context,
+                        '🏷️ Promoción actualizada.',
+                      );
                     }
                   },
                   child: const Text('Guardar'),
@@ -355,6 +367,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
   }
 
   void _showProductFormDialog({Product? productToEdit}) {
+    final isEditing = productToEdit != null;
     showDialog(
       context: context,
       builder: (context) {
@@ -370,6 +383,12 @@ class _InventoryScreenState extends State<InventoryScreen> {
             if (context.mounted) {
               Navigator.pop(context);
               _loadProducts();
+              AppAlerts.showSuccess(
+                context,
+                isEditing
+                    ? '✨ ¡Producto actualizado con éxito!'
+                    : '🎉 ¡Producto creado con éxito!',
+              );
             }
           },
         );
@@ -379,7 +398,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // 💡 Filtrado exclusivo por texto de búsqueda
     final filteredProducts = _products.where((product) {
       return product.name.toLowerCase().contains(_searchQuery.toLowerCase());
     }).toList();
@@ -416,7 +434,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
             ? const Center(child: CircularProgressIndicator())
             : Column(
                 children: [
-                  // --- 💡 BARRA DE BÚSQUEDA LIMPIA ---
                   Container(
                     padding: const EdgeInsets.all(12.0),
                     color: Theme.of(context).colorScheme.surfaceContainerHighest
@@ -447,8 +464,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
                       ),
                     ),
                   ),
-
-                  // --- CONTENIDO DE LA TABLA ---
                   Expanded(
                     child: filteredProducts.isEmpty
                         ? Center(
@@ -703,6 +718,10 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                                               context,
                                                             );
                                                             _loadProducts();
+                                                            AppAlerts.showSuccess(
+                                                              context,
+                                                              '✏️ Nombre actualizado.',
+                                                            );
                                                           }
                                                         }
                                                       },
@@ -758,6 +777,10 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                                               context,
                                                             );
                                                             _loadProducts();
+                                                            AppAlerts.showSuccess(
+                                                              context,
+                                                              '📦 Stock actualizado.',
+                                                            );
                                                           }
                                                         }
                                                       },
@@ -785,86 +808,86 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                               InventoryTableCell(
                                                 text:
                                                     '${product.price.toStringAsFixed(2)} €',
-                                                onTap: () =>
-                                                    _showEditSingleFieldDialog(
-                                                      product: product,
-                                                      title: 'Precio de venta',
-                                                      initialValue: product
-                                                          .price
-                                                          .toString(),
-                                                      keyboardType:
-                                                          const TextInputType.numberWithOptions(
-                                                            decimal: true,
+                                                onTap: () => _showEditSingleFieldDialog(
+                                                  product: product,
+                                                  title: 'Precio de venta',
+                                                  initialValue: product.price
+                                                      .toString(),
+                                                  keyboardType:
+                                                      const TextInputType.numberWithOptions(
+                                                        decimal: true,
+                                                      ),
+                                                  onSave: (value) async {
+                                                    final newPrice =
+                                                        double.tryParse(
+                                                          value.replaceAll(
+                                                            ',',
+                                                            '.',
                                                           ),
-                                                      onSave: (value) async {
-                                                        final newPrice =
-                                                            double.tryParse(
-                                                              value.replaceAll(
-                                                                ',',
-                                                                '.',
-                                                              ),
-                                                            );
-                                                        if (newPrice != null &&
-                                                            newPrice >= 0) {
-                                                          await _productRepository
-                                                              .updateProduct(
-                                                                _toModel(
-                                                                  product,
-                                                                  price:
-                                                                      newPrice,
-                                                                ),
-                                                              );
-                                                          if (context.mounted) {
-                                                            Navigator.pop(
-                                                              context,
-                                                            );
-                                                            _loadProducts();
-                                                          }
-                                                        }
-                                                      },
-                                                    ),
+                                                        );
+                                                    if (newPrice != null &&
+                                                        newPrice >= 0) {
+                                                      await _productRepository
+                                                          .updateProduct(
+                                                            _toModel(
+                                                              product,
+                                                              price: newPrice,
+                                                            ),
+                                                          );
+                                                      if (context.mounted) {
+                                                        Navigator.pop(context);
+                                                        _loadProducts();
+                                                        AppAlerts.showSuccess(
+                                                          context,
+                                                          '💰 Precio de venta actualizado.',
+                                                        );
+                                                      }
+                                                    }
+                                                  },
+                                                ),
                                               ),
                                             ),
                                             DataCell(
                                               InventoryTableCell(
                                                 text:
                                                     '${product.cost.toStringAsFixed(2)} €',
-                                                onTap: () =>
-                                                    _showEditSingleFieldDialog(
-                                                      product: product,
-                                                      title: 'Coste de adquisición',
-                                                      initialValue: product.cost
-                                                          .toString(),
-                                                      keyboardType:
-                                                          const TextInputType.numberWithOptions(
-                                                            decimal: true,
+                                                onTap: () => _showEditSingleFieldDialog(
+                                                  product: product,
+                                                  title: 'Coste de adquisición',
+                                                  initialValue: product.cost
+                                                      .toString(),
+                                                  keyboardType:
+                                                      const TextInputType.numberWithOptions(
+                                                        decimal: true,
+                                                      ),
+                                                  onSave: (value) async {
+                                                    final newCost =
+                                                        double.tryParse(
+                                                          value.replaceAll(
+                                                            ',',
+                                                            '.',
                                                           ),
-                                                      onSave: (value) async {
-                                                        final newCost =
-                                                            double.tryParse(
-                                                              value.replaceAll(
-                                                                ',',
-                                                                '.',
-                                                              ),
-                                                            );
-                                                        if (newCost != null &&
-                                                            newCost >= 0) {
-                                                          await _productRepository
-                                                              .updateProduct(
-                                                                _toModel(
-                                                                  product,
-                                                                  cost: newCost,
-                                                                ),
-                                                              );
-                                                          if (context.mounted) {
-                                                            Navigator.pop(
-                                                              context,
-                                                            );
-                                                            _loadProducts();
-                                                          }
-                                                        }
-                                                      },
-                                                    ),
+                                                        );
+                                                    if (newCost != null &&
+                                                        newCost >= 0) {
+                                                      await _productRepository
+                                                          .updateProduct(
+                                                            _toModel(
+                                                              product,
+                                                              cost: newCost,
+                                                            ),
+                                                          );
+                                                      if (context.mounted) {
+                                                        Navigator.pop(context);
+                                                        _loadProducts();
+                                                        AppAlerts.showSuccess(
+                                                          context,
+                                                          '📉 Coste actualizado.',
+                                                        );
+                                                      }
+                                                    }
+                                                  },
+                                                ),
                                               ),
                                             ),
                                             DataCell(
