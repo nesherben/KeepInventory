@@ -1,20 +1,24 @@
 import 'dart:async';
+import 'dart:collection';
 
 import 'package:flutter/material.dart';
 
 abstract final class AppAlerts {
+  // --- 💡 COLA Y ESTADO DE CONTROL DE ALERTAS ---
+  static final Queue<_AlertTask> _queue = Queue<_AlertTask>();
+  static bool _isShowing = false;
+
   // --- ALERTAS DE ÉXITO ---
   static void showSuccess(
     BuildContext context,
     String message, {
     Duration duration = const Duration(seconds: 3),
   }) {
-    _showCustomSnackBar(
+    _enqueueAlert(
       context: context,
       message: message,
       icon: Icons.check_circle_outline,
       backgroundColor: Theme.of(context).colorScheme.tertiary,
-      // 💡 Texto blanco fijo
       textColor: Colors.white,
       duration: duration,
     );
@@ -26,12 +30,11 @@ abstract final class AppAlerts {
     String message, {
     Duration duration = const Duration(seconds: 3),
   }) {
-    _showCustomSnackBar(
+    _enqueueAlert(
       context: context,
       message: message,
       icon: Icons.error_outline,
       backgroundColor: Theme.of(context).colorScheme.error,
-      // 💡 Texto blanco fijo
       textColor: Colors.white,
       duration: duration,
     );
@@ -43,36 +46,34 @@ abstract final class AppAlerts {
     String message, {
     Duration duration = const Duration(seconds: 3),
   }) {
-    _showCustomSnackBar(
+    _enqueueAlert(
       context: context,
       message: message,
       icon: Icons.warning_amber_rounded,
       backgroundColor: Colors.orange.shade800,
-      // 💡 Texto blanco fijo
       textColor: Colors.white,
       duration: duration,
     );
   }
 
-  // --- ALERTAS DE INFORMACIÓN (El azul clarito) ---
+  // --- ALERTAS DE INFORMACIÓN ---
   static void showInfo(
     BuildContext context,
     String message, {
     Duration duration = const Duration(seconds: 3),
   }) {
-    _showCustomSnackBar(
+    _enqueueAlert(
       context: context,
       message: message,
       icon: Icons.info_outline,
       backgroundColor: Theme.of(context).colorScheme.primary,
-      // 💡 SOLO AQUÍ: Color adaptativo (se pondrá oscuro si el fondo primario es claro en modo oscuro)
       textColor: Theme.of(context).colorScheme.onPrimary,
       duration: duration,
     );
   }
 
-  // --- CONSTRUCTOR PRIVADO DEL SNACKBAR ---
-  static void _showCustomSnackBar({
+  // --- 💡 GESTOR DE COLA (ENQUEUE) ---
+  static void _enqueueAlert({
     required BuildContext context,
     required String message,
     required IconData icon,
@@ -80,33 +81,53 @@ abstract final class AppAlerts {
     required Color textColor,
     required Duration duration,
   }) {
-    final messenger = ScaffoldMessenger.of(context);
+    _queue.add(
+      _AlertTask(
+        context: context,
+        message: message,
+        icon: icon,
+        backgroundColor: backgroundColor,
+        textColor: textColor,
+        duration: duration,
+      ),
+    );
 
-    // 1. Limpiamos cualquier snackbar anterior
-    messenger.clearSnackBars();
+    _processQueue();
+  }
 
-    // 2. Mostramos el nuevo Snackbar
-    final controller = messenger.showSnackBar(
+  // --- 💡 PROCESADOR SECUENCIAL DE LA COLA ---
+  static void _processQueue() async {
+    if (_isShowing || _queue.isEmpty) return;
+
+    _isShowing = true;
+    final task = _queue.removeFirst();
+
+    if (!task.context.mounted) {
+      _isShowing = false;
+      _processQueue();
+      return;
+    }
+
+    final messenger = ScaffoldMessenger.of(task.context);
+
+    // Mostramos el SnackBar
+    final snackBarController = messenger.showSnackBar(
       SnackBar(
         elevation: 4,
         behavior: SnackBarBehavior.floating,
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        backgroundColor: backgroundColor,
-        duration: duration,
+        backgroundColor: task.backgroundColor,
+        duration: task.duration,
         content: Row(
           children: [
-            Icon(
-              icon,
-              color: textColor,
-              size: 28,
-            ), // 💡 Aplica el color que toque
+            Icon(task.icon, color: task.textColor, size: 28),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                message,
+                task.message,
                 style: TextStyle(
-                  color: textColor, // 💡 Aplica el color que toque
+                  color: task.textColor,
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                   letterSpacing: 0.3,
@@ -117,9 +138,7 @@ abstract final class AppAlerts {
         ),
         action: SnackBarAction(
           label: 'OK',
-          textColor: textColor.withValues(
-            alpha: 0.7,
-          ), // 💡 Aplica el color con un poco de transparencia
+          textColor: task.textColor.withValues(alpha: 0.7),
           onPressed: () {
             messenger.hideCurrentSnackBar();
           },
@@ -127,13 +146,37 @@ abstract final class AppAlerts {
       ),
     );
 
-    // 3. Forzamos el cierre manual a los 3 segundos exactos
-    Timer(duration, () {
-      try {
-        controller.close();
-      } catch (_) {
-        // Ignorar
-      }
-    });
+    // Esperamos exactamente lo que dura el snackbar (más una pequeña pausa para la animación de salida)
+    try {
+      await snackBarController.closed;
+    } catch (_) {
+      // Por seguridad si el controlador se destruye de forma abrupta
+      await Future.delayed(task.duration);
+    }
+
+    // Pequeño respiro entre snackbars consecutivos
+    await Future.delayed(const Duration(milliseconds: 150));
+
+    _isShowing = false;
+    _processQueue(); // Llamamos al siguiente elemento de la cola
   }
+}
+
+// --- 💡 CLASE AUXILIAR PARA GUARDAR LOS DATOS DE LA TAREA ---
+class _AlertTask {
+  final BuildContext context;
+  final String message;
+  final IconData icon;
+  final Color backgroundColor;
+  final Color textColor;
+  final Duration duration;
+
+  _AlertTask({
+    required this.context,
+    required this.message,
+    required this.icon,
+    required this.backgroundColor,
+    required this.textColor,
+    required this.duration,
+  });
 }
