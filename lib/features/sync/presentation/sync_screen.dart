@@ -22,8 +22,6 @@ class _SyncScreenState extends State<SyncScreen> {
 
   String? _serverUrl;
   bool _isServerRunning = false;
-
-  // 💡 Variables nuevas para la barra de progreso de descarga
   bool _isReceiving = false;
   String _statusMessage = '';
   double _progressValue = 0.0;
@@ -51,7 +49,7 @@ class _SyncScreenState extends State<SyncScreen> {
       _serverUrl = null;
       _isServerRunning = false;
     });
-    AppAlerts.showInfo(context, 'Servidor de emisión detenido.');
+    AppAlerts.showInfo(context, 'Servidor de sincronización cerrado.');
   }
 
   @override
@@ -61,6 +59,9 @@ class _SyncScreenState extends State<SyncScreen> {
   }
 
   void _openScanner() {
+    bool isScannerActive =
+        true; // 💡 CANDADO: Evita escaneos múltiples en 1 segundo
+
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -68,12 +69,17 @@ class _SyncScreenState extends State<SyncScreen> {
           appBar: AppBar(title: const Text('Escanear QR de Sincronización')),
           body: MobileScanner(
             onDetect: (capture) {
+              // Si el candado está cerrado, ignoramos todo lo que lea la cámara
+              if (!isScannerActive) return;
+
               final List<Barcode> barcodes = capture.barcodes;
               for (final barcode in barcodes) {
                 final String? url = barcode.rawValue;
                 if (url != null && url.startsWith('http')) {
-                  Navigator.pop(context); // Cierra la cámara
-                  _performImport(url); // 💡 Lanza la descarga
+                  // 💡 Cerramos el candado inmediatamente tras la primera lectura buena
+                  isScannerActive = false;
+                  Navigator.pop(context);
+                  _performImport(url);
                   break;
                 }
               }
@@ -87,11 +93,10 @@ class _SyncScreenState extends State<SyncScreen> {
   Future<void> _performImport(String url) async {
     setState(() {
       _isReceiving = true;
-      _statusMessage = 'Conectando con el emisor...';
+      _statusMessage = 'Verificando red...';
       _progressValue = 0.0;
     });
 
-    // 💡 Ahora esperamos status y progress desde el SyncService
     final success = await SyncService.importDatabase(url, (status, progress) {
       if (mounted) {
         setState(() {
@@ -105,7 +110,6 @@ class _SyncScreenState extends State<SyncScreen> {
       setState(() => _isReceiving = false);
 
       if (success) {
-        // 💡 Salta el modal obligatorio de reinicio
         _showRestartDialog();
       } else {
         AppAlerts.showError(context, '❌ Error: $_statusMessage');
@@ -116,7 +120,7 @@ class _SyncScreenState extends State<SyncScreen> {
   void _showRestartDialog() {
     showDialog(
       context: context,
-      barrierDismissible: false, // Obliga a tocar el botón
+      barrierDismissible: false,
       builder: (context) => AlertDialog(
         title: const Row(
           children: [
@@ -126,7 +130,7 @@ class _SyncScreenState extends State<SyncScreen> {
           ],
         ),
         content: const Text(
-          'La base de datos se ha clonado correctamente desde el otro dispositivo. Es necesario reiniciar la aplicación para cargar el nuevo inventario.',
+          'La base de datos se ha clonado correctamente desde el otro dispositivo. Es necesario reiniciar la aplicación para aplicar los cambios de forma segura.',
         ),
         actions: [
           ElevatedButton.icon(
@@ -186,7 +190,7 @@ class _SyncScreenState extends State<SyncScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Activa un Hotspot en el emisor o conecta ambos a la misma red Wi-Fi para clonar el inventario al instante.',
+                  'Conecta ambos dispositivos a la misma red Wi-Fi o activa un Hotspot en uno de ellos para clonar el inventario al instante.',
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                     fontSize: 13,
@@ -195,7 +199,6 @@ class _SyncScreenState extends State<SyncScreen> {
                 ),
                 const SizedBox(height: 40),
 
-                // 💡 ESTADO 1: DESCARGANDO (BARRA DE PROGRESO)
                 if (_isReceiving) ...[
                   Text(
                     _statusMessage,
@@ -203,6 +206,7 @@ class _SyncScreenState extends State<SyncScreen> {
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
                     ),
+                    textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 16),
                   LinearProgressIndicator(
@@ -217,14 +221,12 @@ class _SyncScreenState extends State<SyncScreen> {
                   Text(
                     _progressValue >= 0
                         ? '${(_progressValue * 100).toStringAsFixed(0)}%'
-                        : 'Calculando peso...',
+                        : '',
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.primary,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-
-                  // 💡 ESTADO 2: MENÚ PRINCIPAL (BOTONES)
                 ] else if (!_isServerRunning) ...[
                   SizedBox(
                     width: double.infinity,
@@ -253,8 +255,6 @@ class _SyncScreenState extends State<SyncScreen> {
                       onPressed: _openScanner,
                     ),
                   ),
-
-                  // 💡 ESTADO 3: EMITIENDO SEÑAL (QR EN PANTALLA)
                 ] else ...[
                   const Text(
                     'Escanea este código desde el receptor:',
@@ -277,7 +277,6 @@ class _SyncScreenState extends State<SyncScreen> {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  // Muestra la IP para ayudar a depurar si el Hotspot falla
                   Text(
                     'IP Activa: ${_serverUrl!.split('/')[2]}',
                     style: TextStyle(color: Colors.grey[600], fontSize: 12),

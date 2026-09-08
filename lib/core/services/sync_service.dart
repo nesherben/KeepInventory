@@ -40,7 +40,6 @@ class SyncService {
     }
   }
 
-  // --- 1. EL EMISOR LEVANTA EL SERVIDOR ---
   static Future<String?> startServer(Function(String) onError) async {
     try {
       final ip = await _getLocalIp();
@@ -93,22 +92,54 @@ class SyncService {
     }
   }
 
-  // --- 2. EL RECEPTOR DESCARGA EN STREAMING (CON RETRY Y FAILSAFE) ---
+  // --- 2. EL RECEPTOR DESCARGA EN STREAMING ---
   static Future<bool> importDatabase(
     String url,
     Function(String status, double progress) onProgress,
   ) async {
-    // 💡 Lógica de auto-reintento
+    // 💡 1. VERIFICACIÓN DE REDES (Misma Wi-Fi / Subred)
+    final uri = Uri.tryParse(url);
+    if (uri == null) return false;
+
+    final targetIp = uri.host;
+    final receiverIp = await _getLocalIp();
+
+    if (receiverIp == null ||
+        receiverIp == '127.0.0.1' ||
+        receiverIp == '0.0.0.0') {
+      onProgress(
+        '⚠️ No tienes red. Conéctate al Wi-Fi o Hotspot del emisor.',
+        0.0,
+      );
+      await Future.delayed(const Duration(seconds: 2));
+    } else {
+      // Extraemos la subred (ej: 192.168.1 de 192.168.1.55)
+      final targetSubnet = targetIp.contains('.')
+          ? targetIp.substring(0, targetIp.lastIndexOf('.'))
+          : '';
+      final receiverSubnet = receiverIp.contains('.')
+          ? receiverIp.substring(0, receiverIp.lastIndexOf('.'))
+          : '';
+
+      if (targetSubnet.isNotEmpty && targetSubnet != receiverSubnet) {
+        onProgress(
+          '⚠️ Parece que estáis en Wi-Fis distintas (Emisor: $targetSubnet.x / Tú: $receiverSubnet.x)',
+          0.0,
+        );
+        await Future.delayed(const Duration(seconds: 3));
+      }
+    }
+
+    // 💡 2. DESCARGA CON AUTO-REINTENTO
     const int maxRetries = 3;
     const int delayBetweenRetries = 2; // Segundos
 
     for (int attempt = 1; attempt <= maxRetries; attempt++) {
       final client = http.Client();
       try {
-        onProgress('Conectando... (Intento $attempt/$maxRetries)', 0.0);
+        onProgress('Buscando conexión... (Intento $attempt/$maxRetries)', 0.0);
 
         final request = http.Request('GET', Uri.parse(url));
-        // Timeout de 15 segundos para dar tiempo al hotspot a enrutar
         final response = await client
             .send(request)
             .timeout(const Duration(seconds: 15));
@@ -168,39 +199,35 @@ class SyncService {
             if (await tempFile.exists()) await tempFile.delete();
 
             if (attempt < maxRetries) {
-              onProgress('Corte de red. Reintentando en breve...', 0.0);
+              onProgress('Corte de red. Reintentando...', 0.0);
               await Future.delayed(
                 const Duration(seconds: delayBetweenRetries),
               );
-              continue; // Salta al siguiente intento del bucle
+              continue;
             } else {
               onProgress(
                 'Conexión inestable. No se pudo completar la descarga.',
-                0.0,
+                -1.0,
               );
               return false;
             }
           }
 
-          // --- LLEGAMOS AQUÍ: DESCARGA 100% PERFECTA ---
+          // --- INSTALACIÓN SEGURA ---
           onProgress('Instalando datos de forma segura...', 1.0);
 
-          // 1. Apagamos la base de datos actual para soltar bloqueos
           await DatabaseHelper.instance.resetDatabase();
 
           final realFile = File(realPath);
           final backupPath = '$dbPath/keepinventory_failsafe.db';
 
-          // 2. Hacemos copia de seguridad exprés de la BD original (ANTI-DESTRUCCIÓN)
           if (await realFile.exists()) {
             await realFile.copy(backupPath);
           }
 
           try {
-            // 3. Sustituimos usando copy() que es 100x más seguro que rename() en Android
             await tempFile.copy(realPath);
 
-            // 4. Limpiamos la basura temporal y el backup exprés
             if (await tempFile.exists()) await tempFile.delete();
             final failsafeFile = File(backupPath);
             if (await failsafeFile.exists()) await failsafeFile.delete();
@@ -208,15 +235,13 @@ class SyncService {
             onProgress('¡Sincronización completada con éxito!', 1.0);
             return true;
           } catch (copyError) {
-            // 🚨 MODO PÁNICO: Si falla la sobreescritura, restauramos la vieja
-            print('Catástrofe en sobreescritura: $copyError');
             final failsafeFile = File(backupPath);
             if (await failsafeFile.exists()) {
               await failsafeFile.copy(realPath);
             }
             onProgress(
-              'Error al aplicar datos. Se restauró el estado anterior.',
-              0.0,
+              'Error al aplicar datos. Se restauró tu BD original.',
+              -1.0,
             );
             return false;
           }
@@ -226,20 +251,17 @@ class SyncService {
             await Future.delayed(const Duration(seconds: delayBetweenRetries));
             continue;
           }
-          onProgress('Conexión rechazada (Código ${response.statusCode})', 0.0);
+          onProgress('El servidor rechazó la conexión.', -1.0);
           return false;
         }
       } catch (e) {
         client.close();
         if (attempt < maxRetries) {
-          onProgress('Buscando emisor... (Reintento $attempt)', 0.0);
+          onProgress('Pérdida de red... (Reintento $attempt)', 0.0);
           await Future.delayed(const Duration(seconds: delayBetweenRetries));
           continue;
         }
-        onProgress(
-          'No se pudo conectar tras $maxRetries intentos. Verifica el Hotspot.',
-          0.0,
-        );
+        onProgress('No se encontró el emisor. Revisa el Wi-Fi/Hotspot.', -1.0);
         return false;
       }
     }
