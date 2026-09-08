@@ -22,8 +22,11 @@ class _SyncScreenState extends State<SyncScreen> {
 
   String? _serverUrl;
   bool _isServerRunning = false;
+
+  // 💡 Variables nuevas para la barra de progreso de descarga
   bool _isReceiving = false;
   String _statusMessage = '';
+  double _progressValue = 0.0;
 
   Future<void> _startHosting() async {
     final url = await SyncService.startServer((error) {
@@ -37,7 +40,7 @@ class _SyncScreenState extends State<SyncScreen> {
       });
       AppAlerts.showSuccess(
         context,
-        '📡 Servidor listo. Muestra el QR al otro dispositivo.',
+        '📡 Servidor listo. Muestra el QR al dispositivo receptor.',
       );
     }
   }
@@ -48,7 +51,7 @@ class _SyncScreenState extends State<SyncScreen> {
       _serverUrl = null;
       _isServerRunning = false;
     });
-    AppAlerts.showInfo(context, 'Servidor de sincronización cerrado.');
+    AppAlerts.showInfo(context, 'Servidor de emisión detenido.');
   }
 
   @override
@@ -69,8 +72,8 @@ class _SyncScreenState extends State<SyncScreen> {
               for (final barcode in barcodes) {
                 final String? url = barcode.rawValue;
                 if (url != null && url.startsWith('http')) {
-                  Navigator.pop(context);
-                  _performImport(url);
+                  Navigator.pop(context); // Cierra la cámara
+                  _performImport(url); // 💡 Lanza la descarga
                   break;
                 }
               }
@@ -84,22 +87,28 @@ class _SyncScreenState extends State<SyncScreen> {
   Future<void> _performImport(String url) async {
     setState(() {
       _isReceiving = true;
-      _statusMessage = 'Iniciando descarga...';
+      _statusMessage = 'Conectando con el emisor...';
+      _progressValue = 0.0;
     });
 
-    final success = await SyncService.importDatabase(url, (status) {
-      setState(() => _statusMessage = status);
-    });
-
-    setState(() => _isReceiving = false);
-
-    if (success) {
+    // 💡 Ahora esperamos status y progress desde el SyncService
+    final success = await SyncService.importDatabase(url, (status, progress) {
       if (mounted) {
-        _showRestartDialog();
+        setState(() {
+          _statusMessage = status;
+          _progressValue = progress;
+        });
       }
-    } else {
-      if (mounted) {
-        AppAlerts.showError(context, '❌ Falló la importación de datos.');
+    });
+
+    if (mounted) {
+      setState(() => _isReceiving = false);
+
+      if (success) {
+        // 💡 Salta el modal obligatorio de reinicio
+        _showRestartDialog();
+      } else {
+        AppAlerts.showError(context, '❌ Error: $_statusMessage');
       }
     }
   }
@@ -107,22 +116,29 @@ class _SyncScreenState extends State<SyncScreen> {
   void _showRestartDialog() {
     showDialog(
       context: context,
-      barrierDismissible: false,
+      barrierDismissible: false, // Obliga a tocar el botón
       builder: (context) => AlertDialog(
-        title: const Text('🔄 Base de Datos Sincronizada'),
+        title: const Row(
+          children: [
+            Icon(Icons.check_circle, color: Colors.green, size: 28),
+            SizedBox(width: 8),
+            Expanded(child: Text('¡Sincronización Exitosa!')),
+          ],
+        ),
         content: const Text(
-          'La base de datos se ha clonado correctamente desde el otro dispositivo. Es necesario reiniciar la aplicación para aplicar los cambios de forma segura.',
+          'La base de datos se ha clonado correctamente desde el otro dispositivo. Es necesario reiniciar la aplicación para cargar el nuevo inventario.',
         ),
         actions: [
-          ElevatedButton(
+          ElevatedButton.icon(
             style: ElevatedButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.primary,
               foregroundColor: Theme.of(context).colorScheme.onPrimary,
             ),
+            icon: const Icon(Icons.restart_alt),
+            label: const Text('Reiniciar ahora'),
             onPressed: () {
               Restart.restartApp();
             },
-            child: const Text('Reiniciar ahora'),
           ),
         ],
       ),
@@ -170,7 +186,7 @@ class _SyncScreenState extends State<SyncScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Conecta ambos dispositivos a la misma red Wi-Fi o activa un Hotspot en uno de ellos para clonar el inventario al instante.',
+                  'Activa un Hotspot en el emisor o conecta ambos a la misma red Wi-Fi para clonar el inventario al instante.',
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                     fontSize: 13,
@@ -179,13 +195,36 @@ class _SyncScreenState extends State<SyncScreen> {
                 ),
                 const SizedBox(height: 40),
 
+                // 💡 ESTADO 1: DESCARGANDO (BARRA DE PROGRESO)
                 if (_isReceiving) ...[
-                  const CircularProgressIndicator(),
-                  const SizedBox(height: 16),
                   Text(
                     _statusMessage,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
                   ),
+                  const SizedBox(height: 16),
+                  LinearProgressIndicator(
+                    value: _progressValue >= 0 ? _progressValue : null,
+                    minHeight: 12,
+                    borderRadius: BorderRadius.circular(10),
+                    backgroundColor: Theme.of(context)
+                        .colorScheme
+                        .surfaceContainerHighest,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    _progressValue >= 0
+                        ? '${(_progressValue * 100).toStringAsFixed(0)}%'
+                        : 'Calculando peso...',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.primary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+
+                  // 💡 ESTADO 2: MENÚ PRINCIPAL (BOTONES)
                 ] else if (!_isServerRunning) ...[
                   SizedBox(
                     width: double.infinity,
@@ -214,9 +253,11 @@ class _SyncScreenState extends State<SyncScreen> {
                       onPressed: _openScanner,
                     ),
                   ),
+
+                  // 💡 ESTADO 3: EMITIENDO SEÑAL (QR EN PANTALLA)
                 ] else ...[
                   const Text(
-                    'Escanea este código desde el otro dispositivo:',
+                    'Escanea este código desde el receptor:',
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 16),
@@ -235,6 +276,12 @@ class _SyncScreenState extends State<SyncScreen> {
                       size: 200.0,
                     ),
                   ),
+                  const SizedBox(height: 12),
+                  // Muestra la IP para ayudar a depurar si el Hotspot falla
+                  Text(
+                    'IP Activa: ${_serverUrl!.split('/')[2]}',
+                    style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                  ),
                   const SizedBox(height: 24),
                   ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
@@ -242,7 +289,7 @@ class _SyncScreenState extends State<SyncScreen> {
                       foregroundColor: Theme.of(context).colorScheme.onError,
                     ),
                     icon: const Icon(Icons.stop),
-                    label: const Text('Detener Servidor'),
+                    label: const Text('Detener Emisión'),
                     onPressed: _stopHosting,
                   ),
                 ],
