@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // 💡 NUEVO
 
+import '../../features/sync/presentation/data_management_screen.dart';
 import '../services/database_backup_service.dart';
 import '../theme/app_colors.dart';
 import 'app_alerts.dart';
@@ -213,43 +214,14 @@ class AppDrawer extends StatelessWidget {
           ),
           const Divider(height: 24, indent: 16, endIndent: 16),
           ListTile(
-            leading: const Icon(Icons.backup, color: AppColors.primary),
-            title: const Text('Hacer copia de seguridad'),
-            subtitle: const Text('Exporta tu base de datos actual'),
-            onTap: () async {
-              bool success = await DatabaseBackupService.exportDatabase();
-              if (success) {
-                AppAlerts.showSuccess(
-                  context,
-                  '¡Copia generada correctamente! Guárdala bien.',
-                );
-              }
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.restore, color: AppColors.warning),
-            title: const Text('Restaurar base de datos'),
-            subtitle: const Text('Carga un archivo .db guardado'),
-            onTap: () async {
-              final navigator = Navigator.of(context);
-              final currentRoute = ModalRoute.of(context)?.settings.name ?? '/';
-
-              navigator.pop();
-
-              bool success = await DatabaseBackupService.importDatabase();
-
-              if (success) {
-                AppAlerts.showSuccess(
-                  context,
-                  '¡Base de datos restaurada con éxito!',
-                );
-                navigator.pushReplacementNamed(currentRoute);
-              } else {
-                AppAlerts.showError(
-                  context,
-                  'No se seleccionó ningún archivo.',
-                );
-              }
+            leading: Icon(
+              Icons.storage_rounded,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            title: const Text('Gestión de Datos'),
+            subtitle: const Text('Copias de seguridad y Sync'),
+            onTap: () {
+              Navigator.pushReplacementNamed(context, '/data-management');
             },
           ),
         ],

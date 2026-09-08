@@ -11,7 +11,6 @@ class DatabaseBackupService {
 
   static Future<String> _getDatabasePath() async {
     final databasesPath = await getDatabasesPath();
-    // 💡 ¡AQUÍ ESTABA EL ERROR! TODO JUNTO, SIN GUION BAJO
     return join(databasesPath, 'keepinventory.db');
   }
 

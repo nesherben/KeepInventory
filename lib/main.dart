@@ -14,6 +14,7 @@ import 'features/sales/presentation/sales_screen.dart';
 
 // 💡 Importamos el Drawer para acceder a su ValueNotifier del tema
 import 'core/shared_widgets/app_drawer.dart';
+import 'features/sync/presentation/data_management_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -60,6 +61,7 @@ class KeepInventoryApp extends StatelessWidget {
                 '/history': (context) => const HistoryScreen(),
                 '/promotions': (context) => const PromotionsScreen(),
                 '/packs': (context) => const PacksScreen(),
+                '/data-management': (context) => const DataManagementScreen(),
               },
             );
           },
