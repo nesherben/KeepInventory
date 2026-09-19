@@ -168,18 +168,20 @@ class SaleLocalDatasource {
     final database = await db;
     await database.transaction((txn) async {
       for (var entry in itemsToRefund.entries) {
-        if (entry.value > 0)
+        if (entry.value > 0) {
           await txn.rawUpdate(
             'UPDATE products SET units = units + ? WHERE id = ?',
             [entry.value, entry.key.productId],
           );
+        }
       }
       for (var entry in packsToRefund.entries) {
-        if (entry.value > 0 && restockPacks)
+        if (entry.value > 0 && restockPacks) {
           await txn.rawUpdate(
             'UPDATE packs SET units = units + ? WHERE id = ?',
             [entry.value, entry.key.packId],
           );
+        }
       }
       for (var entry in itemsToRefund.entries) {
         if (entry.value >= entry.key.quantity) {
@@ -238,29 +240,33 @@ class SaleLocalDatasource {
         );
 
         double currentRemainingValue = 0.0;
-        for (var row in remainingItems)
+        for (var row in remainingItems) {
           currentRemainingValue +=
               (row['historical_price'] as num) * (row['quantity'] as int);
-        for (var row in remainingPacks)
+        }
+        for (var row in remainingPacks) {
           currentRemainingValue +=
               (row['historical_price'] as num) * (row['quantity'] as int);
+        }
 
         if (currentRemainingValue > 0 && newTotalAmount > 0) {
           final double ratio = newTotalAmount / currentRemainingValue;
-          for (var row in remainingItems)
+          for (var row in remainingItems) {
             await txn.update(
               'sale_items',
               {'historical_price': (row['historical_price'] as num) * ratio},
               where: 'id = ?',
               whereArgs: [row['id']],
             );
-          for (var row in remainingPacks)
+          }
+          for (var row in remainingPacks) {
             await txn.update(
               'sale_packs',
               {'historical_price': (row['historical_price'] as num) * ratio},
               where: 'id = ?',
               whereArgs: [row['id']],
             );
+          }
         }
       }
     });

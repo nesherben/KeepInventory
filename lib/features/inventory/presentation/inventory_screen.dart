@@ -367,7 +367,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
   }
 
   void _showProductFormDialog({Product? productToEdit}) {
-    final isEditing = productToEdit != null;
     showDialog(
       context: context,
       builder: (context) {

@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // 💡 NUEVO
 
-import '../../features/sync/presentation/data_management_screen.dart';
-import '../services/database_backup_service.dart';
 import '../theme/app_colors.dart';
 import 'app_alerts.dart';
 

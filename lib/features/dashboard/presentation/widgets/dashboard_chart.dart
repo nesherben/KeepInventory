@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 
 class FullScreenChartScreen extends StatefulWidget {
   final Map<String, double> dailySales;
