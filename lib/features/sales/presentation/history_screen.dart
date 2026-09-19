@@ -27,8 +27,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   bool _isLoading = true;
   List<Sale> _sales = [];
-  String _searchQuery =
-      ''; // 💡 Variable para el buscador de tickets/ferias/productos
+  String _searchQuery = '';
 
   @override
   void initState() {
@@ -85,7 +84,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
       for (var pack in sale.packItems) pack: 0,
     };
 
-    bool restockPacks = false;
+    bool restockAsComponents = false;
     final TextEditingController refundAmountController = TextEditingController(
       text: '0.00',
     );
@@ -129,7 +128,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
             );
 
             return AlertDialog(
-              title: Text('Devolución Ticket #${sale.id}'),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              title: Text(
+                'Devolución Ticket #${sale.id}',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
               content: SizedBox(
                 width: MediaQuery.of(context).size.width * 0.85,
                 child: SingleChildScrollView(
@@ -140,31 +145,46 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       Text(
                         'Indica cuántas unidades devuelves de cada artículo:',
                         style: TextStyle(
-                          fontSize: 13,
+                          fontSize: 14,
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 16),
 
                       // 1. PRODUCTOS SUELTOS
                       if (sale.items.isNotEmpty) ...[
-                        const Text(
-                          'Productos Sueltos:',
+                        Text(
+                          'Productos Sueltos',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            fontSize: 13,
+                            fontSize: 12,
+                            letterSpacing: 1.2,
+                            color: Theme.of(context).colorScheme.primary,
                           ),
                         ),
-                        const SizedBox(height: 6),
+                        const SizedBox(height: 8),
                         ...sale.items.map((item) {
                           final currentRefundQty =
                               refundItemQuantities[item] ?? 0;
-                          return Card(
-                            margin: const EdgeInsets.symmetric(vertical: 4),
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 8),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .surfaceContainerHighest
+                                  .withValues(alpha: 0.3),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .outlineVariant
+                                    .withValues(alpha: 0.5),
+                              ),
+                            ),
                             child: Padding(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 6,
+                                horizontal: 12,
+                                vertical: 10,
                               ),
                               child: Row(
                                 children: [
@@ -176,14 +196,15 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                         Text(
                                           item.productName ?? 'Desconocido',
                                           style: const TextStyle(
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 13,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14,
                                           ),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                         ),
+                                        const SizedBox(height: 4),
                                         Text(
-                                          'Pagado: ${(item.quantity * item.historicalPrice).toStringAsFixed(2)} € (Compradas: ${item.quantity})',
+                                          'Compradas: ${item.quantity}  •  Abonado: ${(item.quantity * item.historicalPrice).toStringAsFixed(2)} €',
                                           style: TextStyle(
                                             fontSize: 11,
                                             color: Theme.of(context)
@@ -194,89 +215,125 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                       ],
                                     ),
                                   ),
-                                  Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      IconButton(
-                                        icon: Icon(
-                                          Icons.remove_circle_outline,
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .error,
-                                          size: 20,
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context).cardColor,
+                                      borderRadius: BorderRadius.circular(20),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withValues(
+                                            alpha: 0.05,
+                                          ),
+                                          blurRadius: 4,
+                                          offset: const Offset(0, 2),
                                         ),
-                                        onPressed: currentRefundQty > 0
-                                            ? () {
-                                                setDialogState(
-                                                  () =>
-                                                      refundItemQuantities[item] =
-                                                          currentRefundQty - 1,
-                                                );
-                                                recalculateDefaultRefund();
-                                              }
-                                            : null,
-                                      ),
-                                      Text(
-                                        '$currentRefundQty',
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 14,
+                                      ],
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        IconButton(
+                                          icon: Icon(
+                                            Icons.remove,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .error,
+                                            size: 18,
+                                          ),
+                                          constraints: const BoxConstraints(
+                                            minWidth: 36,
+                                            minHeight: 36,
+                                          ),
+                                          padding: EdgeInsets.zero,
+                                          onPressed: currentRefundQty > 0
+                                              ? () {
+                                                  setDialogState(
+                                                    () =>
+                                                        refundItemQuantities[item] =
+                                                            currentRefundQty -
+                                                            1,
+                                                  );
+                                                  recalculateDefaultRefund();
+                                                }
+                                              : null,
                                         ),
-                                      ),
-                                      IconButton(
-                                        icon: Icon(
-                                          Icons.add_circle_outline,
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .tertiary,
-                                          size: 20,
+                                        Text(
+                                          '$currentRefundQty',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 15,
+                                          ),
                                         ),
-                                        onPressed:
-                                            currentRefundQty < item.quantity
-                                            ? () {
-                                                setDialogState(
-                                                  () =>
-                                                      refundItemQuantities[item] =
-                                                          currentRefundQty + 1,
-                                                );
-                                                recalculateDefaultRefund();
-                                              }
-                                            : null,
-                                      ),
-                                    ],
+                                        IconButton(
+                                          icon: Icon(
+                                            Icons.add,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .primary,
+                                            size: 18,
+                                          ),
+                                          constraints: const BoxConstraints(
+                                            minWidth: 36,
+                                            minHeight: 36,
+                                          ),
+                                          padding: EdgeInsets.zero,
+                                          onPressed:
+                                              currentRefundQty < item.quantity
+                                              ? () {
+                                                  setDialogState(
+                                                    () =>
+                                                        refundItemQuantities[item] =
+                                                            currentRefundQty +
+                                                            1,
+                                                  );
+                                                  recalculateDefaultRefund();
+                                                }
+                                              : null,
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ],
                               ),
                             ),
                           );
                         }),
+                        const SizedBox(height: 8),
                       ],
 
                       // 2. PACKS
                       if (sale.packItems.isNotEmpty) ...[
-                        const SizedBox(height: 12),
                         Text(
-                          'Packs / Bundles:',
+                          'Packs / Bundles',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            fontSize: 13,
+                            fontSize: 12,
+                            letterSpacing: 1.2,
                             color: Theme.of(context).colorScheme.secondary,
                           ),
                         ),
-                        const SizedBox(height: 6),
+                        const SizedBox(height: 8),
                         ...sale.packItems.map((pack) {
                           final currentRefundQty =
                               refundPackQuantities[pack] ?? 0;
-                          return Card(
-                            margin: const EdgeInsets.symmetric(vertical: 4),
-                            color: Theme.of(context)
-                                .colorScheme
-                                .surfaceContainerHighest
-                                .withValues(alpha: 0.5),
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 8),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .secondaryContainer
+                                  .withValues(alpha: 0.3),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .secondaryContainer,
+                              ),
+                            ),
                             child: Padding(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 6,
+                                horizontal: 12,
+                                vertical: 10,
                               ),
                               child: Row(
                                 children: [
@@ -288,14 +345,15 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                         Text(
                                           '${pack.packName} (Pack)',
                                           style: const TextStyle(
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 13,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14,
                                           ),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                         ),
+                                        const SizedBox(height: 4),
                                         Text(
-                                          '${pack.historicalPrice.toStringAsFixed(2)} €/pack (Comprados: ${pack.quantity})',
+                                          'Comprados: ${pack.quantity}  •  Abonado: ${(pack.quantity * pack.historicalPrice).toStringAsFixed(2)} €',
                                           style: TextStyle(
                                             fontSize: 11,
                                             color: Theme.of(context)
@@ -306,56 +364,83 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                       ],
                                     ),
                                   ),
-                                  Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      IconButton(
-                                        icon: Icon(
-                                          Icons.remove_circle_outline,
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .error,
-                                          size: 20,
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context).cardColor,
+                                      borderRadius: BorderRadius.circular(20),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withValues(
+                                            alpha: 0.05,
+                                          ),
+                                          blurRadius: 4,
+                                          offset: const Offset(0, 2),
                                         ),
-                                        onPressed: currentRefundQty > 0
-                                            ? () {
-                                                setDialogState(
-                                                  () =>
-                                                      refundPackQuantities[pack] =
-                                                          currentRefundQty - 1,
-                                                );
-                                                recalculateDefaultRefund();
-                                              }
-                                            : null,
-                                      ),
-                                      Text(
-                                        '$currentRefundQty',
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 14,
+                                      ],
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        IconButton(
+                                          icon: Icon(
+                                            Icons.remove,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .error,
+                                            size: 18,
+                                          ),
+                                          constraints: const BoxConstraints(
+                                            minWidth: 36,
+                                            minHeight: 36,
+                                          ),
+                                          padding: EdgeInsets.zero,
+                                          onPressed: currentRefundQty > 0
+                                              ? () {
+                                                  setDialogState(
+                                                    () =>
+                                                        refundPackQuantities[pack] =
+                                                            currentRefundQty -
+                                                            1,
+                                                  );
+                                                  recalculateDefaultRefund();
+                                                }
+                                              : null,
                                         ),
-                                      ),
-                                      IconButton(
-                                        icon: Icon(
-                                          Icons.add_circle_outline,
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .tertiary,
-                                          size: 20,
+                                        Text(
+                                          '$currentRefundQty',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 15,
+                                          ),
                                         ),
-                                        onPressed:
-                                            currentRefundQty < pack.quantity
-                                            ? () {
-                                                setDialogState(
-                                                  () =>
-                                                      refundPackQuantities[pack] =
-                                                          currentRefundQty + 1,
-                                                );
-                                                recalculateDefaultRefund();
-                                              }
-                                            : null,
-                                      ),
-                                    ],
+                                        IconButton(
+                                          icon: Icon(
+                                            Icons.add,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .primary,
+                                            size: 18,
+                                          ),
+                                          constraints: const BoxConstraints(
+                                            minWidth: 36,
+                                            minHeight: 36,
+                                          ),
+                                          padding: EdgeInsets.zero,
+                                          onPressed:
+                                              currentRefundQty < pack.quantity
+                                              ? () {
+                                                  setDialogState(
+                                                    () =>
+                                                        refundPackQuantities[pack] =
+                                                            currentRefundQty +
+                                                            1,
+                                                  );
+                                                  recalculateDefaultRefund();
+                                                }
+                                              : null,
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ],
                               ),
@@ -364,36 +449,52 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         }),
                         if (hasPacksSelected) ...[
                           const SizedBox(height: 8),
-                          SwitchListTile(
-                            dense: true,
-                            contentPadding: EdgeInsets.zero,
-                            title: const Text(
-                              '¿Reincorporar Pack al stock?',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .errorContainer
+                                  .withValues(alpha: 0.3),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: Theme.of(context).colorScheme.error
+                                    .withValues(alpha: 0.3),
                               ),
                             ),
-                            subtitle: Text(
-                              'Desactívalo si era un pack sorpresa abierto.',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurfaceVariant,
+                            child: SwitchListTile(
+                              dense: true,
+                              title: const Text(
+                                'Pack abierto (Devolver piezas)',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              subtitle: Text(
+                                'Suma stock a los artículos individuales.',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant,
+                                ),
+                              ),
+                              value: restockAsComponents,
+                              activeThumbColor: Theme.of(context)
+                                  .colorScheme
+                                  .error,
+                              onChanged: (val) => setDialogState(
+                                () => restockAsComponents = val,
                               ),
                             ),
-                            value: restockPacks,
-                            onChanged: (val) =>
-                                setDialogState(() => restockPacks = val),
                           ),
                         ],
                       ],
 
-                      const Divider(height: 20),
+                      const Divider(height: 32),
 
                       const Text(
-                        'Total a Reembolsar al cliente (€):',
+                        'Total a Reembolsar al cliente (€)',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 14,
@@ -406,19 +507,25 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           decimal: true,
                         ),
                         style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
+                          fontSize: 24,
+                          fontWeight: FontWeight.w900,
                           color: Theme.of(context).colorScheme.error,
                         ),
                         decoration: InputDecoration(
-                          border: const OutlineInputBorder(),
-                          isDense: true,
-                          helperText: 'Cálculo automático de ruptura de promoción. Puedes editarlo manualmente.',
-                          helperStyle: TextStyle(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurfaceVariant,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
                           ),
+                          filled: true,
+                          fillColor: Theme.of(context)
+                              .colorScheme
+                              .errorContainer
+                              .withValues(alpha: 0.1),
+                          prefixIcon: Icon(
+                            Icons.payments,
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                          isDense: true,
+                          helperText: 'Cálculo automático de ruptura de promoción. Editable si es necesario.',
                           helperMaxLines: 2,
                         ),
                       ),
@@ -426,15 +533,29 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   ),
                 ),
               ),
+              actionsPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 16,
+              ),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancelar'),
+                  child: const Text(
+                    'Cancelar',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                 ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
+                FilledButton.icon(
+                  style: FilledButton.styleFrom(
                     backgroundColor: Theme.of(context).colorScheme.error,
                     foregroundColor: Theme.of(context).colorScheme.onError,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                   ),
                   onPressed: totalItemsToRefund == 0
                       ? null
@@ -461,7 +582,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                             originalSale: sale,
                             itemsToRefund: refundItemQuantities,
                             packsToRefund: refundPackQuantities,
-                            restockPacks: restockPacks,
+                            restockAsComponents: restockAsComponents,
                             customRefundAmount: customRefund,
                           );
                           await _loadSales();
@@ -473,7 +594,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
                             );
                           }
                         },
-                  child: const Text('Confirmar Devolución'),
+                  icon: const Icon(Icons.undo, size: 18),
+                  label: const Text(
+                    'Confirmar',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                 ),
               ],
             );
@@ -500,30 +625,43 @@ class _HistoryScreenState extends State<HistoryScreen> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Agrupar en Feria'),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: const Text(
+            'Agrupar en Feria',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Selecciona una feria guardada o escribe el nombre de una nueva:',
-              ),
+              const Text('Selecciona una feria guardada o escribe una nueva:'),
               const SizedBox(height: 16),
               if (existingFairs.isNotEmpty) ...[
                 DropdownButtonFormField<String>(
+                  isExpanded: true, // 💡 ARREGLO DEL RENDERFLEX OVERFLOW
                   initialValue: selectedExisting,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Ferias disponibles',
-                    border: OutlineInputBorder(),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    prefixIcon: const Icon(Icons.event_seat),
                   ),
                   items: [
                     const DropdownMenuItem(
                       value: null,
-                      child: Text('-- Escribir nueva / Ninguna --'),
+                      child: Text(
+                        '-- Escribir nueva / Ninguna --',
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                     ...existingFairs.map(
-                      (fair) =>
-                          DropdownMenuItem(value: fair, child: Text(fair)),
+                      (fair) => DropdownMenuItem(
+                        value: fair,
+                        child: Text(fair, overflow: TextOverflow.ellipsis),
+                      ),
                     ),
                   ],
                   onChanged: (val) {
@@ -541,20 +679,35 @@ class _HistoryScreenState extends State<HistoryScreen> {
               ],
               TextField(
                 controller: controller,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Nombre de la Feria',
-                  border: OutlineInputBorder(),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  prefixIcon: const Icon(Icons.edit),
                 ),
                 autofocus: true,
               ),
             ],
           ),
+          actionsPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 16,
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancelar'),
+              child: const Text(
+                'Cancelar',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
             ),
-            ElevatedButton(
+            FilledButton.icon(
+              style: FilledButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
               onPressed: () async {
                 final newName = controller.text.trim();
                 Navigator.pop(context);
@@ -572,7 +725,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   );
                 }
               },
-              child: const Text('Guardar'),
+              icon: const Icon(Icons.save, size: 18),
+              label: const Text(
+                'Guardar',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
             ),
           ],
         ),
@@ -581,16 +738,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   String _formatDateTime(DateTime date) {
-    final day = date.day.toString().padLeft(2, '0');
-    final month = date.month.toString().padLeft(2, '0');
     final hour = date.hour.toString().padLeft(2, '0');
     final minute = date.minute.toString().padLeft(2, '0');
-    return '$day/$month a las $hour:$minute';
+    return '$hour:$minute';
   }
 
   @override
   Widget build(BuildContext context) {
-    // 💡 Lógica de filtrado inteligente: busca en nombre de feria, ID de ticket y nombres de artículos o packs
     final filteredSales = _sales.where((sale) {
       final query = _searchQuery.toLowerCase();
 
@@ -619,8 +773,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
       final datePrefix = '$year-$month-$day';
 
       final groupKey = (sale.fairName != null && sale.fairName!.isNotEmpty)
-          ? '🎪 Feria: ${sale.fairName}'
-          : dateKey;
+          ? '🎪 ${sale.fairName}'
+          : '📅 $dateKey';
 
       groupedSales.putIfAbsent(groupKey, () => []).add(sale);
       groupDatePrefix[groupKey] = datePrefix;
@@ -651,7 +805,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
       child: Scaffold(
         key: _scaffoldKey,
         appBar: AppBar(
-          title: const Text('Historial y Ferias'),
+          title: const Text(
+            'Historial y Ferias',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
           actions: [
             IconButton(icon: const Icon(Icons.refresh), onPressed: _loadSales),
           ],
@@ -661,18 +818,28 @@ class _HistoryScreenState extends State<HistoryScreen> {
             ? const Center(child: CircularProgressIndicator())
             : Column(
                 children: [
-                  // --- 💡 BARRA DE BÚSQUEDA DE TICKETS Y FERIAS ---
+                  // --- BARRA DE BÚSQUEDA ---
                   Container(
-                    padding: const EdgeInsets.all(12.0),
-                    color: Theme.of(context).colorScheme.surfaceContainerHighest
-                        .withValues(alpha: 0.3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16.0,
+                      vertical: 12.0,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surface,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
                     child: TextField(
                       controller: _searchController,
                       onChanged: (value) =>
                           setState(() => _searchQuery = value),
                       decoration: InputDecoration(
-                        hintText:
-                            'Buscar por feria, ID de ticket o artículo...',
+                        hintText: 'Buscar ticket, artículo, feria...',
                         prefixIcon: const Icon(Icons.search),
                         suffixIcon: _searchQuery.isNotEmpty
                             ? IconButton(
@@ -683,34 +850,51 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                 },
                               )
                             : null,
-                        isDense: true,
+                        contentPadding: const EdgeInsets.symmetric(vertical: 0),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(16),
                           borderSide: BorderSide.none,
                         ),
                         filled: true,
-                        fillColor: Theme.of(context).cardColor,
+                        fillColor: Theme.of(context)
+                            .colorScheme
+                            .surfaceContainerHighest
+                            .withValues(alpha: 0.5),
                       ),
                     ),
                   ),
 
-                  // --- LISTADO DE HISTORIAL Y FERIAS ---
+                  // --- LISTADO DE HISTORIAL ---
                   Expanded(
                     child: groupKeys.isEmpty
                         ? Center(
-                            child: Text(
-                              _sales.isEmpty
-                                  ? 'No hay ventas registradas aún.'
-                                  : 'No se encontraron tickets con esa búsqueda.',
-                              style: TextStyle(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurfaceVariant,
-                              ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.receipt_long_outlined,
+                                  size: 64,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .surfaceContainerHighest,
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  _sales.isEmpty
+                                      ? 'No hay ventas registradas aún.'
+                                      : 'No hay resultados para tu búsqueda.',
+                                  style: TextStyle(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ],
                             ),
                           )
                         : ListView.builder(
-                            padding: const EdgeInsets.all(12),
+                            padding: const EdgeInsets.all(16),
                             itemCount: groupKeys.length,
                             itemBuilder: (context, index) {
                               final groupKey = groupKeys[index];
@@ -721,249 +905,430 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                 0.0,
                                 (sum, sale) => sum + sale.totalAmount,
                               );
-                              final isFair = groupKey.startsWith('🎪 Feria:');
+
+                              final isFair = groupKey.startsWith('🎪');
                               final currentFairName = isFair
-                                  ? groupKey.replaceFirst('🎪 Feria: ', '')
+                                  ? groupKey.replaceFirst('🎪 ', '')
                                   : '';
 
-                              final baseThemeColor = isFair
-                                  ? Theme.of(context).colorScheme.secondary
-                                  : Theme.of(context).colorScheme.primary;
+                              final theme = Theme.of(context);
 
-                              final groupHeaderColor = baseThemeColor
-                                  .withValues(alpha: 0.12);
-                              final groupHeaderTextColor = baseThemeColor;
+                              // 💡 RECUPERAMOS TUS COLORES ORIGINALES Y VIBRANTES
+                              final baseThemeColor = isFair
+                                  ? theme.colorScheme.secondary
+                                  : theme.colorScheme.primary;
+
+                              final headerColor = baseThemeColor.withValues(
+                                alpha: 0.12,
+                              );
+                              final headerTextColor = baseThemeColor;
 
                               return Card(
-                                margin: const EdgeInsets.only(bottom: 12),
-                                elevation: 2,
+                                margin: const EdgeInsets.only(bottom: 20),
+                                elevation: 0,
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
+                                  borderRadius: BorderRadius.circular(20),
+                                  side: BorderSide(
+                                    color: theme.colorScheme.outlineVariant
+                                        .withValues(alpha: 0.5),
+                                  ),
                                 ),
+                                clipBehavior: Clip.antiAlias,
                                 child: ExpansionTile(
                                   initiallyExpanded: true,
-                                  collapsedBackgroundColor: groupHeaderColor,
-                                  backgroundColor: groupHeaderColor.withValues(
-                                    alpha: 0.5,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  collapsedShape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
+                                  backgroundColor: theme.colorScheme.surface,
+                                  collapsedBackgroundColor: headerColor,
+                                  shape: const Border(),
                                   title: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
                                     children: [
                                       Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              groupKey,
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.w900,
+                                                fontSize: 18,
+                                                color: headerTextColor,
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              '${groupSales.length} tickets registrados',
+                                              style: TextStyle(
+                                                fontSize: 13,
+                                                color: headerTextColor
+                                                    .withValues(alpha: 0.8),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 8,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: theme.colorScheme.surface
+                                              .withValues(alpha: 0.6),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                        ),
                                         child: Text(
-                                          groupKey,
+                                          '${groupTotal.toStringAsFixed(2)} €',
                                           style: TextStyle(
                                             fontWeight: FontWeight.bold,
                                             fontSize: 16,
-                                            color: groupHeaderTextColor,
+                                            color: headerTextColor,
                                           ),
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                      Text(
-                                        '${groupTotal.toStringAsFixed(2)} €',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
-                                          color: groupHeaderTextColor,
                                         ),
                                       ),
                                     ],
                                   ),
-                                  subtitle: Row(
-                                    children: [
-                                      Text(
-                                        '${groupSales.length} tickets',
-                                        style: TextStyle(
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .onSurfaceVariant,
+                                  subtitle: Padding(
+                                    padding: const EdgeInsets.only(top: 12.0),
+                                    child: Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: ActionChip(
+                                        avatar: Icon(
+                                          isFair
+                                              ? Icons.edit
+                                              : Icons.add_circle,
+                                          size: 16,
+                                          color: headerTextColor,
                                         ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      InkWell(
-                                        onTap: () => _showAssignFairDialog(
+                                        label: Text(
+                                          isFair
+                                              ? 'Cambiar Feria'
+                                              : 'Agrupar en Feria',
+                                          style: TextStyle(
+                                            color: headerTextColor,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        visualDensity: VisualDensity.compact,
+                                        backgroundColor:
+                                            theme.colorScheme.surface,
+                                        side: BorderSide(
+                                          color: headerTextColor.withValues(
+                                            alpha: 0.5,
+                                          ),
+                                        ),
+                                        onPressed: () => _showAssignFairDialog(
                                           datePrefix,
                                           currentFairName,
                                         ),
-                                        borderRadius: BorderRadius.circular(6),
-                                        child: Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 6.0,
-                                            vertical: 4.0,
-                                          ),
-                                          child: Text(
-                                            isFair
-                                                ? '[Cambiar Feria]'
-                                                : '[+ Agrupar en Feria]',
-                                            style: TextStyle(
-                                              color: groupHeaderTextColor,
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 12,
-                                            ),
-                                          ),
-                                        ),
                                       ),
-                                    ],
+                                    ),
                                   ),
                                   children: [
-                                    const Divider(height: 1),
-                                    Padding(
-                                      padding: const EdgeInsets.all(8.0),
+                                    Container(
+                                      color: theme
+                                          .colorScheme
+                                          .surfaceContainerHighest
+                                          .withValues(alpha: 0.2),
+                                      padding: const EdgeInsets.all(12.0),
                                       child: Column(
                                         children: groupSales.map((sale) {
                                           return Card(
                                             margin: const EdgeInsets.only(
-                                              bottom: 8,
+                                              bottom: 12,
                                             ),
-                                            elevation: 1,
+                                            elevation: 2,
+                                            shadowColor: Colors.black
+                                                .withValues(alpha: 0.1),
                                             shape: RoundedRectangleBorder(
                                               borderRadius:
-                                                  BorderRadius.circular(10),
+                                                  BorderRadius.circular(16),
                                             ),
-                                            child: ExpansionTile(
-                                              leading: CircleAvatar(
-                                                backgroundColor:
-                                                    groupHeaderColor,
-                                                child: Icon(
-                                                  Icons.receipt_long,
-                                                  color: groupHeaderTextColor,
+                                            child: Theme(
+                                              data: theme.copyWith(
+                                                dividerColor:
+                                                    Colors.transparent,
+                                              ),
+                                              child: ExpansionTile(
+                                                tilePadding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 16,
+                                                      vertical: 8,
+                                                    ),
+                                                leading: CircleAvatar(
+                                                  backgroundColor: headerColor,
+                                                  foregroundColor:
+                                                      headerTextColor,
+                                                  child: const Icon(
+                                                    Icons.receipt_long,
+                                                  ),
                                                 ),
-                                              ),
-                                              title: Text(
-                                                'Ticket #${sale.id}',
-                                                style: const TextStyle(
-                                                  fontWeight: FontWeight.bold,
+                                                title: Text(
+                                                  'Ticket #${sale.id}',
+                                                  style: const TextStyle(
+                                                    fontWeight: FontWeight.w900,
+                                                    fontSize: 16,
+                                                  ),
                                                 ),
-                                              ),
-                                              subtitle: Text(
-                                                _formatDateTime(sale.date),
-                                              ),
-                                              trailing: Text(
-                                                '${sale.totalAmount.toStringAsFixed(2)} €',
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 16,
-                                                  color: Theme.of(context)
-                                                      .colorScheme
-                                                      .primary,
-                                                ),
-                                              ),
-                                              children: [
-                                                const Divider(height: 1),
-                                                Container(
-                                                  color: Theme.of(context)
-                                                      .colorScheme
-                                                      .surfaceContainerHighest
-                                                      .withValues(alpha: 0.3),
-                                                  padding:
-                                                      const EdgeInsets.symmetric(
-                                                        vertical: 8,
+                                                subtitle: Row(
+                                                  children: [
+                                                    Icon(
+                                                      Icons.access_time,
+                                                      size: 14,
+                                                      color: theme
+                                                          .colorScheme
+                                                          .outline,
+                                                    ),
+                                                    const SizedBox(width: 4),
+                                                    Text(
+                                                      _formatDateTime(
+                                                        sale.date,
                                                       ),
-                                                  child: Column(
-                                                    children: [
-                                                      // PRODUCTOS SUELTOS
-                                                      ...sale.items.map((item) {
-                                                        return ListTile(
-                                                          dense: true,
-                                                          leading: Icon(
-                                                            Icons
-                                                                .inventory_2_outlined,
-                                                            size: 18,
-                                                            color: Theme.of(context)
-                                                                .colorScheme
-                                                                .onSurfaceVariant,
+                                                      style: TextStyle(
+                                                        color: theme
+                                                            .colorScheme
+                                                            .outline,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                trailing: Text(
+                                                  '${sale.totalAmount.toStringAsFixed(2)} €',
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.w900,
+                                                    fontSize: 18,
+                                                    color: theme
+                                                        .colorScheme
+                                                        .primary,
+                                                  ),
+                                                ),
+                                                children: [
+                                                  Container(
+                                                    decoration: BoxDecoration(
+                                                      color: theme
+                                                          .colorScheme
+                                                          .surfaceContainerHighest
+                                                          .withValues(
+                                                            alpha: 0.3,
                                                           ),
-                                                          title: Text(
-                                                            '${item.quantity}x ${item.productName}',
-                                                          ),
-                                                          trailing: Text(
-                                                            '${(item.quantity * item.historicalPrice).toStringAsFixed(2)} €',
-                                                          ),
-                                                        );
-                                                      }),
-
-                                                      // PACKS Y BUNDLES
-                                                      ...sale.packItems.map((
-                                                        packItem,
-                                                      ) {
-                                                        return ListTile(
-                                                          dense: true,
-                                                          leading: Icon(
-                                                            Icons.card_giftcard,
-                                                            size: 18,
-                                                            color:
-                                                                Theme.of(
-                                                                      context,
-                                                                    )
-                                                                    .colorScheme
-                                                                    .secondary,
-                                                          ),
-                                                          title: Text(
-                                                            '${packItem.quantity}x ${packItem.packName} (Pack)',
-                                                            style:
-                                                                const TextStyle(
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .w600,
+                                                      borderRadius:
+                                                          const BorderRadius.vertical(
+                                                            bottom:
+                                                                Radius.circular(
+                                                                  16,
                                                                 ),
                                                           ),
-                                                          trailing: Text(
-                                                            '${(packItem.quantity * packItem.historicalPrice).toStringAsFixed(2)} €',
-                                                            style: TextStyle(
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w600,
-                                                              color:
-                                                                  Theme.of(
-                                                                        context,
-                                                                      )
-                                                                      .colorScheme
-                                                                      .secondary,
+                                                    ),
+                                                    padding:
+                                                        const EdgeInsets.fromLTRB(
+                                                          16,
+                                                          0,
+                                                          16,
+                                                          16,
+                                                        ),
+                                                    child: Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        const Divider(
+                                                          height: 16,
+                                                        ),
+                                                        ...sale.items.map((
+                                                          item,
+                                                        ) {
+                                                          return Padding(
+                                                            padding:
+                                                                const EdgeInsets.symmetric(
+                                                                  vertical: 6.0,
+                                                                ),
+                                                            child: Row(
+                                                              crossAxisAlignment:
+                                                                  CrossAxisAlignment
+                                                                      .start,
+                                                              children: [
+                                                                Text(
+                                                                  '${item.quantity}x',
+                                                                  style: const TextStyle(
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .bold,
+                                                                    fontSize:
+                                                                        14,
+                                                                  ),
+                                                                ),
+                                                                const SizedBox(
+                                                                  width: 12,
+                                                                ),
+                                                                Expanded(
+                                                                  child: Column(
+                                                                    crossAxisAlignment:
+                                                                        CrossAxisAlignment
+                                                                            .start,
+                                                                    children: [
+                                                                      Text(
+                                                                        item.productName ?? 'Desconocido',
+                                                                        style: const TextStyle(
+                                                                          fontWeight:
+                                                                              FontWeight.w600,
+                                                                        ),
+                                                                      ),
+                                                                      if (item.historicalPrice <
+                                                                          item.originalPrice)
+                                                                        Text(
+                                                                          'Dto aplicado',
+                                                                          style: TextStyle(
+                                                                            fontSize:
+                                                                                11,
+                                                                            color:
+                                                                                theme.colorScheme.tertiary,
+                                                                            fontWeight:
+                                                                                FontWeight.bold,
+                                                                          ),
+                                                                        ),
+                                                                    ],
+                                                                  ),
+                                                                ),
+                                                                Text(
+                                                                  '${(item.quantity * item.historicalPrice).toStringAsFixed(2)} €',
+                                                                  style: const TextStyle(
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .w600,
+                                                                  ),
+                                                                ),
+                                                              ],
                                                             ),
+                                                          );
+                                                        }),
+                                                        if (sale
+                                                                .packItems
+                                                                .isNotEmpty &&
+                                                            sale
+                                                                .items
+                                                                .isNotEmpty)
+                                                          const SizedBox(
+                                                            height: 8,
                                                           ),
-                                                        );
-                                                      }),
-
-                                                      const Divider(height: 16),
-
-                                                      // BOTÓN GESTIÓN DE DEVOLUCIONES
-                                                      Padding(
-                                                        padding:
-                                                            const EdgeInsets.symmetric(
-                                                              horizontal: 16.0,
-                                                              vertical: 8.0,
+                                                        ...sale.packItems.map((
+                                                          packItem,
+                                                        ) {
+                                                          return Padding(
+                                                            padding:
+                                                                const EdgeInsets.symmetric(
+                                                                  vertical: 6.0,
+                                                                ),
+                                                            child: Row(
+                                                              crossAxisAlignment:
+                                                                  CrossAxisAlignment
+                                                                      .start,
+                                                              children: [
+                                                                Text(
+                                                                  '${packItem.quantity}x',
+                                                                  style: TextStyle(
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .bold,
+                                                                    fontSize:
+                                                                        14,
+                                                                    color: theme
+                                                                        .colorScheme
+                                                                        .secondary,
+                                                                  ),
+                                                                ),
+                                                                const SizedBox(
+                                                                  width: 12,
+                                                                ),
+                                                                Expanded(
+                                                                  child: Column(
+                                                                    crossAxisAlignment:
+                                                                        CrossAxisAlignment
+                                                                            .start,
+                                                                    children: [
+                                                                      Text(
+                                                                        packItem
+                                                                            .packName,
+                                                                        style: TextStyle(
+                                                                          fontWeight:
+                                                                              FontWeight.w600,
+                                                                          color: theme
+                                                                              .colorScheme
+                                                                              .secondary,
+                                                                        ),
+                                                                      ),
+                                                                      Container(
+                                                                        margin: const EdgeInsets.only(
+                                                                          top:
+                                                                              2,
+                                                                        ),
+                                                                        padding: const EdgeInsets.symmetric(
+                                                                          horizontal:
+                                                                              6,
+                                                                          vertical:
+                                                                              2,
+                                                                        ),
+                                                                        decoration: BoxDecoration(
+                                                                          color: theme
+                                                                              .colorScheme
+                                                                              .secondaryContainer,
+                                                                          borderRadius:
+                                                                              BorderRadius.circular(
+                                                                                4,
+                                                                              ),
+                                                                        ),
+                                                                        child: Text(
+                                                                          'PACK',
+                                                                          style: TextStyle(
+                                                                            fontSize:
+                                                                                9,
+                                                                            fontWeight:
+                                                                                FontWeight.bold,
+                                                                            color:
+                                                                                theme.colorScheme.onSecondaryContainer,
+                                                                          ),
+                                                                        ),
+                                                                      ),
+                                                                    ],
+                                                                  ),
+                                                                ),
+                                                                Text(
+                                                                  '${(packItem.quantity * packItem.historicalPrice).toStringAsFixed(2)} €',
+                                                                  style: TextStyle(
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .w600,
+                                                                    color: theme
+                                                                        .colorScheme
+                                                                        .secondary,
+                                                                  ),
+                                                                ),
+                                                              ],
                                                             ),
-                                                        child: SizedBox(
-                                                          width:
-                                                              double.infinity,
-                                                          child: OutlinedButton.icon(
-                                                            style: OutlinedButton.styleFrom(
-                                                              foregroundColor:
-                                                                  Theme.of(
-                                                                        context,
-                                                                      )
-                                                                      .colorScheme
-                                                                      .error,
-                                                              side: BorderSide(
-                                                                color: Theme.of(
-                                                                  context,
-                                                                ).colorScheme.error,
-                                                              ),
+                                                          );
+                                                        }),
+                                                        const SizedBox(
+                                                          height: 16,
+                                                        ),
+                                                        Align(
+                                                          alignment: Alignment
+                                                              .centerRight,
+                                                          child: FilledButton.tonalIcon(
+                                                            style: FilledButton.styleFrom(
+                                                              backgroundColor: theme
+                                                                  .colorScheme
+                                                                  .errorContainer,
+                                                              foregroundColor: theme
+                                                                  .colorScheme
+                                                                  .onErrorContainer,
                                                             ),
                                                             icon: const Icon(
                                                               Icons.undo,
                                                               size: 18,
                                                             ),
                                                             label: const Text(
-                                                              'Gestionar Devolución',
+                                                              'Devolución',
                                                             ),
                                                             onPressed: () =>
                                                                 _showPartialRefundDialog(
@@ -971,11 +1336,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                                                 ),
                                                           ),
                                                         ),
-                                                      ),
-                                                    ],
+                                                      ],
+                                                    ),
                                                   ),
-                                                ),
-                                              ],
+                                                ],
+                                              ),
                                             ),
                                           );
                                         }).toList(),

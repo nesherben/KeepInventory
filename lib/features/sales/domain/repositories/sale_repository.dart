@@ -8,7 +8,7 @@ abstract class SaleRepository {
     required Sale originalSale,
     required Map<SaleItem, int> itemsToRefund,
     required Map<SalePackItem, int> packsToRefund,
-    required bool restockPacks,
+    required bool restockAsComponents,
     required double customRefundAmount,
   });
   Future<void> updateFairNameForDate(String datePrefix, String? fairName);

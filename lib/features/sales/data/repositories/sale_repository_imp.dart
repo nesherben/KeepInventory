@@ -22,14 +22,14 @@ class SaleRepositoryImpl implements SaleRepository {
     required Sale originalSale,
     required Map<SaleItem, int> itemsToRefund,
     required Map<SalePackItem, int> packsToRefund,
-    required bool restockPacks,
+    required bool restockAsComponents,
     required double customRefundAmount,
   }) async {
     await datasource.processPartialRefund(
       originalSale: originalSale,
       itemsToRefund: itemsToRefund,
       packsToRefund: packsToRefund,
-      restockPacks: restockPacks,
+      restockAsComponents: restockAsComponents,
       customRefundAmount: customRefundAmount,
     );
   }

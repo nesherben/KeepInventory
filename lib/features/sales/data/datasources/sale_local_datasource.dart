@@ -162,11 +162,12 @@ class SaleLocalDatasource {
     required Sale originalSale,
     required Map<SaleItem, int> itemsToRefund,
     required Map<SalePackItem, int> packsToRefund,
-    required bool restockPacks,
+    required bool restockAsComponents,
     required double customRefundAmount,
   }) async {
     final database = await db;
     await database.transaction((txn) async {
+      // 1. DEVOLUCIÓN DE PRODUCTOS SUELTOS
       for (var entry in itemsToRefund.entries) {
         if (entry.value > 0) {
           await txn.rawUpdate(
@@ -175,14 +176,45 @@ class SaleLocalDatasource {
           );
         }
       }
+
+      // 2. 💡 DEVOLUCIÓN DE PACKS (LÓGICA NUEVA)
       for (var entry in packsToRefund.entries) {
-        if (entry.value > 0 && restockPacks) {
-          await txn.rawUpdate(
-            'UPDATE packs SET units = units + ? WHERE id = ?',
-            [entry.value, entry.key.packId],
-          );
+        final refundQty = entry.value;
+        final packId = entry.key.packId;
+
+        if (refundQty > 0) {
+          if (restockAsComponents) {
+            // El pack se ha abierto: Buscamos sus componentes y sumamos a "products"
+            final components = await txn.query(
+              'pack_items', // ⚠️ Asegúrate de que tu tabla intermedia se llame así
+              columns: ['product_id', 'quantity'],
+              where: 'pack_id = ?',
+              whereArgs: [packId],
+            );
+
+            for (var component in components) {
+              final productId = component['product_id'] as int;
+              final qtyPerPack = component['quantity'] as int;
+
+              // Si devuelven 2 packs y cada pack tiene 3 figuras, devolvemos 6
+              final totalToRestock = qtyPerPack * refundQty;
+
+              await txn.rawUpdate(
+                'UPDATE products SET units = units + ? WHERE id = ?',
+                [totalToRestock, productId],
+              );
+            }
+          } else {
+            // El pack sigue sellado: Lo sumamos intacto a "packs"
+            await txn.rawUpdate(
+              'UPDATE packs SET units = units + ? WHERE id = ?',
+              [refundQty, packId],
+            );
+          }
         }
       }
+
+      // 3. LIMPIEZA DE LA VENTA: SALE_ITEMS
       for (var entry in itemsToRefund.entries) {
         if (entry.value >= entry.key.quantity) {
           await txn.delete(
@@ -197,6 +229,8 @@ class SaleLocalDatasource {
           );
         }
       }
+
+      // 4. LIMPIEZA DE LA VENTA: SALE_PACKS
       for (var entry in packsToRefund.entries) {
         if (entry.value >= entry.key.quantity) {
           await txn.delete(
@@ -212,6 +246,7 @@ class SaleLocalDatasource {
         }
       }
 
+      // 5. REBALANCEO DE PRECIOS HISTÓRICOS Y CONTABILIDAD
       final remainingItems = await txn.query(
         'sale_items',
         where: 'sale_id = ?',
@@ -224,6 +259,7 @@ class SaleLocalDatasource {
       );
 
       if (remainingItems.isEmpty && remainingPacks.isEmpty) {
+        // Si el ticket se quedó vacío, lo borramos entero
         await txn.delete(
           'sales',
           where: 'id = ?',
