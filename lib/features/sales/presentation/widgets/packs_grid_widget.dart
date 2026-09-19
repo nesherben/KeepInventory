@@ -1,10 +1,10 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/shared_widgets/app_alerts.dart'; // 💡 Importamos las alertas
+import '../../../../core/shared_widgets/auto_scroll_text.dart';
 import '../../../packs/domain/pack.dart';
+
+import 'item_preview.dart';
 
 class PacksGridWidget extends StatelessWidget {
   final List<Pack> packs;
@@ -25,6 +25,30 @@ class PacksGridWidget extends StatelessWidget {
     required this.onRemoveFromCart,
     required this.onRemoveAllFromCart,
   });
+
+  /// Mantener pulsada la tarjeta => se amplía con todos los datos.
+  void _showPreview(BuildContext context, Pack pack, int qtyInCart) {
+    final contents = pack.items.map((item) => item.productName).join(', ');
+
+    showItemPreview(
+      context,
+      image: buildPackImage(pack),
+      title: pack.name,
+      unitPrice: '${pack.price.toStringAsFixed(2)} €',
+      stock: pack.units,
+      cartQty: qtyInCart, // El popup ocultará el chip automáticamente si es 0
+      packContents: contents.isNotEmpty ? contents : null,
+
+      // 💡 Configuramos el botón de acción
+      actionLabel: qtyInCart > 0 ? 'Añadir otro pack' : 'Añadir al carrito',
+      actionIcon: Icons.library_add_outlined,
+      onAction: () {
+        onAddToCart(pack);
+      },
+      onRemoveAction: () => onRemoveFromCart(pack),
+      onRemoveAllAction: () => onRemoveAllFromCart(pack),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -63,59 +87,18 @@ class PacksGridWidget extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Expanded(
-                child: pack.imageBytes != null
-                    ? Image.memory(
-                        pack.imageBytes!,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            color: AppColors.surfaceMuted,
-                            child: const Icon(
-                              Icons.image_not_supported_outlined,
-                              color: AppColors.textSubtle,
-                              size: 40,
-                            ),
-                          );
-                        },
-                      )
-                    : (pack.imagePath != null
-                          ? Image.file(
-                              File(pack.imagePath!),
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return Container(
-                                  color: AppColors.surfaceMuted,
-                                  child: const Icon(
-                                    Icons.image_not_supported_outlined,
-                                    color: AppColors.textSubtle,
-                                    size: 40,
-                                  ),
-                                );
-                              },
-                            )
-                          : Container(
-                              color: AppColors.surfaceMuted,
-                              child: const Icon(
-                                Icons.card_giftcard,
-                                color: AppColors.textSubtle,
-                                size: 40,
-                              ),
-                            )),
-              ),
+              Expanded(child: buildPackImage(pack)),
               Padding(
                 padding: const EdgeInsets.all(6.0),
                 child: Column(
                   children: [
-                    Text(
+                    // Si el nombre no cabe, hace scroll automático
+                    AutoScrollText(
                       pack.name,
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 13,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
                     ),
                     Text(
                       '${pack.price.toStringAsFixed(2)} €',
@@ -138,6 +121,7 @@ class PacksGridWidget extends StatelessWidget {
               // 💡 ¡Mucho más limpio usando AppAlerts!
               AppAlerts.showError(context, 'Este pack no tiene stock montado.');
             },
+            onLongPress: () => _showPreview(context, pack, qtyInCart),
             child: ColorFiltered(
               colorFilter: const ColorFilter.matrix([
                 0.2126,
@@ -168,6 +152,7 @@ class PacksGridWidget extends StatelessWidget {
 
         return InkWell(
           onTap: () => onAddToCart(pack),
+          onLongPress: () => _showPreview(context, pack, qtyInCart),
           child: Stack(
             children: [
               Positioned.fill(child: cardContent),

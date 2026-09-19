@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/shared_widgets/auto_scroll_text.dart';
 import '../../../inventory/domain/product.dart';
 import '../../../packs/domain/pack.dart';
 import '../../../promotions/domain/promotion.dart';
+
+import 'item_preview.dart';
 
 class CartItemsListWidget extends StatelessWidget {
   final Map<Product, int> cart;
@@ -47,21 +50,20 @@ class CartItemsListWidget extends StatelessWidget {
           final qty = cart[product]!;
           final itemTotal = calculateItemTotal(product, qty);
 
-          String? promoText;
-          bool promoActive = false;
-          if (product.promotionId != null &&
-              promotionsMap.containsKey(product.promotionId)) {
-            final promo = promotionsMap[product.promotionId!]!;
-            promoText = promo.name;
-            if ((promo.type == 'bundle_fixed_price' ||
-                    promo.type == 'percentage') &&
-                qty >= promo.threshold) {
-              promoActive = true;
-            }
-          }
+          final Promotion? promo = promotionsMap[product.promotionId];
+          final bool promoActive = isPromoActive(promo, qty);
 
           return ListTile(
-            title: Text(
+            // Mantener pulsado => tarjeta ampliada con todos los datos
+            onLongPress: () => showCartProductPreview(
+              context,
+              product: product,
+              qty: qty,
+              itemTotal: itemTotal,
+              promo: promo,
+            ),
+            // Si el nombre no cabe, hace scroll automático
+            title: AutoScrollText(
               product.name,
               style: const TextStyle(fontWeight: FontWeight.w600),
             ),
@@ -69,12 +71,12 @@ class CartItemsListWidget extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('${product.price.toStringAsFixed(2)} € x $qty uds'),
-                if (promoText != null) ...[
+                if (promo != null) ...[
                   const SizedBox(height: 2),
                   Text(
                     promoActive
-                        ? 'Oferta: $promoText'
-                        : 'Disponible: $promoText',
+                        ? 'Oferta: ${promo.name}'
+                        : 'Disponible: ${promo.name}',
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
@@ -84,7 +86,7 @@ class CartItemsListWidget extends StatelessWidget {
                 ],
               ],
             ),
-            isThreeLine: promoText != null,
+            isThreeLine: promo != null,
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -116,7 +118,13 @@ class CartItemsListWidget extends StatelessWidget {
           final itemTotal = pack.price * qty;
 
           return ListTile(
-            title: Text(
+            onLongPress: () => showCartPackPreview(
+              context,
+              pack: pack,
+              qty: qty,
+              itemTotal: itemTotal,
+            ),
+            title: AutoScrollText(
               pack.name,
               style: const TextStyle(fontWeight: FontWeight.w600),
             ),

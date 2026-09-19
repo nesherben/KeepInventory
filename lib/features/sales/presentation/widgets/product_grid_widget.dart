@@ -1,10 +1,12 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/shared_widgets/app_alerts.dart'; // 💡 Importamos las Alertas
+import '../../../../core/shared_widgets/auto_scroll_text.dart';
 import '../../../inventory/domain/product.dart';
+
+import '../../../promotions/domain/promotion.dart';
+import '../../../promotions/data/datasources/promotion_local_datasource.dart';
+import 'item_preview.dart';
 
 class ProductGridWidget extends StatelessWidget {
   final List<Product> products;
@@ -25,6 +27,50 @@ class ProductGridWidget extends StatelessWidget {
     required this.onRemoveFromCart,
     required this.onRemoveAllFromCart,
   });
+
+  /// Mantener pulsada la tarjeta => se amplía con todos los datos.
+  Future<void> _showPreview(
+    BuildContext context,
+    Product product,
+    int qtyInCart,
+  ) async {
+    Promotion? promo;
+    if (product.promotionId != null) {
+      final promoDataSource = PromotionLocalDatasource();
+      final allPromotions = await promoDataSource.getPromotions();
+
+      // 💡 Forma súper limpia (Dart 3.0+)
+      promo = allPromotions
+          .where((p) => p.id == product.promotionId)
+          .firstOrNull;
+    }
+
+    // 2. Verificamos que el usuario no haya cerrado la pantalla mientras cargaba
+    if (!context.mounted) return;
+
+    // 3. Lanzamos nuestro popup rediseñado (sin auto-cierre y con feedback)
+    showItemPreview(
+      context,
+      image: buildProductImage(product),
+      title: product.name,
+      unitPrice: '${product.price.toStringAsFixed(2)} €',
+      stock: product.units,
+      cartQty: qtyInCart,
+
+      // Inyectamos los datos de la promoción si existe
+      promoName: promo?.name,
+      promoActive: promo != null && qtyInCart >= promo.threshold,
+      promoThreshold: promo?.threshold,
+
+      actionLabel: qtyInCart > 0 ? 'Añadir otra unidad' : 'Añadir al carrito',
+      actionIcon: Icons.add_shopping_cart,
+      onAction: () {
+        onAddToCart(product);
+      },
+      onRemoveAction: () => onRemoveFromCart(product),
+      onRemoveAllAction: () => onRemoveAllFromCart(product),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -63,59 +109,18 @@ class ProductGridWidget extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Expanded(
-                child: product.imageBytes != null
-                    ? Image.memory(
-                        product.imageBytes!,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            color: AppColors.surfaceMuted,
-                            child: const Icon(
-                              Icons.image_not_supported_outlined,
-                              color: AppColors.textSubtle,
-                              size: 40,
-                            ),
-                          );
-                        },
-                      )
-                    : (product.imagePath != null
-                          ? Image.file(
-                              File(product.imagePath!),
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return Container(
-                                  color: AppColors.surfaceMuted,
-                                  child: const Icon(
-                                    Icons.image_not_supported_outlined,
-                                    color: AppColors.textSubtle,
-                                    size: 40,
-                                  ),
-                                );
-                              },
-                            )
-                          : Container(
-                              color: AppColors.surfaceMuted,
-                              child: const Icon(
-                                Icons.inventory,
-                                color: AppColors.textSubtle,
-                                size: 40,
-                              ),
-                            )),
-              ),
+              Expanded(child: buildProductImage(product)),
               Padding(
                 padding: const EdgeInsets.all(6.0),
                 child: Column(
                   children: [
-                    Text(
+                    // Si el nombre no cabe, hace scroll automático
+                    AutoScrollText(
                       product.name,
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 13,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
                     ),
                     Text(
                       '${product.price.toStringAsFixed(2)} €',
@@ -137,6 +142,7 @@ class ProductGridWidget extends StatelessWidget {
               // 💡 ¡Mucho más limpio usando AppAlerts!
               AppAlerts.showError(context, 'Este producto está sin stock.');
             },
+            onLongPress: () => _showPreview(context, product, qtyInCart),
             child: ColorFiltered(
               colorFilter: const ColorFilter.matrix([
                 0.2126,
@@ -167,6 +173,7 @@ class ProductGridWidget extends StatelessWidget {
 
         return InkWell(
           onTap: () => onAddToCart(product),
+          onLongPress: () => _showPreview(context, product, qtyInCart),
           child: Stack(
             children: [
               Positioned.fill(child: cardContent),
