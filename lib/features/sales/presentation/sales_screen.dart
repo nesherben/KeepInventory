@@ -49,7 +49,6 @@ class _SalesScreenState extends State<SalesScreen>
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  // 💡 Controladores de búsqueda independientes para cada pestaña
   final TextEditingController _productSearchController =
       TextEditingController();
   final TextEditingController _packSearchController = TextEditingController();
@@ -62,7 +61,6 @@ class _SalesScreenState extends State<SalesScreen>
   Map<int, Promotion> _promotionsMap = {};
   bool _isLoading = true;
 
-  // 💡 Textos de búsqueda actuales
   String _productSearchQuery = '';
   String _packSearchQuery = '';
 
@@ -183,36 +181,84 @@ class _SalesScreenState extends State<SalesScreen>
     AppAlerts.showInfo(context, 'Pack ${pack.name} eliminado del carrito');
   }
 
-  double _calculateItemTotal(Product product, int qty) {
-    if (product.promotionId == null ||
-        !_promotionsMap.containsKey(product.promotionId)) {
-      return product.price * qty;
+  // 💡 NUEVO ALGORITMO: Mix & Match (Iguales o Combinados)
+  double _calculateItemTotal(
+    Product targetProduct,
+    Map<Product, int> cart,
+    Map<int, Promotion> promotionsMap,
+  ) {
+    final promoId = targetProduct.promotionId;
+
+    // Si no tiene promo, precio normal
+    if (promoId == null || !promotionsMap.containsKey(promoId)) {
+      return targetProduct.price * cart[targetProduct]!;
     }
 
-    final promo = _promotionsMap[product.promotionId!]!;
+    final promo = promotionsMap[promoId]!;
 
+    // 1. Buscamos TODOS los productos del carrito que comparten esta promoción
+    final promoProducts = cart.keys
+        .where((p) => p.promotionId == promoId)
+        .toList();
+
+    // 2. Sumamos sus unidades para ver si entre todos superan el umbral
+    final combinedQty = promoProducts.fold<int>(0, (sum, p) => sum + cart[p]!);
+
+    // Si no llegan al mínimo, precio normal
+    if (combinedQty < promo.threshold) {
+      return targetProduct.price * cart[targetProduct]!;
+    }
+
+    // --- PROMOCIÓN DE PORCENTAJE ---
+    if (promo.type == 'percentage') {
+      final double discountedUnitPrice =
+          targetProduct.price * (1 - (promo.discountValue / 100));
+      return cart[targetProduct]! * discountedUnitPrice;
+    }
+
+    // --- PROMOCIÓN DE BUNDLE (Ej: 3 por 30€) ---
     if (promo.type == 'bundle_fixed_price') {
-      final int bundles = qty ~/ promo.threshold;
-      final int remainder = qty % promo.threshold;
+      // Ordenamos todos los productos involucrados de MAYOR a MENOR precio
+      promoProducts.sort((a, b) => b.price.compareTo(a.price));
 
-      final double bundleTotal = bundles * promo.discountValue;
-      final double remainderTotal = remainder * product.price;
-
-      return bundleTotal + remainderTotal;
-    } else if (promo.type == 'percentage') {
-      if (qty >= promo.threshold) {
-        final double discountedUnitPrice =
-            product.price * (1 - (promo.discountValue / 100));
-        return qty * discountedUnitPrice;
+      // Creamos una lista "plana" de unidades (Si hay 2 de A y 1 de B -> [A, A, B])
+      List<Product> flatList = [];
+      for (var p in promoProducts) {
+        for (int i = 0; i < cart[p]!; i++) {
+          flatList.add(p);
+        }
       }
+
+      double targetProductTotal = 0.0;
+      final double pricePerItemInBundle = promo.discountValue / promo.threshold;
+
+      // Iteramos la lista plana
+      for (int i = 0; i < flatList.length; i++) {
+        final currentUnit = flatList[i];
+
+        // Solo sumamos el dinero si la unidad actual es el producto que estamos calculando
+        if (currentUnit.id == targetProduct.id) {
+          // ¿Esta unidad cae dentro de un pack cerrado? (Ej: las 3 primeras, las 3 segundas...)
+          bool isInsideBundle =
+              i < (flatList.length ~/ promo.threshold) * promo.threshold;
+
+          if (isInsideBundle) {
+            targetProductTotal += pricePerItemInBundle;
+          } else {
+            // Si sobra y queda fuera del múltiplo, se cobra a precio original
+            targetProductTotal += currentUnit.price;
+          }
+        }
+      }
+      return targetProductTotal;
     }
 
-    return product.price * qty;
+    return targetProduct.price * cart[targetProduct]!;
   }
 
   double get _cartTotal {
     final productsTotal = _cart.entries.fold(0.0, (total, entry) {
-      return total + _calculateItemTotal(entry.key, entry.value);
+      return total + _calculateItemTotal(entry.key, _cart, _promotionsMap);
     });
     final packsTotal = _cartPacks.entries.fold(0.0, (total, entry) {
       return total + (entry.key.price * entry.value);
@@ -238,7 +284,9 @@ class _SalesScreenState extends State<SalesScreen>
     final saleItems = _cart.entries.map((entry) {
       final product = entry.key;
       final qty = entry.value;
-      final finalSubtotal = _calculateItemTotal(product, qty);
+
+      // 💡 Pasamos el carrito entero a la fórmula
+      final finalSubtotal = _calculateItemTotal(product, _cart, _promotionsMap);
       final effectiveUnitPrice = finalSubtotal / qty;
 
       String? pType;
@@ -303,7 +351,6 @@ class _SalesScreenState extends State<SalesScreen>
     final screenSize = MediaQuery.of(context).size;
     final bool isLandscape = screenSize.width > screenSize.height;
 
-    // 💡 Filtrado dinámico de productos y packs según la búsqueda
     final filteredProducts = _products.where((p) {
       return p.name.toLowerCase().contains(_productSearchQuery.toLowerCase());
     }).toList();
@@ -364,7 +411,6 @@ class _SalesScreenState extends State<SalesScreen>
                     flex: 3,
                     child: Column(
                       children: [
-                        // 💡 Barra de búsqueda superior para Landscape según pestaña activa
                         Container(
                           padding: const EdgeInsets.all(8.0),
                           color: Theme.of(context)
@@ -524,7 +570,6 @@ class _SalesScreenState extends State<SalesScreen>
                 children: [
                   Column(
                     children: [
-                      // 💡 Barra de búsqueda superior en Portrait
                       Container(
                         padding: const EdgeInsets.all(8.0),
                         color: Theme.of(context)
@@ -639,181 +684,18 @@ class _SalesScreenState extends State<SalesScreen>
                                           : 20,
                                     ),
                                     children: [
-                                      (_cart.isEmpty && _cartPacks.isEmpty)
-                                          ? Padding(
-                                              padding: const EdgeInsets.only(
-                                                top: 32.0,
-                                              ),
-                                              child: Center(
-                                                child: Text(
-                                                  'El carrito está vacío',
-                                                  style: TextStyle(
-                                                    color: Theme.of(context)
-                                                        .colorScheme
-                                                        .onSurfaceVariant,
-                                                  ),
-                                                ),
-                                              ),
-                                            )
-                                          : Column(
-                                              children: [
-                                                // PRODUCTOS (CON PROMOS)
-                                                ..._cart.keys.map((product) {
-                                                  final qty = _cart[product]!;
-                                                  final itemTotal =
-                                                      _calculateItemTotal(
-                                                        product,
-                                                        qty,
-                                                      );
-
-                                                  final hasPromo =
-                                                      product.promotionId !=
-                                                          null &&
-                                                      _promotionsMap
-                                                          .containsKey(
-                                                            product.promotionId,
-                                                          );
-                                                  final promoName = hasPromo
-                                                      ? _promotionsMap[product
-                                                                .promotionId!]!
-                                                            .name
-                                                      : '';
-
-                                                  return ListTile(
-                                                    title: Text(product.name),
-                                                    subtitle: Column(
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .start,
-                                                      mainAxisSize:
-                                                          MainAxisSize.min,
-                                                      children: [
-                                                        Text(
-                                                          '${product.price.toStringAsFixed(2)} € x $qty uds',
-                                                        ),
-                                                        if (hasPromo)
-                                                          Padding(
-                                                            padding:
-                                                                const EdgeInsets.only(
-                                                                  top: 2.0,
-                                                                ),
-                                                            child: Text(
-                                                              '🏷️ $promoName',
-                                                              style: TextStyle(
-                                                                color: Theme.of(
-                                                                  context,
-                                                                ).colorScheme.tertiary,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold,
-                                                                fontSize: 12,
-                                                              ),
-                                                            ),
-                                                          ),
-                                                      ],
-                                                    ),
-                                                    trailing: Row(
-                                                      mainAxisSize:
-                                                          MainAxisSize.min,
-                                                      children: [
-                                                        Text(
-                                                          '${itemTotal.toStringAsFixed(2)} €',
-                                                          style:
-                                                              const TextStyle(
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold,
-                                                                fontSize: 16,
-                                                              ),
-                                                        ),
-                                                        const SizedBox(
-                                                          width: 8,
-                                                        ),
-                                                        GestureDetector(
-                                                          onTap: () =>
-                                                              _removeFromCart(
-                                                                product,
-                                                              ),
-                                                          onLongPress: () =>
-                                                              _removeAllFromCart(
-                                                                product,
-                                                              ),
-                                                          child: Padding(
-                                                            padding:
-                                                                const EdgeInsets.all(
-                                                                  8.0,
-                                                                ),
-                                                            child: Icon(
-                                                              Icons
-                                                                  .remove_circle,
-                                                              color: Theme.of(
-                                                                context,
-                                                              ).colorScheme.error,
-                                                              size: 28,
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  );
-                                                }),
-                                                // PACKS
-                                                ..._cartPacks.keys.map((pack) {
-                                                  final qty = _cartPacks[pack]!;
-                                                  final itemTotal =
-                                                      pack.price * qty;
-                                                  return ListTile(
-                                                    title: Text(pack.name),
-                                                    subtitle: Text(
-                                                      '${pack.price.toStringAsFixed(2)} € x $qty uds (Pack)',
-                                                    ),
-                                                    trailing: Row(
-                                                      mainAxisSize:
-                                                          MainAxisSize.min,
-                                                      children: [
-                                                        Text(
-                                                          '${itemTotal.toStringAsFixed(2)} €',
-                                                          style:
-                                                              const TextStyle(
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold,
-                                                                fontSize: 16,
-                                                              ),
-                                                        ),
-                                                        const SizedBox(
-                                                          width: 8,
-                                                        ),
-                                                        GestureDetector(
-                                                          onTap: () =>
-                                                              _removePackFromCart(
-                                                                pack,
-                                                              ),
-                                                          onLongPress: () =>
-                                                              _removeAllPackFromCart(
-                                                                pack,
-                                                              ),
-                                                          child: Padding(
-                                                            padding:
-                                                                const EdgeInsets.all(
-                                                                  8.0,
-                                                                ),
-                                                            child: Icon(
-                                                              Icons
-                                                                  .remove_circle,
-                                                              color: Theme.of(
-                                                                context,
-                                                              ).colorScheme.error,
-                                                              size: 28,
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  );
-                                                }),
-                                              ],
-                                            ),
+                                      CartItemsListWidget(
+                                        cart: _cart,
+                                        cartPacks: _cartPacks,
+                                        promotionsMap: _promotionsMap,
+                                        calculateItemTotal: _calculateItemTotal,
+                                        onRemoveFromCart: _removeFromCart,
+                                        onRemoveAllFromCart: _removeAllFromCart,
+                                        onRemovePackFromCart:
+                                            _removePackFromCart,
+                                        onRemoveAllPackFromCart:
+                                            _removeAllPackFromCart,
+                                      ),
                                     ],
                                   ),
                                   Positioned(

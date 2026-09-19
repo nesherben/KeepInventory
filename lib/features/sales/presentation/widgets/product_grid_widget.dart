@@ -6,7 +6,7 @@ import '../../../inventory/domain/product.dart';
 
 import '../../../promotions/domain/promotion.dart';
 import '../../../promotions/data/datasources/promotion_local_datasource.dart';
-import 'item_preview.dart';
+import 'sales_ui_utils.dart';
 
 class ProductGridWidget extends StatelessWidget {
   final List<Product> products;

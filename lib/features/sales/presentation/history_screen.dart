@@ -53,26 +53,97 @@ class _HistoryScreenState extends State<HistoryScreen> {
     });
   }
 
-  // --- MATEMÁTICAS DE LA PROMOCIÓN PARA REEMBOLSOS ---
-  double _calculateItemTotal(SaleItem item, int qtyToKeep) {
-    if (item.promoType == null ||
-        item.promoThreshold == null ||
-        item.promoDiscount == null) {
-      return item.originalPrice * qtyToKeep;
-    }
+  // 💡 NUEVO ALGORITMO: Simula el carrito resultante tras la devolución para recalcular promociones combinadas
+  double _calculateRemainingCartValue(
+    Map<SaleItem, int> keptItemQuantities,
+    Map<SalePackItem, int> keptPackQuantities,
+  ) {
+    double totalValue = 0.0;
 
-    if (item.promoType == 'bundle_fixed_price') {
-      final int bundles = qtyToKeep ~/ item.promoThreshold!;
-      final int remainder = qtyToKeep % item.promoThreshold!;
-      return (bundles * item.promoDiscount!) + (remainder * item.originalPrice);
-    } else if (item.promoType == 'percentage') {
-      if (qtyToKeep >= item.promoThreshold!) {
-        final discountedPrice =
-            item.originalPrice * (1 - (item.promoDiscount! / 100));
-        return qtyToKeep * discountedPrice;
+    // 1. Añadimos el valor de los Packs (No tienen ofertas combinadas, usan precio histórico)
+    keptPackQuantities.forEach((pack, keptQty) {
+      totalValue += pack.historicalPrice * keptQty;
+    });
+
+    // 2. Evaluamos los Productos Sueltos
+    // Agrupamos por ID de promoción para aplicar Mix & Match
+    Map<int?, List<SaleItem>> itemsByPromo = {};
+    for (var entry in keptItemQuantities.entries) {
+      final item = entry.key;
+      if (entry.value > 0) {
+        itemsByPromo.putIfAbsent(item.promotionId, () => []).add(item);
       }
     }
-    return item.originalPrice * qtyToKeep;
+
+    for (var entry in itemsByPromo.entries) {
+      final promoId = entry.key;
+      final groupItems = entry.value;
+
+      if (promoId == null) {
+        // Sin promoción: se cobra al precio original
+        for (var item in groupItems) {
+          totalValue += item.originalPrice * keptItemQuantities[item]!;
+        }
+      } else {
+        // Con promoción: evaluamos si entre todos llegan al mínimo
+        final firstItem = groupItems.first;
+        final promoType = firstItem.promoType;
+        final promoThreshold = firstItem.promoThreshold;
+        final promoDiscount = firstItem.promoDiscount;
+
+        if (promoType == null ||
+            promoThreshold == null ||
+            promoDiscount == null) {
+          for (var item in groupItems) {
+            totalValue += item.originalPrice * keptItemQuantities[item]!;
+          }
+          continue;
+        }
+
+        int combinedQty = groupItems.fold(
+          0,
+          (sum, item) => sum + keptItemQuantities[item]!,
+        );
+
+        if (combinedQty < promoThreshold) {
+          // ⚠️ LA OFERTA SE HA ROTO: Cobramos todo a precio original
+          for (var item in groupItems) {
+            totalValue += item.originalPrice * keptItemQuantities[item]!;
+          }
+        } else {
+          // LA OFERTA SE MANTIENE
+          if (promoType == 'percentage') {
+            for (var item in groupItems) {
+              double discountedUnit =
+                  item.originalPrice * (1 - (promoDiscount / 100));
+              totalValue += keptItemQuantities[item]! * discountedUnit;
+            }
+          } else if (promoType == 'bundle_fixed_price') {
+            // Mix & Match (Desplegamos unidades y ordenamos por precio original)
+            List<SaleItem> flatList = [];
+            for (var item in groupItems) {
+              for (int i = 0; i < keptItemQuantities[item]!; i++) {
+                flatList.add(item);
+              }
+            }
+            flatList.sort((a, b) => b.originalPrice.compareTo(a.originalPrice));
+
+            double pricePerBundleItem = promoDiscount / promoThreshold;
+
+            for (int i = 0; i < flatList.length; i++) {
+              bool isInsideBundle =
+                  i < (flatList.length ~/ promoThreshold) * promoThreshold;
+              if (isInsideBundle) {
+                totalValue += pricePerBundleItem;
+              } else {
+                totalValue += flatList[i].originalPrice;
+              }
+            }
+          }
+        }
+      }
+    }
+    return totalValue;
   }
 
   // --- DIÁLOGO DE DEVOLUCIÓN PARCIAL / SELECTIVA ---
@@ -90,27 +161,29 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
 
     void recalculateDefaultRefund() {
-      double totalRefund = 0.0;
+      // Calculamos qué cantidades SE QUEDA el cliente
+      final Map<SaleItem, int> keptItemQuantities = {};
+      final Map<SalePackItem, int> keptPackQuantities = {};
 
-      refundItemQuantities.forEach((item, refundQty) {
-        if (refundQty > 0) {
-          int keptQty = item.quantity - refundQty;
-          double originalTotal = item.historicalPrice * item.quantity;
-          double newTotal = 0.0;
-          if (keptQty > 0) {
-            newTotal = _calculateItemTotal(item, keptQty);
-          }
-          totalRefund += (originalTotal - newTotal);
-        }
-      });
+      for (var item in sale.items) {
+        keptItemQuantities[item] =
+            item.quantity - (refundItemQuantities[item] ?? 0);
+      }
+      for (var pack in sale.packItems) {
+        keptPackQuantities[pack] =
+            pack.quantity - (refundPackQuantities[pack] ?? 0);
+      }
 
-      refundPackQuantities.forEach((pack, refundQty) {
-        if (refundQty > 0) {
-          totalRefund += pack.historicalPrice * refundQty;
-        }
-      });
+      // Calculamos cuánto vale la compra que le queda en las manos
+      final double newTotalValue = _calculateRemainingCartValue(
+        keptItemQuantities,
+        keptPackQuantities,
+      );
 
+      // El reembolso justo es la diferencia entre lo que pagó y lo que vale lo que se queda
+      double totalRefund = sale.totalAmount - newTotalValue;
       if (totalRefund < 0) totalRefund = 0.0;
+
       refundAmountController.text = totalRefund.toStringAsFixed(2);
     }
 
@@ -640,7 +713,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
               const SizedBox(height: 16),
               if (existingFairs.isNotEmpty) ...[
                 DropdownButtonFormField<String>(
-                  isExpanded: true, // 💡 ARREGLO DEL RENDERFLEX OVERFLOW
+                  isExpanded: true,
                   initialValue: selectedExisting,
                   decoration: InputDecoration(
                     labelText: 'Ferias disponibles',
@@ -913,7 +986,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
                               final theme = Theme.of(context);
 
-                              // 💡 RECUPERAMOS TUS COLORES ORIGINALES Y VIBRANTES
                               final baseThemeColor = isFair
                                   ? theme.colorScheme.secondary
                                   : theme.colorScheme.primary;

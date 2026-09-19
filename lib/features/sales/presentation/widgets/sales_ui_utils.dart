@@ -77,11 +77,13 @@ class _PreviewInfo extends StatefulWidget {
   final int? promoThreshold;
   final String? packContents;
 
+  // 💡 NUEVO: Saber si hay más items combinados en el carrito para esta promo
+  final int otherItemsInPromo;
+
   final String? actionLabel;
   final IconData? actionIcon;
   final VoidCallback? onAction;
 
-  // 💡 NUEVOS PARÁMETROS PARA QUITAR
   final VoidCallback? onRemoveAction;
   final VoidCallback? onRemoveAllAction;
 
@@ -90,6 +92,7 @@ class _PreviewInfo extends StatefulWidget {
     required this.unitPrice,
     this.rawPrice,
     this.cartQty = 0,
+    this.otherItemsInPromo = 0, // 💡 INICIALIZADO
     this.cartTotal,
     this.stock,
     this.promoName,
@@ -99,8 +102,8 @@ class _PreviewInfo extends StatefulWidget {
     this.actionLabel,
     this.actionIcon,
     this.onAction,
-    this.onRemoveAction, // 💡 AÑADIDO
-    this.onRemoveAllAction, // 💡 AÑADIDO
+    this.onRemoveAction,
+    this.onRemoveAllAction,
   });
 
   @override
@@ -111,7 +114,7 @@ class _PreviewInfoState extends State<_PreviewInfo> {
   bool _justAdded = false;
 
   late int _localCartQty;
-  late int _availableStock; // 💡 AHORA SÍ: El stock real disponible
+  late int _availableStock;
   late num? _localTotal;
   late bool _localPromoActive;
 
@@ -120,26 +123,27 @@ class _PreviewInfoState extends State<_PreviewInfo> {
     super.initState();
     _localCartQty = widget.cartQty;
 
-    // 💡 EL CÁLCULO QUE FALTABA: Stock Total - Unidades en el Carrito
     if (widget.stock != null) {
       _availableStock = widget.stock! - widget.cartQty;
-      if (_availableStock < 0) _availableStock = 0; // Failsafe por si acaso
+      if (_availableStock < 0) _availableStock = 0;
     } else {
-      _availableStock = 9999; // Si el stock es null, asumimos infinito
+      _availableStock = 9999;
     }
 
     _localTotal = widget.cartTotal;
-    _localPromoActive = widget.promoActive;
+
+    // 💡 EVALUACIÓN INICIAL CON MIX & MATCH
+    _localPromoActive = widget.promoThreshold != null
+        ? (_localCartQty + widget.otherItemsInPromo) >= widget.promoThreshold!
+        : widget.promoActive;
   }
 
   void _handleTap() async {
-    // 💡 BLOQUEO REAL: Si el stock disponible es 0, no hace absolutamente nada
     if (widget.onAction == null ||
         (widget.stock != null && _availableStock <= 0)) {
       return;
     }
 
-    // Llama a tu función onAddToCart real
     widget.onAction!();
 
     if (mounted) {
@@ -147,19 +151,18 @@ class _PreviewInfoState extends State<_PreviewInfo> {
         _justAdded = true;
         _localCartQty++;
 
-        // Restamos uno al stock disponible que vemos en la tarjeta
         if (widget.stock != null) {
           _availableStock--;
         }
 
-        // Sumamos el precio para el total acumulado
         if (_localTotal != null && widget.rawPrice != null) {
           _localTotal = _localTotal! + widget.rawPrice!;
         }
 
-        // Comprobamos si con esta unidad hemos activado la promo
+        // 💡 RE-EVALUAMOS PROMOCIÓN AL AÑADIR (Suma total combinada)
         if (widget.promoThreshold != null &&
-            _localCartQty >= widget.promoThreshold!) {
+            (_localCartQty + widget.otherItemsInPromo) >=
+                widget.promoThreshold!) {
           _localPromoActive = true;
         }
       });
@@ -169,7 +172,6 @@ class _PreviewInfoState extends State<_PreviewInfo> {
     }
   }
 
-  // 💡 NUEVO: FUNCIÓN PARA QUITAR UNA UNIDAD
   void _handleRemove() {
     if (widget.onRemoveAction == null || _localCartQty <= 0) return;
 
@@ -184,15 +186,16 @@ class _PreviewInfoState extends State<_PreviewInfo> {
           _localTotal = _localTotal! - widget.rawPrice!;
         }
 
+        // 💡 RE-EVALUAMOS PROMOCIÓN AL QUITAR
         if (widget.promoThreshold != null &&
-            _localCartQty < widget.promoThreshold!) {
+            (_localCartQty + widget.otherItemsInPromo) <
+                widget.promoThreshold!) {
           _localPromoActive = false;
         }
       });
     }
   }
 
-  // 💡 NUEVO: FUNCIÓN PARA QUITAR TODAS (Long press)
   void _handleRemoveAll() {
     if (widget.onRemoveAllAction == null || _localCartQty <= 0) return;
 
@@ -207,7 +210,13 @@ class _PreviewInfoState extends State<_PreviewInfo> {
         }
 
         _localCartQty = 0;
-        _localPromoActive = false;
+
+        // 💡 RE-EVALUAMOS PROMOCIÓN AL VACIAR
+        if (widget.promoThreshold != null &&
+            (_localCartQty + widget.otherItemsInPromo) <
+                widget.promoThreshold!) {
+          _localPromoActive = false;
+        }
       });
     }
   }
@@ -219,13 +228,12 @@ class _PreviewInfoState extends State<_PreviewInfo> {
     String value, {
     Color? color,
     bool isBold = false,
-    Widget? trailing, // 💡 AÑADIDO PARÁMETRO TRAILING
+    Widget? trailing,
   }) {
     final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
-        // 💡 Ajustamos alineación si hay botón para que quede centrado
         crossAxisAlignment: trailing != null
             ? CrossAxisAlignment.center
             : CrossAxisAlignment.start,
@@ -247,7 +255,7 @@ class _PreviewInfoState extends State<_PreviewInfo> {
             ),
           ),
           Expanded(
-            flex: trailing != null ? 1 : 3, // 💡 Menos espacio si hay botón
+            flex: trailing != null ? 1 : 3,
             child: Text(
               value,
               style: TextStyle(
@@ -258,7 +266,6 @@ class _PreviewInfoState extends State<_PreviewInfo> {
               textAlign: TextAlign.right,
             ),
           ),
-          // 💡 PINTAMOS EL BOTÓN AL FINAL
           if (trailing != null) ...[const SizedBox(width: 12), trailing],
         ],
       ),
@@ -268,7 +275,6 @@ class _PreviewInfoState extends State<_PreviewInfo> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    // 💡 Evaluamos el bloqueo visual usando el stock restante calculado
     final isOutOfStock = widget.stock != null && _availableStock <= 0;
 
     return Padding(
@@ -313,7 +319,6 @@ class _PreviewInfoState extends State<_PreviewInfo> {
               Icons.shopping_cart_outlined,
               'En el carrito',
               '$_localCartQty uds',
-              // 💡 AQUÍ ESTÁ EL BOTÓN DE QUITAR
               trailing: widget.onRemoveAction != null
                   ? Material(
                       color: Colors.red.withValues(alpha: 0.1),
@@ -356,7 +361,12 @@ class _PreviewInfoState extends State<_PreviewInfo> {
                   ? Icons.check_circle_outline
                   : Icons.info_outline,
               'Estado',
-              _localPromoActive ? 'Oferta aplicada' : 'Faltan uds para activar',
+              _localPromoActive
+                  ? 'Oferta aplicada'
+                  // 💡 Pequeña ayuda visual en el texto si tiene combinados
+                  : (widget.otherItemsInPromo > 0
+                        ? 'Faltan uds (combinando $_localCartQty + ${widget.otherItemsInPromo})'
+                        : 'Faltan uds para activar'),
               color: _localPromoActive
                   ? Colors.green
                   : theme.colorScheme.tertiary,
@@ -378,12 +388,10 @@ class _PreviewInfoState extends State<_PreviewInfo> {
             ),
           ],
 
-          // --- BOTÓN DE ACCIÓN INTELIGENTE Y ELEGANTE ---
           if (widget.onAction != null) ...[
             const SizedBox(height: 24),
             Builder(
               builder: (context) {
-                // 1. Calculamos los colores y textos limpios arriba
                 final Color bgColor = isOutOfStock
                     ? theme.colorScheme.surfaceContainerHighest
                     : (_justAdded
@@ -414,12 +422,11 @@ class _PreviewInfoState extends State<_PreviewInfo> {
                           : (widget.actionIcon ??
                                 Icons.shopping_cart_checkout_rounded));
 
-                // 2. Construimos el botón personalizado
                 return AnimatedContainer(
                   duration: const Duration(milliseconds: 350),
                   curve: Curves.easeOutCubic,
                   width: double.infinity,
-                  height: 58, // Altura fija y respirable
+                  height: 58,
                   decoration: BoxDecoration(
                     color: bgColor,
                     borderRadius: BorderRadius.circular(16),
@@ -437,7 +444,6 @@ class _PreviewInfoState extends State<_PreviewInfo> {
                       borderRadius: BorderRadius.circular(16),
                       onTap: isOutOfStock ? null : _handleTap,
                       child: Center(
-                        // 3. Animación "Pop" exclusiva para el texto y el icono
                         child: AnimatedSwitcher(
                           duration: const Duration(milliseconds: 250),
                           transitionBuilder: (child, animation) {
@@ -489,6 +495,7 @@ Future<void> showItemPreview(
   required String unitPrice,
   double? rawPrice,
   int cartQty = 0,
+  int otherItemsInPromo = 0, // 💡 AÑADIDO
   num? cartTotal,
   int? stock,
   String? promoName,
@@ -498,8 +505,8 @@ Future<void> showItemPreview(
   String? actionLabel,
   IconData? actionIcon,
   VoidCallback? onAction,
-  VoidCallback? onRemoveAction, // 💡 AÑADIDO
-  VoidCallback? onRemoveAllAction, // 💡 AÑADIDO
+  VoidCallback? onRemoveAction,
+  VoidCallback? onRemoveAllAction,
 }) {
   return showGeneralDialog<void>(
     context: context,
@@ -520,6 +527,7 @@ Future<void> showItemPreview(
         unitPrice: unitPrice,
         rawPrice: rawPrice,
         cartQty: cartQty,
+        otherItemsInPromo: otherItemsInPromo, // 💡 PASADO AL WIDGET
         cartTotal: cartTotal,
         stock: stock,
         promoName: promoName,
@@ -529,8 +537,8 @@ Future<void> showItemPreview(
         actionLabel: actionLabel,
         actionIcon: actionIcon,
         onAction: onAction,
-        onRemoveAction: onRemoveAction, // 💡 PASADO
-        onRemoveAllAction: onRemoveAllAction, // 💡 PASADO
+        onRemoveAction: onRemoveAction,
+        onRemoveAllAction: onRemoveAllAction,
       );
 
       final Widget cardLayout;
@@ -633,11 +641,13 @@ void showCartProductPreview(
   required int qty,
   required num itemTotal,
   Promotion? promo,
+  int otherItemsInPromo = 0, // 💡 RECIBE EL PARÁMETRO
   VoidCallback? onAddAction,
-  VoidCallback? onRemoveAction, // 💡 AÑADIDO
-  VoidCallback? onRemoveAllAction, // 💡 AÑADIDO
+  VoidCallback? onRemoveAction,
+  VoidCallback? onRemoveAllAction,
 }) {
-  final active = isPromoActive(promo, qty);
+  // 💡 EVALÚA EL COMBINADO TOTAL
+  final active = isPromoActive(promo, qty + otherItemsInPromo);
 
   showItemPreview(
     context,
@@ -646,6 +656,7 @@ void showCartProductPreview(
     unitPrice: '${product.price.toStringAsFixed(2)} € / ud',
     rawPrice: product.price,
     cartQty: qty,
+    otherItemsInPromo: otherItemsInPromo, // 💡 SE LO PASA AL POPUP
     cartTotal: itemTotal,
     stock: product.units,
     promoName: promo?.name,
@@ -654,8 +665,8 @@ void showCartProductPreview(
     actionLabel: qty > 0 ? 'Añadir otra unidad' : 'Añadir al carrito',
     actionIcon: Icons.add_shopping_cart,
     onAction: onAddAction,
-    onRemoveAction: onRemoveAction, // 💡 PASADO
-    onRemoveAllAction: onRemoveAllAction, // 💡 PASADO
+    onRemoveAction: onRemoveAction,
+    onRemoveAllAction: onRemoveAllAction,
   );
 }
 
@@ -665,8 +676,8 @@ void showCartPackPreview(
   required int qty,
   required num itemTotal,
   VoidCallback? onAddAction,
-  VoidCallback? onRemoveAction, // 💡 AÑADIDO
-  VoidCallback? onRemoveAllAction, // 💡 AÑADIDO
+  VoidCallback? onRemoveAction,
+  VoidCallback? onRemoveAllAction,
 }) {
   final contents = pack.items.map((item) => item.productName).join(', ');
 
@@ -683,7 +694,7 @@ void showCartPackPreview(
     actionLabel: qty > 0 ? 'Añadir otro pack' : 'Añadir al carrito',
     actionIcon: Icons.library_add_outlined,
     onAction: onAddAction,
-    onRemoveAction: onRemoveAction, // 💡 PASADO
-    onRemoveAllAction: onRemoveAllAction, // 💡 PASADO
+    onRemoveAction: onRemoveAction,
+    onRemoveAllAction: onRemoveAllAction,
   );
 }

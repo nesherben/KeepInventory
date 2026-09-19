@@ -4,7 +4,7 @@ import '../../../../core/shared_widgets/app_alerts.dart'; // 💡 Importamos las
 import '../../../../core/shared_widgets/auto_scroll_text.dart';
 import '../../../packs/domain/pack.dart';
 
-import 'item_preview.dart';
+import 'sales_ui_utils.dart';
 
 class PacksGridWidget extends StatelessWidget {
   final List<Pack> packs;
