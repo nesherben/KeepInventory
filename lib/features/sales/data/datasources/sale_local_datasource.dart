@@ -79,9 +79,7 @@ class SaleLocalDatasource {
               productName: itemMap['product_name'] as String?,
               quantity: itemMap['quantity'] as int,
               historicalPrice: (itemMap['historical_price'] as num).toDouble(),
-              originalPrice:
-                  (itemMap['original_price'] as num?)?.toDouble() ??
-                  (itemMap['historical_price'] as num).toDouble(),
+              originalPrice: _originalPrice(itemMap),
               promotionId: itemMap['promotion_id'] as int?,
               promoType: itemMap['promo_type'] as String?,
               promoThreshold: itemMap['promo_threshold'] as int?,
@@ -125,6 +123,15 @@ class SaleLocalDatasource {
       );
     }
     return salesList;
+  }
+
+  double _originalPrice(Map<String, Object?> itemMap) {
+    final historicalPrice = (itemMap['historical_price'] as num).toDouble();
+    final originalPrice = (itemMap['original_price'] as num?)?.toDouble();
+    if (originalPrice == null || (originalPrice == 0 && historicalPrice > 0)) {
+      return historicalPrice;
+    }
+    return originalPrice;
   }
 
   Future<void> refundSale(Sale sale) async {

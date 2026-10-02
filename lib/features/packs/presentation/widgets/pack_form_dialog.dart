@@ -3,8 +3,8 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:keepinventory/l10n/app_localizations_ext.dart';
+import 'package:keepinventory/core/services/image_compression_service.dart';
 
 // 💡 Importamos las alertas y tu paleta de colores
 import '../../../../core/shared_widgets/app_alerts.dart';
@@ -71,26 +71,6 @@ class _PackFormDialogState extends State<PackFormDialog> {
     }
   }
 
-  Future<Uint8List?> _compressImage(File file) async {
-    try {
-      final bytes = await file.readAsBytes();
-      final compressed = await FlutterImageCompress.compressWithList(
-        bytes,
-        minWidth: 400,
-        minHeight: 400,
-        quality: 70,
-      );
-      if (compressed.isNotEmpty) {
-        return compressed;
-      } else {
-        return bytes;
-      }
-    } catch (e) {
-      print("❌ Error comprimiendo la imagen: $e");
-      return await file.readAsBytes();
-    }
-  }
-
   Future<void> _savePack() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -152,6 +132,26 @@ class _PackFormDialogState extends State<PackFormDialog> {
     widget.onSave(newPack);
   }
 
+  Future<void> _pickAndSetImage(
+    ImageSource source,
+    BuildContext sheetContext,
+  ) async {
+    Navigator.pop(sheetContext);
+    await Future.delayed(const Duration(milliseconds: 200));
+    final pickedFile = await _picker.pickImage(source: source);
+    if (pickedFile == null) return;
+
+    final bytes = await ImageCompressionService.compressFile(
+      File(pickedFile.path),
+    );
+    if (!mounted) return;
+
+    setState(() {
+      selectedImageBytes = bytes;
+      oldImagePath = null;
+    });
+  }
+
   Widget _buildImagePickerWidget() {
     return GestureDetector(
       onTap: () async {
@@ -163,38 +163,12 @@ class _PackFormDialogState extends State<PackFormDialog> {
               ListTile(
                 leading: const Icon(Icons.camera_alt),
                 title: Text(context.l10n.camera),
-                onTap: () async {
-                  Navigator.pop(context);
-                  await Future.delayed(const Duration(milliseconds: 200));
-                  final pickedFile = await _picker.pickImage(
-                    source: ImageSource.camera,
-                  );
-                  if (pickedFile != null) {
-                    final bytes = await _compressImage(File(pickedFile.path));
-                    setState(() {
-                      selectedImageBytes = bytes;
-                      oldImagePath = null;
-                    });
-                  }
-                },
+                onTap: () => _pickAndSetImage(ImageSource.camera, context),
               ),
               ListTile(
                 leading: const Icon(Icons.photo_library),
                 title: Text(context.l10n.gallery),
-                onTap: () async {
-                  Navigator.pop(context);
-                  await Future.delayed(const Duration(milliseconds: 200));
-                  final pickedFile = await _picker.pickImage(
-                    source: ImageSource.gallery,
-                  );
-                  if (pickedFile != null) {
-                    final bytes = await _compressImage(File(pickedFile.path));
-                    setState(() {
-                      selectedImageBytes = bytes;
-                      oldImagePath = null;
-                    });
-                  }
-                },
+                onTap: () => _pickAndSetImage(ImageSource.gallery, context),
               ),
             ],
           ),
@@ -232,32 +206,162 @@ class _PackFormDialogState extends State<PackFormDialog> {
     );
   }
 
+  Widget _buildPackDetails() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Center(child: _buildImagePickerWidget()),
+        const SizedBox(height: 16),
+        _buildNameField(),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(child: _buildPriceField()),
+            const SizedBox(width: 10),
+            Expanded(child: _buildUnitsField()),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildProductSelector(List<Product> availableOptions) {
+    return Row(
+      children: [
+        Expanded(
+          child: DropdownButtonFormField<Product>(
+            decoration: InputDecoration(
+              hintText: context.l10n.addProduct,
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 12,
+              ),
+            ),
+            initialValue: _productToAdd,
+            isExpanded: true,
+            items: availableOptions
+                .map(
+                  (product) => DropdownMenuItem(
+                    value: product,
+                    child: Text(
+                      product.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                  ),
+                )
+                .toList(),
+            onChanged: (product) => setState(() => _productToAdd = product),
+          ),
+        ),
+        const SizedBox(width: 8),
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            foregroundColor: Theme.of(context).colorScheme.onPrimary,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          ),
+          onPressed: _productToAdd == null
+              ? null
+              : () {
+                  setState(() {
+                    selectedItems[_productToAdd!] = 1;
+                    _productToAdd = null;
+                  });
+                },
+          child: const Icon(Icons.add, size: 20),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildComponentsSection(
+    List<Product> availableOptions,
+    int parsedUnits, {
+    required bool centerEmptyState,
+    bool constrainList = true,
+  }) {
+    final emptyState = Text(
+      context.l10n.packEmpty,
+      style: TextStyle(
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
+        fontSize: 13,
+      ),
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          context.l10n.packComponents,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+        ),
+        const SizedBox(height: 8),
+        _buildProductSelector(availableOptions),
+        const SizedBox(height: 12),
+        if (constrainList)
+          Flexible(
+            child: _buildComponentList(
+              emptyState,
+              parsedUnits,
+              centerEmptyState,
+            ),
+          )
+        else
+          _buildComponentList(emptyState, parsedUnits, centerEmptyState),
+      ],
+    );
+  }
+
+  Widget _buildComponentList(
+    Widget emptyState,
+    int parsedUnits,
+    bool centerEmptyState,
+  ) {
+    if (selectedItems.isEmpty) {
+      return centerEmptyState
+          ? Center(child: emptyState)
+          : Padding(padding: const EdgeInsets.all(16), child: emptyState);
+    }
+
+    return ListView(
+      shrinkWrap: true,
+      physics: centerEmptyState
+          ? const ClampingScrollPhysics()
+          : const NeverScrollableScrollPhysics(),
+      children: _buildItemsList(parsedUnits: parsedUnits),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
-    final bool isLandscape = screenSize.width > screenSize.height;
-
+    final isLandscape = screenSize.width > screenSize.height;
     final availableOptions = widget.availableProducts
-        .where((p) => !selectedItems.containsKey(p))
+        .where((product) => !selectedItems.containsKey(product))
         .toList();
+    final parsedUnits = int.tryParse(packUnits.toString()) ?? 1;
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      backgroundColor: Theme.of(context).cardColor, // 💡 Fondo adaptado
+      backgroundColor: Theme.of(context).cardColor,
       child: ConstrainedBox(
         constraints: BoxConstraints(
           maxWidth: isLandscape ? 850 : screenSize.width * 0.90,
           maxHeight: screenSize.height * 0.85,
         ),
         child: Padding(
-          padding: const EdgeInsets.all(20.0),
+          padding: const EdgeInsets.all(20),
           child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               mainAxisSize: MainAxisSize.min,
               children: [
-                // --- TÍTULO FIJO ---
                 Text(
                   widget.existingPack == null
                       ? context.l10n.createPackTitle
@@ -268,270 +372,54 @@ class _PackFormDialogState extends State<PackFormDialog> {
                   ),
                 ),
                 const SizedBox(height: 16),
-
-                // --- CONTENIDO FLEXIBLE ---
                 Flexible(
                   child: isLandscape
                       ? Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // 💡 HORIZONTAL IZQUIERDA: Items
                             Expanded(
                               flex: 11,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    context.l10n.packComponents,
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 13,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: DropdownButtonFormField<Product>(
-                                          decoration: InputDecoration(
-                                            hintText: context.l10n.addProduct,
-                                            isDense: true,
-                                            contentPadding:
-                                                EdgeInsets.symmetric(
-                                                  horizontal: 12,
-                                                  vertical: 12,
-                                                ),
-                                          ),
-                                          initialValue: _productToAdd,
-                                          isExpanded: true,
-                                          items: availableOptions.map((p) {
-                                            return DropdownMenuItem(
-                                              value: p,
-                                              child: Text(
-                                                p.name,
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                                style: const TextStyle(
-                                                  fontSize: 13,
-                                                ),
-                                              ),
-                                            );
-                                          }).toList(),
-                                          onChanged: (val) {
-                                            setState(() => _productToAdd = val);
-                                          },
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      ElevatedButton(
-                                        style: ElevatedButton.styleFrom(
-                                          // 💡 Adaptado al theme (modo claro y oscuro)
-                                          backgroundColor: Theme.of(context)
-                                              .colorScheme
-                                              .primary,
-                                          foregroundColor: Theme.of(context)
-                                              .colorScheme
-                                              .onPrimary,
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 12,
-                                            vertical: 12,
-                                          ),
-                                        ),
-                                        onPressed: _productToAdd == null
-                                            ? null
-                                            : () {
-                                                setState(() {
-                                                  selectedItems[_productToAdd!] =
-                                                      1;
-                                                  _productToAdd = null;
-                                                });
-                                              },
-                                        child: const Icon(Icons.add, size: 20),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 12),
-
-                                  // LA LISTA TIENE SU PROPIO SCROLL CON FLEXIBLE
-                                  Flexible(
-                                    child: selectedItems.isEmpty
-                                        ? Center(
-                                            child: Text(
-                                              context.l10n.packEmpty,
-                                              style: TextStyle(
-                                                color: Theme.of(context)
-                                                    .colorScheme
-                                                    .onSurfaceVariant, // 💡 Color dinámico
-                                                fontSize: 13,
-                                              ),
-                                            ),
-                                          )
-                                        : ListView(
-                                            shrinkWrap: true,
-                                            children: _buildItemsList(
-                                              parsedUnits:
-                                                  int.tryParse(
-                                                    packUnits.toString(),
-                                                  ) ??
-                                                  1,
-                                            ),
-                                          ),
-                                  ),
-                                ],
+                              child: _buildComponentsSection(
+                                availableOptions,
+                                parsedUnits,
+                                centerEmptyState: true,
                               ),
                             ),
                             const VerticalDivider(width: 24, thickness: 1),
-                            // 💡 HORIZONTAL DERECHA: Campos fijos
                             Expanded(
                               flex: 9,
                               child: SingleChildScrollView(
-                                child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.stretch,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Center(child: _buildImagePickerWidget()),
-                                    const SizedBox(height: 16),
-                                    _buildNameField(),
-                                    const SizedBox(height: 12),
-                                    Row(
-                                      children: [
-                                        Expanded(child: _buildPriceField()),
-                                        const SizedBox(width: 10),
-                                        Expanded(child: _buildUnitsField()),
-                                      ],
-                                    ),
-                                  ],
-                                ),
+                                child: _buildPackDetails(),
                               ),
                             ),
                           ],
                         )
-                      : Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            // 💡 VERTICAL: Campos fijos arriba
-                            Center(child: _buildImagePickerWidget()),
-                            const SizedBox(height: 16),
-                            _buildNameField(),
-                            const SizedBox(height: 12),
-                            Row(
-                              children: [
-                                Expanded(child: _buildPriceField()),
-                                const SizedBox(width: 10),
-                                Expanded(child: _buildUnitsField()),
-                              ],
-                            ),
-                            const Divider(height: 32, thickness: 1),
-                            Text(
-                              context.l10n.packComponents,
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13,
+                      : SingleChildScrollView(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              _buildPackDetails(),
+                              const Divider(height: 32, thickness: 1),
+                              _buildComponentsSection(
+                                availableOptions,
+                                parsedUnits,
+                                centerEmptyState: false,
+                                constrainList: false,
                               ),
-                            ),
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: DropdownButtonFormField<Product>(
-                                    decoration: InputDecoration(
-                                      hintText: context.l10n.addProduct,
-                                      isDense: true,
-                                      contentPadding: EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 12,
-                                      ),
-                                    ),
-                                    initialValue: _productToAdd,
-                                    isExpanded: true,
-                                    items: availableOptions.map((p) {
-                                      return DropdownMenuItem(
-                                        value: p,
-                                        child: Text(
-                                          p.name,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: const TextStyle(fontSize: 13),
-                                        ),
-                                      );
-                                    }).toList(),
-                                    onChanged: (val) {
-                                      setState(() => _productToAdd = val);
-                                    },
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    // 💡 Adaptado al theme
-                                    backgroundColor: Theme.of(context)
-                                        .colorScheme
-                                        .primary,
-                                    foregroundColor: Theme.of(context)
-                                        .colorScheme
-                                        .onPrimary,
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 12,
-                                    ),
-                                  ),
-                                  onPressed: _productToAdd == null
-                                      ? null
-                                      : () {
-                                          setState(() {
-                                            selectedItems[_productToAdd!] = 1;
-                                            _productToAdd = null;
-                                          });
-                                        },
-                                  child: const Icon(Icons.add, size: 20),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-
-                            // 💡 VERTICAL: SOLO ESTA LISTA HACE SCROLL
-                            Flexible(
-                              child: selectedItems.isEmpty
-                                  ? Padding(
-                                      padding: const EdgeInsets.all(16.0),
-                                      child: Text(
-                                        context.l10n.packEmpty,
-                                        style: TextStyle(
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .onSurfaceVariant, // 💡 Color dinámico
-                                          fontSize: 13,
-                                        ),
-                                      ),
-                                    )
-                                  : ListView(
-                                      shrinkWrap: true,
-                                      children: _buildItemsList(
-                                        parsedUnits:
-                                            int.tryParse(
-                                              packUnits.toString(),
-                                            ) ??
-                                            1,
-                                      ),
-                                    ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                 ),
                 const SizedBox(height: 16),
-
-                // --- BOTONES DE ACCIÓN FIJOS ABAJO ---
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
+                Wrap(
+                  alignment: WrapAlignment.end,
+                  spacing: 8,
                   children: [
                     TextButton(
                       onPressed: () => Navigator.pop(context),
                       child: Text(context.l10n.cancel),
                     ),
-                    const SizedBox(width: 8),
                     ElevatedButton(
                       onPressed: _savePack,
                       child: Text(

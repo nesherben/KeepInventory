@@ -25,6 +25,10 @@ class SaleItem {
     this.promoThreshold,
     this.promoDiscount,
   });
+
+  double get refundUnitPrice => originalPrice == 0 && historicalPrice > 0
+      ? historicalPrice
+      : originalPrice;
 }
 
 // Asegúrate de que SalePackItem también esté bien definido si lo tocaste:

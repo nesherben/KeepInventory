@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:shelf/shelf.dart' as shelf;
 import 'package:shelf/shelf_io.dart' as io;
@@ -9,6 +10,7 @@ import 'package:http/http.dart' as http;
 import 'package:keepinventory/l10n/generated/app_localizations.dart';
 
 import '../database/database_helper.dart';
+import 'database_file_installer.dart';
 
 class SyncService {
   static HttpServer? _server;
@@ -77,7 +79,7 @@ class SyncService {
       });
 
       _server = await io.serve(router.call, InternetAddress.anyIPv4, 8080);
-      print('🚀 Servidor activo en http://$ip:8080/download-db');
+      debugPrint('Sync server active at http://$ip:8080/download-db');
 
       return 'http://$ip:8080/download-db';
     } catch (e) {
@@ -90,7 +92,7 @@ class SyncService {
     if (_server != null) {
       await _server!.close(force: true);
       _server = null;
-      print('🛑 Servidor de Sincronización detenido.');
+      debugPrint('Sync server stopped.');
     }
   }
 
@@ -190,7 +192,7 @@ class SyncService {
                   },
                   onError: (e) {
                     hasStreamError = true;
-                    print('Error en stream: $e');
+                    debugPrint('Sync stream error: $e');
                   },
                   cancelOnError: true,
                 )
@@ -227,28 +229,20 @@ class SyncService {
 
           final realFile = File(realPath);
           final backupPath = '$dbPath/keepinventory_failsafe.db';
+          final backupFile = File(backupPath);
 
           if (await realFile.exists()) {
-            await realFile.copy(backupPath);
+            await realFile.copy(backupFile.path);
           }
 
-          try {
-            await tempFile.copy(realPath);
-
-            if (await tempFile.exists()) await tempFile.delete();
-            final failsafeFile = File(backupPath);
-            if (await failsafeFile.exists()) await failsafeFile.delete();
-
-            onProgress(l10n.syncCompleted, 1.0);
-            return true;
-          } catch (copyError) {
-            final failsafeFile = File(backupPath);
-            if (await failsafeFile.exists()) {
-              await failsafeFile.copy(realPath);
-            }
-            onProgress(l10n.syncApplyFailed, -1.0);
-            return false;
-          }
+          return await DatabaseFileInstaller.installDownloadedFile(
+            temporaryFile: tempFile,
+            databaseFile: realFile,
+            backupFile: backupFile,
+            onProgress: onProgress,
+            completedMessage: l10n.syncCompleted,
+            failedMessage: l10n.syncApplyFailed,
+          );
         } else {
           client.close();
           if (attempt < maxRetries) {

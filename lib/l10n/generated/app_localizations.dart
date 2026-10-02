@@ -236,6 +236,18 @@ abstract class AppLocalizations {
   /// **'Sin notas de la versión.'**
   String get updateNoNotes;
 
+  /// No description provided for @updateReleaseHeading.
+  ///
+  /// In es, this message translates to:
+  /// **'🚀 Versión {version}'**
+  String updateReleaseHeading(Object version);
+
+  /// No description provided for @updateGenericReleaseNotes.
+  ///
+  /// In es, this message translates to:
+  /// **'Mejoras y correcciones generales.'**
+  String get updateGenericReleaseNotes;
+
   /// No description provided for @updateAvailableTitle.
   ///
   /// In es, this message translates to:

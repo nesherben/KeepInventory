@@ -10,7 +10,9 @@ import '../../inventory/data/repositories/product_repository_impl.dart';
 import '../../packs/data/repositories/pack_repository_impl.dart';
 import '../../promotions/data/repositories/promotion_repository_impl.dart';
 import '../data/repositories/sale_repository_imp.dart';
-import '../domain/sale.dart';
+import '../domain/sale_catalog_filter.dart';
+import '../domain/sale_cart_pricing_calculator.dart';
+import '../domain/sale_from_cart_factory.dart';
 import '../data/datasources/sale_local_datasource.dart';
 
 // Inventory (Products)
@@ -179,155 +181,22 @@ class _SalesScreenState extends State<SalesScreen>
     AppAlerts.showInfo(context, context.l10n.packRemovedFromCart(pack.name));
   }
 
-  // 💡 NUEVO ALGORITMO: Mix & Match (Iguales o Combinados)
-  double _calculateItemTotal(
-    Product targetProduct,
-    Map<Product, int> cart,
-    Map<int, Promotion> promotionsMap,
-  ) {
-    final promoId = targetProduct.promotionId;
+  double get _cartTotal => SaleCartPricingCalculator.calculateCartTotal(
+    products: _cart,
+    packs: _cartPacks,
+    promotions: _promotionsMap,
+  );
 
-    // Si no tiene promo, precio normal
-    if (promoId == null || !promotionsMap.containsKey(promoId)) {
-      return targetProduct.price * cart[targetProduct]!;
-    }
-
-    final promo = promotionsMap[promoId]!;
-
-    // 1. Buscamos TODOS los productos del carrito que comparten esta promoción
-    final promoProducts = cart.keys
-        .where((p) => p.promotionId == promoId)
-        .toList();
-
-    // 2. Sumamos sus unidades para ver si entre todos superan el umbral
-    final combinedQty = promoProducts.fold<int>(0, (sum, p) => sum + cart[p]!);
-
-    // Si no llegan al mínimo, precio normal
-    if (combinedQty < promo.threshold) {
-      return targetProduct.price * cart[targetProduct]!;
-    }
-
-    // --- PROMOCIÓN DE PORCENTAJE ---
-    if (promo.type == 'percentage') {
-      final double discountedUnitPrice =
-          targetProduct.price * (1 - (promo.discountValue / 100));
-      return cart[targetProduct]! * discountedUnitPrice;
-    }
-
-    // --- PROMOCIÓN DE BUNDLE (Ej: 3 por 30€) ---
-    if (promo.type == 'bundle_fixed_price') {
-      // Ordenamos todos los productos involucrados de MAYOR a MENOR precio
-      promoProducts.sort((a, b) => b.price.compareTo(a.price));
-
-      // Creamos una lista "plana" de unidades (Si hay 2 de A y 1 de B -> [A, A, B])
-      List<Product> flatList = [];
-      for (var p in promoProducts) {
-        for (int i = 0; i < cart[p]!; i++) {
-          flatList.add(p);
-        }
-      }
-
-      double targetProductTotal = 0.0;
-      final double pricePerItemInBundle = promo.discountValue / promo.threshold;
-
-      // Iteramos la lista plana
-      for (int i = 0; i < flatList.length; i++) {
-        final currentUnit = flatList[i];
-
-        // Solo sumamos el dinero si la unidad actual es el producto que estamos calculando
-        if (currentUnit.id == targetProduct.id) {
-          // ¿Esta unidad cae dentro de un pack cerrado? (Ej: las 3 primeras, las 3 segundas...)
-          bool isInsideBundle =
-              i < (flatList.length ~/ promo.threshold) * promo.threshold;
-
-          if (isInsideBundle) {
-            targetProductTotal += pricePerItemInBundle;
-          } else {
-            // Si sobra y queda fuera del múltiplo, se cobra a precio original
-            targetProductTotal += currentUnit.price;
-          }
-        }
-      }
-      return targetProductTotal;
-    }
-
-    return targetProduct.price * cart[targetProduct]!;
-  }
-
-  double get _cartTotal {
-    final productsTotal = _cart.entries.fold(0.0, (total, entry) {
-      return total + _calculateItemTotal(entry.key, _cart, _promotionsMap);
-    });
-    final packsTotal = _cartPacks.entries.fold(0.0, (total, entry) {
-      return total + (entry.key.price * entry.value);
-    });
-    return productsTotal + packsTotal;
-  }
-
-  int get _cartItemCount {
-    final prodCount = _cart.entries.fold(
-      0,
-      (total, entry) => total + entry.value,
-    );
-    final packCount = _cartPacks.entries.fold(
-      0,
-      (total, entry) => total + entry.value,
-    );
-    return prodCount + packCount;
-  }
+  int get _cartItemCount =>
+      SaleCartPricingCalculator.countItems(products: _cart, packs: _cartPacks);
 
   Future<void> _processSale() async {
     if (_cart.isEmpty && _cartPacks.isEmpty) return;
-
-    final saleItems = _cart.entries.map((entry) {
-      final product = entry.key;
-      final qty = entry.value;
-
-      // 💡 Pasamos el carrito entero a la fórmula
-      final finalSubtotal = _calculateItemTotal(product, _cart, _promotionsMap);
-      final effectiveUnitPrice = finalSubtotal / qty;
-
-      String? pType;
-      int? pThresh;
-      double? pDisc;
-
-      if (product.promotionId != null &&
-          _promotionsMap.containsKey(product.promotionId)) {
-        final promo = _promotionsMap[product.promotionId!]!;
-        pType = promo.type;
-        pThresh = promo.threshold;
-        pDisc = promo.discountValue;
-      }
-
-      return SaleItem(
-        saleId: 0,
-        productId: product.id!,
-        productName: product.name,
-        quantity: qty,
-        historicalPrice: effectiveUnitPrice,
-        originalPrice: product.price,
-        promotionId: product.promotionId,
-        promoType: pType,
-        promoThreshold: pThresh,
-        promoDiscount: pDisc,
-      );
-    }).toList();
-
-    final salePackItems = _cartPacks.entries.map((entry) {
-      return SalePackItem(
-        saleId: 0,
-        packId: entry.key.id!,
-        packName: entry.key.name,
-        quantity: entry.value,
-        historicalPrice: entry.key.price,
-      );
-    }).toList();
-
-    final sale = Sale(
+    final sale = SaleFromCartFactory.create(
       date: DateTime.now(),
-      totalAmount: _cartTotal,
-      items: saleItems,
-      packItems: salePackItems,
+      products: _cart,
+      packs: _cartPacks,
+      promotions: _promotionsMap,
     );
 
     await _saleRepository.processSale(sale);
@@ -344,23 +213,94 @@ class _SalesScreenState extends State<SalesScreen>
     }
   }
 
+  Widget _buildSearchField() {
+    final isProductTab = _tabController.index == 0;
+    return Container(
+      padding: const EdgeInsets.all(8),
+      color: Theme.of(context).colorScheme.surfaceContainerHighest
+          .withValues(alpha: 0.3),
+      child: TextField(
+        controller: isProductTab
+            ? _productSearchController
+            : _packSearchController,
+        onChanged: (value) => setState(() {
+          if (isProductTab) {
+            _productSearchQuery = value;
+          } else {
+            _packSearchQuery = value;
+          }
+        }),
+        decoration: InputDecoration(
+          hintText: isProductTab
+              ? context.l10n.searchProducts
+              : context.l10n.searchPacksOrComponents,
+          prefixIcon: const Icon(Icons.search, size: 20),
+          isDense: true,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide.none,
+          ),
+          filled: true,
+          fillColor: Theme.of(context).cardColor,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCatalogTabs({
+    required List<Product> filteredProducts,
+    required List<Pack> filteredPacks,
+    required int crossAxisCount,
+    required double bottomPadding,
+  }) {
+    return TabBarView(
+      controller: _tabController,
+      children: [
+        ProductGridWidget(
+          products: filteredProducts,
+          cart: _cart,
+          bottomPadding: bottomPadding,
+          crossAxisCount: crossAxisCount,
+          onAddToCart: _addToCart,
+          onRemoveFromCart: _removeFromCart,
+          onRemoveAllFromCart: _removeAllFromCart,
+        ),
+        filteredPacks.isEmpty
+            ? Center(
+                child: Text(
+                  _packs.isEmpty
+                      ? context.l10n.packsEmpty
+                      : context.l10n.noPacksFound,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              )
+            : PacksGridWidget(
+                packs: filteredPacks,
+                cartPacks: _cartPacks,
+                bottomPadding: bottomPadding,
+                crossAxisCount: crossAxisCount,
+                onAddToCart: _addPackToCart,
+                onRemoveFromCart: _removePackFromCart,
+                onRemoveAllFromCart: _removeAllPackFromCart,
+              ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
     final bool isLandscape = screenSize.width > screenSize.height;
-
-    final filteredProducts = _products.where((p) {
-      return p.name.toLowerCase().contains(_productSearchQuery.toLowerCase());
-    }).toList();
-
-    final filteredPacks = _packs.where((pack) {
-      final query = _packSearchQuery.toLowerCase();
-      final matchesPackName = pack.name.toLowerCase().contains(query);
-      final matchesItemName = pack.items.any(
-        (item) => (item.productName ?? '').toLowerCase().contains(query),
-      );
-      return matchesPackName || matchesItemName;
-    }).toList();
+    final filteredProducts = SaleCatalogFilter.filterProducts(
+      _products,
+      _productSearchQuery,
+    );
+    final filteredPacks = SaleCatalogFilter.filterPacks(
+      _packs,
+      _packSearchQuery,
+    );
 
     return Listener(
       onPointerDown: (event) {
@@ -415,75 +355,13 @@ class _SalesScreenState extends State<SalesScreen>
                     flex: 3,
                     child: Column(
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(8.0),
-                          color: Theme.of(context)
-                              .colorScheme
-                              .surfaceContainerHighest
-                              .withValues(alpha: 0.3),
-                          child: TextField(
-                            controller: _tabController.index == 0
-                                ? _productSearchController
-                                : _packSearchController,
-                            onChanged: (value) => setState(() {
-                              if (_tabController.index == 0) {
-                                _productSearchQuery = value;
-                              } else {
-                                _packSearchQuery = value;
-                              }
-                            }),
-                            decoration: InputDecoration(
-                              hintText: _tabController.index == 0
-                                  ? context.l10n.searchProducts
-                                  : context.l10n.searchPacksOrComponents,
-                              prefixIcon: const Icon(Icons.search, size: 20),
-                              isDense: true,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: BorderSide.none,
-                              ),
-                              filled: true,
-                              fillColor: Theme.of(context).cardColor,
-                            ),
-                          ),
-                        ),
+                        _buildSearchField(),
                         Expanded(
-                          child: TabBarView(
-                            controller: _tabController,
-                            children: [
-                              ProductGridWidget(
-                                products: filteredProducts,
-                                cart: _cart,
-                                bottomPadding: 16,
-                                crossAxisCount: 4,
-                                onAddToCart: _addToCart,
-                                onRemoveFromCart: _removeFromCart,
-                                onRemoveAllFromCart: _removeAllFromCart,
-                              ),
-                              filteredPacks.isEmpty
-                                  ? Center(
-                                      child: Text(
-                                        _packs.isEmpty
-                                            ? context.l10n.packsEmpty
-                                            : context.l10n.noPacksFound,
-                                        style: TextStyle(
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .onSurfaceVariant,
-                                        ),
-                                      ),
-                                    )
-                                  : PacksGridWidget(
-                                      packs: filteredPacks,
-                                      cartPacks: _cartPacks,
-                                      bottomPadding: 16,
-                                      crossAxisCount: 4,
-                                      onAddToCart: _addPackToCart,
-                                      onRemoveFromCart: _removePackFromCart,
-                                      onRemoveAllFromCart:
-                                          _removeAllPackFromCart,
-                                    ),
-                            ],
+                          child: _buildCatalogTabs(
+                            filteredProducts: filteredProducts,
+                            filteredPacks: filteredPacks,
+                            crossAxisCount: 4,
+                            bottomPadding: 16,
                           ),
                         ),
                       ],
@@ -531,7 +409,8 @@ class _SalesScreenState extends State<SalesScreen>
                             cart: _cart,
                             cartPacks: _cartPacks,
                             promotionsMap: _promotionsMap,
-                            calculateItemTotal: _calculateItemTotal,
+                            calculateItemTotal:
+                                SaleCartPricingCalculator.calculateItemTotal,
                             onRemoveFromCart: _removeFromCart,
                             onRemoveAllFromCart: _removeAllFromCart,
                             onRemovePackFromCart: _removePackFromCart,
@@ -578,74 +457,13 @@ class _SalesScreenState extends State<SalesScreen>
                 children: [
                   Column(
                     children: [
-                      Container(
-                        padding: const EdgeInsets.all(8.0),
-                        color: Theme.of(context)
-                            .colorScheme
-                            .surfaceContainerHighest
-                            .withValues(alpha: 0.3),
-                        child: TextField(
-                          controller: _tabController.index == 0
-                              ? _productSearchController
-                              : _packSearchController,
-                          onChanged: (value) => setState(() {
-                            if (_tabController.index == 0) {
-                              _productSearchQuery = value;
-                            } else {
-                              _packSearchQuery = value;
-                            }
-                          }),
-                          decoration: InputDecoration(
-                            hintText: _tabController.index == 0
-                                ? context.l10n.searchProducts
-                                : context.l10n.searchPacksOrComponents,
-                            prefixIcon: const Icon(Icons.search, size: 20),
-                            isDense: true,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
-                              borderSide: BorderSide.none,
-                            ),
-                            filled: true,
-                            fillColor: Theme.of(context).cardColor,
-                          ),
-                        ),
-                      ),
+                      _buildSearchField(),
                       Expanded(
-                        child: TabBarView(
-                          controller: _tabController,
-                          children: [
-                            ProductGridWidget(
-                              products: filteredProducts,
-                              cart: _cart,
-                              bottomPadding: 120,
-                              crossAxisCount: 3,
-                              onAddToCart: _addToCart,
-                              onRemoveFromCart: _removeFromCart,
-                              onRemoveAllFromCart: _removeAllFromCart,
-                            ),
-                            filteredPacks.isEmpty
-                                ? Center(
-                                    child: Text(
-                                      _packs.isEmpty
-                                          ? context.l10n.packsEmpty
-                                          : context.l10n.noPacksFound,
-                                      style: TextStyle(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onSurfaceVariant,
-                                      ),
-                                    ),
-                                  )
-                                : PacksGridWidget(
-                                    packs: filteredPacks,
-                                    cartPacks: _cartPacks,
-                                    bottomPadding: 120,
-                                    crossAxisCount: 3,
-                                    onAddToCart: _addPackToCart,
-                                    onRemoveFromCart: _removePackFromCart,
-                                    onRemoveAllFromCart: _removeAllPackFromCart,
-                                  ),
-                          ],
+                        child: _buildCatalogTabs(
+                          filteredProducts: filteredProducts,
+                          filteredPacks: filteredPacks,
+                          crossAxisCount: 3,
+                          bottomPadding: 120,
                         ),
                       ),
                     ],
@@ -704,7 +522,8 @@ class _SalesScreenState extends State<SalesScreen>
                                             cartPacks: _cartPacks,
                                             promotionsMap: _promotionsMap,
                                             calculateItemTotal:
-                                                _calculateItemTotal,
+                                                SaleCartPricingCalculator
+                                                    .calculateItemTotal,
                                             onRemoveFromCart: _removeFromCart,
                                             onRemoveAllFromCart:
                                                 _removeAllFromCart,

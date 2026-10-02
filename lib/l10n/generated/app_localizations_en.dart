@@ -81,6 +81,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get updateNoNotes => 'No release notes.';
 
   @override
+  String updateReleaseHeading(Object version) {
+    return '🚀 Version $version';
+  }
+
+  @override
+  String get updateGenericReleaseNotes => 'General improvements and fixes.';
+
+  @override
   String updateAvailableTitle(Object version) {
     return 'New version v$version is available!';
   }

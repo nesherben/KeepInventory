@@ -3,6 +3,7 @@ import 'package:dynamic_color/dynamic_color.dart';
 import 'package:keepinventory/l10n/generated/app_localizations.dart';
 
 import 'core/database/database_helper.dart';
+import 'core/services/app_preferences.dart';
 import 'core/services/image_migration_service.dart';
 import 'core/theme/app_theme.dart';
 import 'l10n/app_locale_resolution.dart';
@@ -29,6 +30,7 @@ void main() async {
 
   // 3. 💡 Cargamos el tema guardado antes de arrancar la interfaz
   await AppDrawer.loadSavedTheme();
+  await AppPreferences.load();
 
   runApp(const KeepInventoryApp());
 }

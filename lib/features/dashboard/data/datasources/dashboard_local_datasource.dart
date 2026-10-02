@@ -92,66 +92,35 @@ class DashboardLocalDatasource {
     };
   }
 
-  // CÁLCULO OPTIMIZADO (Cruza datos en memoria para evitar el problema N+1)
   Future<Map<String, double>> getDailyNetProfits() async {
     final database = await db;
-    Map<String, double> netProfits = {};
-
-    // 1. Precargar costes de productos
-    final prodMaps = await database.query('products', columns: ['id', 'cost']);
-    final productCosts = {
-      for (var p in prodMaps) p['id'] as int: (p['cost'] as num).toDouble(),
-    };
-
-    // 2. Precargar costes de fabricación de los packs
-    final packCostResult = await database.rawQuery('''
-      SELECT pi.pack_id, SUM(p.cost * pi.quantity) as pack_unit_cost
-      FROM pack_items pi 
-      JOIN products p ON pi.product_id = p.id 
-      GROUP BY pi.pack_id
+    final result = await database.rawQuery('''
+      WITH pack_costs AS (
+        SELECT pi.pack_id, SUM(p.cost * pi.quantity) AS unit_cost
+        FROM pack_items pi
+        JOIN products p ON p.id = pi.product_id
+        GROUP BY pi.pack_id
+      ), sale_profits AS (
+        SELECT s.fair_name, date(s.date) AS sale_date,
+          (si.historical_price - COALESCE(p.cost, 0)) * si.quantity AS profit
+        FROM sales s
+        JOIN sale_items si ON si.sale_id = s.id
+        LEFT JOIN products p ON p.id = si.product_id
+        UNION ALL
+        SELECT s.fair_name, date(s.date) AS sale_date,
+          (sp.historical_price - COALESCE(pc.unit_cost, 0)) * sp.quantity AS profit
+        FROM sales s
+        JOIN sale_packs sp ON sp.sale_id = s.id
+        LEFT JOIN pack_costs pc ON pc.pack_id = sp.pack_id
+      )
+      SELECT COALESCE(fair_name, sale_date) AS group_key, SUM(profit) AS total
+      FROM sale_profits
+      GROUP BY group_key
     ''');
-    final packCosts = {
-      for (var p in packCostResult)
-        p['pack_id'] as int: (p['pack_unit_cost'] as num?)?.toDouble() ?? 0.0,
+
+    return {
+      for (final row in result)
+        row['group_key'] as String: (row['total'] as num).toDouble(),
     };
-
-    // 3. Iterar ventas y calcular cruces rápidos en memoria
-    final salesMaps = await database.query('sales', orderBy: 'date ASC');
-    for (var saleMap in salesMaps) {
-      final saleId = saleMap['id'] as int;
-      final key =
-          (saleMap['fair_name'] as String?) ??
-          (saleMap['date'] as String).substring(0, 10);
-      double saleProfit = 0.0;
-
-      // Beneficios de items sueltos
-      final itemsMaps = await database.query(
-        'sale_items',
-        where: 'sale_id = ?',
-        whereArgs: [saleId],
-      );
-      for (var item in itemsMaps) {
-        final cost = productCosts[item['product_id'] as int] ?? 0.0;
-        saleProfit +=
-            ((item['historical_price'] as num).toDouble() - cost) *
-            (item['quantity'] as int);
-      }
-
-      // Beneficios de packs
-      final packsMaps = await database.query(
-        'sale_packs',
-        where: 'sale_id = ?',
-        whereArgs: [saleId],
-      );
-      for (var pack in packsMaps) {
-        final cost = packCosts[pack['pack_id'] as int] ?? 0.0;
-        saleProfit +=
-            ((pack['historical_price'] as num).toDouble() - cost) *
-            (pack['quantity'] as int);
-      }
-
-      netProfits[key] = (netProfits[key] ?? 0.0) + saleProfit;
-    }
-    return netProfits;
   }
 }

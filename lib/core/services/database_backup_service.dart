@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
@@ -24,7 +25,7 @@ class DatabaseBackupService {
       final dbFile = File(dbPath);
 
       if (!await dbFile.exists()) {
-        print("❌ La base de datos no existe.");
+        debugPrint('La base de datos no existe.');
         return false;
       }
 
@@ -34,7 +35,7 @@ class DatabaseBackupService {
 
       return success;
     } catch (e) {
-      print("❌ Error al exportar: $e");
+      debugPrint('Error al exportar: $e');
       return false;
     }
   }
@@ -51,12 +52,12 @@ class DatabaseBackupService {
       if (success) {
         // 3. No hace falta abrirla a mano, al hacer pushReplacement en la UI
         // el Helper verá que _database es null y cargará el archivo nuevo automáticamente.
-        print("✅ Base de datos restaurada con éxito.");
+        debugPrint('Base de datos restaurada con éxito.');
         return true;
       }
       return false;
     } catch (e) {
-      print("❌ Error al importar: $e");
+      debugPrint('Error al importar: $e');
       return false;
     }
   }

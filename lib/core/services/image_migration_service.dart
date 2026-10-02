@@ -11,13 +11,13 @@ class ImageMigrationService {
   static Future<void> migrateImagesToDb() async {
     final db = await DatabaseHelper.instance.database;
 
-    print("🔄 Iniciando migración de imágenes de PRODUCTOS...");
+    debugPrint('Iniciando migración de imágenes de PRODUCTOS...');
     await _migrateTable(db, 'products');
 
-    print("🔄 Iniciando migración de imágenes de PACKS...");
+    debugPrint('Iniciando migración de imágenes de PACKS...');
     await _migrateTable(db, 'packs');
 
-    print("✅ Migración de imágenes completada.");
+    debugPrint('Migración de imágenes completada.');
   }
 
   static Future<void> _migrateTable(Database db, String tableName) async {
@@ -29,7 +29,7 @@ class ImageMigrationService {
     );
 
     if (records.isEmpty) {
-      print("No hay imágenes pendientes de migrar en $tableName.");
+      debugPrint('No hay imágenes pendientes de migrar en $tableName.');
       return;
     }
 
@@ -58,12 +58,12 @@ class ImageMigrationService {
             where: 'id = ?',
             whereArgs: [id],
           );
-          print("✅ Migrada imagen en $tableName (ID: $id)");
+          debugPrint('Migrada imagen en $tableName (ID: $id)');
         } catch (e) {
-          print("❌ Error comprimiendo la imagen del ID $id: $e");
+          debugPrint('Error comprimiendo la imagen del ID $id: $e');
         }
       } else {
-        print("⚠️ Archivo no encontrado para el ID $id en la ruta: $path");
+        debugPrint('Archivo no encontrado para el ID $id en la ruta: $path');
       }
     }
   }

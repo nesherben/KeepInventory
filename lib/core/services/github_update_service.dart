@@ -1,7 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:keepinventory/l10n/generated/app_localizations.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
@@ -11,7 +13,9 @@ class GithubUpdateService {
   static const String _repoUrl =
       'https://api.github.com/repos/nesherben/KeepInventory/releases';
 
-  static Future<Map<String, dynamic>?> checkForUpdate() async {
+  static Future<Map<String, dynamic>?> checkForUpdate(
+    AppLocalizations l10n,
+  ) async {
     try {
       final packageInfo = await PackageInfo.fromPlatform();
       final localVersion = packageInfo.version;
@@ -40,7 +44,7 @@ class GithubUpdateService {
             .replaceAll(RegExp(r'[vV]'), '')
             .trim();
 
-        // 💡 CAMBIO 3: Si la más reciente es mayor que la nuestra, recopilamos TODO el historial
+        // 💡 CAMBIO 3: Si la más reciente es mayor que la nuestra, recopilamos el historial
         if (_isVersionGreater(localVersion, latestTag)) {
           // Buscamos el link directo al APK
           String downloadUrl = latestRelease['html_url'];
@@ -59,9 +63,11 @@ class GithubUpdateService {
 
             // Si esta versión de la iteración es MAYOR que la que tenemos instalada, sumamos sus notas
             if (_isVersionGreater(localVersion, currentLoopTag)) {
-              cumulativeNotes.writeln('🚀 VERSIÓN $currentLoopTag');
               cumulativeNotes.writeln(
-                release['body']?.trim() ?? 'Mejoras y correcciones generales.',
+                l10n.updateReleaseHeading(currentLoopTag),
+              );
+              cumulativeNotes.writeln(
+                release['body']?.trim() ?? l10n.updateGenericReleaseNotes,
               );
               cumulativeNotes.writeln(
                 '\n---------------------------\n',
@@ -81,7 +87,7 @@ class GithubUpdateService {
       }
       return null;
     } catch (e) {
-      print("❌ Error comprobando actualizaciones: $e");
+      debugPrint('Error comprobando actualizaciones: $e');
       return null;
     }
   }
@@ -118,13 +124,13 @@ class GithubUpdateService {
     IOSink? sink;
 
     try {
-      print("📥 Iniciando descarga desde: $apkUrl");
+      debugPrint('Iniciando descarga desde: $apkUrl');
       final client = http.Client();
       final request = http.Request('GET', Uri.parse(apkUrl));
       final response = await client.send(request);
 
       if (response.statusCode != 200) {
-        print("❌ Error del servidor: Código ${response.statusCode}");
+        debugPrint('Error del servidor: Código ${response.statusCode}');
         client.close();
         return false;
       }
@@ -156,15 +162,15 @@ class GithubUpdateService {
       await sink.close();
       client.close();
 
-      print("✅ Descarga completada al 100%. Guardando archivo...");
-      print("📦 Abriendo instalador en: $filePath");
+      debugPrint('Descarga completada al 100%. Guardando archivo...');
+      debugPrint('Abriendo instalador en: $filePath');
 
       final result = await OpenFilex.open(filePath);
-      print("📱 Resultado de OpenFilex: ${result.message}");
+      debugPrint('Resultado de OpenFilex: ${result.message}');
 
       return result.type == ResultType.done;
     } catch (e) {
-      print("❌ Excepción crítica al iniciar descarga: $e");
+      debugPrint('Excepción crítica al iniciar descarga: $e');
 
       await sink?.close();
       if (file != null && await file.exists()) {

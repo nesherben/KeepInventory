@@ -3,8 +3,8 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:keepinventory/l10n/app_localizations_ext.dart';
+import 'package:keepinventory/core/services/image_compression_service.dart';
 
 import '../../domain/product.dart';
 import '../../data/product_model.dart';
@@ -52,20 +52,25 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
   }
 
   Future<void> _pickAndCompressImage() async {
-    showModalBottomSheet(
+    final source = await _showImageSourcePicker();
+    if (source != null) await _processImage(source);
+  }
+
+  Future<ImageSource?> _showImageSourcePicker() {
+    return showModalBottomSheet<ImageSource>(
       context: context,
-      builder: (context) => Column(
+      builder: (sheetContext) => Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           ListTile(
             leading: const Icon(Icons.camera_alt),
-            title: Text(context.l10n.camera),
-            onTap: () => _processImage(ImageSource.camera),
+            title: Text(sheetContext.l10n.camera),
+            onTap: () => Navigator.pop(sheetContext, ImageSource.camera),
           ),
           ListTile(
             leading: const Icon(Icons.photo_library),
-            title: Text(context.l10n.gallery),
-            onTap: () => _processImage(ImageSource.gallery),
+            title: Text(sheetContext.l10n.gallery),
+            onTap: () => Navigator.pop(sheetContext, ImageSource.gallery),
           ),
         ],
       ),
@@ -73,22 +78,39 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
   }
 
   Future<void> _processImage(ImageSource source) async {
-    Navigator.pop(context);
     final pickedFile = await _picker.pickImage(source: source);
-    if (pickedFile != null) {
-      final file = File(pickedFile.path);
-      final bytes = await file.readAsBytes();
-      final compressed = await FlutterImageCompress.compressWithList(
-        bytes,
-        minWidth: 400,
-        minHeight: 400,
-        quality: 70,
-      );
-      setState(() {
-        _selectedImageBytes = compressed.isNotEmpty ? compressed : bytes;
-        _oldImagePath = null;
-      });
-    }
+    if (pickedFile == null) return;
+
+    final compressed = await ImageCompressionService.compressFile(
+      File(pickedFile.path),
+    );
+    if (!mounted) return;
+
+    setState(() {
+      _selectedImageBytes = compressed;
+      _oldImagePath = null;
+    });
+  }
+
+  ProductModel _createProductModel() {
+    return ProductModel(
+      id: widget.productToEdit?.id,
+      name: _name,
+      units: _units,
+      price: _price,
+      cost: _cost,
+      imagePath: _oldImagePath,
+      imageBytes: _selectedImageBytes,
+      promotionId: _selectedPromotionId,
+    );
+  }
+
+  Future<void> _saveProduct(bool isEditing) async {
+    final form = _formKey.currentState!;
+    if (!form.validate()) return;
+
+    form.save();
+    await widget.onSave(_createProductModel(), isEditing);
   }
 
   @override
@@ -243,22 +265,7 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
           child: Text(context.l10n.cancel),
         ),
         ElevatedButton(
-          onPressed: () async {
-            if (_formKey.currentState!.validate()) {
-              _formKey.currentState!.save();
-              final productModel = ProductModel(
-                id: widget.productToEdit?.id,
-                name: _name,
-                units: _units,
-                price: _price,
-                cost: _cost,
-                imagePath: _oldImagePath,
-                imageBytes: _selectedImageBytes,
-                promotionId: _selectedPromotionId,
-              );
-              await widget.onSave(productModel, isEditing);
-            }
-          },
+          onPressed: () => _saveProduct(isEditing),
           child: Text(isEditing ? context.l10n.update : context.l10n.save),
         ),
       ],

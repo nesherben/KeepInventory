@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:keepinventory/l10n/app_localizations_ext.dart';
 
 // Rutas actualizadas a la arquitectura modular
 import '../../../core/shared_widgets/app_drawer.dart';
 import '../../../core/shared_widgets/app_alerts.dart'; // 💡 Importamos tus AppAlerts
+import '../../../core/services/app_preferences.dart';
 import '../data/datasources/dashboard_local_datasource.dart';
 import '../data/repositories/dashboard_repository_impl.dart';
 import '../../../../core/services/github_update_service.dart';
@@ -11,6 +14,7 @@ import '../../../../core/services/github_update_service.dart';
 // Importa tu paleta de colores
 import '../../../core/theme/app_colors.dart';
 import 'widgets/dashboard_chart.dart'; // Ajusta esta ruta si es distinta
+import 'widgets/update_available_dialog.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -31,7 +35,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   double? _startY;
 
   bool _isLoading = true;
-  bool _isPrivacyModeEnabled = false;
+  bool get _isPrivacyModeEnabled => AppPreferences.privacyModeEnabled.value;
 
   double _totalRevenue = 0;
   double _inventoryCost = 0;
@@ -45,6 +49,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
+    AppPreferences.privacyModeEnabled.addListener(_onPrivacyModeChanged);
     _loadMetrics();
 
     if (!_hasCheckedForUpdate) {
@@ -53,6 +58,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _checkForAppUpdates(); // Comprobación automática silenciosa
       });
     }
+  }
+
+  @override
+  void dispose() {
+    AppPreferences.privacyModeEnabled.removeListener(_onPrivacyModeChanged);
+    super.dispose();
+  }
+
+  void _onPrivacyModeChanged() {
+    if (mounted) setState(() {});
+  }
+
+  void _togglePrivacyMode() {
+    unawaited(AppPreferences.setPrivacyModeEnabled(!_isPrivacyModeEnabled));
   }
 
   // 💡 Añadido el parámetro 'manual' para distinguir si pulsaste el botón
@@ -71,7 +90,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
       if (!mounted) return;
 
-      final updateInfo = await GithubUpdateService.checkForUpdate();
+      final updateInfo = await GithubUpdateService.checkForUpdate(context.l10n);
 
       // Si no hay actualizaciones o falló la conexión
       if (updateInfo == null) {
@@ -92,99 +111,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
       if (url.isEmpty) return;
 
-      showDialog(
+      showDialog<void>(
         context: context,
         barrierDismissible: false,
-        builder: (dialogContext) {
-          double progress = 0.0;
-          bool isDownloading = false;
-
-          return StatefulBuilder(
-            builder: (context, setDialogState) {
-              return AlertDialog(
-                title: Text(context.l10n.updateAvailableTitle(version)),
-                content: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      context.l10n.updateAvailableBody,
-                      style: TextStyle(fontSize: 13),
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      constraints: const BoxConstraints(maxHeight: 120),
-                      child: SingleChildScrollView(
-                        child: Text(
-                          notes,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurfaceVariant,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    if (isDownloading) ...[
-                      LinearProgressIndicator(value: progress),
-                      const SizedBox(height: 8),
-                      Center(
-                        child: Text(
-                          context.l10n.updateDownloading(
-                            (progress * 100).toStringAsFixed(0),
-                          ),
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-                actions: [
-                  if (!isDownloading) ...[
-                    TextButton(
-                      onPressed: () => Navigator.pop(dialogContext),
-                      child: Text(context.l10n.later),
-                    ),
-                    ElevatedButton(
-                      onPressed: () async {
-                        setDialogState(() => isDownloading = true);
-
-                        final success =
-                            await GithubUpdateService.downloadAndInstall(url, (
-                              p,
-                            ) {
-                              if (context.mounted) {
-                                setDialogState(() => progress = p);
-                              }
-                            });
-
-                        if (dialogContext.mounted) {
-                          Navigator.pop(dialogContext); // Cerramos el diálogo
-
-                          if (!success && mounted) {
-                            AppAlerts.showError(
-                              context,
-                              context.l10n.updateDownloadError,
-                            );
-                          }
-                        }
-                      },
-                      child: Text(context.l10n.updateNow),
-                    ),
-                  ],
-                ],
-              );
-            },
-          );
-        },
+        builder: (_) => UpdateAvailableDialog(
+          version: version,
+          notes: notes,
+          url: url,
+          download: GithubUpdateService.downloadAndInstall,
+          onDownloadFailure: () {
+            if (mounted) {
+              AppAlerts.showError(context, context.l10n.updateDownloadError);
+            }
+          },
+        ),
       );
     } catch (e) {
-      print("❌ Error en _checkForAppUpdates: $e");
+      debugPrint('Error checking for app updates: $e');
       if (manual && mounted) {
         AppAlerts.showError(context, context.l10n.updateConnectionError);
       }
@@ -225,7 +168,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
         builder: (context) => FullScreenChartScreen(
           dailySales: _dailySales,
           dailyNetProfits: _dailyNetProfits,
-          isPrivacyModeEnabled: _isPrivacyModeEnabled,
         ),
       ),
     );
@@ -522,11 +464,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ? Theme.of(context).colorScheme.secondary
                     : null,
               ),
-              onPressed: () {
-                setState(() {
-                  _isPrivacyModeEnabled = !_isPrivacyModeEnabled;
-                });
-              },
+              onPressed: _togglePrivacyMode,
               tooltip: _isPrivacyModeEnabled
                   ? context.l10n.privacyOff
                   : context.l10n.privacyOn,

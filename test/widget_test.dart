@@ -8,23 +8,47 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:keepinventory/main.dart';
+import 'package:keepinventory/features/dashboard/presentation/widgets/dashboard_chart.dart';
+import 'package:keepinventory/l10n/generated/app_localizations.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const KeepInventoryApp());
+  testWidgets('chart details toggles privacy mode', (tester) async {
+    const locale = Locale('es');
+    final localizations = await AppLocalizations.delegate.load(locale);
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: locale,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: const FullScreenChartScreen(
+          dailySales: {'2026-10-02': 10},
+          dailyNetProfits: {'2026-10-02': 3},
+        ),
+      ),
+    );
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
+    expect(find.text(localizations.chartDetailsTitle), findsOneWidget);
+    expect(find.byIcon(Icons.visibility), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.visibility));
     await tester.pump();
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(find.byIcon(Icons.visibility_off), findsOneWidget);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: locale,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: const FullScreenChartScreen(
+          dailySales: {'2026-10-02': 10},
+          dailyNetProfits: {'2026-10-02': 3},
+        ),
+      ),
+    );
+
+    expect(find.byIcon(Icons.visibility_off), findsOneWidget);
+    expect(find.text('••€'), findsOneWidget);
   });
 }
