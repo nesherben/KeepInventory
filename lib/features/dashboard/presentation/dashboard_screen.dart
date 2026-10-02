@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:keepinventory/l10n/app_localizations_ext.dart';
 
 // Rutas actualizadas a la arquitectura modular
 import '../../../core/shared_widgets/app_drawer.dart';
@@ -63,7 +64,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         // Aviso visual rápido si el usuario le dio al botón
         AppAlerts.showInfo(
           context,
-          'Buscando actualizaciones en GitHub...',
+          context.l10n.updateSearching,
           duration: const Duration(seconds: 2),
         );
       }
@@ -75,19 +76,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
       // Si no hay actualizaciones o falló la conexión
       if (updateInfo == null) {
         if (manual && mounted) {
-          AppAlerts.showSuccess(
-            context,
-            '¡La aplicación ya está en la última versión!',
-          );
+          AppAlerts.showSuccess(context, context.l10n.updateLatest);
         }
         return;
       }
 
       if (!mounted) return;
 
-      final String version = updateInfo['version']?.toString() ?? 'Desconocida';
+      final String version =
+          updateInfo['version']?.toString() ??
+          context.l10n.updateUnknownVersion;
       final String notes =
-          updateInfo['notes']?.toString() ?? 'Sin notas de la versión.';
+          updateInfo['notes']?.toString() ?? context.l10n.updateNoNotes;
       final String url = updateInfo['url']?.toString() ?? '';
 
       if (url.isEmpty) return;
@@ -102,13 +102,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
           return StatefulBuilder(
             builder: (context, setDialogState) {
               return AlertDialog(
-                title: Text('¡Nueva versión v$version disponible!'),
+                title: Text(context.l10n.updateAvailableTitle(version)),
                 content: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Hay una actualización lista para instalar con mejoras y correcciones:',
+                    Text(
+                      context.l10n.updateAvailableBody,
                       style: TextStyle(fontSize: 13),
                     ),
                     const SizedBox(height: 8),
@@ -132,7 +132,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       const SizedBox(height: 8),
                       Center(
                         child: Text(
-                          'Descargando... ${(progress * 100).toStringAsFixed(0)}%',
+                          context.l10n.updateDownloading(
+                            (progress * 100).toStringAsFixed(0),
+                          ),
                           style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
@@ -146,7 +148,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   if (!isDownloading) ...[
                     TextButton(
                       onPressed: () => Navigator.pop(dialogContext),
-                      child: const Text('Más tarde'),
+                      child: Text(context.l10n.later),
                     ),
                     ElevatedButton(
                       onPressed: () async {
@@ -167,12 +169,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           if (!success && mounted) {
                             AppAlerts.showError(
                               context,
-                              'Error al descargar la actualización. Revisa tu conexión a internet.',
+                              context.l10n.updateDownloadError,
                             );
                           }
                         }
                       },
-                      child: const Text('Actualizar ahora'),
+                      child: Text(context.l10n.updateNow),
                     ),
                   ],
                 ],
@@ -184,7 +186,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     } catch (e) {
       print("❌ Error en _checkForAppUpdates: $e");
       if (manual && mounted) {
-        AppAlerts.showError(context, 'No se pudo conectar con el servidor.');
+        AppAlerts.showError(context, context.l10n.updateConnectionError);
       }
     }
   }
@@ -326,8 +328,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text(
-                      'Balance por Ferias y Días',
+                    Text(
+                      context.l10n.chartButtonTitle,
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.bold,
@@ -335,7 +337,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'Ver gráfico de barras y beneficio neto',
+                      context.l10n.chartButtonSubtitle,
                       style: TextStyle(
                         fontSize: 12,
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -413,7 +415,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           color: Colors.white.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        child: const Row(
+                        child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(
@@ -423,7 +425,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             ),
                             SizedBox(width: 5),
                             Text(
-                              'CAJA GENERAL',
+                              context.l10n.cashDesk,
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 10,
@@ -459,13 +461,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ),
                   const SizedBox(height: 10),
-                  const Row(
+                  Row(
                     children: [
                       Icon(Icons.info_outline, color: Colors.white60, size: 13),
                       SizedBox(width: 6),
                       Expanded(
                         child: Text(
-                          'Balance acumulado de ferias y ventas directas',
+                          context.l10n.cumulativeBalance,
                           style: TextStyle(color: Colors.white70, fontSize: 12),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -510,7 +512,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Scaffold(
         key: _scaffoldKey,
         appBar: AppBar(
-          title: const Text('Panel de Control'),
+          title: Text(context.l10n.dashboardTitle),
           elevation: 0,
           actions: [
             IconButton(
@@ -526,14 +528,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 });
               },
               tooltip: _isPrivacyModeEnabled
-                  ? 'Desactivar modo privacidad'
-                  : 'Activar modo privacidad',
+                  ? context.l10n.privacyOff
+                  : context.l10n.privacyOn,
             ),
             // 💡 REEMPLAZADO: Ahora es el botón de buscar actualizaciones
             IconButton(
               icon: const Icon(Icons.system_update_alt), // Icono más intuitivo
               onPressed: () => _checkForAppUpdates(manual: true),
-              tooltip: 'Buscar actualizaciones',
+              tooltip: context.l10n.searchUpdates,
             ),
             const SizedBox(width: 8),
           ],
@@ -568,7 +570,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 children: [
                                   Expanded(
                                     child: _buildMetricCard(
-                                      title: 'COSTE ALMACÉN',
+                                      title: context.l10n.metricInventoryCost,
                                       value: _formatCurrency(_inventoryCost),
                                       icon: Icons.inventory_2_outlined,
                                       color: AppColors.warning,
@@ -577,7 +579,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   const SizedBox(height: 10),
                                   Expanded(
                                     child: _buildMetricCard(
-                                      title: 'VALOR VENTA',
+                                      title: context.l10n.metricSalesValue,
                                       value: _formatCurrency(_expectedRevenue),
                                       icon: Icons.trending_up,
                                       color: AppColors.info,
@@ -586,7 +588,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   const SizedBox(height: 10),
                                   Expanded(
                                     child: _buildMetricCard(
-                                      title: 'BENEFICIO NETO REAL',
+                                      title: context.l10n.metricNetProfit,
                                       value: _formatCurrency(_actualNetProfit),
                                       icon: Icons.savings_outlined,
                                       color: AppColors.success,
@@ -607,7 +609,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         children: [
                           Expanded(
                             child: _buildMetricCard(
-                              title: 'COSTE ALMACÉN',
+                              title: context.l10n.metricInventoryCost,
                               value: _formatCurrency(_inventoryCost),
                               icon: Icons.inventory_2_outlined,
                               color: AppColors.warning,
@@ -616,7 +618,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: _buildMetricCard(
-                              title: 'VALOR VENTA',
+                              title: context.l10n.metricSalesValue,
                               value: _formatCurrency(_expectedRevenue),
                               icon: Icons.trending_up,
                               color: AppColors.info,
@@ -629,7 +631,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         children: [
                           Expanded(
                             child: _buildMetricCard(
-                              title: 'BENEFICIO NETO REAL',
+                              title: context.l10n.metricNetProfit,
                               value: _formatCurrency(_actualNetProfit),
                               icon: Icons.savings_outlined,
                               color: AppColors.success,

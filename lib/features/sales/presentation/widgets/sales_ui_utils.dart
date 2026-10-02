@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:keepinventory/l10n/app_localizations_ext.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../inventory/domain/product.dart';
@@ -307,8 +308,10 @@ class _PreviewInfoState extends State<_PreviewInfo> {
             _buildDetailRow(
               context,
               Icons.inventory_2_outlined,
-              'Stock disponible',
-              isOutOfStock ? 'Agotado' : 'Quedan $_availableStock uds',
+              context.l10n.stockAvailable,
+              isOutOfStock
+                  ? context.l10n.outOfStock
+                  : context.l10n.unitsRemaining(_availableStock.toString()),
               color: isOutOfStock ? Colors.red : null,
               isBold: isOutOfStock,
             ),
@@ -317,8 +320,8 @@ class _PreviewInfoState extends State<_PreviewInfo> {
             _buildDetailRow(
               context,
               Icons.shopping_cart_outlined,
-              'En el carrito',
-              '$_localCartQty uds',
+              context.l10n.inCart,
+              context.l10n.unitCount(_localCartQty.toString()),
               trailing: widget.onRemoveAction != null
                   ? Material(
                       color: Colors.red.withValues(alpha: 0.1),
@@ -344,7 +347,7 @@ class _PreviewInfoState extends State<_PreviewInfo> {
             _buildDetailRow(
               context,
               Icons.widgets_outlined,
-              'Contenido',
+              context.l10n.packContents,
               widget.packContents!,
             ),
 
@@ -352,7 +355,7 @@ class _PreviewInfoState extends State<_PreviewInfo> {
             _buildDetailRow(
               context,
               Icons.local_offer_outlined,
-              'Promoción',
+              context.l10n.promotion,
               widget.promoName!,
             ),
             _buildDetailRow(
@@ -360,13 +363,16 @@ class _PreviewInfoState extends State<_PreviewInfo> {
               _localPromoActive
                   ? Icons.check_circle_outline
                   : Icons.info_outline,
-              'Estado',
+              context.l10n.status,
               _localPromoActive
-                  ? 'Oferta aplicada'
+                  ? context.l10n.offerApplied
                   // 💡 Pequeña ayuda visual en el texto si tiene combinados
                   : (widget.otherItemsInPromo > 0
-                        ? 'Faltan uds (combinando $_localCartQty + ${widget.otherItemsInPromo})'
-                        : 'Faltan uds para activar'),
+                        ? context.l10n.promotionShortfallCombined(
+                            _localCartQty.toString(),
+                            widget.otherItemsInPromo.toString(),
+                          )
+                        : context.l10n.promotionShortfall),
               color: _localPromoActive
                   ? Colors.green
                   : theme.colorScheme.tertiary,
@@ -381,7 +387,7 @@ class _PreviewInfoState extends State<_PreviewInfo> {
             _buildDetailRow(
               context,
               Icons.payments_outlined,
-              'Total acumulado',
+              context.l10n.totalAccumulated,
               '${_localTotal!.toStringAsFixed(2)} €',
               color: theme.colorScheme.primary,
               isBold: true,
@@ -407,13 +413,13 @@ class _PreviewInfoState extends State<_PreviewInfo> {
                     : (_justAdded ? 2 : 6);
 
                 final String buttonText = isOutOfStock
-                    ? 'Agotado'
+                    ? context.l10n.outOfStock
                     : (_justAdded
-                          ? '¡Añadido!'
+                          ? context.l10n.added
                           : (widget.actionLabel ??
                                 (_localCartQty > 0
-                                    ? 'Añadir otra unidad'
-                                    : 'Añadir al carrito')));
+                                    ? context.l10n.addAnotherUnit
+                                    : context.l10n.addToCart)));
 
                 final IconData buttonIcon = isOutOfStock
                     ? Icons.remove_shopping_cart_rounded
@@ -511,7 +517,7 @@ Future<void> showItemPreview(
   return showGeneralDialog<void>(
     context: context,
     barrierDismissible: true,
-    barrierLabel: 'Cerrar vista previa',
+    barrierLabel: context.l10n.closePreview,
     barrierColor: Colors.black.withValues(alpha: 0.6),
     transitionDuration: const Duration(milliseconds: 220),
     pageBuilder: (dialogContext, animation, secondaryAnimation) {
@@ -607,7 +613,7 @@ Future<void> showItemPreview(
                           color: Colors.white,
                           size: 22,
                         ),
-                        tooltip: 'Cerrar',
+                        tooltip: context.l10n.closePreview,
                         padding: const EdgeInsets.all(8),
                         constraints: const BoxConstraints(),
                         onPressed: () => Navigator.pop(dialogContext),
@@ -653,7 +659,7 @@ void showCartProductPreview(
     context,
     image: buildProductImage(product),
     title: product.name,
-    unitPrice: '${product.price.toStringAsFixed(2)} € / ud',
+    unitPrice: context.l10n.pricePerUnit(product.price.toStringAsFixed(2)),
     rawPrice: product.price,
     cartQty: qty,
     otherItemsInPromo: otherItemsInPromo, // 💡 SE LO PASA AL POPUP
@@ -662,7 +668,7 @@ void showCartProductPreview(
     promoName: promo?.name,
     promoActive: active,
     promoThreshold: promo?.threshold,
-    actionLabel: qty > 0 ? 'Añadir otra unidad' : 'Añadir al carrito',
+    actionLabel: qty > 0 ? context.l10n.addAnotherUnit : context.l10n.addToCart,
     actionIcon: Icons.add_shopping_cart,
     onAction: onAddAction,
     onRemoveAction: onRemoveAction,
@@ -679,19 +685,21 @@ void showCartPackPreview(
   VoidCallback? onRemoveAction,
   VoidCallback? onRemoveAllAction,
 }) {
-  final contents = pack.items.map((item) => item.productName).join(', ');
+  final contents = pack.items
+      .map((item) => item.productName ?? context.l10n.unknownDeleted)
+      .join(', ');
 
   showItemPreview(
     context,
     image: buildPackImage(pack),
     title: pack.name,
-    unitPrice: '${pack.price.toStringAsFixed(2)} € / pack',
+    unitPrice: context.l10n.pricePerPack(pack.price.toStringAsFixed(2)),
     rawPrice: pack.price,
     cartQty: qty,
     cartTotal: itemTotal,
     stock: pack.units,
     packContents: contents,
-    actionLabel: qty > 0 ? 'Añadir otro pack' : 'Añadir al carrito',
+    actionLabel: qty > 0 ? context.l10n.addAnotherPack : context.l10n.addToCart,
     actionIcon: Icons.library_add_outlined,
     onAction: onAddAction,
     onRemoveAction: onRemoveAction,

@@ -6,6 +6,7 @@ import 'package:shelf/shelf_io.dart' as io;
 import 'package:shelf_router/shelf_router.dart' as shelf_router;
 import 'package:network_info_plus/network_info_plus.dart';
 import 'package:http/http.dart' as http;
+import 'package:keepinventory/l10n/generated/app_localizations.dart';
 
 import '../database/database_helper.dart';
 
@@ -40,14 +41,15 @@ class SyncService {
     }
   }
 
-  static Future<String?> startServer(Function(String) onError) async {
+  static Future<String?> startServer(
+    AppLocalizations l10n,
+    Function(String) onError,
+  ) async {
     try {
       final ip = await _getLocalIp();
 
       if (ip == null) {
-        onError(
-          'No se pudo detectar la IP. ¿Estás conectado a un Wi-Fi o Hotspot activo?',
-        );
+        onError(l10n.syncNoIp);
         return null;
       }
 
@@ -58,7 +60,7 @@ class SyncService {
 
       final file = File(path);
       if (!await file.exists()) {
-        onError('La base de datos local no existe.');
+        onError(l10n.syncLocalDbMissing);
         return null;
       }
 
@@ -79,7 +81,7 @@ class SyncService {
 
       return 'http://$ip:8080/download-db';
     } catch (e) {
-      onError('Error al iniciar el servidor local: $e');
+      onError(l10n.syncStartFailed);
       return null;
     }
   }
@@ -95,6 +97,7 @@ class SyncService {
   // --- 2. EL RECEPTOR DESCARGA EN STREAMING ---
   static Future<bool> importDatabase(
     String url,
+    AppLocalizations l10n,
     Function(String status, double progress) onProgress,
   ) async {
     // 💡 1. VERIFICACIÓN DE REDES (Misma Wi-Fi / Subred)
@@ -107,10 +110,7 @@ class SyncService {
     if (receiverIp == null ||
         receiverIp == '127.0.0.1' ||
         receiverIp == '0.0.0.0') {
-      onProgress(
-        '⚠️ No tienes red. Conéctate al Wi-Fi o Hotspot del emisor.',
-        0.0,
-      );
+      onProgress(l10n.syncNoNetwork, 0.0);
       await Future.delayed(const Duration(seconds: 2));
     } else {
       // Extraemos la subred (ej: 192.168.1 de 192.168.1.55)
@@ -123,7 +123,7 @@ class SyncService {
 
       if (targetSubnet.isNotEmpty && targetSubnet != receiverSubnet) {
         onProgress(
-          '⚠️ Parece que estáis en Wi-Fis distintas (Emisor: $targetSubnet.x / Tú: $receiverSubnet.x)',
+          l10n.syncDifferentNetworks(targetSubnet, receiverSubnet),
           0.0,
         );
         await Future.delayed(const Duration(seconds: 3));
@@ -137,7 +137,13 @@ class SyncService {
     for (int attempt = 1; attempt <= maxRetries; attempt++) {
       final client = http.Client();
       try {
-        onProgress('Buscando conexión... (Intento $attempt/$maxRetries)', 0.0);
+        onProgress(
+          l10n.syncSearchingConnection(
+            attempt.toString(),
+            maxRetries.toString(),
+          ),
+          0.0,
+        );
 
         final request = http.Request('GET', Uri.parse(url));
         final response = await client
@@ -168,12 +174,16 @@ class SyncService {
                     if (totalBytes > 0) {
                       final progress = receivedBytes / totalBytes;
                       onProgress(
-                        'Descargando... ${(progress * 100).toStringAsFixed(0)}%',
+                        l10n.syncDownloadingPercent(
+                          (progress * 100).toStringAsFixed(0),
+                        ),
                         progress,
                       );
                     } else {
                       onProgress(
-                        'Descargando... ${(receivedBytes / 1024 / 1024).toStringAsFixed(2)} MB',
+                        l10n.syncDownloadingMegabytes(
+                          (receivedBytes / 1024 / 1024).toStringAsFixed(2),
+                        ),
                         -1.0,
                       );
                     }
@@ -199,22 +209,19 @@ class SyncService {
             if (await tempFile.exists()) await tempFile.delete();
 
             if (attempt < maxRetries) {
-              onProgress('Corte de red. Reintentando...', 0.0);
+              onProgress(l10n.syncNetworkCutRetry, 0.0);
               await Future.delayed(
                 const Duration(seconds: delayBetweenRetries),
               );
               continue;
             } else {
-              onProgress(
-                'Conexión inestable. No se pudo completar la descarga.',
-                -1.0,
-              );
+              onProgress(l10n.syncUnstableDownload, -1.0);
               return false;
             }
           }
 
           // --- INSTALACIÓN SEGURA ---
-          onProgress('Instalando datos de forma segura...', 1.0);
+          onProgress(l10n.syncInstalling, 1.0);
 
           await DatabaseHelper.instance.resetDatabase();
 
@@ -232,17 +239,14 @@ class SyncService {
             final failsafeFile = File(backupPath);
             if (await failsafeFile.exists()) await failsafeFile.delete();
 
-            onProgress('¡Sincronización completada con éxito!', 1.0);
+            onProgress(l10n.syncCompleted, 1.0);
             return true;
           } catch (copyError) {
             final failsafeFile = File(backupPath);
             if (await failsafeFile.exists()) {
               await failsafeFile.copy(realPath);
             }
-            onProgress(
-              'Error al aplicar datos. Se restauró tu BD original.',
-              -1.0,
-            );
+            onProgress(l10n.syncApplyFailed, -1.0);
             return false;
           }
         } else {
@@ -251,17 +255,17 @@ class SyncService {
             await Future.delayed(const Duration(seconds: delayBetweenRetries));
             continue;
           }
-          onProgress('El servidor rechazó la conexión.', -1.0);
+          onProgress(l10n.syncServerRejected, -1.0);
           return false;
         }
       } catch (e) {
         client.close();
         if (attempt < maxRetries) {
-          onProgress('Pérdida de red... (Reintento $attempt)', 0.0);
+          onProgress(l10n.syncNetworkRetry(attempt.toString()), 0.0);
           await Future.delayed(const Duration(seconds: delayBetweenRetries));
           continue;
         }
-        onProgress('No se encontró el emisor. Revisa el Wi-Fi/Hotspot.', -1.0);
+        onProgress(l10n.syncSenderNotFound, -1.0);
         return false;
       }
     }

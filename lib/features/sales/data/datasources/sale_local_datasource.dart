@@ -76,8 +76,7 @@ class SaleLocalDatasource {
               id: itemMap['id'] as int,
               saleId: itemMap['sale_id'] as int,
               productId: itemMap['product_id'] as int,
-              productName:
-                  itemMap['product_name'] as String? ?? 'Desconocido/Eliminado',
+              productName: itemMap['product_name'] as String?,
               quantity: itemMap['quantity'] as int,
               historicalPrice: (itemMap['historical_price'] as num).toDouble(),
               originalPrice:
@@ -107,8 +106,7 @@ class SaleLocalDatasource {
               id: pMap['id'] as int?,
               saleId: pMap['sale_id'] as int,
               packId: pMap['pack_id'] as int,
-              packName:
-                  pMap['pack_name'] as String? ?? 'Pack Eliminado/Desconocido',
+              packName: pMap['pack_name'] as String?,
               quantity: pMap['quantity'] as int,
               historicalPrice: (pMap['historical_price'] as num).toDouble(),
             ),

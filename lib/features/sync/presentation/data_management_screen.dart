@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:restart_app/restart_app.dart';
+import 'package:keepinventory/l10n/app_localizations_ext.dart';
 
+import '../../../core/database/database_helper.dart';
 import '../../../core/shared_widgets/app_drawer.dart';
 import '../../../core/shared_widgets/app_alerts.dart';
 import '../../../core/services/database_backup_service.dart';
@@ -21,27 +23,22 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
 
   bool _isExporting = false;
   bool _isImporting = false;
+  bool _isDeleting = false;
 
   Future<void> _handleExport() async {
     if (_isExporting) return;
     setState(() => _isExporting = true);
 
-    AppAlerts.showInfo(context, 'Selecciona dónde guardar la copia...');
+    AppAlerts.showInfo(context, context.l10n.exportPrompt);
 
     final success = await DatabaseBackupService.exportDatabase();
 
     if (mounted) {
       setState(() => _isExporting = false);
       if (success) {
-        AppAlerts.showSuccess(
-          context,
-          '✨ ¡Copia de seguridad guardada con éxito!',
-        );
+        AppAlerts.showSuccess(context, context.l10n.backupSaved);
       } else {
-        AppAlerts.showWarning(
-          context,
-          'Exportación cancelada u ocurrió un error.',
-        );
+        AppAlerts.showWarning(context, context.l10n.exportFailed);
       }
     }
   }
@@ -50,10 +47,7 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
     if (_isImporting) return;
     setState(() => _isImporting = true);
 
-    AppAlerts.showWarning(
-      context,
-      'Busca el archivo de respaldo en tu dispositivo...',
-    );
+    AppAlerts.showWarning(context, context.l10n.restorePrompt);
 
     final success = await DatabaseBackupService.importDatabase();
 
@@ -62,12 +56,95 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
       if (success) {
         _showRestartDialog();
       } else {
-        AppAlerts.showWarning(
-          context,
-          'Restauración cancelada u ocurrió un error.',
-        );
+        AppAlerts.showWarning(context, context.l10n.restoreFailed);
       }
     }
+  }
+
+  Future<void> _confirmDatabaseDeletion() async {
+    if (_isExporting || _isImporting || _isDeleting) return;
+
+    final firstConfirmation = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        icon: Icon(
+          Icons.warning_amber_rounded,
+          color: Theme.of(context).colorScheme.error,
+        ),
+        title: Text(context.l10n.databaseDeleteTitle),
+        content: Text(context.l10n.databaseDeleteWarning),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(context.l10n.cancel),
+          ),
+          FilledButton.tonal(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(context.l10n.databaseDeleteContinue),
+          ),
+        ],
+      ),
+    );
+
+    if (firstConfirmation != true || !mounted) return;
+
+    final finalConfirmation = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        icon: Icon(
+          Icons.delete_forever,
+          color: Theme.of(context).colorScheme.error,
+        ),
+        title: Text(context.l10n.databaseDeleteFinalTitle),
+        content: Text(context.l10n.databaseDeleteFinalWarning),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(context.l10n.cancel),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+              foregroundColor: Theme.of(context).colorScheme.onError,
+            ),
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(context.l10n.databaseDeleteConfirm),
+          ),
+        ],
+      ),
+    );
+
+    if (finalConfirmation != true || !mounted) return;
+
+    setState(() => _isDeleting = true);
+    try {
+      await DatabaseHelper.instance.deleteDatabaseFile();
+      if (!mounted) return;
+      setState(() => _isDeleting = false);
+      _showDatabaseDeletedDialog();
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _isDeleting = false);
+      AppAlerts.showError(context, context.l10n.databaseDeleteFailure);
+    }
+  }
+
+  void _showDatabaseDeletedDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: Text(context.l10n.databaseDeletedTitle),
+        content: Text(context.l10n.databaseDeletedMessage),
+        actions: [
+          ElevatedButton(
+            onPressed: Restart.restartApp,
+            child: Text(context.l10n.restartNow),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showRestartDialog() {
@@ -75,10 +152,8 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: const Text('🔄 Base de Datos Restaurada'),
-        content: const Text(
-          'La base de datos se ha actualizado correctamente. Es necesario reiniciar la aplicación para aplicar los cambios de forma segura.',
-        ),
+        title: Text(context.l10n.databaseRestoredTitle),
+        content: Text(context.l10n.databaseRestoredMessage),
         actions: [
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -88,7 +163,7 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
             onPressed: () {
               Restart.restartApp();
             },
-            child: const Text('Reiniciar ahora'),
+            child: Text(context.l10n.restartNow),
           ),
         ],
       ),
@@ -119,7 +194,7 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
       },
       child: Scaffold(
         key: _scaffoldKey,
-        appBar: AppBar(title: const Text('Gestión de Datos')),
+        appBar: AppBar(title: Text(context.l10n.dataManagementTitle)),
         drawer: const AppDrawer(),
         body: ListView(
           padding: const EdgeInsets.all(16.0),
@@ -144,12 +219,12 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
                     size: 28,
                   ),
                 ),
-                title: const Text(
-                  'Sincronización por QR (Ferias)',
+                title: Text(
+                  context.l10n.syncByQrTitle,
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
-                subtitle: const Text(
-                  'Clona la base de datos completa con otro dispositivo cercano vía Wi-Fi o Hotspot.',
+                subtitle: Text(
+                  context.l10n.syncByQrDescription,
                   style: TextStyle(fontSize: 12),
                 ),
                 trailing: const Icon(Icons.arrow_forward_ios, size: 16),
@@ -163,10 +238,10 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
             ),
             const SizedBox(height: 16),
 
-            const Padding(
+            Padding(
               padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
               child: Text(
-                'COPIAS DE SEGURIDAD EN ARCHIVO',
+                context.l10n.backupSectionTitle,
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
@@ -189,11 +264,11 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
                         child: CircularProgressIndicator(strokeWidth: 2.5),
                       )
                     : const Icon(Icons.download_rounded, color: Colors.blue),
-                title: const Text('Exportar copia de seguridad'),
-                subtitle: const Text(
-                  'Guarda un archivo de respaldo de tu base de datos.',
-                ),
-                onTap: _isExporting || _isImporting ? null : _handleExport,
+                title: Text(context.l10n.exportBackupTitle),
+                subtitle: Text(context.l10n.exportBackupDescription),
+                onTap: _isExporting || _isImporting || _isDeleting
+                    ? null
+                    : _handleExport,
               ),
             ),
             const SizedBox(height: 8),
@@ -211,11 +286,42 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
                         child: CircularProgressIndicator(strokeWidth: 2.5),
                       )
                     : const Icon(Icons.upload_rounded, color: Colors.orange),
-                title: const Text('Restaurar copia de seguridad'),
-                subtitle: const Text(
-                  'Carga un archivo de respaldo previo para recuperar datos.',
+                title: Text(context.l10n.restoreBackupTitle),
+                subtitle: Text(context.l10n.restoreBackupDescription),
+                onTap: _isExporting || _isImporting || _isDeleting
+                    ? null
+                    : _handleImport,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Card(
+              elevation: 1,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: BorderSide(
+                  color: Theme.of(context).colorScheme.error
+                      .withValues(alpha: 0.35),
                 ),
-                onTap: _isExporting || _isImporting ? null : _handleImport,
+              ),
+              child: ListTile(
+                leading: _isDeleting
+                    ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(strokeWidth: 2.5),
+                      )
+                    : Icon(
+                        Icons.delete_forever_outlined,
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                title: Text(
+                  context.l10n.databaseDeleteTitle,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+                subtitle: Text(context.l10n.databaseDeleteDescription),
+                onTap: _isExporting || _isImporting || _isDeleting
+                    ? null
+                    : _confirmDatabaseDeletion,
               ),
             ),
           ],

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:keepinventory/l10n/app_localizations_ext.dart';
 
 class FullScreenChartScreen extends StatefulWidget {
   final Map<String, double> dailySales;
@@ -207,7 +208,7 @@ class _FullScreenChartScreenState extends State<FullScreenChartScreen> {
                 Column(
                   children: [
                     Text(
-                      'TOTAL INGRESOS',
+                      context.l10n.chartTotalRevenue,
                       style: TextStyle(
                         fontSize: 11,
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -233,7 +234,7 @@ class _FullScreenChartScreenState extends State<FullScreenChartScreen> {
                 Column(
                   children: [
                     Text(
-                      'TOTAL NETO',
+                      context.l10n.chartTotalNet,
                       style: TextStyle(
                         fontSize: 11,
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -276,8 +277,8 @@ class _FullScreenChartScreenState extends State<FullScreenChartScreen> {
                       ),
                     ),
                     const SizedBox(width: 6),
-                    const Text(
-                      'Días sueltos',
+                    Text(
+                      context.l10n.chartDays,
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w500,
@@ -297,8 +298,8 @@ class _FullScreenChartScreenState extends State<FullScreenChartScreen> {
                       ),
                     ),
                     const SizedBox(width: 6),
-                    const Text(
-                      'Ferias',
+                    Text(
+                      context.l10n.chartFairs,
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w500,
@@ -319,8 +320,8 @@ class _FullScreenChartScreenState extends State<FullScreenChartScreen> {
                       ),
                     ),
                     const SizedBox(width: 6),
-                    const Text(
-                      'Beneficio Neto',
+                    Text(
+                      context.l10n.chartNetProfit,
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w500,
@@ -347,8 +348,10 @@ class _FullScreenChartScreenState extends State<FullScreenChartScreen> {
           final parts = key.split('-');
           final isDate = parts.length == 3;
           final formattedTitle = isDate
-              ? 'Día: ${parts[2]}/${parts[1]}/${parts[0]}'
-              : '🎪 Feria: $key';
+              ? context.l10n.chartDayTitle(
+                  '${parts[2]}/${parts[1]}/${parts[0]}',
+                )
+              : context.l10n.chartFairTitle(key);
 
           return ListTile(
             leading: CircleAvatar(
@@ -370,11 +373,11 @@ class _FullScreenChartScreenState extends State<FullScreenChartScreen> {
               style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
             ),
             subtitle: Text(
-              'Ingresos: ${_formatCurrency(revenue)}',
+              context.l10n.chartRevenue(_formatCurrency(revenue)),
               style: const TextStyle(fontSize: 12),
             ),
             trailing: Text(
-              'Neto: ${_formatCurrency(net)}',
+              context.l10n.chartNet(_formatCurrency(net)),
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 14,
@@ -388,7 +391,7 @@ class _FullScreenChartScreenState extends State<FullScreenChartScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Balance Detallado'),
+        title: Text(context.l10n.chartDetailsTitle),
         actions: [
           IconButton(
             icon: Icon(
@@ -403,8 +406,8 @@ class _FullScreenChartScreenState extends State<FullScreenChartScreen> {
               });
             },
             tooltip: _privacyActive
-                ? 'Desactivar privacidad'
-                : 'Activar privacidad',
+                ? context.l10n.privacyOffShort
+                : context.l10n.privacyOnShort,
           ),
           const SizedBox(width: 8),
         ],
@@ -412,7 +415,7 @@ class _FullScreenChartScreenState extends State<FullScreenChartScreen> {
       body: sortedKeys.isEmpty
           ? Center(
               child: Text(
-                'Aún no hay ventas para mostrar.',
+                context.l10n.chartEmpty,
                 style: TextStyle(
                   fontSize: 16,
                   color: Theme.of(context).colorScheme.onSurfaceVariant,

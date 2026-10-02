@@ -131,7 +131,7 @@ abstract final class AppAlerts {
           ],
         ),
         action: SnackBarAction(
-          label: 'OK',
+          label: MaterialLocalizations.of(task.context).okButtonLabel,
           textColor: task.textColor.withValues(alpha: 0.7),
           onPressed: () {
             _dismissTimer?.cancel();

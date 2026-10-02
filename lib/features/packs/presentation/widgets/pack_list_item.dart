@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:keepinventory/l10n/app_localizations_ext.dart';
 
 import '../../domain/pack.dart';
 
@@ -126,7 +127,7 @@ class PackListItem extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      '${pack.units} uds',
+                      context.l10n.packUnitCount(pack.units.toString()),
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
@@ -171,8 +172,8 @@ class PackListItem extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Divider(),
-                const Text(
-                  'Componentes de 1 unidad de este pack:',
+                Text(
+                  context.l10n.packComponentsPerUnit,
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 12,
@@ -188,7 +189,7 @@ class PackListItem extends StatelessWidget {
                       children: [
                         Expanded(
                           child: Text(
-                            '• ${item.productName}',
+                            '• ${item.productName ?? context.l10n.unknownDeleted}',
                             style: const TextStyle(fontSize: 13),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -196,7 +197,9 @@ class PackListItem extends StatelessWidget {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          '${item.quantity} uds/pack',
+                          context.l10n.packComponentCount(
+                            item.quantity.toString(),
+                          ),
                           style: const TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.bold,

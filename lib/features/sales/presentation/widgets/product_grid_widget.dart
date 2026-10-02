@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:keepinventory/l10n/app_localizations_ext.dart';
 
 import '../../../../core/shared_widgets/app_alerts.dart'; // 💡 Importamos las Alertas
 import '../../../../core/shared_widgets/auto_scroll_text.dart';
@@ -62,7 +63,9 @@ class ProductGridWidget extends StatelessWidget {
       promoActive: promo != null && qtyInCart >= promo.threshold,
       promoThreshold: promo?.threshold,
 
-      actionLabel: qtyInCart > 0 ? 'Añadir otra unidad' : 'Añadir al carrito',
+      actionLabel: qtyInCart > 0
+          ? context.l10n.addAnotherUnit
+          : context.l10n.addToCart,
       actionIcon: Icons.add_shopping_cart,
       onAction: () {
         onAddToCart(product);
@@ -140,7 +143,7 @@ class ProductGridWidget extends StatelessWidget {
           return GestureDetector(
             onTap: () {
               // 💡 ¡Mucho más limpio usando AppAlerts!
-              AppAlerts.showError(context, 'Este producto está sin stock.');
+              AppAlerts.showError(context, context.l10n.productOutOfStock);
             },
             onLongPress: () => _showPreview(context, product, qtyInCart),
             child: ColorFiltered(

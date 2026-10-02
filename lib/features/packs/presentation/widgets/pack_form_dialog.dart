@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:keepinventory/l10n/app_localizations_ext.dart';
 
 // 💡 Importamos las alertas y tu paleta de colores
 import '../../../../core/shared_widgets/app_alerts.dart';
@@ -98,10 +99,7 @@ class _PackFormDialogState extends State<PackFormDialog> {
 
     if (selectedItems.isEmpty) {
       // 💡 Reemplazado por AppAlerts de advertencia
-      AppAlerts.showWarning(
-        context,
-        'Añade al menos 1 producto al pack usando el desplegable.',
-      );
+      AppAlerts.showWarning(context, context.l10n.packAddAtLeastOne);
       return;
     }
 
@@ -120,7 +118,10 @@ class _PackFormDialogState extends State<PackFormDialog> {
           // 💡 Reemplazado por AppAlerts de error
           AppAlerts.showError(
             context,
-            'Stock insuficiente de "${entry.key.name}" para montar $packUnits unidades.',
+            context.l10n.packInsufficientStock(
+              entry.key.name,
+              packUnits.toString(),
+            ),
           );
           return;
         }
@@ -161,7 +162,7 @@ class _PackFormDialogState extends State<PackFormDialog> {
             children: [
               ListTile(
                 leading: const Icon(Icons.camera_alt),
-                title: const Text('Cámara'),
+                title: Text(context.l10n.camera),
                 onTap: () async {
                   Navigator.pop(context);
                   await Future.delayed(const Duration(milliseconds: 200));
@@ -179,7 +180,7 @@ class _PackFormDialogState extends State<PackFormDialog> {
               ),
               ListTile(
                 leading: const Icon(Icons.photo_library),
-                title: const Text('Galería'),
+                title: Text(context.l10n.gallery),
                 onTap: () async {
                   Navigator.pop(context);
                   await Future.delayed(const Duration(milliseconds: 200));
@@ -259,8 +260,8 @@ class _PackFormDialogState extends State<PackFormDialog> {
                 // --- TÍTULO FIJO ---
                 Text(
                   widget.existingPack == null
-                      ? 'Crear Nuevo Pack / Bundle'
-                      : 'Modificar Pack',
+                      ? context.l10n.createPackTitle
+                      : context.l10n.editPackTitle,
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -281,8 +282,8 @@ class _PackFormDialogState extends State<PackFormDialog> {
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Text(
-                                    'Componentes del Pack:',
+                                  Text(
+                                    context.l10n.packComponents,
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 13,
@@ -293,8 +294,8 @@ class _PackFormDialogState extends State<PackFormDialog> {
                                     children: [
                                       Expanded(
                                         child: DropdownButtonFormField<Product>(
-                                          decoration: const InputDecoration(
-                                            hintText: 'Añadir producto...',
+                                          decoration: InputDecoration(
+                                            hintText: context.l10n.addProduct,
                                             isDense: true,
                                             contentPadding:
                                                 EdgeInsets.symmetric(
@@ -357,7 +358,7 @@ class _PackFormDialogState extends State<PackFormDialog> {
                                     child: selectedItems.isEmpty
                                         ? Center(
                                             child: Text(
-                                              'No hay productos en este pack.',
+                                              context.l10n.packEmpty,
                                               style: TextStyle(
                                                 color: Theme.of(context)
                                                     .colorScheme
@@ -424,8 +425,8 @@ class _PackFormDialogState extends State<PackFormDialog> {
                               ],
                             ),
                             const Divider(height: 32, thickness: 1),
-                            const Text(
-                              'Componentes del Pack:',
+                            Text(
+                              context.l10n.packComponents,
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 13,
@@ -436,8 +437,8 @@ class _PackFormDialogState extends State<PackFormDialog> {
                               children: [
                                 Expanded(
                                   child: DropdownButtonFormField<Product>(
-                                    decoration: const InputDecoration(
-                                      hintText: 'Añadir producto...',
+                                    decoration: InputDecoration(
+                                      hintText: context.l10n.addProduct,
                                       isDense: true,
                                       contentPadding: EdgeInsets.symmetric(
                                         horizontal: 12,
@@ -497,7 +498,7 @@ class _PackFormDialogState extends State<PackFormDialog> {
                                   ? Padding(
                                       padding: const EdgeInsets.all(16.0),
                                       child: Text(
-                                        'No hay productos en este pack.',
+                                        context.l10n.packEmpty,
                                         style: TextStyle(
                                           color: Theme.of(context)
                                               .colorScheme
@@ -528,13 +529,15 @@ class _PackFormDialogState extends State<PackFormDialog> {
                   children: [
                     TextButton(
                       onPressed: () => Navigator.pop(context),
-                      child: const Text('Cancelar'),
+                      child: Text(context.l10n.cancel),
                     ),
                     const SizedBox(width: 8),
                     ElevatedButton(
                       onPressed: _savePack,
                       child: Text(
-                        widget.existingPack == null ? 'Crear Pack' : 'Guardar',
+                        widget.existingPack == null
+                            ? context.l10n.createPack
+                            : context.l10n.save,
                       ),
                     ),
                   ],
@@ -552,12 +555,12 @@ class _PackFormDialogState extends State<PackFormDialog> {
   Widget _buildNameField() {
     return TextFormField(
       initialValue: packName,
-      decoration: const InputDecoration(
-        labelText: 'Nombre del Pack',
+      decoration: InputDecoration(
+        labelText: context.l10n.packName,
         isDense: true,
       ),
       validator: (value) =>
-          value == null || value.trim().isEmpty ? 'Requerido' : null,
+          value == null || value.trim().isEmpty ? context.l10n.required : null,
       onSaved: (value) => packName = value!.trim(),
     );
   }
@@ -565,10 +568,13 @@ class _PackFormDialogState extends State<PackFormDialog> {
   Widget _buildPriceField() {
     return TextFormField(
       initialValue: packPrice > 0 ? packPrice.toString() : '',
-      decoration: const InputDecoration(labelText: 'Precio (€)', isDense: true),
+      decoration: InputDecoration(
+        labelText: context.l10n.packPrice,
+        isDense: true,
+      ),
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       validator: (value) =>
-          value == null || value.trim().isEmpty ? 'Requerido' : null,
+          value == null || value.trim().isEmpty ? context.l10n.required : null,
       onSaved: (value) =>
           packPrice = double.tryParse(value!.replaceAll(',', '.')) ?? 0.0,
     );
@@ -577,13 +583,13 @@ class _PackFormDialogState extends State<PackFormDialog> {
   Widget _buildUnitsField() {
     return TextFormField(
       initialValue: packUnits.toString(),
-      decoration: const InputDecoration(
-        labelText: 'Stock inicial',
+      decoration: InputDecoration(
+        labelText: context.l10n.packStartingStock,
         isDense: true,
       ),
       keyboardType: TextInputType.number,
       validator: (value) =>
-          value == null || value.trim().isEmpty ? 'Requerido' : null,
+          value == null || value.trim().isEmpty ? context.l10n.required : null,
       onSaved: (value) => packUnits = int.tryParse(value!) ?? 1,
     );
   }
@@ -623,7 +629,10 @@ class _PackFormDialogState extends State<PackFormDialog> {
             overflow: TextOverflow.ellipsis,
           ),
           subtitle: Text(
-            'Almacén: $effectiveAvailable (Req: $neededTotal)',
+            context.l10n.packStockDetails(
+              effectiveAvailable.toString(),
+              neededTotal.toString(),
+            ),
             style: TextStyle(
               fontSize: 11,
               // 💡 Lógica de color dinámica

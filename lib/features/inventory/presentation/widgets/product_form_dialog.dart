@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:keepinventory/l10n/app_localizations_ext.dart';
 
 import '../../domain/product.dart';
 import '../../data/product_model.dart';
@@ -58,12 +59,12 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
         children: [
           ListTile(
             leading: const Icon(Icons.camera_alt),
-            title: const Text('Cámara'),
+            title: Text(context.l10n.camera),
             onTap: () => _processImage(ImageSource.camera),
           ),
           ListTile(
             leading: const Icon(Icons.photo_library),
-            title: const Text('Galería'),
+            title: Text(context.l10n.gallery),
             onTap: () => _processImage(ImageSource.gallery),
           ),
         ],
@@ -98,7 +99,11 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
     final fieldWidth = isLandscape ? 320.0 : 520.0;
 
     return AlertDialog(
-      title: Text(isEditing ? 'Editar Producto' : 'Nuevo Producto'),
+      title: Text(
+        isEditing
+            ? context.l10n.productFormEditTitle
+            : context.l10n.productFormNewTitle,
+      ),
       content: SizedBox(
         width: isLandscape ? 760 : 520,
         child: Form(
@@ -154,11 +159,11 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
                   width: fieldWidth,
                   child: TextFormField(
                     initialValue: _name,
-                    decoration: const InputDecoration(
-                      labelText: 'Nombre del producto',
+                    decoration: InputDecoration(
+                      labelText: context.l10n.productName,
                     ),
                     validator: (v) =>
-                        v == null || v.isEmpty ? 'Requerido' : null,
+                        v == null || v.isEmpty ? context.l10n.required : null,
                     onSaved: (v) => _name = v!,
                   ),
                 ),
@@ -166,12 +171,12 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
                   width: fieldWidth,
                   child: TextFormField(
                     initialValue: _units.toString(),
-                    decoration: const InputDecoration(
-                      labelText: 'Unidades en stock',
+                    decoration: InputDecoration(
+                      labelText: context.l10n.unitsInStock,
                     ),
                     keyboardType: TextInputType.number,
                     validator: (v) =>
-                        v == null || v.isEmpty ? 'Requerido' : null,
+                        v == null || v.isEmpty ? context.l10n.required : null,
                     onSaved: (v) => _units = int.parse(v!),
                   ),
                 ),
@@ -179,14 +184,14 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
                   width: fieldWidth,
                   child: TextFormField(
                     initialValue: _price == 0.0 ? '' : _price.toString(),
-                    decoration: const InputDecoration(
-                      labelText: 'Precio de venta (€)',
+                    decoration: InputDecoration(
+                      labelText: context.l10n.salePrice,
                     ),
                     keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
                     ),
                     validator: (v) =>
-                        v == null || v.isEmpty ? 'Requerido' : null,
+                        v == null || v.isEmpty ? context.l10n.required : null,
                     onSaved: (v) =>
                         _price = double.parse(v!.replaceAll(',', '.')),
                   ),
@@ -195,14 +200,14 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
                   width: fieldWidth,
                   child: TextFormField(
                     initialValue: _cost == 0.0 ? '' : _cost.toString(),
-                    decoration: const InputDecoration(
-                      labelText: 'Coste de adquisición (€)',
+                    decoration: InputDecoration(
+                      labelText: context.l10n.acquisitionCost,
                     ),
                     keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
                     ),
                     validator: (v) =>
-                        v == null || v.isEmpty ? 'Requerido' : null,
+                        v == null || v.isEmpty ? context.l10n.required : null,
                     onSaved: (v) =>
                         _cost = double.parse(v!.replaceAll(',', '.')),
                   ),
@@ -211,13 +216,13 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
                   width: fieldWidth,
                   child: DropdownButtonFormField<int?>(
                     initialValue: _selectedPromotionId,
-                    decoration: const InputDecoration(
-                      labelText: 'Promoción Aplicada',
+                    decoration: InputDecoration(
+                      labelText: context.l10n.appliedPromotion,
                     ),
                     items: [
-                      const DropdownMenuItem(
+                      DropdownMenuItem(
                         value: null,
-                        child: Text('Sin promoción'),
+                        child: Text(context.l10n.noPromotion),
                       ),
                       ...widget.promotionsMap.values.map(
                         (p) =>
@@ -235,7 +240,7 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancelar'),
+          child: Text(context.l10n.cancel),
         ),
         ElevatedButton(
           onPressed: () async {
@@ -254,7 +259,7 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
               await widget.onSave(productModel, isEditing);
             }
           },
-          child: Text(isEditing ? 'Actualizar' : 'Guardar'),
+          child: Text(isEditing ? context.l10n.update : context.l10n.save),
         ),
       ],
     );

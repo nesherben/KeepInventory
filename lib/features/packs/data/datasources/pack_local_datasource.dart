@@ -32,7 +32,7 @@ class PackLocalDatasource {
           .map(
             (iMap) => PackItem(
               productId: iMap['product_id'] as int,
-              productName: iMap['product_name'] as String,
+              productName: iMap['product_name'] as String?,
               quantity: iMap['quantity'] as int,
             ),
           )

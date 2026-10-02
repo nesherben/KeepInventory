@@ -274,6 +274,12 @@ class DatabaseHelper {
     }
   }
 
+  Future<void> deleteDatabaseFile() async {
+    final path = join(await getDatabasesPath(), 'keepinventory.db');
+    await resetDatabase();
+    await deleteDatabase(path);
+  }
+
   Future<void> close() async {
     await resetDatabase();
   }

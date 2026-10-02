@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:keepinventory/l10n/app_localizations_ext.dart';
 
 import '../../../core/shared_widgets/app_drawer.dart';
 import '../../../core/shared_widgets/app_alerts.dart';
@@ -205,7 +206,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 borderRadius: BorderRadius.circular(20),
               ),
               title: Text(
-                'Devolución Ticket #${sale.id}',
+                context.l10n.refundTitle(sale.id.toString()),
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
               content: SizedBox(
@@ -216,7 +217,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Indica cuántas unidades devuelves de cada artículo:',
+                        context.l10n.refundInstruction,
                         style: TextStyle(
                           fontSize: 14,
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -227,7 +228,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       // 1. PRODUCTOS SUELTOS
                       if (sale.items.isNotEmpty) ...[
                         Text(
-                          'Productos Sueltos',
+                          context.l10n.looseProducts,
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 12,
@@ -267,7 +268,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                           CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          item.productName ?? 'Desconocido',
+                                          item.productName ??
+                                              context.l10n.unknown,
                                           style: const TextStyle(
                                             fontWeight: FontWeight.bold,
                                             fontSize: 14,
@@ -277,7 +279,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                         ),
                                         const SizedBox(height: 4),
                                         Text(
-                                          'Compradas: ${item.quantity}  •  Abonado: ${(item.quantity * item.historicalPrice).toStringAsFixed(2)} €',
+                                          context.l10n.purchasedItemSummary(
+                                            item.quantity.toString(),
+                                            (item.quantity *
+                                                    item.historicalPrice)
+                                                .toStringAsFixed(2),
+                                          ),
                                           style: TextStyle(
                                             fontSize: 11,
                                             color: Theme.of(context)
@@ -377,7 +384,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       // 2. PACKS
                       if (sale.packItems.isNotEmpty) ...[
                         Text(
-                          'Packs / Bundles',
+                          context.l10n.packsBundles,
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 12,
@@ -416,7 +423,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                           CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          '${pack.packName} (Pack)',
+                                          context.l10n.packNameLabel(
+                                            pack.packName ??
+                                                context.l10n.unknownPackDeleted,
+                                          ),
                                           style: const TextStyle(
                                             fontWeight: FontWeight.bold,
                                             fontSize: 14,
@@ -426,7 +436,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                         ),
                                         const SizedBox(height: 4),
                                         Text(
-                                          'Comprados: ${pack.quantity}  •  Abonado: ${(pack.quantity * pack.historicalPrice).toStringAsFixed(2)} €',
+                                          context.l10n.purchasedPackSummary(
+                                            pack.quantity.toString(),
+                                            (pack.quantity *
+                                                    pack.historicalPrice)
+                                                .toStringAsFixed(2),
+                                          ),
                                           style: TextStyle(
                                             fontSize: 11,
                                             color: Theme.of(context)
@@ -536,15 +551,15 @@ class _HistoryScreenState extends State<HistoryScreen> {
                             ),
                             child: SwitchListTile(
                               dense: true,
-                              title: const Text(
-                                'Pack abierto (Devolver piezas)',
+                              title: Text(
+                                context.l10n.openPackRestock,
                                 style: TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                               subtitle: Text(
-                                'Suma stock a los artículos individuales.',
+                                context.l10n.openPackRestockSubtitle,
                                 style: TextStyle(
                                   fontSize: 11,
                                   color: Theme.of(context)
@@ -566,8 +581,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
                       const Divider(height: 32),
 
-                      const Text(
-                        'Total a Reembolsar al cliente (€)',
+                      Text(
+                        context.l10n.refundTotalLabel,
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 14,
@@ -598,7 +613,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                             color: Theme.of(context).colorScheme.error,
                           ),
                           isDense: true,
-                          helperText: 'Cálculo automático de ruptura de promoción. Editable si es necesario.',
+                          helperText: context.l10n.refundAutoHelp,
                           helperMaxLines: 2,
                         ),
                       ),
@@ -613,8 +628,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text(
-                    'Cancelar',
+                  child: Text(
+                    context.l10n.cancel,
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -633,6 +648,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   onPressed: totalItemsToRefund == 0
                       ? null
                       : () async {
+                          final l10n = context.l10n;
                           final double customRefund =
                               double.tryParse(
                                 refundAmountController.text.replaceAll(
@@ -645,7 +661,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           if (customRefund > sale.totalAmount) {
                             AppAlerts.showError(
                               context,
-                              'No puedes devolver más de lo que cobró el ticket.',
+                              context.l10n.refundCannotExceed,
                             );
                             return;
                           }
@@ -660,16 +676,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           );
                           await _loadSales();
 
-                          if (mounted) {
-                            AppAlerts.showSuccess(
-                              context,
-                              'Devolución procesada y contabilidad rebalanceada.',
-                            );
-                          }
+                          if (!context.mounted) return;
+                          AppAlerts.showSuccess(context, l10n.refundSuccess);
                         },
                   icon: const Icon(Icons.undo, size: 18),
-                  label: const Text(
-                    'Confirmar',
+                  label: Text(
+                    context.l10n.confirm,
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -701,32 +713,32 @@ class _HistoryScreenState extends State<HistoryScreen> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
-          title: const Text(
-            'Agrupar en Feria',
+          title: Text(
+            context.l10n.assignFairTitle,
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Selecciona una feria guardada o escribe una nueva:'),
+              Text(context.l10n.selectFairPrompt),
               const SizedBox(height: 16),
               if (existingFairs.isNotEmpty) ...[
                 DropdownButtonFormField<String>(
                   isExpanded: true,
                   initialValue: selectedExisting,
                   decoration: InputDecoration(
-                    labelText: 'Ferias disponibles',
+                    labelText: context.l10n.availableFairs,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                     prefixIcon: const Icon(Icons.event_seat),
                   ),
                   items: [
-                    const DropdownMenuItem(
+                    DropdownMenuItem(
                       value: null,
                       child: Text(
-                        '-- Escribir nueva / Ninguna --',
+                        context.l10n.enterNewFairOrNone,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -753,7 +765,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
               TextField(
                 controller: controller,
                 decoration: InputDecoration(
-                  labelText: 'Nombre de la Feria',
+                  labelText: context.l10n.fairName,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -770,8 +782,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text(
-                'Cancelar',
+              child: Text(
+                context.l10n.cancel,
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
             ),
@@ -782,6 +794,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 ),
               ),
               onPressed: () async {
+                final l10n = context.l10n;
                 final newName = controller.text.trim();
                 Navigator.pop(context);
                 await _saleRepository.updateFairNameForDate(
@@ -789,18 +802,17 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   newName.isEmpty ? null : newName,
                 );
                 await _loadSales();
-                if (mounted) {
-                  AppAlerts.showSuccess(
-                    context,
-                    newName.isEmpty
-                        ? 'Feria desasignada correctamente.'
-                        : 'Ventas agrupadas en "$newName" con éxito.',
-                  );
-                }
+                if (!context.mounted) return;
+                AppAlerts.showSuccess(
+                  context,
+                  newName.isEmpty
+                      ? l10n.fairUnassigned
+                      : l10n.salesGroupedFair(newName),
+                );
               },
               icon: const Icon(Icons.save, size: 18),
-              label: const Text(
-                'Guardar',
+              label: Text(
+                context.l10n.save,
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
             ),
@@ -829,7 +841,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
         (item) => (item.productName ?? '').toLowerCase().contains(query),
       );
       final matchesPack = sale.packItems.any(
-        (pack) => pack.packName.toLowerCase().contains(query),
+        (pack) => (pack.packName ?? '').toLowerCase().contains(query),
       );
 
       return matchesFair || matchesTicketId || matchesItem || matchesPack;
@@ -878,8 +890,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
       child: Scaffold(
         key: _scaffoldKey,
         appBar: AppBar(
-          title: const Text(
-            'Historial y Ferias',
+          title: Text(
+            context.l10n.refundTitleHistory,
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
           actions: [
@@ -912,7 +924,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       onChanged: (value) =>
                           setState(() => _searchQuery = value),
                       decoration: InputDecoration(
-                        hintText: 'Buscar ticket, artículo, feria...',
+                        hintText: context.l10n.searchHistory,
                         prefixIcon: const Icon(Icons.search),
                         suffixIcon: _searchQuery.isNotEmpty
                             ? IconButton(
@@ -954,8 +966,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                 const SizedBox(height: 16),
                                 Text(
                                   _sales.isEmpty
-                                      ? 'No hay ventas registradas aún.'
-                                      : 'No hay resultados para tu búsqueda.',
+                                      ? context.l10n.salesHistoryEmpty
+                                      : context.l10n.historyNoResults,
                                   style: TextStyle(
                                     color: Theme.of(context)
                                         .colorScheme
@@ -1029,7 +1041,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                             ),
                                             const SizedBox(height: 4),
                                             Text(
-                                              '${groupSales.length} tickets registrados',
+                                              context.l10n.ticketCount(
+                                                groupSales.length.toString(),
+                                              ),
                                               style: TextStyle(
                                                 fontSize: 13,
                                                 color: headerTextColor
@@ -1076,8 +1090,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                         ),
                                         label: Text(
                                           isFair
-                                              ? 'Cambiar Feria'
-                                              : 'Agrupar en Feria',
+                                              ? context.l10n.changeFair
+                                              : context.l10n.groupIntoFair,
                                           style: TextStyle(
                                             color: headerTextColor,
                                             fontWeight: FontWeight.bold,
@@ -1138,7 +1152,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                                   ),
                                                 ),
                                                 title: Text(
-                                                  'Ticket #${sale.id}',
+                                                  context.l10n.ticketTitle(
+                                                    sale.id.toString(),
+                                                  ),
                                                   style: const TextStyle(
                                                     fontWeight: FontWeight.w900,
                                                     fontSize: 16,
@@ -1241,7 +1257,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                                                             .start,
                                                                     children: [
                                                                       Text(
-                                                                        item.productName ?? 'Desconocido',
+                                                                        item.productName ??
+                                                                            context.l10n.unknown,
                                                                         style: const TextStyle(
                                                                           fontWeight:
                                                                               FontWeight.w600,
@@ -1250,7 +1267,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                                                       if (item.historicalPrice <
                                                                           item.originalPrice)
                                                                         Text(
-                                                                          'Dto aplicado',
+                                                                          context
+                                                                              .l10n
+                                                                              .discountApplied,
                                                                           style: TextStyle(
                                                                             fontSize:
                                                                                 11,
@@ -1320,8 +1339,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                                                             .start,
                                                                     children: [
                                                                       Text(
-                                                                        packItem
-                                                                            .packName,
+                                                                        packItem.packName ??
+                                                                            context.l10n.unknownPackDeleted,
                                                                         style: TextStyle(
                                                                           fontWeight:
                                                                               FontWeight.w600,
@@ -1399,8 +1418,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                                               Icons.undo,
                                                               size: 18,
                                                             ),
-                                                            label: const Text(
-                                                              'Devolución',
+                                                            label: Text(
+                                                              context
+                                                                  .l10n
+                                                                  .refund,
                                                             ),
                                                             onPressed: () =>
                                                                 _showPartialRefundDialog(

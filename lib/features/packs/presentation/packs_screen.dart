@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:keepinventory/l10n/app_localizations_ext.dart';
 
 import '../../../core/shared_widgets/app_drawer.dart';
 import '../../../core/shared_widgets/app_alerts.dart';
@@ -88,10 +89,7 @@ class _PacksScreenState extends State<PacksScreen> {
       await _loadData();
 
       if (mounted) {
-        AppAlerts.showInfo(
-          context,
-          '1 unidad de "${pack.name}" desmontada. Componentes devueltos al almacén.',
-        );
+        AppAlerts.showInfo(context, context.l10n.packDismantled(pack.name));
       }
     } else if (delta > 0) {
       for (var item in pack.items) {
@@ -107,7 +105,10 @@ class _PacksScreenState extends State<PacksScreen> {
           if (mounted) {
             AppAlerts.showError(
               context,
-              'Falta stock de "${item.productName}" (necesitas $missingQty uds más en almacén).',
+              context.l10n.packStockMissing(
+                item.productName ?? context.l10n.unknownDeleted,
+                missingQty.toString(),
+              ),
             );
           }
           return;
@@ -128,10 +129,7 @@ class _PacksScreenState extends State<PacksScreen> {
       await _loadData();
 
       if (mounted) {
-        AppAlerts.showSuccess(
-          context,
-          '¡1 unidad montada añadida a "${pack.name}"!',
-        );
+        AppAlerts.showSuccess(context, context.l10n.packAssembled(pack.name));
       }
     }
   }
@@ -140,10 +138,7 @@ class _PacksScreenState extends State<PacksScreen> {
   void _showPackDialog({Pack? existingPack}) async {
     if (_availableProducts.isEmpty) {
       if (mounted) {
-        AppAlerts.showWarning(
-          context,
-          'Primero necesitas productos activos en el inventario.',
-        );
+        AppAlerts.showWarning(context, context.l10n.packNeedProducts);
       }
       return;
     }
@@ -168,8 +163,8 @@ class _PacksScreenState extends State<PacksScreen> {
             AppAlerts.showSuccess(
               context,
               existingPack == null
-                  ? '¡Pack creado con éxito!'
-                  : '¡Pack modificado con éxito!',
+                  ? context.l10n.packCreated
+                  : context.l10n.packModified,
             );
           }
         },
@@ -181,14 +176,14 @@ class _PacksScreenState extends State<PacksScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Eliminar Pack'),
+        title: Text(context.l10n.deletePackTitle),
         content: Text(
-          '¿Seguro que deseas eliminar "${pack.name}"? Los componentes de los ${pack.units} packs montados volverán al almacén.',
+          context.l10n.confirmDeletePack(pack.name, pack.units.toString()),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
+            child: Text(context.l10n.cancel),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -200,13 +195,10 @@ class _PacksScreenState extends State<PacksScreen> {
               if (context.mounted) {
                 Navigator.pop(context);
                 _loadData();
-                AppAlerts.showWarning(
-                  context,
-                  'Pack eliminado y componentes devueltos al almacén.',
-                );
+                AppAlerts.showWarning(context, context.l10n.packDeleted);
               }
             },
-            child: const Text('Eliminar'),
+            child: Text(context.l10n.delete),
           ),
         ],
       ),
@@ -224,7 +216,7 @@ class _PacksScreenState extends State<PacksScreen> {
 
       // 2. ¿Algún producto dentro del pack coincide con la búsqueda?
       final matchesItemName = pack.items.any(
-        (item) => item.productName.toLowerCase().contains(query),
+        (item) => (item.productName ?? '').toLowerCase().contains(query),
       );
 
       return matchesPackName || matchesItemName;
@@ -251,7 +243,7 @@ class _PacksScreenState extends State<PacksScreen> {
       },
       child: Scaffold(
         key: _scaffoldKey,
-        appBar: AppBar(title: const Text('Gestión de Packs y Bundles')),
+        appBar: AppBar(title: Text(context.l10n.packsTitle)),
         drawer: const AppDrawer(),
         body: _isLoading
             ? const Center(child: CircularProgressIndicator())
@@ -267,8 +259,7 @@ class _PacksScreenState extends State<PacksScreen> {
                       onChanged: (value) =>
                           setState(() => _searchQuery = value),
                       decoration: InputDecoration(
-                        hintText:
-                            'Buscar pack o producto dentro de los packs...',
+                        hintText: context.l10n.searchPacks,
                         prefixIcon: const Icon(Icons.search),
                         suffixIcon: _searchQuery.isNotEmpty
                             ? IconButton(
@@ -295,7 +286,9 @@ class _PacksScreenState extends State<PacksScreen> {
                     child: filteredPacks.isEmpty
                         ? Center(
                             child: Text(
-                              _packs.isEmpty ? 'No hay packs creados todavía.' : 'No se encontraron packs o componentes con ese nombre.',
+                              _packs.isEmpty
+                                  ? context.l10n.packsEmpty
+                                  : context.l10n.packsNotFound,
                               style: TextStyle(
                                 color: Theme.of(context)
                                     .colorScheme

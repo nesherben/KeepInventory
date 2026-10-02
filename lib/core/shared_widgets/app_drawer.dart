@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // 💡 NUEVO
 
+import 'package:keepinventory/l10n/app_localizations_ext.dart';
+
 import '../theme/app_colors.dart';
 import 'app_alerts.dart';
 
@@ -10,12 +12,12 @@ class AppDrawer extends StatelessWidget {
 
   // Lista de colores del huevo de pascua (guardamos un identificador único en 'key')
   static final List<Map<String, dynamic>> _themeColors = [
-    {'name': 'Por defecto / Sistema', 'color': null, 'key': 'default'},
-    {'name': 'Azul Eléctrico', 'color': Colors.blue, 'key': 'blue'},
-    {'name': 'Verde Esmeralda', 'color': Colors.teal, 'key': 'teal'},
-    {'name': 'Púrpura Ciber', 'color': Colors.deepPurple, 'key': 'purple'},
-    {'name': 'Rojo Carmesí', 'color': Colors.redAccent, 'key': 'red'},
-    {'name': 'Naranja Épico', 'color': Colors.orangeAccent, 'key': 'orange'},
+    {'color': null, 'key': 'default'},
+    {'color': Colors.blue, 'key': 'blue'},
+    {'color': Colors.teal, 'key': 'teal'},
+    {'color': Colors.deepPurple, 'key': 'purple'},
+    {'color': Colors.redAccent, 'key': 'red'},
+    {'color': Colors.orangeAccent, 'key': 'orange'},
   ];
 
   static final ValueNotifier<Color?> customThemeNotifier =
@@ -42,17 +44,29 @@ class AppDrawer extends StatelessWidget {
 
     // Cambiamos el color en caliente
     customThemeNotifier.value = selectedTheme['color'] as Color?;
+    final themeLabel = _themeName(context, selectedTheme['key']);
+    final message = context.l10n.themeChanged(themeLabel);
 
     // Guardamos la preferencia en el dispositivo de forma permanente
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('selected_theme_key', selectedTheme['key']);
+    if (!context.mounted) return;
 
     AppAlerts.showSuccess(
       context,
-      '🎨 ¡Tema cambiado a: ${selectedTheme['name']}!',
+      message,
       duration: const Duration(seconds: 2),
     );
   }
+
+  static String _themeName(BuildContext context, String key) => switch (key) {
+    'blue' => context.l10n.themeNameBlue,
+    'teal' => context.l10n.themeNameGreen,
+    'purple' => context.l10n.themeNamePurple,
+    'red' => context.l10n.themeNameRed,
+    'orange' => context.l10n.themeNameOrange,
+    _ => context.l10n.themeNameDefault,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -112,8 +126,8 @@ class AppDrawer extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 8),
-                    const Text(
-                      'Gestión y POS', // Opcional: una pista sutil para el cliente
+                    Text(
+                      context.l10n.drawerSubtitle,
                       style: TextStyle(
                         color: AppColors.onPrimary,
                         fontSize: 14,
@@ -125,10 +139,10 @@ class AppDrawer extends StatelessWidget {
             ),
           ),
           // --- SECCIÓN 1: PRINCIPAL Y VENTAS ---
-          const Padding(
+          Padding(
             padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
             child: Text(
-              'PRINCIPAL',
+              context.l10n.navSectionMain,
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.bold,
@@ -139,14 +153,14 @@ class AppDrawer extends StatelessWidget {
           ),
           ListTile(
             leading: Icon(Icons.dashboard_outlined, color: iconColor),
-            title: const Text('Dashboard'),
+            title: Text(context.l10n.navDashboard),
             onTap: () {
               Navigator.pushReplacementNamed(context, '/');
             },
           ),
           ListTile(
             leading: Icon(Icons.point_of_sale_outlined, color: iconColor),
-            title: const Text('Panel de Ventas (TPV)'),
+            title: Text(context.l10n.navSales),
             onTap: () {
               Navigator.pushReplacementNamed(context, '/sales');
             },
@@ -155,10 +169,10 @@ class AppDrawer extends StatelessWidget {
           const Divider(height: 24, indent: 16, endIndent: 16),
 
           // --- SECCIÓN 2: ALMACÉN Y CATÁLOGO ---
-          const Padding(
+          Padding(
             padding: EdgeInsets.fromLTRB(16, 0, 16, 8),
             child: Text(
-              'ALMACÉN Y OFERTAS',
+              context.l10n.navSectionStockOffers,
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.bold,
@@ -169,21 +183,21 @@ class AppDrawer extends StatelessWidget {
           ),
           ListTile(
             leading: Icon(Icons.inventory_2_outlined, color: iconColor),
-            title: const Text('Gestión de Inventario'),
+            title: Text(context.l10n.navInventory),
             onTap: () {
               Navigator.pushReplacementNamed(context, '/inventory');
             },
           ),
           ListTile(
             leading: Icon(Icons.local_offer_outlined, color: iconColor),
-            title: const Text('Gestor de Promociones'),
+            title: Text(context.l10n.navPromotions),
             onTap: () {
               Navigator.pushReplacementNamed(context, '/promotions');
             },
           ),
           ListTile(
             leading: Icon(Icons.card_giftcard, color: iconColor),
-            title: const Text('Packs y Bundles'),
+            title: Text(context.l10n.navPacks),
             onTap: () {
               Navigator.pushReplacementNamed(context, '/packs');
             },
@@ -191,10 +205,10 @@ class AppDrawer extends StatelessWidget {
           const Divider(height: 24, indent: 16, endIndent: 16),
 
           // --- SECCIÓN 3: HISTORIAL Y REGISTROS ---
-          const Padding(
+          Padding(
             padding: EdgeInsets.fromLTRB(16, 0, 16, 8),
             child: Text(
-              'REGISTROS',
+              context.l10n.navSectionRecords,
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.bold,
@@ -205,7 +219,7 @@ class AppDrawer extends StatelessWidget {
           ),
           ListTile(
             leading: Icon(Icons.history_outlined, color: iconColor),
-            title: const Text('Historial y Ferias'),
+            title: Text(context.l10n.navHistory),
             onTap: () {
               Navigator.pushReplacementNamed(context, '/history');
             },
@@ -216,8 +230,8 @@ class AppDrawer extends StatelessWidget {
               Icons.storage_rounded,
               color: Theme.of(context).colorScheme.primary,
             ),
-            title: const Text('Gestión de Datos'),
-            subtitle: const Text('Copias de seguridad y Sync'),
+            title: Text(context.l10n.navDataManagement),
+            subtitle: Text(context.l10n.navDataManagementSubtitle),
             onTap: () {
               Navigator.pushReplacementNamed(context, '/data-management');
             },

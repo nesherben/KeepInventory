@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:keepinventory/l10n/app_localizations_ext.dart';
 
 import '../../../core/shared_widgets/app_drawer.dart';
 import '../../../core/shared_widgets/app_alerts.dart'; // 💡 Sistema de alertas en cola
@@ -70,7 +71,11 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
             final fieldWidth = isLandscape ? 320.0 : 520.0;
 
             return AlertDialog(
-              title: Text(isEditing ? 'Editar Promoción' : 'Nueva Promoción'),
+              title: Text(
+                isEditing
+                    ? context.l10n.promotionFormEditTitle
+                    : context.l10n.promotionFormNewTitle,
+              ),
               content: SizedBox(
                 width: isLandscape ? 680 : 520,
                 child: Form(
@@ -85,11 +90,11 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
                           width: fieldWidth,
                           child: TextFormField(
                             initialValue: name,
-                            decoration: const InputDecoration(
-                              labelText: 'Nombre de la oferta',
+                            decoration: InputDecoration(
+                              labelText: context.l10n.offerName,
                             ),
                             validator: (value) => value == null || value.isEmpty
-                                ? 'Requerido'
+                                ? context.l10n.required
                                 : null,
                             onSaved: (value) => name = value!,
                           ),
@@ -98,17 +103,17 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
                           width: fieldWidth,
                           child: DropdownButtonFormField<String>(
                             initialValue: type,
-                            decoration: const InputDecoration(
-                              labelText: 'Tipo de Promoción',
+                            decoration: InputDecoration(
+                              labelText: context.l10n.promotionType,
                             ),
-                            items: const [
+                            items: [
                               DropdownMenuItem(
                                 value: 'bundle_fixed_price',
-                                child: Text('Precio fijo por lote'),
+                                child: Text(context.l10n.bundleFixedPrice),
                               ),
                               DropdownMenuItem(
                                 value: 'percentage',
-                                child: Text('Descuento porcentual (%)'),
+                                child: Text(context.l10n.percentageDiscount),
                               ),
                             ],
                             onChanged: (value) {
@@ -120,13 +125,13 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
                           width: fieldWidth,
                           child: TextFormField(
                             initialValue: threshold.toString(),
-                            decoration: const InputDecoration(
-                              labelText: 'Cantidad mínima (Unidades a llevar)',
+                            decoration: InputDecoration(
+                              labelText: context.l10n.minimumQuantity,
                             ),
                             keyboardType: TextInputType.number,
                             validator: (value) =>
                                 value == null || int.tryParse(value) == null
-                                ? 'Número válido requerido'
+                                ? context.l10n.validNumberRequired
                                 : null,
                             onSaved: (value) => threshold = int.parse(value!),
                           ),
@@ -139,8 +144,8 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
                                 : discountValue.toString(),
                             decoration: InputDecoration(
                               labelText: type == 'bundle_fixed_price'
-                                  ? 'Precio total del lote (€)'
-                                  : 'Porcentaje de descuento (%)',
+                                  ? context.l10n.bundleTotalPrice
+                                  : context.l10n.discountPercentage,
                             ),
                             keyboardType: const TextInputType.numberWithOptions(
                               decimal: true,
@@ -151,7 +156,7 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
                                           value.replaceAll(',', '.'),
                                         ) ==
                                         null
-                                ? 'Valor válido requerido'
+                                ? context.l10n.validValueRequired
                                 : null,
                             onSaved: (value) => discountValue = double.parse(
                               value!.replaceAll(',', '.'),
@@ -166,7 +171,7 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancelar'),
+                  child: Text(context.l10n.cancel),
                 ),
                 ElevatedButton(
                   onPressed: () async {
@@ -194,13 +199,15 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
                         AppAlerts.showSuccess(
                           context,
                           isEditing
-                              ? '✨ ¡Promoción actualizada con éxito!'
-                              : '🎉 ¡Promoción creada con éxito!',
+                              ? context.l10n.promotionUpdatedSuccess
+                              : context.l10n.promotionCreated,
                         );
                       }
                     }
                   },
-                  child: Text(isEditing ? 'Actualizar' : 'Guardar'),
+                  child: Text(
+                    isEditing ? context.l10n.update : context.l10n.save,
+                  ),
                 ),
               ],
             );
@@ -215,14 +222,12 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Eliminar Promoción'),
-        content: Text(
-          '¿Seguro que deseas eliminar la promoción "${promotion.name}"? Los productos vinculados se quedarán sin promoción.',
-        ),
+        title: Text(context.l10n.deletePromotionTitle),
+        content: Text(context.l10n.confirmDeletePromotion(promotion.name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
+            child: Text(context.l10n.cancel),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -235,13 +240,10 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
                 Navigator.pop(context);
                 _loadPromotions();
                 // 💡 Alerta de advertencia/borrado
-                AppAlerts.showWarning(
-                  context,
-                  '🗑️ Promoción eliminada correctamente.',
-                );
+                AppAlerts.showWarning(context, context.l10n.promotionDeleted);
               }
             },
-            child: const Text('Eliminar'),
+            child: Text(context.l10n.delete),
           ),
         ],
       ),
@@ -278,7 +280,7 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
       },
       child: Scaffold(
         key: _scaffoldKey,
-        appBar: AppBar(title: const Text('Gestor de Promociones')),
+        appBar: AppBar(title: Text(context.l10n.navPromotions)),
         drawer: const AppDrawer(),
         body: _isLoading
             ? const Center(child: CircularProgressIndicator())
@@ -294,7 +296,7 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
                       onChanged: (value) =>
                           setState(() => _searchQuery = value),
                       decoration: InputDecoration(
-                        hintText: 'Buscar promoción por nombre...',
+                        hintText: context.l10n.searchPromotion,
                         prefixIcon: const Icon(Icons.search),
                         suffixIcon: _searchQuery.isNotEmpty
                             ? IconButton(
@@ -322,8 +324,8 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
                         ? Center(
                             child: Text(
                               _promotions.isEmpty
-                                  ? 'No hay promociones creadas. Crea una con el botón +'
-                                  : 'No se encontraron promociones con ese nombre.',
+                                  ? context.l10n.promotionsEmpty
+                                  : context.l10n.promotionsNotFound,
                               style: TextStyle(
                                 color: Theme.of(context)
                                     .colorScheme
@@ -359,8 +361,18 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
                                   ),
                                   subtitle: Text(
                                     isBundle
-                                        ? 'Llevando ${promo.threshold} unidades por ${promo.discountValue.toStringAsFixed(2)} €'
-                                        : '${promo.discountValue.toStringAsFixed(0)}% de descuento a partir de ${promo.threshold} uds.',
+                                        ? context.l10n.promotionBundleSummary(
+                                            promo.threshold.toString(),
+                                            promo.discountValue.toStringAsFixed(
+                                              2,
+                                            ),
+                                          )
+                                        : context.l10n.promotionPercentSummary(
+                                            promo.discountValue.toStringAsFixed(
+                                              0,
+                                            ),
+                                            promo.threshold.toString(),
+                                          ),
                                   ),
                                   trailing: Row(
                                     mainAxisSize: MainAxisSize.min,

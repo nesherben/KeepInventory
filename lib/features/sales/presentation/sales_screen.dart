@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:keepinventory/l10n/app_localizations_ext.dart';
 
 import '../../../core/shared_widgets/app_drawer.dart';
 import '../../../core/shared_widgets/app_alerts.dart';
@@ -109,10 +110,7 @@ class _SalesScreenState extends State<SalesScreen>
     final currentQtyInCart = _cart[product] ?? 0;
 
     if (currentQtyInCart >= product.units) {
-      AppAlerts.showError(
-        context,
-        'No hay más stock disponible de este producto.',
-      );
+      AppAlerts.showError(context, context.l10n.noMoreProductStock);
       return;
     }
 
@@ -140,17 +138,17 @@ class _SalesScreenState extends State<SalesScreen>
       _cart.remove(product);
     });
 
-    AppAlerts.showInfo(context, '${product.name} eliminado del carrito');
+    AppAlerts.showInfo(
+      context,
+      context.l10n.productRemovedFromCart(product.name),
+    );
   }
 
   void _addPackToCart(Pack pack) {
     final currentQtyInCart = _cartPacks[pack] ?? 0;
 
     if (currentQtyInCart >= pack.units) {
-      AppAlerts.showError(
-        context,
-        'No hay más unidades en stock de este pack.',
-      );
+      AppAlerts.showError(context, context.l10n.noMorePackStock);
       return;
     }
 
@@ -178,7 +176,7 @@ class _SalesScreenState extends State<SalesScreen>
       _cartPacks.remove(pack);
     });
 
-    AppAlerts.showInfo(context, 'Pack ${pack.name} eliminado del carrito');
+    AppAlerts.showInfo(context, context.l10n.packRemovedFromCart(pack.name));
   }
 
   // 💡 NUEVO ALGORITMO: Mix & Match (Iguales o Combinados)
@@ -342,7 +340,7 @@ class _SalesScreenState extends State<SalesScreen>
     await _loadData();
 
     if (mounted) {
-      AppAlerts.showSuccess(context, '¡Cobro realizado con éxito!');
+      AppAlerts.showSuccess(context, context.l10n.saleCompleted);
     }
   }
 
@@ -359,7 +357,7 @@ class _SalesScreenState extends State<SalesScreen>
       final query = _packSearchQuery.toLowerCase();
       final matchesPackName = pack.name.toLowerCase().contains(query);
       final matchesItemName = pack.items.any(
-        (item) => item.productName.toLowerCase().contains(query),
+        (item) => (item.productName ?? '').toLowerCase().contains(query),
       );
       return matchesPackName || matchesItemName;
     }).toList();
@@ -392,12 +390,18 @@ class _SalesScreenState extends State<SalesScreen>
         key: _scaffoldKey,
         drawerEnableOpenDragGesture: _tabController.index == 0,
         appBar: AppBar(
-          title: const Text('Panel de Ventas (TPV)'),
+          title: Text(context.l10n.salesTitle),
           bottom: TabBar(
             controller: _tabController,
-            tabs: const [
-              Tab(icon: Icon(Icons.inventory_2), text: 'Productos Sueltos'),
-              Tab(icon: Icon(Icons.card_giftcard), text: 'Packs y Bundles'),
+            tabs: [
+              Tab(
+                icon: const Icon(Icons.inventory_2),
+                text: context.l10n.salesProductsTab,
+              ),
+              Tab(
+                icon: const Icon(Icons.card_giftcard),
+                text: context.l10n.salesPacksTab,
+              ),
             ],
           ),
         ),
@@ -430,8 +434,8 @@ class _SalesScreenState extends State<SalesScreen>
                             }),
                             decoration: InputDecoration(
                               hintText: _tabController.index == 0
-                                  ? 'Buscar producto...'
-                                  : 'Buscar pack o componente...',
+                                  ? context.l10n.searchProducts
+                                  : context.l10n.searchPacksOrComponents,
                               prefixIcon: const Icon(Icons.search, size: 20),
                               isDense: true,
                               border: OutlineInputBorder(
@@ -460,8 +464,8 @@ class _SalesScreenState extends State<SalesScreen>
                                   ? Center(
                                       child: Text(
                                         _packs.isEmpty
-                                            ? 'No hay packs creados todavía.'
-                                            : 'No se encontraron packs.',
+                                            ? context.l10n.packsEmpty
+                                            : context.l10n.noPacksFound,
                                         style: TextStyle(
                                           color: Theme.of(context)
                                               .colorScheme
@@ -500,14 +504,18 @@ class _SalesScreenState extends State<SalesScreen>
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                'Items: $_cartItemCount',
+                                context.l10n.cartItemsCount(
+                                  _cartItemCount.toString(),
+                                ),
                                 style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                               Text(
-                                'Total: ${_cartTotal.toStringAsFixed(2)} €',
+                                context.l10n.cartTotal(
+                                  _cartTotal.toStringAsFixed(2),
+                                ),
                                 style: TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
@@ -551,8 +559,8 @@ class _SalesScreenState extends State<SalesScreen>
                               onPressed: (_cart.isEmpty && _cartPacks.isEmpty)
                                   ? null
                                   : _processSale,
-                              child: const Text(
-                                'COBRAR',
+                              child: Text(
+                                context.l10n.checkout,
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
@@ -589,8 +597,8 @@ class _SalesScreenState extends State<SalesScreen>
                           }),
                           decoration: InputDecoration(
                             hintText: _tabController.index == 0
-                                ? 'Buscar producto...'
-                                : 'Buscar pack o componente...',
+                                ? context.l10n.searchProducts
+                                : context.l10n.searchPacksOrComponents,
                             prefixIcon: const Icon(Icons.search, size: 20),
                             isDense: true,
                             border: OutlineInputBorder(
@@ -619,8 +627,8 @@ class _SalesScreenState extends State<SalesScreen>
                                 ? Center(
                                     child: Text(
                                       _packs.isEmpty
-                                          ? 'No hay packs creados todavía.'
-                                          : 'No se encontraron packs.',
+                                          ? context.l10n.packsEmpty
+                                          : context.l10n.noPacksFound,
                                       style: TextStyle(
                                         color: Theme.of(context)
                                             .colorScheme
@@ -646,172 +654,193 @@ class _SalesScreenState extends State<SalesScreen>
                     initialChildSize: 0.12,
                     minChildSize: 0.12,
                     maxChildSize: 0.7,
-                    builder: (BuildContext context, ScrollController scrollController) {
-                      return LayoutBuilder(
-                        builder: (context, constraints) {
-                          final bool isExpanded = constraints.maxHeight > 150;
+                    builder:
+                        (
+                          BuildContext context,
+                          ScrollController scrollController,
+                        ) {
+                          return LayoutBuilder(
+                            builder: (context, constraints) {
+                              final bool isExpanded =
+                                  constraints.maxHeight > 150;
 
-                          return Container(
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).cardColor,
-                              borderRadius: const BorderRadius.vertical(
-                                top: Radius.circular(24),
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.2),
-                                  blurRadius: 10,
-                                  spreadRadius: 2,
-                                  offset: const Offset(0, -2),
-                                ),
-                              ],
-                            ),
-                            child: ClipRRect(
-                              borderRadius: const BorderRadius.vertical(
-                                top: Radius.circular(24),
-                              ),
-                              child: Stack(
-                                children: [
-                                  ListView(
-                                    controller: scrollController,
-                                    padding: EdgeInsets.only(
-                                      top: 75,
-                                      bottom:
-                                          (isExpanded &&
-                                              (_cart.isNotEmpty ||
-                                                  _cartPacks.isNotEmpty))
-                                          ? 90
-                                          : 20,
-                                    ),
-                                    children: [
-                                      CartItemsListWidget(
-                                        cart: _cart,
-                                        cartPacks: _cartPacks,
-                                        promotionsMap: _promotionsMap,
-                                        calculateItemTotal: _calculateItemTotal,
-                                        onRemoveFromCart: _removeFromCart,
-                                        onRemoveAllFromCart: _removeAllFromCart,
-                                        onRemovePackFromCart:
-                                            _removePackFromCart,
-                                        onRemoveAllPackFromCart:
-                                            _removeAllPackFromCart,
+                              return Container(
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).cardColor,
+                                  borderRadius: const BorderRadius.vertical(
+                                    top: Radius.circular(24),
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(
+                                        alpha: 0.2,
                                       ),
+                                      blurRadius: 10,
+                                      spreadRadius: 2,
+                                      offset: const Offset(0, -2),
+                                    ),
+                                  ],
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: const BorderRadius.vertical(
+                                    top: Radius.circular(24),
+                                  ),
+                                  child: Stack(
+                                    children: [
+                                      ListView(
+                                        controller: scrollController,
+                                        padding: EdgeInsets.only(
+                                          top: 75,
+                                          bottom:
+                                              (isExpanded &&
+                                                  (_cart.isNotEmpty ||
+                                                      _cartPacks.isNotEmpty))
+                                              ? 90
+                                              : 20,
+                                        ),
+                                        children: [
+                                          CartItemsListWidget(
+                                            cart: _cart,
+                                            cartPacks: _cartPacks,
+                                            promotionsMap: _promotionsMap,
+                                            calculateItemTotal:
+                                                _calculateItemTotal,
+                                            onRemoveFromCart: _removeFromCart,
+                                            onRemoveAllFromCart:
+                                                _removeAllFromCart,
+                                            onRemovePackFromCart:
+                                                _removePackFromCart,
+                                            onRemoveAllPackFromCart:
+                                                _removeAllPackFromCart,
+                                          ),
+                                        ],
+                                      ),
+                                      Positioned(
+                                        top: 0,
+                                        left: 0,
+                                        right: 0,
+                                        child: IgnorePointer(
+                                          child: Container(
+                                            color: Theme.of(context).cardColor,
+                                            child: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                const SizedBox(height: 8),
+                                                Container(
+                                                  width: 40,
+                                                  height: 5,
+                                                  decoration: BoxDecoration(
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .outlineVariant,
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          10,
+                                                        ),
+                                                  ),
+                                                ),
+                                                Padding(
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 24.0,
+                                                        vertical: 12.0,
+                                                      ),
+                                                  child: Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .spaceBetween,
+                                                    children: [
+                                                      Text(
+                                                        context.l10n
+                                                            .cartItemsCount(
+                                                              _cartItemCount
+                                                                  .toString(),
+                                                            ),
+                                                        style: const TextStyle(
+                                                          fontSize: 18,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                        ),
+                                                      ),
+                                                      Text(
+                                                        context.l10n.cartTotal(
+                                                          _cartTotal
+                                                              .toStringAsFixed(
+                                                                2,
+                                                              ),
+                                                        ),
+                                                        style: TextStyle(
+                                                          fontSize: 22,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          color: Theme.of(
+                                                            context,
+                                                          ).colorScheme.primary,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                const Divider(height: 1),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      if (isExpanded &&
+                                          (_cart.isNotEmpty ||
+                                              _cartPacks.isNotEmpty))
+                                        Positioned(
+                                          bottom: 0,
+                                          left: 0,
+                                          right: 0,
+                                          child: Container(
+                                            padding: const EdgeInsets.all(16.0),
+                                            decoration: BoxDecoration(
+                                              color: Theme.of(context)
+                                                  .cardColor,
+                                              border: Border(
+                                                top: BorderSide(
+                                                  color: Theme.of(context)
+                                                      .dividerColor,
+                                                ),
+                                              ),
+                                            ),
+                                            child: SizedBox(
+                                              width: double.infinity,
+                                              child: ElevatedButton(
+                                                style: ElevatedButton.styleFrom(
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        vertical: 16,
+                                                      ),
+                                                  backgroundColor: Theme.of(
+                                                    context,
+                                                  ).colorScheme.primary,
+                                                  foregroundColor: Theme.of(
+                                                    context,
+                                                  ).colorScheme.onPrimary,
+                                                  elevation: 0,
+                                                ),
+                                                onPressed: _processSale,
+                                                child: Text(
+                                                  context.l10n.checkout,
+                                                  style: TextStyle(
+                                                    fontSize: 20,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
                                     ],
                                   ),
-                                  Positioned(
-                                    top: 0,
-                                    left: 0,
-                                    right: 0,
-                                    child: IgnorePointer(
-                                      child: Container(
-                                        color: Theme.of(context).cardColor,
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            const SizedBox(height: 8),
-                                            Container(
-                                              width: 40,
-                                              height: 5,
-                                              decoration: BoxDecoration(
-                                                color: Theme.of(context)
-                                                    .colorScheme
-                                                    .outlineVariant,
-                                                borderRadius:
-                                                    BorderRadius.circular(10),
-                                              ),
-                                            ),
-                                            Padding(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    horizontal: 24.0,
-                                                    vertical: 12.0,
-                                                  ),
-                                              child: Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                children: [
-                                                  Text(
-                                                    'Items: $_cartItemCount',
-                                                    style: const TextStyle(
-                                                      fontSize: 18,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                    ),
-                                                  ),
-                                                  Text(
-                                                    'Total: ${_cartTotal.toStringAsFixed(2)} €',
-                                                    style: TextStyle(
-                                                      fontSize: 22,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      color: Theme.of(context)
-                                                          .colorScheme
-                                                          .primary,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                            const Divider(height: 1),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  if (isExpanded &&
-                                      (_cart.isNotEmpty ||
-                                          _cartPacks.isNotEmpty))
-                                    Positioned(
-                                      bottom: 0,
-                                      left: 0,
-                                      right: 0,
-                                      child: Container(
-                                        padding: const EdgeInsets.all(16.0),
-                                        decoration: BoxDecoration(
-                                          color: Theme.of(context).cardColor,
-                                          border: Border(
-                                            top: BorderSide(
-                                              color: Theme.of(context)
-                                                  .dividerColor,
-                                            ),
-                                          ),
-                                        ),
-                                        child: SizedBox(
-                                          width: double.infinity,
-                                          child: ElevatedButton(
-                                            style: ElevatedButton.styleFrom(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    vertical: 16,
-                                                  ),
-                                              backgroundColor: Theme.of(context)
-                                                  .colorScheme
-                                                  .primary,
-                                              foregroundColor: Theme.of(context)
-                                                  .colorScheme
-                                                  .onPrimary,
-                                              elevation: 0,
-                                            ),
-                                            onPressed: _processSale,
-                                            child: const Text(
-                                              'COBRAR',
-                                              style: TextStyle(
-                                                fontSize: 20,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            ),
+                                ),
+                              );
+                            },
                           );
                         },
-                      );
-                    },
                   ),
                 ],
               ),

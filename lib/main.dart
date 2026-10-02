@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:dynamic_color/dynamic_color.dart';
+import 'package:keepinventory/l10n/generated/app_localizations.dart';
 
 import 'core/database/database_helper.dart';
 import 'core/services/image_migration_service.dart';
 import 'core/theme/app_theme.dart';
+import 'l10n/app_locale_resolution.dart';
 
 import 'features/dashboard/presentation/dashboard_screen.dart';
 import 'features/inventory/presentation/inventory_screen.dart';
@@ -50,6 +52,9 @@ class KeepInventoryApp extends StatelessWidget {
             return MaterialApp(
               title: 'KeepInventory',
               debugShowCheckedModeBanner: false,
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              localeResolutionCallback: resolveAppLocale,
               theme: AppTheme.light(dynamicPrimary: effectiveLightPrimary),
               darkTheme: AppTheme.dark(dynamicPrimary: effectiveDarkPrimary),
               themeMode: ThemeMode.system,

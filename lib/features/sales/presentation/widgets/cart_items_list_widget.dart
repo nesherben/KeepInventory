@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:keepinventory/l10n/app_localizations_ext.dart';
 
 import '../../../../core/shared_widgets/auto_scroll_text.dart';
 import '../../../inventory/domain/product.dart';
@@ -50,7 +51,7 @@ class CartItemsListWidget extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               Text(
-                'El carrito está vacío',
+                context.l10n.cartEmpty,
                 style: TextStyle(
                   color: theme.colorScheme.onSurfaceVariant,
                   fontSize: 16,
@@ -159,7 +160,9 @@ class CartItemsListWidget extends StatelessWidget {
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                '${product.price.toStringAsFixed(2)} €/ud',
+                                context.l10n.pricePerUnit(
+                                  product.price.toStringAsFixed(2),
+                                ),
                                 style: TextStyle(
                                   color: theme.colorScheme.onSurfaceVariant,
                                   fontSize: 13,
@@ -183,8 +186,12 @@ class CartItemsListWidget extends StatelessWidget {
                                 Expanded(
                                   child: Text(
                                     promoActive
-                                        ? 'Oferta aplicada: ${promo.name}'
-                                        : 'Promo disponible: ${promo.name}',
+                                        ? context.l10n.promoAppliedName(
+                                            promo.name,
+                                          )
+                                        : context.l10n.promoAvailableName(
+                                            promo.name,
+                                          ),
                                     style: TextStyle(
                                       fontSize: 11,
                                       fontWeight: FontWeight.bold,
@@ -321,7 +328,9 @@ class CartItemsListWidget extends StatelessWidget {
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                '${pack.price.toStringAsFixed(2)} €/pack',
+                                context.l10n.pricePerPack(
+                                  pack.price.toStringAsFixed(2),
+                                ),
                                 style: TextStyle(
                                   color: theme.colorScheme.onSurfaceVariant,
                                   fontSize: 13,

@@ -4,7 +4,7 @@ class PackItemModel {
   final int? id;
   final int packId;
   final int productId;
-  final String productName;
+  final String? productName;
   final int quantity;
 
   PackItemModel({
@@ -24,7 +24,7 @@ class PackItemModel {
       id: map['id'],
       packId: map['pack_id'],
       productId: map['product_id'],
-      productName: map['product_name'] ?? 'Producto desconocido',
+      productName: map['product_name'] as String?,
       quantity: map['quantity'],
     );
   }

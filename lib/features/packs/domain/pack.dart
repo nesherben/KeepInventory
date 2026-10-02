@@ -2,7 +2,7 @@ import 'dart:typed_data'; // <-- IMPORTANTE: Necesario para usar Uint8List
 
 class PackItem {
   final int productId;
-  final String productName;
+  final String? productName;
   final int quantity; // Cantidad que lleva 1 unidad del pack
 
   PackItem({

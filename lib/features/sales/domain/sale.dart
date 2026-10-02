@@ -32,7 +32,7 @@ class SalePackItem {
   final int? id;
   final int saleId;
   final int packId;
-  final String packName;
+  final String? packName;
   final int quantity;
   final double historicalPrice;
 

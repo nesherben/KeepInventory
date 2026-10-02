@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:keepinventory/l10n/app_localizations_ext.dart';
 
 import '../../../../core/shared_widgets/app_alerts.dart'; // 💡 Importamos las alertas
 import '../../../../core/shared_widgets/auto_scroll_text.dart';
@@ -28,7 +29,9 @@ class PacksGridWidget extends StatelessWidget {
 
   /// Mantener pulsada la tarjeta => se amplía con todos los datos.
   void _showPreview(BuildContext context, Pack pack, int qtyInCart) {
-    final contents = pack.items.map((item) => item.productName).join(', ');
+    final contents = pack.items
+        .map((item) => item.productName ?? context.l10n.unknownDeleted)
+        .join(', ');
 
     showItemPreview(
       context,
@@ -40,7 +43,9 @@ class PacksGridWidget extends StatelessWidget {
       packContents: contents.isNotEmpty ? contents : null,
 
       // 💡 Configuramos el botón de acción
-      actionLabel: qtyInCart > 0 ? 'Añadir otro pack' : 'Añadir al carrito',
+      actionLabel: qtyInCart > 0
+          ? context.l10n.addAnotherPack
+          : context.l10n.addToCart,
       actionIcon: Icons.library_add_outlined,
       onAction: () {
         onAddToCart(pack);
@@ -119,7 +124,7 @@ class PacksGridWidget extends StatelessWidget {
           return GestureDetector(
             onTap: () {
               // 💡 ¡Mucho más limpio usando AppAlerts!
-              AppAlerts.showError(context, 'Este pack no tiene stock montado.');
+              AppAlerts.showError(context, context.l10n.packOutOfStock);
             },
             onLongPress: () => _showPreview(context, pack, qtyInCart),
             child: ColorFiltered(

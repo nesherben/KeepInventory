@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:keepinventory/l10n/app_localizations_ext.dart';
 
 import '../../../core/shared_widgets/app_drawer.dart';
 import '../../../core/shared_widgets/app_alerts.dart'; // 💡 Importante para las alertas en cola
@@ -115,7 +116,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
         _loadProducts();
 
         if (mounted) {
-          AppAlerts.showSuccess(context, '📸 ¡Foto actualizada con éxito!');
+          AppAlerts.showSuccess(context, context.l10n.photoUpdated);
         }
       }
     }
@@ -157,7 +158,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
     _loadProducts();
 
     if (mounted) {
-      AppAlerts.showWarning(context, '🗑️ Producto eliminado permanentemente.');
+      AppAlerts.showWarning(context, context.l10n.productDeleted);
     }
   }
 
@@ -166,14 +167,12 @@ class _InventoryScreenState extends State<InventoryScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Eliminar producto'),
-          content: const Text(
-            '¿Estás seguro de que deseas eliminar este producto de forma permanente?',
-          ),
+          title: Text(context.l10n.deleteProductTitle),
+          content: Text(context.l10n.deleteProductConfirm),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancelar'),
+              child: Text(context.l10n.cancel),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
@@ -184,7 +183,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 Navigator.pop(context);
                 _deleteProduct(id);
               },
-              child: const Text('Eliminar'),
+              child: Text(context.l10n.delete),
             ),
           ],
         );
@@ -250,12 +249,12 @@ class _InventoryScreenState extends State<InventoryScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Editar $title'),
+          title: Text(context.l10n.editFieldTitle(title)),
           content: TextField(
             controller: controller,
             keyboardType: keyboardType,
-            decoration: const InputDecoration(
-              labelText: 'Nuevo valor',
+            decoration: InputDecoration(
+              labelText: context.l10n.newValue,
               border: OutlineInputBorder(),
             ),
             autofocus: true,
@@ -263,13 +262,13 @@ class _InventoryScreenState extends State<InventoryScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancelar'),
+              child: Text(context.l10n.cancel),
             ),
             ElevatedButton(
               onPressed: () async {
                 await onSave(controller.text);
               },
-              child: const Text('Guardar'),
+              child: Text(context.l10n.save),
             ),
           ],
         );
@@ -286,17 +285,17 @@ class _InventoryScreenState extends State<InventoryScreen> {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
-              title: const Text('Seleccionar Promoción'),
+              title: Text(context.l10n.selectPromotion),
               content: DropdownButtonFormField<int?>(
                 initialValue: selectedPromotionId,
-                decoration: const InputDecoration(
-                  labelText: 'Promoción Aplicada',
+                decoration: InputDecoration(
+                  labelText: context.l10n.appliedPromotion,
                   border: OutlineInputBorder(),
                 ),
                 items: [
-                  const DropdownMenuItem(
+                  DropdownMenuItem(
                     value: null,
-                    child: Text('Sin promoción'),
+                    child: Text(context.l10n.noPromotion),
                   ),
                   ..._promotionsMap.values.map(
                     (p) => DropdownMenuItem(value: p.id, child: Text(p.name)),
@@ -309,7 +308,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancelar'),
+                  child: Text(context.l10n.cancel),
                 ),
                 ElevatedButton(
                   onPressed: () async {
@@ -325,11 +324,11 @@ class _InventoryScreenState extends State<InventoryScreen> {
                       _loadProducts();
                       AppAlerts.showSuccess(
                         context,
-                        '🏷️ Promoción actualizada.',
+                        context.l10n.promotionUpdated,
                       );
                     }
                   },
-                  child: const Text('Guardar'),
+                  child: Text(context.l10n.save),
                 ),
               ],
             );
@@ -347,7 +346,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
         children: [
           ListTile(
             leading: const Icon(Icons.camera_alt),
-            title: const Text('Tomar nueva foto'),
+            title: Text(context.l10n.takeNewPhoto),
             onTap: () async {
               Navigator.pop(context);
               await _processAndSaveNewImage(product, ImageSource.camera);
@@ -355,7 +354,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
           ),
           ListTile(
             leading: const Icon(Icons.photo_library),
-            title: const Text('Elegir de la galería'),
+            title: Text(context.l10n.chooseGalleryPhoto),
             onTap: () async {
               Navigator.pop(context);
               await _processAndSaveNewImage(product, ImageSource.gallery);
@@ -385,8 +384,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
               AppAlerts.showSuccess(
                 context,
                 isEditing
-                    ? '✨ ¡Producto actualizado con éxito!'
-                    : '🎉 ¡Producto creado con éxito!',
+                    ? context.l10n.productUpdated
+                    : context.l10n.productCreated,
               );
             }
           },
@@ -427,7 +426,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
       },
       child: Scaffold(
         key: _scaffoldKey,
-        appBar: AppBar(title: const Text('Gestión de Inventario')),
+        appBar: AppBar(title: Text(context.l10n.inventoryTitle)),
         drawer: const AppDrawer(),
         body: _isLoading
             ? const Center(child: CircularProgressIndicator())
@@ -442,7 +441,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                       onChanged: (value) =>
                           setState(() => _searchQuery = value),
                       decoration: InputDecoration(
-                        hintText: 'Buscar producto por nombre...',
+                        hintText: context.l10n.searchProduct,
                         prefixIcon: const Icon(Icons.search),
                         suffixIcon: _searchQuery.isNotEmpty
                             ? IconButton(
@@ -468,8 +467,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
                         ? Center(
                             child: Text(
                               _products.isEmpty
-                                  ? 'No hay productos en el inventario.'
-                                  : 'No se encontraron productos con ese nombre.',
+                                  ? context.l10n.inventoryEmpty
+                                  : context.l10n.productsNotFound,
                               style: TextStyle(
                                 color: Theme.of(context)
                                     .colorScheme
@@ -506,14 +505,32 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                       dataRowMaxHeight: 65,
                                       horizontalMargin: 16,
                                       columnSpacing: 24,
-                                      columns: const [
-                                        DataColumn(label: Text('ACCIONES')),
-                                        DataColumn(label: Text('FOTO')),
-                                        DataColumn(label: Text('NOMBRE')),
-                                        DataColumn(label: Text('UNIDADES')),
-                                        DataColumn(label: Text('PRECIO')),
-                                        DataColumn(label: Text('COSTE')),
-                                        DataColumn(label: Text('PROMOCIÓN')),
+                                      columns: [
+                                        DataColumn(
+                                          label: Text(
+                                            context.l10n.tableActions,
+                                          ),
+                                        ),
+                                        DataColumn(
+                                          label: Text(context.l10n.tablePhoto),
+                                        ),
+                                        DataColumn(
+                                          label: Text(context.l10n.tableName),
+                                        ),
+                                        DataColumn(
+                                          label: Text(context.l10n.tableUnits),
+                                        ),
+                                        DataColumn(
+                                          label: Text(context.l10n.tablePrice),
+                                        ),
+                                        DataColumn(
+                                          label: Text(context.l10n.tableCost),
+                                        ),
+                                        DataColumn(
+                                          label: Text(
+                                            context.l10n.tablePromotion,
+                                          ),
+                                        ),
                                       ],
                                       rows: filteredProducts.map((product) {
                                         final hasPromo =
@@ -525,7 +542,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                             ? _promotionsMap[product
                                                       .promotionId]!
                                                   .name
-                                            : 'Sin promoción';
+                                            : context.l10n.noPromotion;
 
                                         return DataRow(
                                           cells: [
@@ -564,8 +581,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                                         const SizedBox(
                                                           width: 8,
                                                         ),
-                                                        const Text(
-                                                          'Editar todo',
+                                                        Text(
+                                                          context.l10n.editAll,
                                                         ),
                                                       ],
                                                     ),
@@ -584,7 +601,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                                         const SizedBox(
                                                           width: 8,
                                                         ),
-                                                        const Text('Eliminar'),
+                                                        Text(
+                                                          context.l10n.delete,
+                                                        ),
                                                       ],
                                                     ),
                                                   ),
@@ -698,7 +717,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                                 onTap: () =>
                                                     _showEditSingleFieldDialog(
                                                       product: product,
-                                                      title: 'Nombre',
+                                                      title: context
+                                                          .l10n
+                                                          .fieldName,
                                                       initialValue:
                                                           product.name,
                                                       keyboardType:
@@ -719,7 +740,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                                             _loadProducts();
                                                             AppAlerts.showSuccess(
                                                               context,
-                                                              '✏️ Nombre actualizado.',
+                                                              context
+                                                                  .l10n
+                                                                  .nameUpdated,
                                                             );
                                                           }
                                                         }
@@ -752,7 +775,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                                         .toString(),
                                                     onTap: () => _showEditSingleFieldDialog(
                                                       product: product,
-                                                      title: 'Unidades',
+                                                      title: context
+                                                          .l10n
+                                                          .fieldUnits,
                                                       initialValue: product
                                                           .units
                                                           .toString(),
@@ -778,7 +803,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                                             _loadProducts();
                                                             AppAlerts.showSuccess(
                                                               context,
-                                                              '📦 Stock actualizado.',
+                                                              context
+                                                                  .l10n
+                                                                  .stockUpdated,
                                                             );
                                                           }
                                                         }
@@ -809,7 +836,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                                     '${product.price.toStringAsFixed(2)} €',
                                                 onTap: () => _showEditSingleFieldDialog(
                                                   product: product,
-                                                  title: 'Precio de venta',
+                                                  title: context
+                                                      .l10n
+                                                      .fieldSalePrice,
                                                   initialValue: product.price
                                                       .toString(),
                                                   keyboardType:
@@ -838,7 +867,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                                         _loadProducts();
                                                         AppAlerts.showSuccess(
                                                           context,
-                                                          '💰 Precio de venta actualizado.',
+                                                          context
+                                                              .l10n
+                                                              .salePriceUpdated,
                                                         );
                                                       }
                                                     }
@@ -852,7 +883,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                                     '${product.cost.toStringAsFixed(2)} €',
                                                 onTap: () => _showEditSingleFieldDialog(
                                                   product: product,
-                                                  title: 'Coste de adquisición',
+                                                  title: context
+                                                      .l10n
+                                                      .fieldAcquisitionCost,
                                                   initialValue: product.cost
                                                       .toString(),
                                                   keyboardType:
@@ -881,7 +914,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                                         _loadProducts();
                                                         AppAlerts.showSuccess(
                                                           context,
-                                                          '📉 Coste actualizado.',
+                                                          context
+                                                              .l10n
+                                                              .costUpdated,
                                                         );
                                                       }
                                                     }

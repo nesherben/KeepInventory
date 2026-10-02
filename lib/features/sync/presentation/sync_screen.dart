@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:keepinventory/l10n/app_localizations_ext.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:restart_app/restart_app.dart';
@@ -27,29 +28,29 @@ class _SyncScreenState extends State<SyncScreen> {
   double _progressValue = 0.0;
 
   Future<void> _startHosting() async {
-    final url = await SyncService.startServer((error) {
-      AppAlerts.showError(context, error);
+    final l10n = context.l10n;
+    final url = await SyncService.startServer(l10n, (error) {
+      if (context.mounted) AppAlerts.showError(context, error);
     });
 
+    if (!mounted) return;
     if (url != null) {
       setState(() {
         _serverUrl = url;
         _isServerRunning = true;
       });
-      AppAlerts.showSuccess(
-        context,
-        '📡 Servidor listo. Muestra el QR al dispositivo receptor.',
-      );
+      AppAlerts.showSuccess(context, l10n.syncServerReady);
     }
   }
 
   Future<void> _stopHosting() async {
     await SyncService.stopServer();
+    if (!mounted) return;
     setState(() {
       _serverUrl = null;
       _isServerRunning = false;
     });
-    AppAlerts.showInfo(context, 'Servidor de sincronización cerrado.');
+    AppAlerts.showInfo(context, context.l10n.syncServerStopped);
   }
 
   @override
@@ -66,7 +67,7 @@ class _SyncScreenState extends State<SyncScreen> {
       context,
       MaterialPageRoute(
         builder: (context) => Scaffold(
-          appBar: AppBar(title: const Text('Escanear QR de Sincronización')),
+          appBar: AppBar(title: Text(context.l10n.scannerTitle)),
           body: MobileScanner(
             onDetect: (capture) {
               // Si el candado está cerrado, ignoramos todo lo que lea la cámara
@@ -93,11 +94,14 @@ class _SyncScreenState extends State<SyncScreen> {
   Future<void> _performImport(String url) async {
     setState(() {
       _isReceiving = true;
-      _statusMessage = 'Verificando red...';
+      _statusMessage = context.l10n.syncVerifyNetwork;
       _progressValue = 0.0;
     });
 
-    final success = await SyncService.importDatabase(url, (status, progress) {
+    final success = await SyncService.importDatabase(url, context.l10n, (
+      status,
+      progress,
+    ) {
       if (mounted) {
         setState(() {
           _statusMessage = status;
@@ -112,7 +116,10 @@ class _SyncScreenState extends State<SyncScreen> {
       if (success) {
         _showRestartDialog();
       } else {
-        AppAlerts.showError(context, '❌ Error: $_statusMessage');
+        AppAlerts.showError(
+          context,
+          context.l10n.syncErrorPrefix(_statusMessage),
+        );
       }
     }
   }
@@ -122,16 +129,14 @@ class _SyncScreenState extends State<SyncScreen> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: const Row(
+        title: Row(
           children: [
             Icon(Icons.check_circle, color: Colors.green, size: 28),
             SizedBox(width: 8),
-            Expanded(child: Text('¡Sincronización Exitosa!')),
+            Expanded(child: Text(context.l10n.syncSuccessTitle)),
           ],
         ),
-        content: const Text(
-          'La base de datos se ha clonado correctamente desde el otro dispositivo. Es necesario reiniciar la aplicación para aplicar los cambios de forma segura.',
-        ),
+        content: Text(context.l10n.syncSuccessMessage),
         actions: [
           ElevatedButton.icon(
             style: ElevatedButton.styleFrom(
@@ -139,7 +144,7 @@ class _SyncScreenState extends State<SyncScreen> {
               foregroundColor: Theme.of(context).colorScheme.onPrimary,
             ),
             icon: const Icon(Icons.restart_alt),
-            label: const Text('Reiniciar ahora'),
+            label: Text(context.l10n.restartNow),
             onPressed: () {
               Restart.restartApp();
             },
@@ -173,7 +178,7 @@ class _SyncScreenState extends State<SyncScreen> {
       },
       child: Scaffold(
         key: _scaffoldKey,
-        appBar: AppBar(title: const Text('Sincronización de Dispositivos')),
+        appBar: AppBar(title: Text(context.l10n.syncTitle)),
         drawer: const AppDrawer(),
         body: Padding(
           padding: const EdgeInsets.all(24.0),
@@ -183,14 +188,14 @@ class _SyncScreenState extends State<SyncScreen> {
               children: [
                 const Icon(Icons.sync_alt, size: 64, color: Colors.teal),
                 const SizedBox(height: 16),
-                const Text(
-                  'Sincronización Local (Wi-Fi / Hotspot)',
+                Text(
+                  context.l10n.syncLocalTitle,
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Conecta ambos dispositivos a la misma red Wi-Fi o activa un Hotspot en uno de ellos para clonar el inventario al instante.',
+                  context.l10n.syncLocalDescription,
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                     fontSize: 13,
@@ -239,7 +244,7 @@ class _SyncScreenState extends State<SyncScreen> {
                             .onPrimary,
                       ),
                       icon: const Icon(Icons.upload),
-                      label: const Text('📤 Emitir Datos (Crear QR)'),
+                      label: Text(context.l10n.syncEmitData),
                       onPressed: _startHosting,
                     ),
                   ),
@@ -251,13 +256,13 @@ class _SyncScreenState extends State<SyncScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
                       icon: const Icon(Icons.qr_code_scanner),
-                      label: const Text('📥 Recibir Datos (Escanear QR)'),
+                      label: Text(context.l10n.syncReceiveData),
                       onPressed: _openScanner,
                     ),
                   ),
                 ] else ...[
-                  const Text(
-                    'Escanea este código desde el receptor:',
+                  Text(
+                    context.l10n.syncScanFromReceiver,
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 16),
@@ -278,7 +283,7 @@ class _SyncScreenState extends State<SyncScreen> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'IP Activa: ${_serverUrl!.split('/')[2]}',
+                    context.l10n.syncActiveIp(_serverUrl!.split('/')[2]),
                     style: TextStyle(color: Colors.grey[600], fontSize: 12),
                   ),
                   const SizedBox(height: 24),
@@ -288,7 +293,7 @@ class _SyncScreenState extends State<SyncScreen> {
                       foregroundColor: Theme.of(context).colorScheme.onError,
                     ),
                     icon: const Icon(Icons.stop),
-                    label: const Text('Detener Emisión'),
+                    label: Text(context.l10n.syncStopBroadcast),
                     onPressed: _stopHosting,
                   ),
                 ],
