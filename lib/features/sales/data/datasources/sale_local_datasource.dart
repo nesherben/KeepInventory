@@ -2,6 +2,7 @@ import 'package:sqflite/sqflite.dart';
 
 import '../../../../core/database/database_helper.dart';
 import '../../domain/sale.dart';
+import '../../domain/sale_refund_calculator.dart';
 
 class SaleLocalDatasource {
   final DatabaseHelper _databaseHelper = DatabaseHelper.instance;
@@ -182,16 +183,15 @@ class SaleLocalDatasource {
         }
       }
 
-      // 2. 💡 DEVOLUCIÓN DE PACKS (LÓGICA NUEVA)
+      // 2. DEVOLUCIÓN DE PACKS
       for (var entry in packsToRefund.entries) {
         final refundQty = entry.value;
         final packId = entry.key.packId;
 
         if (refundQty > 0) {
           if (restockAsComponents) {
-            // El pack se ha abierto: Buscamos sus componentes y sumamos a "products"
             final components = await txn.query(
-              'pack_items', // ⚠️ Asegúrate de que tu tabla intermedia se llame así
+              'pack_items',
               columns: ['product_id', 'quantity'],
               where: 'pack_id = ?',
               whereArgs: [packId],
@@ -200,8 +200,6 @@ class SaleLocalDatasource {
             for (var component in components) {
               final productId = component['product_id'] as int;
               final qtyPerPack = component['quantity'] as int;
-
-              // Si devuelven 2 packs y cada pack tiene 3 figuras, devolvemos 6
               final totalToRestock = qtyPerPack * refundQty;
 
               await txn.rawUpdate(
@@ -210,7 +208,6 @@ class SaleLocalDatasource {
               );
             }
           } else {
-            // El pack sigue sellado: Lo sumamos intacto a "packs"
             await txn.rawUpdate(
               'UPDATE packs SET units = units + ? WHERE id = ?',
               [refundQty, packId],
@@ -251,63 +248,81 @@ class SaleLocalDatasource {
         }
       }
 
-      // 5. REBALANCEO DE PRECIOS HISTÓRICOS Y CONTABILIDAD
-      final remainingItems = await txn.query(
+      // 5. CONTABILIDAD: solo se repreciaran los grupos de promoción afectados
+      final remainingItemRows = await txn.query(
         'sale_items',
         where: 'sale_id = ?',
         whereArgs: [originalSale.id],
       );
-      final remainingPacks = await txn.query(
+      final remainingPackRows = await txn.query(
         'sale_packs',
         where: 'sale_id = ?',
         whereArgs: [originalSale.id],
       );
 
-      if (remainingItems.isEmpty && remainingPacks.isEmpty) {
-        // Si el ticket se quedó vacío, lo borramos entero
+      if (remainingItemRows.isEmpty && remainingPackRows.isEmpty) {
         await txn.delete(
           'sales',
           where: 'id = ?',
           whereArgs: [originalSale.id],
         );
-      } else {
-        final double newTotalAmount =
-            originalSale.totalAmount - customRefundAmount;
-        await txn.update(
-          'sales',
-          {'total_amount': newTotalAmount > 0 ? newTotalAmount : 0.0},
-          where: 'id = ?',
-          whereArgs: [originalSale.id],
+        return;
+      }
+
+      final newTotalAmount = originalSale.totalAmount - customRefundAmount;
+      await txn.update(
+        'sales',
+        {'total_amount': newTotalAmount > 0 ? newTotalAmount : 0.0},
+        where: 'id = ?',
+        whereArgs: [originalSale.id],
+      );
+
+      // Promociones tocadas por la devolución
+      final affectedPromotionIds = <int>{
+        for (final entry in itemsToRefund.entries)
+          if (entry.value > 0 && entry.key.promotionId != null)
+            entry.key.promotionId!,
+      };
+
+      for (final promotionId in affectedPromotionIds) {
+        final groupItems = originalSale.items
+            .where((i) => i.promotionId == promotionId)
+            .toList();
+        final keptQuantities = <SaleItem, int>{
+          for (final item in groupItems)
+            item: item.quantity - (itemsToRefund[item] ?? 0),
+        };
+        final keptItems = groupItems
+            .where((i) => keptQuantities[i]! > 0)
+            .toList();
+        if (keptItems.isEmpty) continue;
+
+        final newTotalGroup = SaleRefundCalculator.calculateGroupValue(
+          keptItems: keptItems,
+          keptQuantities: keptQuantities,
         );
+        final keptUnits = keptItems.fold<int>(
+          0,
+          (t, i) => t + keptQuantities[i]!,
+        );
+        if (keptUnits == 0) continue;
 
-        double currentRemainingValue = 0.0;
-        for (var row in remainingItems) {
-          currentRemainingValue +=
-              (row['historical_price'] as num) * (row['quantity'] as int);
-        }
-        for (var row in remainingPacks) {
-          currentRemainingValue +=
-              (row['historical_price'] as num) * (row['quantity'] as int);
-        }
-
-        if (currentRemainingValue > 0 && newTotalAmount > 0) {
-          final double ratio = newTotalAmount / currentRemainingValue;
-          for (var row in remainingItems) {
-            await txn.update(
-              'sale_items',
-              {'historical_price': (row['historical_price'] as num) * ratio},
-              where: 'id = ?',
-              whereArgs: [row['id']],
-            );
-          }
-          for (var row in remainingPacks) {
-            await txn.update(
-              'sale_packs',
-              {'historical_price': (row['historical_price'] as num) * ratio},
-              where: 'id = ?',
-              whereArgs: [row['id']],
-            );
-          }
+        // Reparto proporcional al precio completo de cada línea
+        final fullValue = keptItems.fold<double>(
+          0,
+          (t, i) => t + i.refundUnitPrice * keptQuantities[i]!,
+        );
+        for (final item in keptItems) {
+          final share = fullValue > 0
+              ? (item.refundUnitPrice * keptQuantities[item]!) / fullValue
+              : keptQuantities[item]! / keptUnits;
+          final lineTotal = newTotalGroup * share;
+          await txn.update(
+            'sale_items',
+            {'historical_price': lineTotal / keptQuantities[item]!},
+            where: 'id = ?',
+            whereArgs: [item.id],
+          );
         }
       }
     });
