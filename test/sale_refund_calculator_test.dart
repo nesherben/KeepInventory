@@ -157,7 +157,42 @@ void main() {
       // 3 * 8 (precio cobrado, sin recalcular) + 1 * 4
       expect(total, 28);
     });
+    test('refunds a 3-for-7 fixed bundle non-linearly (7 units bought)', () {
+      // 7 unidades a 3 €, promo 3 por 7 € -> 2 packs (14) + 1 suelta (3) = 17
+      SaleItem buildItem() => SaleItem(
+        productId: 1,
+        quantity: 7,
+        historicalPrice: 17 / 7,
+        originalPrice: 3,
+        promotionId: 1,
+        promoType: 'bundle_fixed_price',
+        promoThreshold: 3,
+        promoDiscount: 7,
+      );
 
+      // unidades devueltas -> reembolso esperado
+      const expected = {
+        1: 3.0,
+        2: 4.0,
+        3: 7.0,
+        4: 10.0,
+        5: 11.0,
+        6: 14.0,
+        7: 17.0,
+      };
+
+      expected.forEach((returned, refund) {
+        final item = buildItem();
+        final result = SaleRefundCalculator.calculateRefundAmount(
+          originalItemQuantities: {item: 7},
+          keptItemQuantities: {item: 7 - returned},
+          originalPackQuantities: {},
+          keptPackQuantities: {},
+        );
+
+        expect(result, closeTo(refund, 0.001), reason: 'devolviendo $returned');
+      });
+    });
     test('recalculates only the promotion group affected by the return', () {
       // Grupo de promo 1, se devuelve una unidad -> deja de cumplir umbral 3.
       final affectedA = _promotedItem(
