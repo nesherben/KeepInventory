@@ -1040,4 +1040,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get invalidNumber => 'Enter a valid number (e.g. 12.50)';
+
+  @override
+  String get trashSlideTitle => 'Last step';
+
+  @override
+  String get trashSlideHint =>
+      'Slide the database into the bin to delete everything';
+
+  @override
+  String get trashSlideRelease => 'Release to delete';
+
+  @override
+  String get trashSlideDrag => 'Slide →';
 }

@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../../../../core/shared_widgets/app_ui.dart';
+
 import 'package:keepinventory/l10n/app_localizations_ext.dart';
 
 typedef UpdateDownloadCallback = Future<bool> Function(
@@ -45,7 +48,11 @@ class _UpdateAvailableDialogState extends State<UpdateAvailableDialog> {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     return AlertDialog(
-      title: Text(context.l10n.updateAvailableTitle(widget.version)),
+      icon: Icon(Icons.system_update, color: colors.primary, size: 32),
+      title: Text(
+        context.l10n.updateAvailableTitle(widget.version),
+        textAlign: TextAlign.center,
+      ),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -54,9 +61,16 @@ class _UpdateAvailableDialogState extends State<UpdateAvailableDialog> {
             context.l10n.updateAvailableBody,
             style: const TextStyle(fontSize: 13),
           ),
-          const SizedBox(height: 8),
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxHeight: 120),
+          const SizedBox(height: AppSpacing.md),
+          // Notas de la versión en un recuadro con su propio scroll
+          Container(
+            width: double.infinity,
+            constraints: const BoxConstraints(maxHeight: 180),
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: colors.surfaceContainerHighest.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(AppRadius.md),
+            ),
             child: SingleChildScrollView(
               child: Text(
                 widget.notes,
@@ -66,7 +80,11 @@ class _UpdateAvailableDialogState extends State<UpdateAvailableDialog> {
           ),
           if (_isDownloading) ...[
             const SizedBox(height: 16),
-            LinearProgressIndicator(value: _progress),
+            LinearProgressIndicator(
+              value: _progress,
+              minHeight: 8,
+              borderRadius: BorderRadius.circular(AppRadius.sm),
+            ),
             const SizedBox(height: 8),
             Center(
               child: Text(
@@ -88,9 +106,10 @@ class _UpdateAvailableDialogState extends State<UpdateAvailableDialog> {
             onPressed: () => Navigator.pop(context),
             child: Text(context.l10n.later),
           ),
-          ElevatedButton(
+          FilledButton.icon(
             onPressed: _downloadUpdate,
-            child: Text(context.l10n.updateNow),
+            icon: const Icon(Icons.download_rounded),
+            label: Text(context.l10n.updateNow),
           ),
         ],
       ],

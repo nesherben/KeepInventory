@@ -17,7 +17,7 @@ void main() {
       );
 
       final l10n = await AppLocalizations.delegate.load(const Locale('es'));
-      await tester.tap(find.widgetWithText(ListTile, l10n.databaseDeleteTitle));
+      await tester.tap(find.text(l10n.databaseDeleteTitle));
       await tester.pumpAndSettle();
 
       expect(find.text(l10n.databaseDeleteWarning), findsOneWidget);

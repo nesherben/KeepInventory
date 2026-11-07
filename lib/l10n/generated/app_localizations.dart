@@ -1909,6 +1909,30 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Introduce un número válido (ej. 12,50)'**
   String get invalidNumber;
+
+  /// No description provided for @trashSlideTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Último paso'**
+  String get trashSlideTitle;
+
+  /// No description provided for @trashSlideHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Desliza la base de datos hasta la papelera para borrarlo todo'**
+  String get trashSlideHint;
+
+  /// No description provided for @trashSlideRelease.
+  ///
+  /// In es, this message translates to:
+  /// **'Suelta para borrar'**
+  String get trashSlideRelease;
+
+  /// No description provided for @trashSlideDrag.
+  ///
+  /// In es, this message translates to:
+  /// **'Desliza →'**
+  String get trashSlideDrag;
 }
 
 class _AppLocalizationsDelegate

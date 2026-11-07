@@ -8,6 +8,9 @@ abstract final class AppAlerts {
   static bool _isShowing = false;
   static Timer? _dismissTimer; // 💡 Timer de control absoluto
 
+  /// Naranja oscuro: legible con texto blanco (el ámbar de stock no lo es).
+  static const Color _warningBackground = Color(0xFFC25E00);
+
   static void showSuccess(
     BuildContext context,
     String message, {
@@ -47,7 +50,7 @@ abstract final class AppAlerts {
       context: context,
       message: message,
       icon: Icons.warning_amber_rounded,
-      backgroundColor: Colors.orange.shade800,
+      backgroundColor: _warningBackground,
       textColor: Colors.white,
       duration: duration,
     );
@@ -107,15 +110,15 @@ abstract final class AppAlerts {
     // Mostramos el SnackBar
     messenger.showSnackBar(
       SnackBar(
-        elevation: 4,
+        elevation: 2,
         behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         backgroundColor: task.backgroundColor,
         duration: task.duration,
         content: Row(
           children: [
-            Icon(task.icon, color: task.textColor, size: 28),
+            Icon(task.icon, color: task.textColor, size: 24),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
@@ -124,7 +127,6 @@ abstract final class AppAlerts {
                   color: task.textColor,
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  letterSpacing: 0.3,
                 ),
               ),
             ),

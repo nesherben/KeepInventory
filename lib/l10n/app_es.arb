@@ -380,5 +380,9 @@
       }
     }
   },
-  "invalidNumber": "Introduce un número válido (ej. 12,50)"
+  "invalidNumber": "Introduce un número válido (ej. 12,50)",
+  "trashSlideTitle": "Último paso",
+  "trashSlideHint": "Desliza la base de datos hasta la papelera para borrarlo todo",
+  "trashSlideRelease": "Suelta para borrar",
+  "trashSlideDrag": "Desliza →"
 }

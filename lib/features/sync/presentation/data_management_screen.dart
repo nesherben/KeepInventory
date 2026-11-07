@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+
+import 'widgets/slide_to_trash_sheet.dart';
+
+import '../../../core/shared_widgets/app_ui.dart';
+
 import 'package:restart_app/restart_app.dart';
 import 'package:keepinventory/l10n/app_localizations_ext.dart';
 
@@ -117,6 +122,10 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
 
     if (finalConfirmation != true || !mounted) return;
 
+    // Tercer paso: arrastrar la base de datos a la papelera
+    final thrownAway = await showSlideToTrashSheet(context);
+    if (!thrownAway || !mounted) return;
+
     setState(() => _isDeleting = true);
     try {
       await DatabaseHelper.instance.deleteDatabaseFile();
@@ -172,6 +181,7 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final busy = _isExporting || _isImporting || _isDeleting;
     return Listener(
       onPointerDown: (event) {
         _startX = event.position.dx;
@@ -197,135 +207,130 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
         appBar: AppBar(title: Text(context.l10n.dataManagementTitle)),
         drawer: const AppDrawer(),
         body: ListView(
-          padding: const EdgeInsets.all(16.0),
+          padding: EdgeInsets.all(AppSpacing.page(context)),
           children: [
-            Card(
-              elevation: 2,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: ListTile(
-                contentPadding: const EdgeInsets.all(16),
-                leading: Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary
-                        .withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    Icons.sync_alt,
-                    color: Theme.of(context).colorScheme.primary,
-                    size: 28,
-                  ),
-                ),
-                title: Text(
-                  context.l10n.syncByQrTitle,
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                ),
-                subtitle: Text(
-                  context.l10n.syncByQrDescription,
-                  style: TextStyle(fontSize: 12),
-                ),
-                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const SyncScreen()),
-                  );
-                },
-              ),
+            _ActionTile(
+              icon: Icons.sync_alt,
+              title: context.l10n.syncByQrTitle,
+              subtitle: context.l10n.syncByQrDescription,
+              highlighted: true,
+              onTap: busy
+                  ? null
+                  : () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const SyncScreen()),
+                    ),
             ),
-            const SizedBox(height: 16),
-
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-              child: Text(
-                context.l10n.backupSectionTitle,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 0.5,
-                ),
-              ),
+            SectionLabel(
+              context.l10n.backupSectionTitle,
+              padding: const EdgeInsets.fromLTRB(4, 24, 4, 8),
             ),
-            const SizedBox(height: 8),
-
-            Card(
-              elevation: 1,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: ListTile(
-                leading: _isExporting
-                    ? const SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(strokeWidth: 2.5),
-                      )
-                    : const Icon(Icons.download_rounded, color: Colors.blue),
-                title: Text(context.l10n.exportBackupTitle),
-                subtitle: Text(context.l10n.exportBackupDescription),
-                onTap: _isExporting || _isImporting || _isDeleting
-                    ? null
-                    : _handleExport,
-              ),
+            _ActionTile(
+              icon: Icons.download_rounded,
+              title: context.l10n.exportBackupTitle,
+              subtitle: context.l10n.exportBackupDescription,
+              loading: _isExporting,
+              onTap: busy ? null : _handleExport,
             ),
-            const SizedBox(height: 8),
-
-            Card(
-              elevation: 1,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: ListTile(
-                leading: _isImporting
-                    ? const SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(strokeWidth: 2.5),
-                      )
-                    : const Icon(Icons.upload_rounded, color: Colors.orange),
-                title: Text(context.l10n.restoreBackupTitle),
-                subtitle: Text(context.l10n.restoreBackupDescription),
-                onTap: _isExporting || _isImporting || _isDeleting
-                    ? null
-                    : _handleImport,
-              ),
+            const SizedBox(height: AppSpacing.sm),
+            _ActionTile(
+              icon: Icons.upload_rounded,
+              title: context.l10n.restoreBackupTitle,
+              subtitle: context.l10n.restoreBackupDescription,
+              loading: _isImporting,
+              onTap: busy ? null : _handleImport,
             ),
-            const SizedBox(height: 24),
-            Card(
-              elevation: 1,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-                side: BorderSide(
-                  color: Theme.of(context).colorScheme.error
-                      .withValues(alpha: 0.35),
-                ),
-              ),
-              child: ListTile(
-                leading: _isDeleting
-                    ? const SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(strokeWidth: 2.5),
-                      )
-                    : Icon(
-                        Icons.delete_forever_outlined,
-                        color: Theme.of(context).colorScheme.error,
-                      ),
-                title: Text(
-                  context.l10n.databaseDeleteTitle,
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
-                ),
-                subtitle: Text(context.l10n.databaseDeleteDescription),
-                onTap: _isExporting || _isImporting || _isDeleting
-                    ? null
-                    : _confirmDatabaseDeletion,
-              ),
+            const SizedBox(height: AppSpacing.xl),
+            _ActionTile(
+              icon: Icons.delete_forever_outlined,
+              title: context.l10n.databaseDeleteTitle,
+              subtitle: context.l10n.databaseDeleteDescription,
+              loading: _isDeleting,
+              danger: true,
+              onTap: busy ? null : _confirmDatabaseDeletion,
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Fila de acción: icono (o progreso) · título y descripción · flecha.
+/// [danger] la pinta en rojo; [highlighted] destaca la acción principal.
+class _ActionTile extends StatelessWidget {
+  const _ActionTile({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+    this.loading = false,
+    this.danger = false,
+    this.highlighted = false,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback? onTap;
+  final bool loading;
+  final bool danger;
+  final bool highlighted;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final accent = danger ? colors.error : colors.primary;
+
+    return AppCard(
+      onTap: onTap,
+      borderColor: danger
+          ? colors.error.withValues(alpha: 0.35)
+          : highlighted
+          ? colors.primary.withValues(alpha: 0.35)
+          : null,
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 44,
+            height: 44,
+            child: loading
+                ? Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      color: accent,
+                    ),
+                  )
+                : IconBadge(icon, color: accent, size: highlighted ? 24 : 20),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: highlighted ? 16 : 15,
+                    color: danger ? colors.error : colors.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: colors.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Icon(Icons.chevron_right, color: colors.onSurfaceVariant),
+        ],
       ),
     );
   }

@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:keepinventory/core/utils/app_numbers.dart';
+
+import '../../../core/theme/app_colors.dart';
+import '../../../core/shared_widgets/app_ui.dart';
+
 import 'package:keepinventory/l10n/app_localizations_ext.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
@@ -131,18 +136,14 @@ class _SyncScreenState extends State<SyncScreen> {
       builder: (context) => AlertDialog(
         title: Row(
           children: [
-            Icon(Icons.check_circle, color: Colors.green, size: 28),
+            const Icon(Icons.check_circle, color: AppColors.success, size: 28),
             SizedBox(width: 8),
             Expanded(child: Text(context.l10n.syncSuccessTitle)),
           ],
         ),
         content: Text(context.l10n.syncSuccessMessage),
         actions: [
-          ElevatedButton.icon(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.primary,
-              foregroundColor: Theme.of(context).colorScheme.onPrimary,
-            ),
+          FilledButton.icon(
             icon: const Icon(Icons.restart_alt),
             label: Text(context.l10n.restartNow),
             onPressed: () {
@@ -156,6 +157,7 @@ class _SyncScreenState extends State<SyncScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
     return Listener(
       onPointerDown: (event) {
         _startX = event.position.dx;
@@ -180,124 +182,130 @@ class _SyncScreenState extends State<SyncScreen> {
         key: _scaffoldKey,
         appBar: AppBar(title: Text(context.l10n.syncTitle)),
         drawer: const AppDrawer(),
-        body: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.sync_alt, size: 64, color: Colors.teal),
-                const SizedBox(height: 16),
-                Text(
-                  context.l10n.syncLocalTitle,
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  context.l10n.syncLocalDescription,
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    fontSize: 13,
+        body: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(AppSpacing.xl),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 420),
+              child: Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    decoration: BoxDecoration(
+                      color: colors.primary.withValues(alpha: 0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.sync_alt,
+                      size: 44,
+                      color: colors.primary,
+                    ),
                   ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 40),
-
-                if (_isReceiving) ...[
+                  const SizedBox(height: AppSpacing.lg),
                   Text(
-                    _statusMessage,
+                    context.l10n.syncLocalTitle,
                     style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
+                      fontSize: 19,
+                      fontWeight: FontWeight.w700,
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 16),
-                  LinearProgressIndicator(
-                    value: _progressValue >= 0 ? _progressValue : null,
-                    minHeight: 12,
-                    borderRadius: BorderRadius.circular(10),
-                    backgroundColor: Theme.of(context)
-                        .colorScheme
-                        .surfaceContainerHighest,
-                  ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppSpacing.sm),
                   Text(
-                    _progressValue >= 0
-                        ? '${(_progressValue * 100).toStringAsFixed(0)}%'
-                        : '',
+                    context.l10n.syncLocalDescription,
                     style: TextStyle(
-                      color: Theme.of(context).colorScheme.primary,
-                      fontWeight: FontWeight.bold,
+                      color: colors.onSurfaceVariant,
+                      fontSize: 13,
                     ),
+                    textAlign: TextAlign.center,
                   ),
-                ] else if (!_isServerRunning) ...[
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        backgroundColor: Theme.of(context).colorScheme.primary,
-                        foregroundColor: Theme.of(context)
-                            .colorScheme
-                            .onPrimary,
+                  const SizedBox(height: 32),
+                  if (_isReceiving) ...[
+                    Text(
+                      _statusMessage,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
                       ),
-                      icon: const Icon(Icons.upload),
-                      label: Text(context.l10n.syncEmitData),
-                      onPressed: _startHosting,
+                      textAlign: TextAlign.center,
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
+                    const SizedBox(height: AppSpacing.lg),
+                    LinearProgressIndicator(
+                      value: _progressValue >= 0 ? _progressValue : null,
+                      minHeight: 10,
+                      borderRadius: BorderRadius.circular(AppRadius.sm),
+                      backgroundColor: colors.surfaceContainerHighest,
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(
+                      _progressValue >= 0
+                          ? context.percent(_progressValue * 100)
+                          : '',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ] else if (!_isServerRunning) ...[
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton.icon(
+                        icon: const Icon(Icons.upload),
+                        label: Text(context.l10n.syncEmitData),
+                        onPressed: _startHosting,
                       ),
-                      icon: const Icon(Icons.qr_code_scanner),
-                      label: Text(context.l10n.syncReceiveData),
-                      onPressed: _openScanner,
                     ),
-                  ),
-                ] else ...[
-                  Text(
-                    context.l10n.syncScanFromReceiver,
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: const [
-                        BoxShadow(color: Colors.black12, blurRadius: 10),
-                      ],
+                    const SizedBox(height: AppSpacing.md),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        icon: const Icon(Icons.qr_code_scanner),
+                        label: Text(context.l10n.syncReceiveData),
+                        onPressed: _openScanner,
+                      ),
                     ),
-                    child: QrImageView(
-                      data: _serverUrl!,
-                      version: QrVersions.auto,
-                      size: 200.0,
+                  ] else ...[
+                    Text(
+                      context.l10n.syncScanFromReceiver,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                      textAlign: TextAlign.center,
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    context.l10n.syncActiveIp(_serverUrl!.split('/')[2]),
-                    style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                  ),
-                  const SizedBox(height: 24),
-                  ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.error,
-                      foregroundColor: Theme.of(context).colorScheme.onError,
+                    const SizedBox(height: AppSpacing.lg),
+                    // Fondo blanco siempre (también en modo oscuro) para que
+                    // el QR se escanee bien
+                    Container(
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(AppRadius.lg),
+                        border: Border.all(
+                          color: Theme.of(context).dividerColor,
+                        ),
+                      ),
+                      child: QrImageView(
+                        data: _serverUrl!,
+                        version: QrVersions.auto,
+                        size: 200.0,
+                      ),
                     ),
-                    icon: const Icon(Icons.stop),
-                    label: Text(context.l10n.syncStopBroadcast),
-                    onPressed: _stopHosting,
-                  ),
+                    const SizedBox(height: AppSpacing.md),
+                    Text(
+                      context.l10n.syncActiveIp(_serverUrl!.split('/')[2]),
+                      style: TextStyle(
+                        color: colors.onSurfaceVariant,
+                        fontSize: 12,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xl),
+                    FilledButton.tonalIcon(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: colors.errorContainer,
+                        foregroundColor: colors.onErrorContainer,
+                      ),
+                      icon: const Icon(Icons.stop),
+                      label: Text(context.l10n.syncStopBroadcast),
+                      onPressed: _stopHosting,
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         ),

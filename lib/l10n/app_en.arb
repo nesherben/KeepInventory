@@ -350,5 +350,9 @@
   "inventorySummary": "{products} products · {units} units · {out} out of stock",
   "inventoryMargin": "Margin",
   "inventoryCostMargin": "Cost {cost} · margin {margin}",
-  "invalidNumber": "Enter a valid number (e.g. 12.50)"
+  "invalidNumber": "Enter a valid number (e.g. 12.50)",
+  "trashSlideTitle": "Last step",
+  "trashSlideHint": "Slide the database into the bin to delete everything",
+  "trashSlideRelease": "Release to delete",
+  "trashSlideDrag": "Slide →"
 }
