@@ -1,6 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 
 import '../../../../core/database/database_helper.dart';
+import '../../../sales/domain/payment_method.dart';
 
 class DashboardLocalDatasource {
   final DatabaseHelper _databaseHelper = DatabaseHelper.instance;
@@ -49,6 +50,47 @@ class DashboardLocalDatasource {
 
     return ((prodResult.first['total'] as num?)?.toDouble() ?? 0.0) +
         ((packResult.first['total'] as num?)?.toDouble() ?? 0.0);
+  }
+
+  /// Ingresos por método de pago (netos de devoluciones, que ya reducen o
+  /// eliminan la venta original). Incluye todos los métodos, aunque sean 0.
+  Future<Map<PaymentMethod, double>> getRevenueByPaymentMethod() async {
+    final database = await db;
+    final result = await database.rawQuery(
+      'SELECT payment_method, SUM(total_amount) as total FROM sales GROUP BY payment_method',
+    );
+    final totals = {for (final m in PaymentMethod.values) m: 0.0};
+    for (final row in result) {
+      final method = PaymentMethod.fromDb(row['payment_method']);
+      totals[method] =
+          totals[method]! + ((row['total'] as num?)?.toDouble() ?? 0);
+    }
+    return totals;
+  }
+
+  /// Igual que [getRevenueByPaymentMethod] pero desglosado por día/feria,
+  /// para el gráfico de ventas (cuadrar caja de cada feria concreta).
+  Future<Map<String, Map<PaymentMethod, double>>>
+  getRevenueByPaymentMethodPerGroup() async {
+    final database = await db;
+    final result = await database.rawQuery('''
+      SELECT COALESCE(fair_name, date(date)) as group_key, payment_method, SUM(total_amount) as total
+      FROM sales
+      GROUP BY group_key, payment_method
+    ''');
+
+    final totals = <String, Map<PaymentMethod, double>>{};
+    for (final row in result) {
+      final groupKey = row['group_key'] as String;
+      final method = PaymentMethod.fromDb(row['payment_method']);
+      final amount = (row['total'] as num?)?.toDouble() ?? 0.0;
+      final groupTotals = totals.putIfAbsent(
+        groupKey,
+        () => {for (final m in PaymentMethod.values) m: 0.0},
+      );
+      groupTotals[method] = groupTotals[method]! + amount;
+    }
+    return totals;
   }
 
   Future<double> getActualNetProfit() async {

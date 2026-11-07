@@ -22,7 +22,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 11, // Versión 11 con soporte de columnas para promociones en el ticket
+      version: 12, // Versión 12: método de pago en las ventas
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
       onConfigure: _onConfigure,

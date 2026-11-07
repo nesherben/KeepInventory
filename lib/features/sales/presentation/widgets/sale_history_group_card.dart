@@ -3,6 +3,7 @@ import 'package:keepinventory/l10n/app_localizations_ext.dart';
 
 import '../../domain/sale.dart';
 import '../sale_history_group.dart';
+import 'payment_method_widgets.dart';
 
 class SaleHistoryGroupCard extends StatelessWidget {
   const SaleHistoryGroupCard({
@@ -61,6 +62,11 @@ class SaleHistoryGroupCard extends StatelessWidget {
                       fontSize: 13,
                       color: baseColor.withValues(alpha: 0.8),
                     ),
+                  ),
+                  const SizedBox(height: 8),
+                  // Recuento por método para cuadrar la caja de la feria/día
+                  PaymentMethodTotals(
+                    totals: PaymentMethod.totalsOf(group.sales),
                   ),
                 ],
               ),
@@ -283,6 +289,8 @@ class _SaleTicketCard extends StatelessWidget {
                 _formatDateTime(sale.date),
                 style: TextStyle(color: theme.colorScheme.outline),
               ),
+              const SizedBox(width: 8),
+              Flexible(child: PaymentMethodBadge(method: sale.paymentMethod)),
             ],
           ),
           trailing: Text(

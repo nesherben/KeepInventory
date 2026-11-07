@@ -1,3 +1,7 @@
+import 'payment_method.dart';
+
+export 'payment_method.dart';
+
 class SaleItem {
   final int? id;
   final int? saleId;
@@ -57,6 +61,7 @@ class Sale {
   final String? fairName;
   final List<SaleItem> items;
   final List<SalePackItem> packItems; // <--- Nuevo para los packs vendidos
+  final PaymentMethod paymentMethod;
 
   Sale({
     this.id,
@@ -65,5 +70,6 @@ class Sale {
     this.fairName,
     required this.items,
     this.packItems = const [],
+    this.paymentMethod = PaymentMethod.defaultMethod,
   });
 }

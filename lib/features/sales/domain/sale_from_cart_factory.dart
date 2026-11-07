@@ -12,6 +12,7 @@ class SaleFromCartFactory {
     required Map<Product, int> products,
     required Map<Pack, int> packs,
     required Map<int, Promotion> promotions,
+    PaymentMethod paymentMethod = PaymentMethod.defaultMethod,
   }) {
     final saleItems = products.entries.map((entry) {
       final product = entry.key;
@@ -60,6 +61,7 @@ class SaleFromCartFactory {
       ),
       items: saleItems,
       packItems: salePacks,
+      paymentMethod: paymentMethod,
     );
   }
 }

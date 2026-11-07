@@ -975,4 +975,46 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get unknownPackDeleted => 'Pack desconocido o eliminado';
+
+  @override
+  String get paymentMethodTitle => 'Método de pago';
+
+  @override
+  String get paymentCash => 'Efectivo';
+
+  @override
+  String get paymentPaypal => 'PayPal';
+
+  @override
+  String get paymentBizum => 'Bizum';
+
+  @override
+  String refundViaMethod(String method) {
+    return 'Se devolverá por $method (método original)';
+  }
+
+  @override
+  String get revenueByPaymentMethod => 'INGRESOS POR MÉTODO DE PAGO';
+
+  @override
+  String get paymentUnspecified => 'Sin especificar';
+
+  @override
+  String get refundMethodUnknown =>
+      'Venta sin método registrado: devuelve por donde se cobró';
+
+  @override
+  String get chartFilterAll => 'Todo';
+
+  @override
+  String get chartMargin => 'MARGEN';
+
+  @override
+  String get chartTapHint => 'Toca una barra para ver su detalle';
+
+  @override
+  String get chartHistory => 'HISTORIAL';
+
+  @override
+  String get chartNoDataForFilter => 'No hay datos para este filtro.';
 }

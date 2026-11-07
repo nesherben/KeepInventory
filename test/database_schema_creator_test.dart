@@ -14,6 +14,7 @@ void main() {
     expect(statements[1], contains('CREATE TABLE products'));
     expect(statements[1], contains('image_bytes BLOB'));
     expect(statements[2], contains('CREATE TABLE sales'));
+    expect(statements[2], contains('payment_method TEXT'));
     expect(statements[3], contains('CREATE TABLE sale_items'));
     expect(statements[4], contains('CREATE TABLE packs'));
     expect(statements[4], contains('image_bytes BLOB'));

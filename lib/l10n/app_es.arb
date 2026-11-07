@@ -329,5 +329,25 @@
   "databaseDeletedTitle": "Base de datos borrada",
   "databaseDeletedMessage": "La base de datos está vacía. Reinicia la aplicación para continuar.",
   "unknownDeleted": "Desconocido o eliminado",
-  "unknownPackDeleted": "Pack desconocido o eliminado"
+  "unknownPackDeleted": "Pack desconocido o eliminado",
+  "paymentMethodTitle": "Método de pago",
+  "paymentCash": "Efectivo",
+  "paymentPaypal": "PayPal",
+  "paymentBizum": "Bizum",
+  "refundViaMethod": "Se devolverá por {method} (método original)",
+  "@refundViaMethod": {
+    "placeholders": {
+      "method": {
+        "type": "String"
+      }
+    }
+  },
+  "revenueByPaymentMethod": "INGRESOS POR MÉTODO DE PAGO",
+  "paymentUnspecified": "Sin especificar",
+  "refundMethodUnknown": "Venta sin método registrado: devuelve por donde se cobró",
+  "chartFilterAll": "Todo",
+  "chartMargin": "MARGEN",
+  "chartTapHint": "Toca una barra para ver su detalle",
+  "chartHistory": "HISTORIAL",
+  "chartNoDataForFilter": "No hay datos para este filtro."
 }

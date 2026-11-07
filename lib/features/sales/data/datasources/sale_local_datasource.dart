@@ -16,6 +16,7 @@ class SaleLocalDatasource {
         'date': sale.date.toIso8601String(),
         'total_amount': sale.totalAmount,
         'fair_name': sale.fairName,
+        'payment_method': sale.paymentMethod.dbValue,
       });
 
       for (var item in sale.items) {
@@ -120,6 +121,7 @@ class SaleLocalDatasource {
           fairName: saleMap['fair_name'] as String?,
           items: itemsList,
           packItems: packItemsList,
+          paymentMethod: PaymentMethod.fromDb(saleMap['payment_method']),
         ),
       );
     }

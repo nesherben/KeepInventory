@@ -31,6 +31,8 @@ import '../../promotions/data/datasources/promotion_local_datasource.dart';
 import 'widgets/product_grid_widget.dart';
 import 'widgets/packs_grid_widget.dart';
 import 'widgets/cart_items_list_widget.dart';
+import 'widgets/payment_method_widgets.dart';
+import '../domain/payment_method.dart';
 
 class SalesScreen extends StatefulWidget {
   const SalesScreen({super.key});
@@ -69,6 +71,9 @@ class _SalesScreenState extends State<SalesScreen>
 
   final Map<Product, int> _cart = {};
   final Map<Pack, int> _cartPacks = {};
+
+  // Método de pago del cliente (solo informativo). Vuelve a efectivo tras cada venta.
+  PaymentMethod _paymentMethod = PaymentMethod.defaultMethod;
 
   @override
   void initState() {
@@ -190,6 +195,11 @@ class _SalesScreenState extends State<SalesScreen>
   int get _cartItemCount =>
       SaleCartPricingCalculator.countItems(products: _cart, packs: _cartPacks);
 
+  Widget _buildPaymentMethodSelector() => PaymentMethodSelector(
+    selected: _paymentMethod,
+    onChanged: (method) => setState(() => _paymentMethod = method),
+  );
+
   Future<void> _processSale() async {
     if (_cart.isEmpty && _cartPacks.isEmpty) return;
     final sale = SaleFromCartFactory.create(
@@ -197,6 +207,7 @@ class _SalesScreenState extends State<SalesScreen>
       products: _cart,
       packs: _cartPacks,
       promotions: _promotionsMap,
+      paymentMethod: _paymentMethod,
     );
 
     await _saleRepository.processSale(sale);
@@ -204,6 +215,7 @@ class _SalesScreenState extends State<SalesScreen>
     setState(() {
       _cart.clear();
       _cartPacks.clear();
+      _paymentMethod = PaymentMethod.defaultMethod;
     });
 
     await _loadData();
@@ -419,6 +431,10 @@ class _SalesScreenState extends State<SalesScreen>
                         ),
                         const Divider(height: 1),
                         Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                          child: _buildPaymentMethodSelector(),
+                        ),
+                        Padding(
                           padding: const EdgeInsets.all(16.0),
                           child: SizedBox(
                             width: double.infinity,
@@ -472,160 +488,150 @@ class _SalesScreenState extends State<SalesScreen>
                     initialChildSize: 0.12,
                     minChildSize: 0.12,
                     maxChildSize: 0.7,
-                    builder:
-                        (
-                          BuildContext context,
-                          ScrollController scrollController,
-                        ) {
-                          return LayoutBuilder(
-                            builder: (context, constraints) {
-                              final bool isExpanded =
-                                  constraints.maxHeight > 150;
+                    builder: (BuildContext context, ScrollController scrollController) {
+                      return LayoutBuilder(
+                        builder: (context, constraints) {
+                          final bool isExpanded = constraints.maxHeight > 150;
 
-                              return Container(
-                                decoration: BoxDecoration(
-                                  color: Theme.of(context).cardColor,
-                                  borderRadius: const BorderRadius.vertical(
-                                    top: Radius.circular(24),
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withValues(
-                                        alpha: 0.2,
-                                      ),
-                                      blurRadius: 10,
-                                      spreadRadius: 2,
-                                      offset: const Offset(0, -2),
-                                    ),
-                                  ],
+                          return Container(
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).cardColor,
+                              borderRadius: const BorderRadius.vertical(
+                                top: Radius.circular(24),
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.2),
+                                  blurRadius: 10,
+                                  spreadRadius: 2,
+                                  offset: const Offset(0, -2),
                                 ),
-                                child: ClipRRect(
-                                  borderRadius: const BorderRadius.vertical(
-                                    top: Radius.circular(24),
-                                  ),
-                                  child: Stack(
+                              ],
+                            ),
+                            child: ClipRRect(
+                              borderRadius: const BorderRadius.vertical(
+                                top: Radius.circular(24),
+                              ),
+                              child: Stack(
+                                children: [
+                                  ListView(
+                                    controller: scrollController,
+                                    padding: EdgeInsets.only(
+                                      top: 75,
+                                      bottom:
+                                          (isExpanded &&
+                                              (_cart.isNotEmpty ||
+                                                  _cartPacks.isNotEmpty))
+                                          ? 170 // botón + selector de pago
+                                          : 20,
+                                    ),
                                     children: [
-                                      ListView(
-                                        controller: scrollController,
-                                        padding: EdgeInsets.only(
-                                          top: 75,
-                                          bottom:
-                                              (isExpanded &&
-                                                  (_cart.isNotEmpty ||
-                                                      _cartPacks.isNotEmpty))
-                                              ? 90
-                                              : 20,
-                                        ),
-                                        children: [
-                                          CartItemsListWidget(
-                                            cart: _cart,
-                                            cartPacks: _cartPacks,
-                                            promotionsMap: _promotionsMap,
-                                            calculateItemTotal:
-                                                SaleCartPricingCalculator
-                                                    .calculateItemTotal,
-                                            onRemoveFromCart: _removeFromCart,
-                                            onRemoveAllFromCart:
-                                                _removeAllFromCart,
-                                            onRemovePackFromCart:
-                                                _removePackFromCart,
-                                            onRemoveAllPackFromCart:
-                                                _removeAllPackFromCart,
-                                          ),
-                                        ],
+                                      CartItemsListWidget(
+                                        cart: _cart,
+                                        cartPacks: _cartPacks,
+                                        promotionsMap: _promotionsMap,
+                                        calculateItemTotal:
+                                            SaleCartPricingCalculator
+                                                .calculateItemTotal,
+                                        onRemoveFromCart: _removeFromCart,
+                                        onRemoveAllFromCart: _removeAllFromCart,
+                                        onRemovePackFromCart:
+                                            _removePackFromCart,
+                                        onRemoveAllPackFromCart:
+                                            _removeAllPackFromCart,
                                       ),
-                                      Positioned(
-                                        top: 0,
-                                        left: 0,
-                                        right: 0,
-                                        child: IgnorePointer(
-                                          child: Container(
-                                            color: Theme.of(context).cardColor,
-                                            child: Column(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                const SizedBox(height: 8),
-                                                Container(
-                                                  width: 40,
-                                                  height: 5,
-                                                  decoration: BoxDecoration(
-                                                    color: Theme.of(context)
-                                                        .colorScheme
-                                                        .outlineVariant,
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                          10,
-                                                        ),
-                                                  ),
-                                                ),
-                                                Padding(
-                                                  padding:
-                                                      const EdgeInsets.symmetric(
-                                                        horizontal: 24.0,
-                                                        vertical: 12.0,
-                                                      ),
-                                                  child: Row(
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment
-                                                            .spaceBetween,
-                                                    children: [
-                                                      Text(
-                                                        context.l10n
-                                                            .cartItemsCount(
-                                                              _cartItemCount
-                                                                  .toString(),
-                                                            ),
-                                                        style: const TextStyle(
-                                                          fontSize: 18,
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                        ),
-                                                      ),
-                                                      Text(
-                                                        context.l10n.cartTotal(
-                                                          _cartTotal
-                                                              .toStringAsFixed(
-                                                                2,
-                                                              ),
-                                                        ),
-                                                        style: TextStyle(
-                                                          fontSize: 22,
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                          color: Theme.of(
-                                                            context,
-                                                          ).colorScheme.primary,
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                                const Divider(height: 1),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      if (isExpanded &&
-                                          (_cart.isNotEmpty ||
-                                              _cartPacks.isNotEmpty))
-                                        Positioned(
-                                          bottom: 0,
-                                          left: 0,
-                                          right: 0,
-                                          child: Container(
-                                            padding: const EdgeInsets.all(16.0),
-                                            decoration: BoxDecoration(
-                                              color: Theme.of(context)
-                                                  .cardColor,
-                                              border: Border(
-                                                top: BorderSide(
-                                                  color: Theme.of(context)
-                                                      .dividerColor,
-                                                ),
+                                    ],
+                                  ),
+                                  Positioned(
+                                    top: 0,
+                                    left: 0,
+                                    right: 0,
+                                    child: IgnorePointer(
+                                      child: Container(
+                                        color: Theme.of(context).cardColor,
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const SizedBox(height: 8),
+                                            Container(
+                                              width: 40,
+                                              height: 5,
+                                              decoration: BoxDecoration(
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .outlineVariant,
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
                                               ),
                                             ),
-                                            child: SizedBox(
+                                            Padding(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 24.0,
+                                                    vertical: 12.0,
+                                                  ),
+                                              child: Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceBetween,
+                                                children: [
+                                                  Text(
+                                                    context.l10n.cartItemsCount(
+                                                      _cartItemCount.toString(),
+                                                    ),
+                                                    style: const TextStyle(
+                                                      fontSize: 18,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                  Text(
+                                                    context.l10n.cartTotal(
+                                                      _cartTotal
+                                                          .toStringAsFixed(2),
+                                                    ),
+                                                    style: TextStyle(
+                                                      fontSize: 22,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      color: Theme.of(context)
+                                                          .colorScheme
+                                                          .primary,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            const Divider(height: 1),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  if (isExpanded &&
+                                      (_cart.isNotEmpty ||
+                                          _cartPacks.isNotEmpty))
+                                    Positioned(
+                                      bottom: 0,
+                                      left: 0,
+                                      right: 0,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(16.0),
+                                        decoration: BoxDecoration(
+                                          color: Theme.of(context).cardColor,
+                                          border: Border(
+                                            top: BorderSide(
+                                              color: Theme.of(context)
+                                                  .dividerColor,
+                                            ),
+                                          ),
+                                        ),
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            _buildPaymentMethodSelector(),
+                                            const SizedBox(height: 12),
+                                            SizedBox(
                                               width: double.infinity,
                                               child: ElevatedButton(
                                                 style: ElevatedButton.styleFrom(
@@ -651,15 +657,17 @@ class _SalesScreenState extends State<SalesScreen>
                                                 ),
                                               ),
                                             ),
-                                          ),
+                                          ],
                                         ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            },
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
                           );
                         },
+                      );
+                    },
                   ),
                 ],
               ),

@@ -4,6 +4,7 @@ import 'package:keepinventory/l10n/app_localizations_ext.dart';
 
 import '../../domain/sale.dart';
 import '../../domain/sale_refund_calculator.dart';
+import 'payment_method_widgets.dart';
 
 typedef PartialRefundHandler = Future<void> Function({
   required Map<SaleItem, int> itemsToRefund,
@@ -209,12 +210,21 @@ class _PartialRefundDialogState extends State<PartialRefundDialog> {
 
   Widget _buildRefundAmountField(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final method = widget.sale.paymentMethod;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           context.l10n.refundTotalLabel,
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+        ),
+        const SizedBox(height: 8),
+        // La devolución se hace siempre por el método de pago original
+        PaymentMethodBadge(
+          method: method,
+          text: method == PaymentMethod.unspecified
+              ? context.l10n.refundMethodUnknown
+              : context.l10n.refundViaMethod(method.label(context)),
         ),
         const SizedBox(height: 8),
         TextField(
@@ -229,7 +239,7 @@ class _PartialRefundDialogState extends State<PartialRefundDialog> {
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
             filled: true,
             fillColor: colors.errorContainer.withValues(alpha: 0.1),
-            prefixIcon: Icon(Icons.payments, color: colors.error),
+            prefixIcon: Icon(method.icon, color: colors.error),
             isDense: true,
             helperText: context.l10n.refundAutoHelp,
             helperMaxLines: 2,

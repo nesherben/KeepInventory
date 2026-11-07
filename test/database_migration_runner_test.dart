@@ -3,19 +3,58 @@ import 'package:keepinventory/core/database/database_migration_runner.dart';
 
 void main() {
   group('DatabaseMigrationRunner', () {
-    test('runs only image blob migrations for version 10', () async {
+    const paymentMethodAlter =
+        'ALTER TABLE sales ADD COLUMN payment_method TEXT';
+
+    test(
+      'runs only image blob and payment migrations for version 10',
+      () async {
+        final statements = <String>[];
+
+        await DatabaseMigrationRunner.upgrade(
+          oldVersion: 10,
+          execute: (sql) async => statements.add(sql),
+          query: (_) async => [],
+        );
+
+        expect(statements, [
+          'ALTER TABLE products ADD COLUMN image_bytes BLOB',
+          'ALTER TABLE packs ADD COLUMN image_bytes BLOB',
+          paymentMethodAlter,
+        ]);
+      },
+    );
+
+    test('runs only the payment method migration for version 11', () async {
       final statements = <String>[];
 
       await DatabaseMigrationRunner.upgrade(
-        oldVersion: 10,
+        oldVersion: 11,
         execute: (sql) async => statements.add(sql),
         query: (_) async => [],
       );
 
-      expect(statements, [
-        'ALTER TABLE products ADD COLUMN image_bytes BLOB',
-        'ALTER TABLE packs ADD COLUMN image_bytes BLOB',
-      ]);
+      expect(statements, [paymentMethodAlter]);
+    });
+
+    test('runs nothing for version 12', () async {
+      final statements = <String>[];
+
+      await DatabaseMigrationRunner.upgrade(
+        oldVersion: 12,
+        execute: (sql) async => statements.add(sql),
+        query: (_) async => [],
+      );
+
+      expect(statements, isEmpty);
+    });
+
+    test('ignores payment column already existing', () async {
+      await DatabaseMigrationRunner.upgrade(
+        oldVersion: 11,
+        execute: (sql) async => throw StateError('duplicate column name'),
+        query: (_) async => [],
+      );
     });
 
     test('skips the fair-name alter when the column already exists', () async {

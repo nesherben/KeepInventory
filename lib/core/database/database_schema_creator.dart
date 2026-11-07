@@ -39,7 +39,8 @@ class DatabaseSchemaCreator {
         id $idType,
         date $textType,
         total_amount $realType,
-        fair_name TEXT
+        fair_name TEXT,
+        payment_method TEXT
       )
     ''');
 

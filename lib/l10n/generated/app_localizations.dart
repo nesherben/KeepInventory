@@ -1783,6 +1783,84 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Pack desconocido o eliminado'**
   String get unknownPackDeleted;
+
+  /// No description provided for @paymentMethodTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Método de pago'**
+  String get paymentMethodTitle;
+
+  /// No description provided for @paymentCash.
+  ///
+  /// In es, this message translates to:
+  /// **'Efectivo'**
+  String get paymentCash;
+
+  /// No description provided for @paymentPaypal.
+  ///
+  /// In es, this message translates to:
+  /// **'PayPal'**
+  String get paymentPaypal;
+
+  /// No description provided for @paymentBizum.
+  ///
+  /// In es, this message translates to:
+  /// **'Bizum'**
+  String get paymentBizum;
+
+  /// No description provided for @refundViaMethod.
+  ///
+  /// In es, this message translates to:
+  /// **'Se devolverá por {method} (método original)'**
+  String refundViaMethod(String method);
+
+  /// No description provided for @revenueByPaymentMethod.
+  ///
+  /// In es, this message translates to:
+  /// **'INGRESOS POR MÉTODO DE PAGO'**
+  String get revenueByPaymentMethod;
+
+  /// No description provided for @paymentUnspecified.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin especificar'**
+  String get paymentUnspecified;
+
+  /// No description provided for @refundMethodUnknown.
+  ///
+  /// In es, this message translates to:
+  /// **'Venta sin método registrado: devuelve por donde se cobró'**
+  String get refundMethodUnknown;
+
+  /// No description provided for @chartFilterAll.
+  ///
+  /// In es, this message translates to:
+  /// **'Todo'**
+  String get chartFilterAll;
+
+  /// No description provided for @chartMargin.
+  ///
+  /// In es, this message translates to:
+  /// **'MARGEN'**
+  String get chartMargin;
+
+  /// No description provided for @chartTapHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Toca una barra para ver su detalle'**
+  String get chartTapHint;
+
+  /// No description provided for @chartHistory.
+  ///
+  /// In es, this message translates to:
+  /// **'HISTORIAL'**
+  String get chartHistory;
+
+  /// No description provided for @chartNoDataForFilter.
+  ///
+  /// In es, this message translates to:
+  /// **'No hay datos para este filtro.'**
+  String get chartNoDataForFilter;
 }
 
 class _AppLocalizationsDelegate

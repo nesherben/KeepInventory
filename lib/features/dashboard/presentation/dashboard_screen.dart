@@ -15,6 +15,8 @@ import '../../../../core/services/github_update_service.dart';
 import '../../../core/theme/app_colors.dart';
 import 'widgets/dashboard_chart.dart'; // Ajusta esta ruta si es distinta
 import 'widgets/update_available_dialog.dart';
+import '../../sales/domain/payment_method.dart';
+import '../../sales/presentation/widgets/payment_method_widgets.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -35,6 +37,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   double? _startY;
 
   bool _isLoading = true;
+  // Desglose de la tarjeta de ingresos totales, plegado por defecto
+  bool _showPaymentBreakdown = false;
   bool get _isPrivacyModeEnabled => AppPreferences.privacyModeEnabled.value;
 
   double _totalRevenue = 0;
@@ -43,6 +47,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   double _actualNetProfit = 0;
   Map<String, double> _dailySales = {};
   Map<String, double> _dailyNetProfits = {};
+  Map<PaymentMethod, double> _revenueByMethod = {};
+  Map<String, Map<PaymentMethod, double>> _revenueByMethodPerGroup = {};
 
   static bool _hasCheckedForUpdate = false;
 
@@ -144,6 +150,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final netProfit = await _dashboardRepository.getActualNetProfit();
       final dailySales = await _dashboardRepository.getDailySales();
       final dailyNetProfits = await _dashboardRepository.getDailyNetProfits();
+      final revenueByMethod = await _dashboardRepository
+          .getRevenueByPaymentMethod();
+      final revenueByMethodPerGroup = await _dashboardRepository
+          .getRevenueByPaymentMethodPerGroup();
 
       if (!mounted) return;
       setState(() {
@@ -153,6 +163,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _actualNetProfit = netProfit;
         _dailySales = dailySales;
         _dailyNetProfits = dailyNetProfits;
+        _revenueByMethod = revenueByMethod;
+        _revenueByMethodPerGroup = revenueByMethodPerGroup;
         _isLoading = false;
       });
     } catch (e) {
@@ -168,6 +180,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         builder: (context) => FullScreenChartScreen(
           dailySales: _dailySales,
           dailyNetProfits: _dailyNetProfits,
+          revenueByMethodPerGroup: _revenueByMethodPerGroup,
         ),
       ),
     );
@@ -300,6 +313,86 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  /// Desglose de los ingresos totales por método (efectivo, PayPal, Bizum),
+  /// para cuadrar caja. Se despliega/pliega al tocar la tarjeta de ingresos.
+  Widget _buildPaymentBreakdownPanel() {
+    final theme = Theme.of(context);
+    return AnimatedSize(
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeInOut,
+      alignment: Alignment.topCenter,
+      child: !_showPaymentBreakdown
+          ? const SizedBox(width: double.infinity)
+          : Container(
+              margin: const EdgeInsets.only(top: 10),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: theme.cardColor,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.25),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    context.l10n.revenueByPaymentMethod,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: theme.colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  for (final method in PaymentMethod.values)
+                    // "Sin especificar" solo si hay ventas antiguas con importe
+                    if (method != PaymentMethod.unspecified ||
+                        (_revenueByMethod[method] ?? 0).abs() >= 0.005)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 6),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: method
+                                    .colorOf(context)
+                                    .withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Icon(
+                                method.icon,
+                                color: method.colorOf(context),
+                                size: 20,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                method.label(context),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                            Text(
+                              _formatCurrency(_revenueByMethod[method] ?? 0),
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                ],
+              ),
+            ),
+    );
+  }
+
   Widget _buildMainCard(bool isWideScreen) {
     // 💡 Obtenemos el color primario actual dinámicamente desde el tema aplicado
     final primaryColor = Theme.of(context).colorScheme.primary;
@@ -328,99 +421,123 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20),
-        child: Stack(
-          children: [
-            Positioned(
-              right: -25,
-              bottom: -25,
-              child: Icon(
-                Icons.point_of_sale,
-                size: 130,
-                color: Colors.white.withValues(alpha: 0.07),
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.all(isWideScreen ? 28 : 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () =>
+                setState(() => _showPaymentBreakdown = !_showPaymentBreakdown),
+            child: Stack(
+              children: [
+                Positioned(
+                  right: -25,
+                  bottom: -25,
+                  child: Icon(
+                    Icons.point_of_sale,
+                    size: 130,
+                    color: Colors.white.withValues(alpha: 0.07),
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.all(isWideScreen ? 28 : 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.account_balance_wallet_outlined,
-                              color: Colors.white70,
-                              size: 13,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
                             ),
-                            SizedBox(width: 5),
-                            Text(
-                              context.l10n.cashDesk,
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 1.0,
-                              ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(20),
                             ),
-                          ],
-                        ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.account_balance_wallet_outlined,
+                                  color: Colors.white70,
+                                  size: 13,
+                                ),
+                                SizedBox(width: 5),
+                                Text(
+                                  context.l10n.cashDesk,
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 1.0,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.trending_up,
+                              color: Colors.white,
+                              size: 18,
+                            ),
+                          ),
+                        ],
                       ),
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.trending_up,
+                      const SizedBox(height: 18),
+                      Text(
+                        _formatCurrency(_totalRevenue),
+                        style: TextStyle(
                           color: Colors.white,
-                          size: 18,
+                          fontSize: isWideScreen ? 40 : 36,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: -0.5,
                         ),
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.info_outline,
+                            color: Colors.white60,
+                            size: 13,
+                          ),
+                          SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              context.l10n.cumulativeBalance,
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 12,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          // Pista visual: toca la tarjeta para ver el desglose
+                          AnimatedRotation(
+                            turns: _showPaymentBreakdown ? 0.5 : 0,
+                            duration: const Duration(milliseconds: 200),
+                            child: const Icon(
+                              Icons.expand_more,
+                              color: Colors.white70,
+                              size: 18,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                  const SizedBox(height: 18),
-                  Text(
-                    _formatCurrency(_totalRevenue),
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: isWideScreen ? 40 : 36,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      Icon(Icons.info_outline, color: Colors.white60, size: 13),
-                      SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          context.l10n.cumulativeBalance,
-                          style: TextStyle(color: Colors.white70, fontSize: 12),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -538,8 +655,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ],
                         ),
                       ),
+                      _buildPaymentBreakdownPanel(),
                     ] else ...[
                       _buildMainCard(false),
+                      _buildPaymentBreakdownPanel(),
                       const SizedBox(height: 16),
                       _buildChartButton(),
                       const SizedBox(height: 20),

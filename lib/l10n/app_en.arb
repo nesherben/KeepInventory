@@ -329,5 +329,18 @@
   "databaseDeletedTitle": "Database deleted",
   "databaseDeletedMessage": "The database is empty. Restart the app to continue.",
   "unknownDeleted": "Unknown or deleted",
-  "unknownPackDeleted": "Unknown or deleted pack"
+  "unknownPackDeleted": "Unknown or deleted pack",
+  "paymentMethodTitle": "Payment method",
+  "paymentCash": "Cash",
+  "paymentPaypal": "PayPal",
+  "paymentBizum": "Bizum",
+  "refundViaMethod": "Refund via {method} (original method)",
+  "revenueByPaymentMethod": "REVENUE BY PAYMENT METHOD",
+  "paymentUnspecified": "Unspecified",
+  "refundMethodUnknown": "No payment method recorded: refund the way it was paid",
+  "chartFilterAll": "All",
+  "chartMargin": "MARGIN",
+  "chartTapHint": "Tap a bar to see its details",
+  "chartHistory": "HISTORY",
+  "chartNoDataForFilter": "No data for this filter."
 }

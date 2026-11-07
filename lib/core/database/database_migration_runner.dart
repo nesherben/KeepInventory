@@ -20,6 +20,19 @@ class DatabaseMigrationRunner {
     await _upgradeRefundDetails(oldVersion, execute);
     await _repairPromotionDetails(oldVersion, execute);
     await _upgradeImageBlobs(oldVersion, execute);
+    await _upgradePaymentMethod(oldVersion, execute);
+  }
+
+  /// v12: método de pago por venta. Las ventas existentes quedan en NULL ("sin especificar").
+  static Future<void> _upgradePaymentMethod(
+    int oldVersion,
+    DatabaseSqlExecutor execute,
+  ) async {
+    if (oldVersion >= 12) return;
+
+    try {
+      await execute('ALTER TABLE sales ADD COLUMN payment_method TEXT');
+    } catch (_) {}
   }
 
   static Future<void> _upgradePromotions(
