@@ -23,7 +23,7 @@ void main() {
               width: 420,
               child: ItemPreviewInfo(
                 title: 'Taza',
-                unitPrice: '5.00 €',
+                unitPrice: '5,00 €',
                 rawPrice: 5,
                 cartTotal: 0,
                 stock: 2,
@@ -43,7 +43,7 @@ void main() {
     await tester.pump();
     expect(addCalls, 1);
     expect(find.text(localizations.offerApplied), findsOneWidget);
-    expect(find.text('5.00 €'), findsNWidgets(2));
+    expect(find.text('5,00 €'), findsNWidgets(2));
 
     await tester.pump(const Duration(milliseconds: 600));
     await tester.tap(find.byIcon(Icons.remove));

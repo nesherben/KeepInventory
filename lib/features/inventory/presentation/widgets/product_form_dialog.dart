@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:keepinventory/core/utils/app_numbers.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:keepinventory/l10n/app_localizations_ext.dart';
 import 'package:keepinventory/core/services/image_compression_service.dart';
@@ -113,6 +114,16 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
     await widget.onSave(_createProductModel(), isEditing);
   }
 
+  /// Vacío → "Requerido"; no numérico o negativo → "número no válido".
+  String? _validateNumber(String? value, {bool integer = false}) {
+    if (value == null || value.trim().isEmpty) return context.l10n.required;
+    final parsed = integer
+        ? AppNumbers.parseInt(value)?.toDouble()
+        : AppNumbers.parseDecimal(value);
+    if (parsed == null || parsed < 0) return context.l10n.invalidNumber;
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final isEditing = widget.productToEdit != null;
@@ -149,7 +160,7 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
                           color: Theme.of(context)
                               .colorScheme
                               .surfaceContainerHighest,
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(12),
                           image: _selectedImageBytes != null
                               ? DecorationImage(
                                   image: MemoryImage(_selectedImageBytes!),
@@ -197,41 +208,41 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
                       labelText: context.l10n.unitsInStock,
                     ),
                     keyboardType: TextInputType.number,
-                    validator: (v) =>
-                        v == null || v.isEmpty ? context.l10n.required : null,
-                    onSaved: (v) => _units = int.parse(v!),
+                    inputFormatters: AppNumbers.integerInputFormatters,
+                    validator: (v) => _validateNumber(v, integer: true),
+                    onSaved: (v) => _units = AppNumbers.parseInt(v)!,
                   ),
                 ),
                 SizedBox(
                   width: fieldWidth,
                   child: TextFormField(
-                    initialValue: _price == 0.0 ? '' : _price.toString(),
+                    initialValue: _price == 0.0
+                        ? ''
+                        : context.amountInput(_price),
                     decoration: InputDecoration(
                       labelText: context.l10n.salePrice,
+                      suffixText: '€',
                     ),
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    validator: (v) =>
-                        v == null || v.isEmpty ? context.l10n.required : null,
-                    onSaved: (v) =>
-                        _price = double.parse(v!.replaceAll(',', '.')),
+                    keyboardType: AppNumbers.decimalKeyboard,
+                    inputFormatters: AppNumbers.decimalInputFormatters,
+                    validator: _validateNumber,
+                    onSaved: (v) => _price = AppNumbers.parseDecimal(v)!,
                   ),
                 ),
                 SizedBox(
                   width: fieldWidth,
                   child: TextFormField(
-                    initialValue: _cost == 0.0 ? '' : _cost.toString(),
+                    initialValue: _cost == 0.0
+                        ? ''
+                        : context.amountInput(_cost),
                     decoration: InputDecoration(
                       labelText: context.l10n.acquisitionCost,
+                      suffixText: '€',
                     ),
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    validator: (v) =>
-                        v == null || v.isEmpty ? context.l10n.required : null,
-                    onSaved: (v) =>
-                        _cost = double.parse(v!.replaceAll(',', '.')),
+                    keyboardType: AppNumbers.decimalKeyboard,
+                    inputFormatters: AppNumbers.decimalInputFormatters,
+                    validator: _validateNumber,
+                    onSaved: (v) => _cost = AppNumbers.parseDecimal(v)!,
                   ),
                 ),
                 SizedBox(

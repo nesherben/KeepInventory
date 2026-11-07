@@ -62,7 +62,7 @@ void main() {
     await tester.pump();
 
     final refundField = tester.widget<TextField>(find.byType(TextField));
-    expect(refundField.controller!.text, '5.00');
+    expect(refundField.controller!.text, '5,00');
 
     await tester.tap(find.text(localizations.confirm));
     await tester.pumpAndSettle();

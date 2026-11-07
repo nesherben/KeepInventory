@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:keepinventory/core/utils/app_numbers.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:keepinventory/l10n/app_localizations_ext.dart';
 import 'package:keepinventory/core/services/image_compression_service.dart';
@@ -455,16 +456,20 @@ class _PackFormDialogState extends State<PackFormDialog> {
 
   Widget _buildPriceField() {
     return TextFormField(
-      initialValue: packPrice > 0 ? packPrice.toString() : '',
+      initialValue: packPrice > 0 ? context.amountInput(packPrice) : '',
       decoration: InputDecoration(
         labelText: context.l10n.packPrice,
+        suffixText: '€',
         isDense: true,
       ),
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      validator: (value) =>
-          value == null || value.trim().isEmpty ? context.l10n.required : null,
-      onSaved: (value) =>
-          packPrice = double.tryParse(value!.replaceAll(',', '.')) ?? 0.0,
+      keyboardType: AppNumbers.decimalKeyboard,
+      inputFormatters: AppNumbers.decimalInputFormatters,
+      validator: (value) {
+        if (value == null || value.trim().isEmpty) return context.l10n.required;
+        final price = AppNumbers.parseDecimal(value);
+        return price == null || price < 0 ? context.l10n.invalidNumber : null;
+      },
+      onSaved: (value) => packPrice = AppNumbers.parseDecimal(value) ?? 0.0,
     );
   }
 
@@ -476,9 +481,14 @@ class _PackFormDialogState extends State<PackFormDialog> {
         isDense: true,
       ),
       keyboardType: TextInputType.number,
-      validator: (value) =>
-          value == null || value.trim().isEmpty ? context.l10n.required : null,
-      onSaved: (value) => packUnits = int.tryParse(value!) ?? 1,
+      inputFormatters: AppNumbers.integerInputFormatters,
+      validator: (value) {
+        if (value == null || value.trim().isEmpty) return context.l10n.required;
+        return AppNumbers.parseInt(value) == null
+            ? context.l10n.invalidNumber
+            : null;
+      },
+      onSaved: (value) => packUnits = AppNumbers.parseInt(value) ?? 1,
     );
   }
 
