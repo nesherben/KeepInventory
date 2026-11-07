@@ -4,8 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart'; // 💡 NUEVO
 
 import 'package:keepinventory/l10n/app_localizations_ext.dart';
 
-import '../theme/app_colors.dart';
 import 'app_alerts.dart';
+import 'app_ui.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -70,54 +70,166 @@ class AppDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final iconColor = Theme.of(context).colorScheme.primary;
+    final currentRoute = ModalRoute.of(context)?.settings.name ?? '/';
+
+    Widget item(
+      String route,
+      IconData icon,
+      IconData selectedIcon,
+      String label, {
+      String? subtitle,
+    }) => _NavItem(
+      icon: icon,
+      selectedIcon: selectedIcon,
+      label: label,
+      subtitle: subtitle,
+      selected: currentRoute == route,
+      onTap: () {
+        if (currentRoute == route) {
+          Navigator.pop(context);
+        } else {
+          Navigator.pushReplacementNamed(context, route);
+        }
+      },
+    );
+
+    Widget section(String text) =>
+        SectionLabel(text, padding: const EdgeInsets.fromLTRB(28, 20, 16, 8));
 
     return Drawer(
-      child: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          DrawerHeader(
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary,
+      child: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+          children: [
+            _DrawerHeader(onTap: () => _cycleTheme(context)),
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
+              child: Divider(),
             ),
-            // 💡 HUEVO DE PASCUA: GestureDetector en todo el contenedor de la cabecera
-            child: InkWell(
-              onTap: () => _cycleTheme(context),
-              splashColor: Colors.white.withValues(alpha: 0.2),
-              highlightColor: Colors.transparent,
-              child: SizedBox(
-                width: double.infinity,
+            section(context.l10n.navSectionMain),
+            item(
+              '/',
+              Icons.dashboard_outlined,
+              Icons.dashboard,
+              context.l10n.navDashboard,
+            ),
+            item(
+              '/sales',
+              Icons.point_of_sale_outlined,
+              Icons.point_of_sale,
+              context.l10n.navSales,
+            ),
+            section(context.l10n.navSectionStockOffers),
+            item(
+              '/inventory',
+              Icons.inventory_2_outlined,
+              Icons.inventory_2,
+              context.l10n.navInventory,
+            ),
+            item(
+              '/promotions',
+              Icons.local_offer_outlined,
+              Icons.local_offer,
+              context.l10n.navPromotions,
+            ),
+            item(
+              '/packs',
+              Icons.card_giftcard_outlined,
+              Icons.card_giftcard,
+              context.l10n.navPacks,
+            ),
+            section(context.l10n.navSectionRecords),
+            item(
+              '/history',
+              Icons.history_outlined,
+              Icons.history,
+              context.l10n.navHistory,
+            ),
+            item(
+              '/data-management',
+              Icons.storage_outlined,
+              Icons.storage,
+              context.l10n.navDataManagement,
+              subtitle: context.l10n.navDataManagementSubtitle,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Cabecera: icono de la app, nombre, versión y subtítulo.
+/// 💡 Huevo de pascua: tocarla cambia el color del tema.
+class _DrawerHeader extends StatelessWidget {
+  const _DrawerHeader({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: colors.primary,
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                ),
+                child: Icon(
+                  Icons.storefront,
+                  color: colors.onPrimary,
+                  size: 26,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        const Text(
-                          'KeepInventory',
-                          style: TextStyle(
-                            color: AppColors.onPrimary,
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
+                        const Flexible(
+                          child: Text(
+                            'KeepInventory',
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                            ),
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: AppSpacing.sm),
                         FutureBuilder<PackageInfo>(
                           future: PackageInfo.fromPlatform(),
                           builder: (context, snapshot) {
-                            final version = snapshot.hasData
-                                ? snapshot.data!.version
-                                : '';
-                            if (version.isEmpty) return const SizedBox.shrink();
-
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 4.0),
+                            final version = snapshot.data?.version;
+                            if (version == null || version.isEmpty) {
+                              return const SizedBox.shrink();
+                            }
+                            return Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: colors.primary.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
                               child: Text(
                                 'v$version',
-                                style: const TextStyle(
-                                  color: AppColors.onPrimary,
-                                  fontSize: 12,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: colors.primary,
                                 ),
                               ),
                             );
@@ -125,118 +237,93 @@ class AppDrawer extends StatelessWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 2),
                     Text(
                       context.l10n.drawerSubtitle,
                       style: TextStyle(
-                        color: AppColors.onPrimary,
-                        fontSize: 14,
+                        fontSize: 13,
+                        color: colors.onSurfaceVariant,
                       ),
                     ),
                   ],
                 ),
               ),
-            ),
+            ],
           ),
-          // --- SECCIÓN 1: PRINCIPAL Y VENTAS ---
-          Padding(
-            padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: Text(
-              context.l10n.navSectionMain,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textSubtle,
-                letterSpacing: 0.8,
-              ),
-            ),
-          ),
-          ListTile(
-            leading: Icon(Icons.dashboard_outlined, color: iconColor),
-            title: Text(context.l10n.navDashboard),
-            onTap: () {
-              Navigator.pushReplacementNamed(context, '/');
-            },
-          ),
-          ListTile(
-            leading: Icon(Icons.point_of_sale_outlined, color: iconColor),
-            title: Text(context.l10n.navSales),
-            onTap: () {
-              Navigator.pushReplacementNamed(context, '/sales');
-            },
-          ),
+        ),
+      ),
+    );
+  }
+}
 
-          const Divider(height: 24, indent: 16, endIndent: 16),
+/// Entrada del menú: píldora redondeada; la pantalla actual va resaltada.
+class _NavItem extends StatelessWidget {
+  const _NavItem({
+    required this.icon,
+    required this.selectedIcon,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+    this.subtitle,
+  });
 
-          // --- SECCIÓN 2: ALMACÉN Y CATÁLOGO ---
-          Padding(
-            padding: EdgeInsets.fromLTRB(16, 0, 16, 8),
-            child: Text(
-              context.l10n.navSectionStockOffers,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textSubtle,
-                letterSpacing: 0.8,
-              ),
-            ),
-          ),
-          ListTile(
-            leading: Icon(Icons.inventory_2_outlined, color: iconColor),
-            title: Text(context.l10n.navInventory),
-            onTap: () {
-              Navigator.pushReplacementNamed(context, '/inventory');
-            },
-          ),
-          ListTile(
-            leading: Icon(Icons.local_offer_outlined, color: iconColor),
-            title: Text(context.l10n.navPromotions),
-            onTap: () {
-              Navigator.pushReplacementNamed(context, '/promotions');
-            },
-          ),
-          ListTile(
-            leading: Icon(Icons.card_giftcard, color: iconColor),
-            title: Text(context.l10n.navPacks),
-            onTap: () {
-              Navigator.pushReplacementNamed(context, '/packs');
-            },
-          ),
-          const Divider(height: 24, indent: 16, endIndent: 16),
+  final IconData icon;
+  final IconData selectedIcon;
+  final String label;
+  final String? subtitle;
+  final bool selected;
+  final VoidCallback onTap;
 
-          // --- SECCIÓN 3: HISTORIAL Y REGISTROS ---
-          Padding(
-            padding: EdgeInsets.fromLTRB(16, 0, 16, 8),
-            child: Text(
-              context.l10n.navSectionRecords,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textSubtle,
-                letterSpacing: 0.8,
-              ),
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+      child: Material(
+        color: selected
+            ? colors.primary.withValues(alpha: 0.12)
+            : Colors.transparent,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                Icon(
+                  selected ? selectedIcon : icon,
+                  color: selected ? colors.primary : colors.onSurfaceVariant,
+                ),
+                const SizedBox(width: AppSpacing.lg),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        label,
+                        style: TextStyle(
+                          color: selected ? colors.primary : colors.onSurface,
+                          fontWeight: selected
+                              ? FontWeight.bold
+                              : FontWeight.w500,
+                        ),
+                      ),
+                      if (subtitle != null)
+                        Text(
+                          subtitle!,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: colors.onSurfaceVariant,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
-          ListTile(
-            leading: Icon(Icons.history_outlined, color: iconColor),
-            title: Text(context.l10n.navHistory),
-            onTap: () {
-              Navigator.pushReplacementNamed(context, '/history');
-            },
-          ),
-          const Divider(height: 24, indent: 16, endIndent: 16),
-          ListTile(
-            leading: Icon(
-              Icons.storage_rounded,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            title: Text(context.l10n.navDataManagement),
-            subtitle: Text(context.l10n.navDataManagementSubtitle),
-            onTap: () {
-              Navigator.pushReplacementNamed(context, '/data-management');
-            },
-          ),
-        ],
+        ),
       ),
     );
   }
