@@ -1481,7 +1481,7 @@ abstract class AppLocalizations {
   /// No description provided for @syncByQrDescription.
   ///
   /// In es, this message translates to:
-  /// **'Clona la base de datos completa con otro dispositivo cercano vía Wi-Fi o Hotspot.'**
+  /// **'Clona la base de datos completa en otro móvil cercano escaneando un QR, sin necesidad de Wi‑Fi.'**
   String get syncByQrDescription;
 
   /// No description provided for @backupSectionTitle.
@@ -1565,13 +1565,13 @@ abstract class AppLocalizations {
   /// No description provided for @syncLocalTitle.
   ///
   /// In es, this message translates to:
-  /// **'Sincronización Local (Wi-Fi / Hotspot)'**
+  /// **'Clonar a otro móvil'**
   String get syncLocalTitle;
 
   /// No description provided for @syncLocalDescription.
   ///
   /// In es, this message translates to:
-  /// **'Conecta ambos dispositivos a la misma red Wi-Fi o activa un Hotspot en uno de ellos para clonar el inventario al instante.'**
+  /// **'Uno emite y el otro escanea el QR. No hace falta Wi‑Fi: la app crea su propio punto de acceso.'**
   String get syncLocalDescription;
 
   /// No description provided for @syncEmitData.
@@ -1933,6 +1933,180 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Desliza →'**
   String get trashSlideDrag;
+
+  /// No description provided for @syncEmitHotspot.
+  ///
+  /// In es, this message translates to:
+  /// **'Emitir sin Wi‑Fi'**
+  String get syncEmitHotspot;
+
+  /// No description provided for @syncEmitHotspotHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Crea un punto de acceso temporal: no hace falta ninguna red'**
+  String get syncEmitHotspotHint;
+
+  /// No description provided for @syncEmitSameWifi.
+  ///
+  /// In es, this message translates to:
+  /// **'Emitir por la misma red Wi‑Fi'**
+  String get syncEmitSameWifi;
+
+  /// No description provided for @syncHotspotStarting.
+  ///
+  /// In es, this message translates to:
+  /// **'Creando punto de acceso…'**
+  String get syncHotspotStarting;
+
+  /// No description provided for @syncHotspotNetwork.
+  ///
+  /// In es, this message translates to:
+  /// **'Red: {ssid}'**
+  String syncHotspotNetwork(String ssid);
+
+  /// No description provided for @syncHotspotPassword.
+  ///
+  /// In es, this message translates to:
+  /// **'Contraseña: {password}'**
+  String syncHotspotPassword(String password);
+
+  /// No description provided for @syncConnectingToSender.
+  ///
+  /// In es, this message translates to:
+  /// **'Conectando a la red del emisor… acepta el aviso de Android'**
+  String get syncConnectingToSender;
+
+  /// No description provided for @syncHotspotPermissionDenied.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin el permiso de dispositivos cercanos no se puede crear el punto de acceso.'**
+  String get syncHotspotPermissionDenied;
+
+  /// No description provided for @syncHotspotLocationOff.
+  ///
+  /// In es, this message translates to:
+  /// **'Activa la ubicación del móvil para crear el punto de acceso.'**
+  String get syncHotspotLocationOff;
+
+  /// No description provided for @syncHotspotIncompatible.
+  ///
+  /// In es, this message translates to:
+  /// **'Desactiva el punto de acceso o compartir conexión del móvil e inténtalo de nuevo.'**
+  String get syncHotspotIncompatible;
+
+  /// No description provided for @syncHotspotUnsupported.
+  ///
+  /// In es, this message translates to:
+  /// **'Este móvil no puede crear el punto de acceso. Usa la opción de misma red Wi‑Fi.'**
+  String get syncHotspotUnsupported;
+
+  /// No description provided for @syncHotspotFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo crear el punto de acceso.'**
+  String get syncHotspotFailed;
+
+  /// No description provided for @syncConnectFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo conectar a la red del emisor. ¿Aceptaste la conexión?'**
+  String get syncConnectFailed;
+
+  /// No description provided for @syncManualConnectTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Conéctate a la red del emisor'**
+  String get syncManualConnectTitle;
+
+  /// No description provided for @syncManualConnectBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Este móvil no puede conectarse solo. Ve a Ajustes › Wi‑Fi, conéctate a esta red y vuelve aquí:'**
+  String get syncManualConnectBody;
+
+  /// No description provided for @syncManualConnectDone.
+  ///
+  /// In es, this message translates to:
+  /// **'Ya estoy conectado'**
+  String get syncManualConnectDone;
+
+  /// No description provided for @syncOpenSettings.
+  ///
+  /// In es, this message translates to:
+  /// **'Abrir ajustes'**
+  String get syncOpenSettings;
+
+  /// No description provided for @syncInvalidQr.
+  ///
+  /// In es, this message translates to:
+  /// **'Este QR no es de KeepInventory.'**
+  String get syncInvalidQr;
+
+  /// No description provided for @syncApprovalTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Permitir copiar tus datos?'**
+  String get syncApprovalTitle;
+
+  /// No description provided for @syncApprovalBody.
+  ///
+  /// In es, this message translates to:
+  /// **'{device} quiere copiar todo tu inventario, packs, promociones y ventas.'**
+  String syncApprovalBody(String device);
+
+  /// No description provided for @syncApprovalCode.
+  ///
+  /// In es, this message translates to:
+  /// **'Código: {code}'**
+  String syncApprovalCode(String code);
+
+  /// No description provided for @syncApprovalCodeHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Permite solo si el otro móvil muestra el mismo código.'**
+  String get syncApprovalCodeHint;
+
+  /// No description provided for @syncApprovalAllow.
+  ///
+  /// In es, this message translates to:
+  /// **'Permitir'**
+  String get syncApprovalAllow;
+
+  /// No description provided for @syncApprovalDeny.
+  ///
+  /// In es, this message translates to:
+  /// **'Rechazar'**
+  String get syncApprovalDeny;
+
+  /// No description provided for @syncWaitingApproval.
+  ///
+  /// In es, this message translates to:
+  /// **'Esperando a que el emisor acepte… Código: {code}'**
+  String syncWaitingApproval(String code);
+
+  /// No description provided for @syncDeniedBySender.
+  ///
+  /// In es, this message translates to:
+  /// **'El emisor ha rechazado la solicitud.'**
+  String get syncDeniedBySender;
+
+  /// No description provided for @syncApprovalTimeout.
+  ///
+  /// In es, this message translates to:
+  /// **'El emisor no respondió a tiempo.'**
+  String get syncApprovalTimeout;
+
+  /// No description provided for @syncRequestDenied.
+  ///
+  /// In es, this message translates to:
+  /// **'Solicitud rechazada'**
+  String get syncRequestDenied;
+
+  /// No description provided for @syncRequestApproved.
+  ///
+  /// In es, this message translates to:
+  /// **'Envío autorizado a {device}'**
+  String syncRequestApproved(String device);
 }
 
 class _AppLocalizationsDelegate

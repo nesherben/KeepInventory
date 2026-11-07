@@ -789,7 +789,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get syncByQrDescription =>
-      'Clone the entire database with another nearby device over Wi-Fi or a hotspot.';
+      'Clone the whole database to a nearby phone by scanning a QR, no Wi‑Fi needed.';
 
   @override
   String get backupSectionTitle => 'FILE BACKUPS';
@@ -836,11 +836,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get syncTitle => 'Device Sync';
 
   @override
-  String get syncLocalTitle => 'Local Sync (Wi-Fi / Hotspot)';
+  String get syncLocalTitle => 'Clone to another phone';
 
   @override
   String get syncLocalDescription =>
-      'Connect both devices to the same Wi-Fi network or enable a hotspot on one to clone the inventory instantly.';
+      'One phone sends, the other scans the QR. No Wi‑Fi needed: the app creates its own hotspot.';
 
   @override
   String get syncEmitData => '📤 Send Data (Create QR)';
@@ -1053,4 +1053,112 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get trashSlideDrag => 'Slide →';
+
+  @override
+  String get syncEmitHotspot => 'Send without Wi‑Fi';
+
+  @override
+  String get syncEmitHotspotHint =>
+      'Creates a temporary hotspot: no network needed';
+
+  @override
+  String get syncEmitSameWifi => 'Send over the same Wi‑Fi';
+
+  @override
+  String get syncHotspotStarting => 'Creating hotspot…';
+
+  @override
+  String syncHotspotNetwork(String ssid) {
+    return 'Network: $ssid';
+  }
+
+  @override
+  String syncHotspotPassword(String password) {
+    return 'Password: $password';
+  }
+
+  @override
+  String get syncConnectingToSender =>
+      'Connecting to the sender\'s network… accept the Android prompt';
+
+  @override
+  String get syncHotspotPermissionDenied =>
+      'Without the nearby devices permission the hotspot can\'t be created.';
+
+  @override
+  String get syncHotspotLocationOff =>
+      'Turn on location to create the hotspot.';
+
+  @override
+  String get syncHotspotIncompatible =>
+      'Turn off the phone\'s hotspot or tethering and try again.';
+
+  @override
+  String get syncHotspotUnsupported =>
+      'This phone can\'t create the hotspot. Use the same Wi‑Fi option.';
+
+  @override
+  String get syncHotspotFailed => 'Couldn\'t create the hotspot.';
+
+  @override
+  String get syncConnectFailed =>
+      'Couldn\'t connect to the sender\'s network. Did you accept the connection?';
+
+  @override
+  String get syncManualConnectTitle => 'Connect to the sender\'s network';
+
+  @override
+  String get syncManualConnectBody =>
+      'This phone can\'t connect on its own. Go to Settings › Wi‑Fi, join this network and come back:';
+
+  @override
+  String get syncManualConnectDone => 'I\'m connected';
+
+  @override
+  String get syncOpenSettings => 'Open settings';
+
+  @override
+  String get syncInvalidQr => 'This QR code isn\'t from KeepInventory.';
+
+  @override
+  String get syncApprovalTitle => 'Allow copying your data?';
+
+  @override
+  String syncApprovalBody(String device) {
+    return '$device wants to copy your whole inventory, packs, promotions and sales.';
+  }
+
+  @override
+  String syncApprovalCode(String code) {
+    return 'Code: $code';
+  }
+
+  @override
+  String get syncApprovalCodeHint =>
+      'Only allow if the other phone shows the same code.';
+
+  @override
+  String get syncApprovalAllow => 'Allow';
+
+  @override
+  String get syncApprovalDeny => 'Deny';
+
+  @override
+  String syncWaitingApproval(String code) {
+    return 'Waiting for the sender to accept… Code: $code';
+  }
+
+  @override
+  String get syncDeniedBySender => 'The sender denied the request.';
+
+  @override
+  String get syncApprovalTimeout => 'The sender didn\'t respond in time.';
+
+  @override
+  String get syncRequestDenied => 'Request denied';
+
+  @override
+  String syncRequestApproved(String device) {
+    return 'Sending authorised to $device';
+  }
 }

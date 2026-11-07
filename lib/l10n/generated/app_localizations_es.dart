@@ -793,7 +793,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get syncByQrDescription =>
-      'Clona la base de datos completa con otro dispositivo cercano vía Wi-Fi o Hotspot.';
+      'Clona la base de datos completa en otro móvil cercano escaneando un QR, sin necesidad de Wi‑Fi.';
 
   @override
   String get backupSectionTitle => 'COPIAS DE SEGURIDAD EN ARCHIVO';
@@ -841,11 +841,11 @@ class AppLocalizationsEs extends AppLocalizations {
   String get syncTitle => 'Sincronización de Dispositivos';
 
   @override
-  String get syncLocalTitle => 'Sincronización Local (Wi-Fi / Hotspot)';
+  String get syncLocalTitle => 'Clonar a otro móvil';
 
   @override
   String get syncLocalDescription =>
-      'Conecta ambos dispositivos a la misma red Wi-Fi o activa un Hotspot en uno de ellos para clonar el inventario al instante.';
+      'Uno emite y el otro escanea el QR. No hace falta Wi‑Fi: la app crea su propio punto de acceso.';
 
   @override
   String get syncEmitData => '📤 Emitir Datos (Crear QR)';
@@ -1058,4 +1058,112 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get trashSlideDrag => 'Desliza →';
+
+  @override
+  String get syncEmitHotspot => 'Emitir sin Wi‑Fi';
+
+  @override
+  String get syncEmitHotspotHint =>
+      'Crea un punto de acceso temporal: no hace falta ninguna red';
+
+  @override
+  String get syncEmitSameWifi => 'Emitir por la misma red Wi‑Fi';
+
+  @override
+  String get syncHotspotStarting => 'Creando punto de acceso…';
+
+  @override
+  String syncHotspotNetwork(String ssid) {
+    return 'Red: $ssid';
+  }
+
+  @override
+  String syncHotspotPassword(String password) {
+    return 'Contraseña: $password';
+  }
+
+  @override
+  String get syncConnectingToSender =>
+      'Conectando a la red del emisor… acepta el aviso de Android';
+
+  @override
+  String get syncHotspotPermissionDenied =>
+      'Sin el permiso de dispositivos cercanos no se puede crear el punto de acceso.';
+
+  @override
+  String get syncHotspotLocationOff =>
+      'Activa la ubicación del móvil para crear el punto de acceso.';
+
+  @override
+  String get syncHotspotIncompatible =>
+      'Desactiva el punto de acceso o compartir conexión del móvil e inténtalo de nuevo.';
+
+  @override
+  String get syncHotspotUnsupported =>
+      'Este móvil no puede crear el punto de acceso. Usa la opción de misma red Wi‑Fi.';
+
+  @override
+  String get syncHotspotFailed => 'No se pudo crear el punto de acceso.';
+
+  @override
+  String get syncConnectFailed =>
+      'No se pudo conectar a la red del emisor. ¿Aceptaste la conexión?';
+
+  @override
+  String get syncManualConnectTitle => 'Conéctate a la red del emisor';
+
+  @override
+  String get syncManualConnectBody =>
+      'Este móvil no puede conectarse solo. Ve a Ajustes › Wi‑Fi, conéctate a esta red y vuelve aquí:';
+
+  @override
+  String get syncManualConnectDone => 'Ya estoy conectado';
+
+  @override
+  String get syncOpenSettings => 'Abrir ajustes';
+
+  @override
+  String get syncInvalidQr => 'Este QR no es de KeepInventory.';
+
+  @override
+  String get syncApprovalTitle => '¿Permitir copiar tus datos?';
+
+  @override
+  String syncApprovalBody(String device) {
+    return '$device quiere copiar todo tu inventario, packs, promociones y ventas.';
+  }
+
+  @override
+  String syncApprovalCode(String code) {
+    return 'Código: $code';
+  }
+
+  @override
+  String get syncApprovalCodeHint =>
+      'Permite solo si el otro móvil muestra el mismo código.';
+
+  @override
+  String get syncApprovalAllow => 'Permitir';
+
+  @override
+  String get syncApprovalDeny => 'Rechazar';
+
+  @override
+  String syncWaitingApproval(String code) {
+    return 'Esperando a que el emisor acepte… Código: $code';
+  }
+
+  @override
+  String get syncDeniedBySender => 'El emisor ha rechazado la solicitud.';
+
+  @override
+  String get syncApprovalTimeout => 'El emisor no respondió a tiempo.';
+
+  @override
+  String get syncRequestDenied => 'Solicitud rechazada';
+
+  @override
+  String syncRequestApproved(String device) {
+    return 'Envío autorizado a $device';
+  }
 }

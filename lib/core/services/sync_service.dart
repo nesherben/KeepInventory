@@ -11,46 +11,113 @@ import 'package:keepinventory/l10n/generated/app_localizations.dart';
 
 import '../database/database_helper.dart';
 import 'database_file_installer.dart';
+import 'sync_approval.dart';
+import 'sync_invite.dart';
 
 class SyncService {
   static HttpServer? _server;
 
-  // --- DETECCIÓN INTELIGENTE DE IP ---
-  static Future<String?> _getLocalIp() async {
-    try {
-      final info = NetworkInfo();
-      String? ip = await info.getWifiIP();
+  static const int port = 8080;
 
-      if (ip == null || ip == '0.0.0.0' || ip == '127.0.0.1') {
-        final interfaces = await NetworkInterface.list(
-          type: InternetAddressType.IPv4,
-        );
-        for (var interface in interfaces) {
-          for (var addr in interface.addresses) {
-            if (!addr.isLoopback && !addr.isLinkLocal) {
-              ip = addr.address;
-              if (ip.startsWith('192.168.43.') ||
-                  ip.startsWith('192.168.49.')) {
-                return ip;
-              }
-            }
-          }
+  /// Direcciones IPv4 de este móvil (Wi‑Fi, punto de acceso…), con las
+  /// típicas de punto de acceso/Wi‑Fi Direct primero.
+  static Future<List<String>> localIPv4Addresses() async {
+    final result = <String>[];
+    try {
+      final wifiIp = await NetworkInfo().getWifiIP();
+      final interfaces = await NetworkInterface.list(
+        type: InternetAddressType.IPv4,
+      );
+      for (final interface in interfaces) {
+        for (final addr in interface.addresses) {
+          if (!addr.isLoopback && !addr.isLinkLocal) result.add(addr.address);
         }
       }
-      return ip;
-    } catch (e) {
-      return null;
-    }
+      if (wifiIp != null && wifiIp != '0.0.0.0' && !result.contains(wifiIp)) {
+        result.add(wifiIp);
+      }
+    } catch (_) {}
+    int rank(String ip) =>
+        ip.startsWith('192.168.43.') || ip.startsWith('192.168.49.') ? 0 : 1;
+    result.sort((a, b) => rank(a).compareTo(rank(b)));
+    return result;
   }
 
-  static Future<String?> startServer(
-    AppLocalizations l10n,
-    Function(String) onError,
-  ) async {
-    try {
-      final ip = await _getLocalIp();
+  /// Rutas del servidor. Exige el [token] del QR y, además, que el emisor
+  /// apruebe cada solicitud en pantalla ([gate]):
+  ///
+  /// 1. `/request?id=&device=` → registra la solicitud (el emisor la ve).
+  /// 2. `/status?id=` → pending | approved | denied | unknown.
+  /// 3. `/download-db?id=` → solo si está aprobada.
+  static shelf.Handler buildSyncHandler(
+    File file,
+    String token,
+    SyncApprovalGate gate,
+  ) {
+    final router = shelf_router.Router();
+    bool authorized(shelf.Request request) =>
+        request.url.queryParameters['token'] == token;
+    final forbidden = shelf.Response.forbidden('forbidden');
 
-      if (ip == null) {
+    router.get('/ping', (shelf.Request request) {
+      return authorized(request)
+          ? shelf.Response.ok('keepinventory')
+          : forbidden;
+    });
+
+    router.get('/request', (shelf.Request request) {
+      if (!authorized(request)) return forbidden;
+      final q = request.url.queryParameters;
+      final id = q['id'];
+      if (id == null || id.length < 8) return shelf.Response.badRequest();
+      final info =
+          request.context['shelf.io.connection_info'] as HttpConnectionInfo?;
+      final accepted = gate.register(
+        SyncRequest(
+          id: id,
+          device: (q['device'] ?? '').trim().isEmpty ? '?' : q['device']!,
+          address: info?.remoteAddress.address,
+        ),
+      );
+      return accepted
+          ? shelf.Response.ok(gate.status(id).name)
+          : shelf.Response(429, body: 'busy');
+    });
+
+    router.get('/status', (shelf.Request request) {
+      if (!authorized(request)) return forbidden;
+      return shelf.Response.ok(
+        gate.status(request.url.queryParameters['id']).name,
+      );
+    });
+
+    router.get('/download-db', (shelf.Request request) {
+      if (!authorized(request)) return forbidden;
+      if (!gate.consumeDownload(request.url.queryParameters['id'])) {
+        return forbidden;
+      }
+      return shelf.Response.ok(
+        file.openRead(),
+        headers: {
+          'Content-Type': 'application/octet-stream',
+          'Content-Length': file.lengthSync().toString(),
+        },
+      );
+    });
+    return router.call;
+  }
+
+  /// Arranca el servidor. Devuelve las direcciones en las que escucha
+  /// (null si falla; el motivo se comunica con [onError]).
+  static Future<List<String>?> startServer(
+    AppLocalizations l10n,
+    Function(String) onError, {
+    required String token,
+    required SyncApprovalGate gate,
+  }) async {
+    try {
+      final hosts = await localIPv4Addresses();
+      if (hosts.isEmpty) {
         onError(l10n.syncNoIp);
         return null;
       }
@@ -58,34 +125,51 @@ class SyncService {
       await DatabaseHelper.instance.resetDatabase();
 
       final dbPath = await getDatabasesPath();
-      final path = '$dbPath/keepinventory.db';
-
-      final file = File(path);
+      final file = File('$dbPath/keepinventory.db');
       if (!await file.exists()) {
         onError(l10n.syncLocalDbMissing);
         return null;
       }
 
-      final router = shelf_router.Router();
-
-      router.get('/download-db', (shelf.Request request) async {
-        return shelf.Response.ok(
-          file.openRead(),
-          headers: {
-            'Content-Type': 'application/octet-stream',
-            'Content-Length': file.lengthSync().toString(),
-          },
-        );
-      });
-
-      _server = await io.serve(router.call, InternetAddress.anyIPv4, 8080);
-      debugPrint('Sync server active at http://$ip:8080/download-db');
-
-      return 'http://$ip:8080/download-db';
+      await stopServer();
+      _server = await io.serve(
+        buildSyncHandler(file, token, gate),
+        InternetAddress.anyIPv4,
+        port,
+      );
+      debugPrint('Sync server active on $hosts:$port');
+      return hosts;
     } catch (e) {
       onError(l10n.syncStartFailed);
       return null;
     }
+  }
+
+  /// Busca qué dirección del emisor responde (prueba [preferredHosts]
+  /// primero, p. ej. la puerta de enlace del punto de acceso).
+  static Future<String?> findReachableHost(
+    SyncInvite invite, {
+    List<String> preferredHosts = const [],
+  }) async {
+    if (invite.legacyUrl != null) return invite.hosts.first;
+    final candidates = {...preferredHosts, ...invite.hosts}.toList();
+    for (var round = 0; round < 3; round++) {
+      for (final host in candidates) {
+        final client = http.Client();
+        try {
+          final response = await client
+              .get(invite.pingUri(host))
+              .timeout(const Duration(seconds: 3));
+          if (response.statusCode == 200) return host;
+        } catch (_) {
+        } finally {
+          client.close();
+        }
+      }
+      // La red del punto de acceso puede tardar unos segundos en estar lista
+      await Future.delayed(const Duration(seconds: 2));
+    }
+    return null;
   }
 
   static Future<void> stopServer() async {
@@ -97,40 +181,87 @@ class SyncService {
   }
 
   // --- 2. EL RECEPTOR DESCARGA EN STREAMING ---
+  /// Pide la copia al emisor y espera a que la apruebe en su pantalla.
+  /// Devuelve el estado final (approved, denied o unknown si no responde).
+  static Future<SyncRequestStatus> requestApproval(
+    SyncInvite invite,
+    String host,
+    String requestId,
+    String deviceName, {
+    Duration timeout = const Duration(minutes: 2),
+  }) async {
+    final client = http.Client();
+    try {
+      final response = await client
+          .get(invite.requestUri(host, requestId, deviceName))
+          .timeout(const Duration(seconds: 5));
+      if (response.statusCode != 200) return SyncRequestStatus.denied;
+
+      final deadline = DateTime.now().add(timeout);
+      while (DateTime.now().isBefore(deadline)) {
+        try {
+          final status = await client
+              .get(invite.statusUri(host, requestId))
+              .timeout(const Duration(seconds: 5));
+          final value = SyncRequestStatus.values.firstWhere(
+            (s) => s.name == status.body.trim(),
+            orElse: () => SyncRequestStatus.unknown,
+          );
+          if (value == SyncRequestStatus.approved ||
+              value == SyncRequestStatus.denied) {
+            return value;
+          }
+        } catch (_) {}
+        await Future.delayed(const Duration(seconds: 1));
+      }
+      return SyncRequestStatus.unknown;
+    } catch (_) {
+      return SyncRequestStatus.unknown;
+    } finally {
+      client.close();
+    }
+  }
+
   static Future<bool> importDatabase(
-    String url,
+    SyncInvite invite,
     AppLocalizations l10n,
-    Function(String status, double progress) onProgress,
-  ) async {
-    // 💡 1. VERIFICACIÓN DE REDES (Misma Wi-Fi / Subred)
-    final uri = Uri.tryParse(url);
-    if (uri == null) return false;
+    Function(String status, double progress) onProgress, {
+    List<String> preferredHosts = const [],
+    String deviceName = 'Android',
+  }) async {
+    // 💡 1. LOCALIZAR AL EMISOR (prueba cada dirección del QR)
+    onProgress(l10n.syncVerifyNetwork, 0.0);
+    final host = await findReachableHost(
+      invite,
+      preferredHosts: preferredHosts,
+    );
+    if (host == null) {
+      onProgress(l10n.syncSenderNotFound, -1.0);
+      return false;
+    }
 
-    final targetIp = uri.host;
-    final receiverIp = await _getLocalIp();
-
-    if (receiverIp == null ||
-        receiverIp == '127.0.0.1' ||
-        receiverIp == '0.0.0.0') {
-      onProgress(l10n.syncNoNetwork, 0.0);
-      await Future.delayed(const Duration(seconds: 2));
-    } else {
-      // Extraemos la subred (ej: 192.168.1 de 192.168.1.55)
-      final targetSubnet = targetIp.contains('.')
-          ? targetIp.substring(0, targetIp.lastIndexOf('.'))
-          : '';
-      final receiverSubnet = receiverIp.contains('.')
-          ? receiverIp.substring(0, receiverIp.lastIndexOf('.'))
-          : '';
-
-      if (targetSubnet.isNotEmpty && targetSubnet != receiverSubnet) {
+    // 💡 2. EL EMISOR DEBE APROBAR LA COPIA (no aplica al QR antiguo)
+    String? requestId;
+    if (invite.legacyUrl == null) {
+      requestId = SyncInvite.newToken(length: 16);
+      onProgress(l10n.syncWaitingApproval(verificationCode(requestId)), -1.0);
+      final decision = await requestApproval(
+        invite,
+        host,
+        requestId,
+        deviceName,
+      );
+      if (decision != SyncRequestStatus.approved) {
         onProgress(
-          l10n.syncDifferentNetworks(targetSubnet, receiverSubnet),
-          0.0,
+          decision == SyncRequestStatus.denied
+              ? l10n.syncDeniedBySender
+              : l10n.syncApprovalTimeout,
+          -1.0,
         );
-        await Future.delayed(const Duration(seconds: 3));
+        return false;
       }
     }
+    final url = invite.downloadUri(host, requestId: requestId).toString();
 
     // 💡 2. DESCARGA CON AUTO-REINTENTO
     const int maxRetries = 3;

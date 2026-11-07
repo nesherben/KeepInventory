@@ -23,8 +23,12 @@ class MainActivity: FlutterActivity() {
     private val SAVE_FILE_REQUEST_CODE = 1002
     private var sourceFileToSave: String? = null
 
+    // Sincronización por punto de acceso (ver HotspotChannel.kt)
+    private var hotspotChannel: HotspotChannel? = null
+
     override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        hotspotChannel = HotspotChannel(this, flutterEngine.dartExecutor.binaryMessenger)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
             pendingResult = result
             when (call.method) {
@@ -84,6 +88,21 @@ class MainActivity: FlutterActivity() {
         } catch (e: Exception) {
             e.printStackTrace()
         }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        if (hotspotChannel?.onPermissionsResult(requestCode, grantResults) == true) return
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+    }
+
+    override fun onDestroy() {
+        hotspotChannel?.dispose()
+        hotspotChannel = null
+        super.onDestroy()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

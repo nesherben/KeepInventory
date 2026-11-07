@@ -2,6 +2,15 @@
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" /><!-- 💡 AÑADE ESTOS DOS PERMISOS AQUÍ -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Sincronización por punto de acceso propio (HotspotChannel.kt) -->
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+    <!-- Android 8-12: el punto de acceso local exige ubicación -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" android:maxSdkVersion="32" />
+    <!-- Android 13+: permiso de dispositivos Wi‑Fi cercanos, sin uso de ubicación -->
+    <uses-permission android:name="android.permission.NEARBY_WIFI_DEVICES" android:usesPermissionFlags="neverForLocation" />
     <application
         android:label="KeepInventory"
         android:name="${applicationName}"

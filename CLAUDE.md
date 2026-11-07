@@ -5,7 +5,7 @@ Flutter app (Android) for inventory + POS sales/tickets. Local SQLite (`sqflite`
 ## Map
 - `lib/main.dart` — init DB, image migration, theme, prefs; routes to screens.
 - `lib/core/database/` — `database_helper.dart` (singleton, schema version), `database_schema_creator.dart` (fresh install), `database_migration_runner.dart` (upgrades). Schema change ⇒ bump version + add migration + update creator + tests.
-- `lib/core/services/` — prefs, backup, DB import/install, GitHub update check, image compression/migration, LAN sync (`sync_service.dart`, shelf server + QR).
+- `lib/core/services/` — prefs, backup, DB import/install, GitHub update check, image compression/migration, sync (`sync_service.dart` shelf server with one-time token **and mandatory sender approval** via `sync_approval.dart` — never serve data without it; `sync_invite.dart` QR format; `hotspot_service.dart` ↔ native `android/.../HotspotChannel.kt` creates/joins a LocalOnlyHotspot so no shared Wi‑Fi is needed — only testable on two real phones).
 - `lib/core/shared_widgets/`, `lib/core/theme/`.
 - `lib/features/<feature>/` (dashboard, inventory, packs, promotions, sales, sync) — clean layers:
   `domain/` (entities, pure logic, `repositories/` abstract) → `data/` (`*_model.dart`, `datasources/*_local_datasource.dart`, `repositories/*_impl.dart`) → `presentation/` (screens, `widgets/`).
