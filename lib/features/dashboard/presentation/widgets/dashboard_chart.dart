@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:keepinventory/l10n/app_localizations_ext.dart';
 
 import '../../../../core/services/app_preferences.dart';
+import '../../../../core/shared_widgets/app_ui.dart';
 import '../../../sales/domain/payment_method.dart';
 import '../../../sales/presentation/widgets/payment_method_widgets.dart';
 
@@ -235,42 +236,8 @@ class _FullScreenChartScreenState extends State<FullScreenChartScreen> {
     );
   }
 
-  Widget _buildStatTile(String label, String value) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-      decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: theme.dividerColor),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 0.5,
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 4),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: Alignment.centerLeft,
-            child: Text(
-              value,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  Widget _buildStatTile(String label, String value) =>
+      StatTile(label: label, value: value);
 
   // ---------------------------------------------------------------------------
   // Gráfico
@@ -690,91 +657,62 @@ class _FullScreenChartScreenState extends State<FullScreenChartScreen> {
   // ---------------------------------------------------------------------------
 
   Widget _buildHistoryHeader() {
-    return Padding(
+    return SectionLabel(
+      context.l10n.chartHistory,
       padding: const EdgeInsets.fromLTRB(4, 8, 4, 8),
-      child: Text(
-        context.l10n.chartHistory,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 0.5,
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
-        ),
-      ),
     );
   }
 
   Widget _buildHistoryRow(_Group group) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-    final selected = group.key == _selectedKey;
-
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      elevation: 0,
-      color: selected
-          ? colors.primary.withValues(alpha: 0.08)
-          : theme.cardColor,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
-        side: BorderSide(
-          color: selected
-              ? colors.primary.withValues(alpha: 0.4)
-              : theme.dividerColor,
-        ),
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(14),
-        onTap: () => _select(group.key, scrollChart: true),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            children: [
-              Icon(
-                group.isFair ? Icons.store : Icons.calendar_month,
-                size: 20,
-                color: colors.onSurfaceVariant,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      group.title(context),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    _buildShareBar(group),
-                  ],
+    final colors = Theme.of(context).colorScheme;
+    return AppCard(
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+      padding: const EdgeInsets.all(AppSpacing.md),
+      radius: 14,
+      selected: group.key == _selectedKey,
+      onTap: () => _select(group.key, scrollChart: true),
+      child: Row(
+        children: [
+          Icon(
+            group.isFair ? Icons.store : Icons.calendar_month,
+            size: 20,
+            color: colors.onSurfaceVariant,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  group.title(context),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                  ),
                 ),
+                const SizedBox(height: 6),
+                _buildShareBar(group),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                _formatCurrency(group.revenue),
+                style: const TextStyle(fontWeight: FontWeight.bold),
               ),
-              const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    _formatCurrency(group.revenue),
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    context.l10n.chartNet(_formatCurrency(group.net)),
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: colors.onSurfaceVariant,
-                    ),
-                  ),
-                ],
+              const SizedBox(height: 2),
+              Text(
+                context.l10n.chartNet(_formatCurrency(group.net)),
+                style: TextStyle(fontSize: 12, color: colors.onSurfaceVariant),
               ),
             ],
           ),
-        ),
+        ],
       ),
     );
   }
