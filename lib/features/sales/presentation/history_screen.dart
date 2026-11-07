@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../../../core/shared_widgets/app_ui.dart';
+
 import 'package:keepinventory/l10n/app_localizations_ext.dart';
 
 import '../../../core/shared_widgets/app_drawer.dart';
@@ -241,10 +244,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
       child: Scaffold(
         key: _scaffoldKey,
         appBar: AppBar(
-          title: Text(
-            context.l10n.refundTitleHistory,
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
+          title: Text(context.l10n.refundTitleHistory),
           actions: [
             IconButton(icon: const Icon(Icons.refresh), onPressed: _loadSales),
           ],
@@ -255,47 +255,25 @@ class _HistoryScreenState extends State<HistoryScreen> {
             : Column(
                 children: [
                   // --- BARRA DE BÚSQUEDA ---
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16.0,
-                      vertical: 12.0,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surface,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.05),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
                     child: TextField(
                       controller: _searchController,
                       onChanged: (value) =>
                           setState(() => _searchQuery = value),
                       decoration: InputDecoration(
                         hintText: context.l10n.searchHistory,
-                        prefixIcon: const Icon(Icons.search),
+                        prefixIcon: const Icon(Icons.search, size: 20),
                         suffixIcon: _searchQuery.isNotEmpty
                             ? IconButton(
-                                icon: const Icon(Icons.clear),
+                                icon: const Icon(Icons.close, size: 18),
                                 onPressed: () {
                                   _searchController.clear();
                                   setState(() => _searchQuery = '');
                                 },
                               )
                             : null,
-                        contentPadding: const EdgeInsets.symmetric(vertical: 0),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide.none,
-                        ),
-                        filled: true,
-                        fillColor: Theme.of(context)
-                            .colorScheme
-                            .surfaceContainerHighest
-                            .withValues(alpha: 0.5),
+                        fillColor: Theme.of(context).cardColor,
                       ),
                     ),
                   ),
@@ -303,31 +281,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   // --- LISTADO DE HISTORIAL ---
                   Expanded(
                     child: groups.isEmpty
-                        ? Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.receipt_long_outlined,
-                                  size: 64,
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .surfaceContainerHighest,
-                                ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  _sales.isEmpty
-                                      ? context.l10n.salesHistoryEmpty
-                                      : context.l10n.historyNoResults,
-                                  style: TextStyle(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onSurfaceVariant,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                              ],
-                            ),
+                        ? EmptyState(
+                            icon: Icons.receipt_long_outlined,
+                            title: _sales.isEmpty
+                                ? context.l10n.salesHistoryEmpty
+                                : context.l10n.historyNoResults,
                           )
                         : ListView.builder(
                             padding: const EdgeInsets.all(16),

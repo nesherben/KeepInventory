@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../../../../core/shared_widgets/app_ui.dart';
+
 import 'package:keepinventory/l10n/app_localizations_ext.dart';
 
 import '../../domain/sale.dart';
@@ -26,13 +29,11 @@ class SaleHistoryGroupCard extends StatelessWidget {
     final headerColor = baseColor.withValues(alpha: 0.12);
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 20),
+      margin: const EdgeInsets.only(bottom: 16),
       elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: BorderSide(
-          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
-        ),
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: theme.dividerColor),
       ),
       clipBehavior: Clip.antiAlias,
       child: ExpansionTile(
@@ -51,7 +52,7 @@ class SaleHistoryGroupCard extends StatelessWidget {
                     style: TextStyle(
                       fontWeight: FontWeight.w900,
                       fontSize: 18,
-                      color: baseColor,
+                      color: theme.colorScheme.onSurface,
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -60,7 +61,7 @@ class SaleHistoryGroupCard extends StatelessWidget {
                     context.l10n.ticketCount(group.sales.length.toString()),
                     style: TextStyle(
                       fontSize: 13,
-                      color: baseColor.withValues(alpha: 0.8),
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -82,7 +83,7 @@ class SaleHistoryGroupCard extends StatelessWidget {
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
-                  color: baseColor,
+                  color: theme.colorScheme.onSurface,
                 ),
               ),
             ),
@@ -102,7 +103,10 @@ class SaleHistoryGroupCard extends StatelessWidget {
                 group.isFair
                     ? context.l10n.changeFair
                     : context.l10n.groupIntoFair,
-                style: TextStyle(color: baseColor, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: theme.colorScheme.onSurface,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               visualDensity: VisualDensity.compact,
               backgroundColor: theme.colorScheme.surface,
@@ -260,46 +264,54 @@ class _SaleTicketCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: 2,
-      shadowColor: Colors.black.withValues(alpha: 0.1),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      margin: const EdgeInsets.only(bottom: 10),
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: BorderSide(color: theme.dividerColor),
+      ),
       child: Theme(
         data: theme.copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
           tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          leading: CircleAvatar(
-            backgroundColor: headerColor,
-            foregroundColor: headerTextColor,
-            child: const Icon(Icons.receipt_long),
-          ),
+          shape: const Border(),
+          collapsedShape: const Border(),
+          leading: IconBadge(Icons.receipt_long, color: headerTextColor),
           title: Text(
             context.l10n.ticketTitle(sale.id.toString()),
-            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
           ),
-          subtitle: Row(
-            children: [
-              Icon(
-                Icons.access_time,
-                size: 14,
-                color: theme.colorScheme.outline,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                _formatDateTime(sale.date),
-                style: TextStyle(color: theme.colorScheme.outline),
-              ),
-              const SizedBox(width: 8),
-              Flexible(child: PaymentMethodBadge(method: sale.paymentMethod)),
-            ],
+          subtitle: Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 4,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.access_time,
+                      size: 14,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      _formatDateTime(sale.date),
+                      style: TextStyle(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+                PaymentMethodBadge(method: sale.paymentMethod),
+              ],
+            ),
           ),
           trailing: Text(
             '${sale.totalAmount.toStringAsFixed(2)} €',
-            style: TextStyle(
-              fontWeight: FontWeight.w900,
-              fontSize: 18,
-              color: theme.colorScheme.primary,
-            ),
+            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
           ),
           children: [
             Container(
@@ -308,7 +320,7 @@ class _SaleTicketCard extends StatelessWidget {
                   alpha: 0.3,
                 ),
                 borderRadius: const BorderRadius.vertical(
-                  bottom: Radius.circular(16),
+                  bottom: Radius.circular(14),
                 ),
               ),
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
