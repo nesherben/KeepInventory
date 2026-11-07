@@ -166,7 +166,7 @@ Future<void> showItemPreview(
             padding: const EdgeInsets.all(16),
             child: Material(
               color: theme.cardColor,
-              elevation: 12,
+              elevation: 4,
               borderRadius: BorderRadius.circular(20),
               clipBehavior: Clip.antiAlias,
               child: Stack(

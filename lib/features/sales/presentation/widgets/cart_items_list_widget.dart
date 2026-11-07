@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/shared_widgets/app_ui.dart';
+
 import 'package:keepinventory/l10n/app_localizations_ext.dart';
 
 import '../../../../core/shared_widgets/auto_scroll_text.dart';
@@ -35,41 +39,22 @@ class CartItemsListWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     if (cart.isEmpty && cartPacks.isEmpty) {
       return Padding(
-        padding: const EdgeInsets.only(top: 48.0),
-        child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.remove_shopping_cart_outlined,
-                size: 64,
-                color: theme.colorScheme.surfaceContainerHighest,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                context.l10n.cartEmpty,
-                style: TextStyle(
-                  color: theme.colorScheme.onSurfaceVariant,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
+        padding: const EdgeInsets.only(top: 24),
+        child: EmptyState(
+          icon: Icons.remove_shopping_cart_outlined,
+          title: context.l10n.cartEmpty,
         ),
       );
     }
 
     return ListView(
       padding: const EdgeInsets.all(12),
-      shrinkWrap: true, // 💡 LA SOLUCIÓN AL CRASH: Le dice a la lista que no se expanda al infinito
-      physics: const ClampingScrollPhysics(), // 💡 Evita que el scroll del carrito pelee con el scroll de la pantalla
+      shrinkWrap: true, // 💡 Evita el crash: la lista no se expande al infinito
+      physics: const ClampingScrollPhysics(), // 💡 No pelea con el scroll de la pantalla
       children: [
-        // --- PRODUCTOS SUELTOS (Con lógica Mix & Match) ---
+        // --- PRODUCTOS SUELTOS (con lógica Mix & Match) ---
         ...cart.keys.map((product) {
           final qty = cart[product]!;
           final itemTotal = calculateItemTotal(product, cart, promotionsMap);
@@ -81,174 +66,37 @@ class CartItemsListWidget extends StatelessWidget {
                 .where((p) => p.promotionId == promo.id && p.id != product.id)
                 .fold(0, (sum, p) => sum + cart[p]!);
           }
+          final promoActive =
+              promo != null && qty + otherItemsInPromo >= promo.threshold;
 
-          final int combinedQty = qty + otherItemsInPromo;
-          final bool promoActive =
-              promo != null && combinedQty >= promo.threshold;
-
-          return Card(
-            margin: const EdgeInsets.only(bottom: 12),
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-              side: BorderSide(
-                color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
-              ),
+          return _CartLine(
+            image: buildProductImage(product),
+            name: product.name,
+            quantity: qty,
+            unitPriceLabel: context.l10n.pricePerUnit(
+              product.price.toStringAsFixed(2),
             ),
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              onLongPress: () => showCartProductPreview(
-                context,
-                product: product,
-                qty: qty,
-                itemTotal: itemTotal,
-                promo: promo,
-                otherItemsInPromo: otherItemsInPromo,
-                onAddAction: null,
-                onRemoveAction: () => onRemoveFromCart(product),
-                onRemoveAllAction: () => onRemoveAllFromCart(product),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Row(
-                  children: [
-                    // IMAGEN
-                    Container(
-                      width: 56,
-                      height: 56,
-                      clipBehavior: Clip.antiAlias,
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.surfaceContainerHighest,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: buildProductImage(product),
-                    ),
-                    const SizedBox(width: 12),
-
-                    // TEXTOS Y ETIQUETAS
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          AutoScrollText(
-                            product.name,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 15,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 6,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: theme.colorScheme.primaryContainer,
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Text(
-                                  '${qty}x',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: theme.colorScheme.onPrimaryContainer,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                context.l10n.pricePerUnit(
-                                  product.price.toStringAsFixed(2),
-                                ),
-                                style: TextStyle(
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                          if (promo != null) ...[
-                            const SizedBox(height: 6),
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.local_offer,
-                                  size: 12,
-                                  color: promoActive
-                                      ? Colors.green
-                                      : Colors.grey,
-                                ),
-                                const SizedBox(width: 4),
-                                Expanded(
-                                  child: Text(
-                                    promoActive
-                                        ? context.l10n.promoAppliedName(
-                                            promo.name,
-                                          )
-                                        : context.l10n.promoAvailableName(
-                                            promo.name,
-                                          ),
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.bold,
-                                      color: promoActive
-                                          ? Colors.green
-                                          : Colors.grey,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-
-                    // TOTAL Y BOTÓN DE BORRAR
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          '${itemTotal.toStringAsFixed(2)} €',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w900,
-                            fontSize: 17,
-                            color: theme.colorScheme.primary,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Material(
-                          color: Colors.red.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
-                          clipBehavior: Clip.antiAlias,
-                          child: InkWell(
-                            onTap: () => onRemoveFromCart(product),
-                            onLongPress: () => onRemoveAllFromCart(product),
-                            child: const Padding(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 6,
-                              ),
-                              child: Icon(
-                                Icons.remove,
-                                size: 18,
-                                color: Colors.red,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
+            total: itemTotal,
+            extra: promo == null
+                ? null
+                : _PromoTag(
+                    label: promoActive
+                        ? context.l10n.promoAppliedName(promo.name)
+                        : context.l10n.promoAvailableName(promo.name),
+                    active: promoActive,
+                  ),
+            onRemove: () => onRemoveFromCart(product),
+            onRemoveAll: () => onRemoveAllFromCart(product),
+            onLongPress: () => showCartProductPreview(
+              context,
+              product: product,
+              qty: qty,
+              itemTotal: itemTotal,
+              promo: promo,
+              otherItemsInPromo: otherItemsInPromo,
+              onAddAction: null,
+              onRemoveAction: () => onRemoveFromCart(product),
+              onRemoveAllAction: () => onRemoveAllFromCart(product),
             ),
           );
         }),
@@ -258,150 +106,225 @@ class CartItemsListWidget extends StatelessWidget {
           final qty = cartPacks[pack]!;
           final itemTotal = pack.price * qty;
 
-          return Card(
-            margin: const EdgeInsets.only(bottom: 12),
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-              side: BorderSide(
-                color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
-              ),
+          return _CartLine(
+            image: buildPackImage(pack),
+            name: pack.name,
+            quantity: qty,
+            unitPriceLabel: context.l10n.pricePerPack(
+              pack.price.toStringAsFixed(2),
             ),
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              onLongPress: () => showCartPackPreview(
-                context,
-                pack: pack,
-                qty: qty,
-                itemTotal: itemTotal,
-                onAddAction: null,
-                onRemoveAction: () => onRemovePackFromCart(pack),
-                onRemoveAllAction: () => onRemoveAllPackFromCart(pack),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 56,
-                      height: 56,
-                      clipBehavior: Clip.antiAlias,
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.surfaceContainerHighest,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: buildPackImage(pack),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          AutoScrollText(
-                            pack.name,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 15,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 6,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: theme.colorScheme.secondaryContainer,
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Text(
-                                  '${qty}x',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color:
-                                        theme.colorScheme.onSecondaryContainer,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                context.l10n.pricePerPack(
-                                  pack.price.toStringAsFixed(2),
-                                ),
-                                style: TextStyle(
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.tertiaryContainer,
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              'PACK',
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color: theme.colorScheme.onTertiaryContainer,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          '${itemTotal.toStringAsFixed(2)} €',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w900,
-                            fontSize: 17,
-                            color: theme.colorScheme.secondary,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Material(
-                          color: Colors.red.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
-                          clipBehavior: Clip.antiAlias,
-                          child: InkWell(
-                            onTap: () => onRemovePackFromCart(pack),
-                            onLongPress: () => onRemoveAllPackFromCart(pack),
-                            child: const Padding(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 6,
-                              ),
-                              child: Icon(
-                                Icons.remove,
-                                size: 18,
-                                color: Colors.red,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
+            total: itemTotal,
+            extra: const _PackTag(),
+            onRemove: () => onRemovePackFromCart(pack),
+            onRemoveAll: () => onRemoveAllPackFromCart(pack),
+            onLongPress: () => showCartPackPreview(
+              context,
+              pack: pack,
+              qty: qty,
+              itemTotal: itemTotal,
+              onAddAction: null,
+              onRemoveAction: () => onRemovePackFromCart(pack),
+              onRemoveAllAction: () => onRemoveAllPackFromCart(pack),
             ),
           );
         }),
+      ],
+    );
+  }
+}
+
+/// Línea del carrito: imagen · nombre, cantidad y precio unitario · total y
+/// botón de quitar (pulsación larga = quitar todas).
+class _CartLine extends StatelessWidget {
+  const _CartLine({
+    required this.image,
+    required this.name,
+    required this.quantity,
+    required this.unitPriceLabel,
+    required this.total,
+    required this.onRemove,
+    required this.onRemoveAll,
+    required this.onLongPress,
+    this.extra,
+  });
+
+  final Widget image;
+  final String name;
+  final int quantity;
+  final String unitPriceLabel;
+  final double total;
+  final Widget? extra;
+  final VoidCallback onRemove;
+  final VoidCallback onRemoveAll;
+  final VoidCallback onLongPress;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return AppCard(
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+      padding: const EdgeInsets.all(AppSpacing.md),
+      onLongPress: onLongPress,
+      child: Row(
+        children: [
+          Container(
+            width: 52,
+            height: 52,
+            clipBehavior: Clip.antiAlias,
+            decoration: BoxDecoration(
+              color: colors.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(AppRadius.md),
+            ),
+            child: image,
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                AutoScrollText(
+                  name,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: colors.primary.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        '${quantity}x',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: colors.primary,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Flexible(
+                      child: Text(
+                        unitPriceLabel,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: colors.onSurfaceVariant,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                if (extra != null) ...[
+                  const SizedBox(height: AppSpacing.xs),
+                  extra!,
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '${total.toStringAsFixed(2)} €',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 16,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Material(
+                color: colors.errorContainer,
+                borderRadius: BorderRadius.circular(AppRadius.sm),
+                clipBehavior: Clip.antiAlias,
+                child: InkWell(
+                  onTap: onRemove,
+                  onLongPress: onRemoveAll,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    child: Icon(
+                      Icons.remove,
+                      size: 18,
+                      color: colors.onErrorContainer,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Promoción del producto: verde si se aplica, gris si aún no.
+class _PromoTag extends StatelessWidget {
+  const _PromoTag({required this.label, required this.active});
+
+  final String label;
+  final bool active;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = active
+        ? AppColors.success
+        : Theme.of(context).colorScheme.onSurfaceVariant;
+    return Row(
+      children: [
+        Icon(Icons.local_offer, size: 12, color: color),
+        const SizedBox(width: 4),
+        Expanded(
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              color: active
+                  ? Theme.of(context).colorScheme.onSurface
+                  : Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _PackTag extends StatelessWidget {
+  const _PackTag();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Row(
+      children: [
+        Icon(Icons.card_giftcard, size: 12, color: colors.secondary),
+        const SizedBox(width: 4),
+        Text(
+          'PACK',
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+            color: colors.onSurfaceVariant,
+          ),
+        ),
       ],
     );
   }

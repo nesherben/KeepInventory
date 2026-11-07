@@ -3,6 +3,7 @@ import 'package:keepinventory/l10n/app_localizations_ext.dart';
 
 import '../../../core/shared_widgets/app_drawer.dart';
 import '../../../core/shared_widgets/app_alerts.dart';
+import '../../../core/shared_widgets/app_ui.dart';
 
 // --- IMPORTS MODULARES ---
 // Sales
@@ -227,33 +228,63 @@ class _SalesScreenState extends State<SalesScreen>
 
   Widget _buildSearchField() {
     final isProductTab = _tabController.index == 0;
-    return Container(
-      padding: const EdgeInsets.all(8),
-      color: Theme.of(context).colorScheme.surfaceContainerHighest
-          .withValues(alpha: 0.3),
+    final controller = isProductTab
+        ? _productSearchController
+        : _packSearchController;
+    final query = isProductTab ? _productSearchQuery : _packSearchQuery;
+
+    void update(String value) => setState(() {
+      if (isProductTab) {
+        _productSearchQuery = value;
+      } else {
+        _packSearchQuery = value;
+      }
+    });
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
       child: TextField(
-        controller: isProductTab
-            ? _productSearchController
-            : _packSearchController,
-        onChanged: (value) => setState(() {
-          if (isProductTab) {
-            _productSearchQuery = value;
-          } else {
-            _packSearchQuery = value;
-          }
-        }),
+        controller: controller,
+        onChanged: update,
         decoration: InputDecoration(
           hintText: isProductTab
               ? context.l10n.searchProducts
               : context.l10n.searchPacksOrComponents,
           prefixIcon: const Icon(Icons.search, size: 20),
-          isDense: true,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide.none,
-          ),
-          filled: true,
+          suffixIcon: query.isEmpty
+              ? null
+              : IconButton(
+                  icon: const Icon(Icons.close, size: 18),
+                  onPressed: () {
+                    controller.clear();
+                    update('');
+                  },
+                ),
           fillColor: Theme.of(context).cardColor,
+        ),
+      ),
+    );
+  }
+
+  /// Botón de cobrar con el total visible (confirma el importe de un vistazo).
+  Widget _buildCheckoutButton({required bool large}) {
+    final isEmpty = _cart.isEmpty && _cartPacks.isEmpty;
+    return FilledButton.icon(
+      style: FilledButton.styleFrom(
+        padding: EdgeInsets.symmetric(vertical: large ? 18 : 16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+        ),
+      ),
+      onPressed: isEmpty ? null : _processSale,
+      icon: const Icon(Icons.point_of_sale),
+      label: Text(
+        isEmpty
+            ? context.l10n.checkout
+            : '${context.l10n.checkout} · ${_cartTotal.toStringAsFixed(2)} €',
+        style: TextStyle(
+          fontSize: large ? 19 : 17,
+          fontWeight: FontWeight.w800,
         ),
       ),
     );
@@ -386,10 +417,7 @@ class _SalesScreenState extends State<SalesScreen>
                     child: Column(
                       children: [
                         Container(
-                          padding: const EdgeInsets.all(16.0),
-                          color: Theme.of(context)
-                              .colorScheme
-                              .surfaceContainerHighest,
+                          padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
@@ -406,10 +434,9 @@ class _SalesScreenState extends State<SalesScreen>
                                 context.l10n.cartTotal(
                                   _cartTotal.toStringAsFixed(2),
                                 ),
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Theme.of(context).colorScheme.primary,
+                                style: const TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w800,
                                 ),
                               ),
                             ],
@@ -438,30 +465,7 @@ class _SalesScreenState extends State<SalesScreen>
                           padding: const EdgeInsets.all(16.0),
                           child: SizedBox(
                             width: double.infinity,
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 16,
-                                ),
-                                backgroundColor: Theme.of(context)
-                                    .colorScheme
-                                    .primary,
-                                foregroundColor: Theme.of(context)
-                                    .colorScheme
-                                    .onPrimary,
-                                elevation: 0,
-                              ),
-                              onPressed: (_cart.isEmpty && _cartPacks.isEmpty)
-                                  ? null
-                                  : _processSale,
-                              child: Text(
-                                context.l10n.checkout,
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
+                            child: _buildCheckoutButton(large: false),
                           ),
                         ),
                       ],
@@ -488,186 +492,181 @@ class _SalesScreenState extends State<SalesScreen>
                     initialChildSize: 0.12,
                     minChildSize: 0.12,
                     maxChildSize: 0.7,
-                    builder: (BuildContext context, ScrollController scrollController) {
-                      return LayoutBuilder(
-                        builder: (context, constraints) {
-                          final bool isExpanded = constraints.maxHeight > 150;
+                    builder:
+                        (
+                          BuildContext context,
+                          ScrollController scrollController,
+                        ) {
+                          return LayoutBuilder(
+                            builder: (context, constraints) {
+                              final bool isExpanded =
+                                  constraints.maxHeight > 150;
 
-                          return Container(
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).cardColor,
-                              borderRadius: const BorderRadius.vertical(
-                                top: Radius.circular(24),
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.2),
-                                  blurRadius: 10,
-                                  spreadRadius: 2,
-                                  offset: const Offset(0, -2),
+                              return Container(
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).cardColor,
+                                  borderRadius: const BorderRadius.vertical(
+                                    top: Radius.circular(24),
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(
+                                        alpha: 0.2,
+                                      ),
+                                      blurRadius: 10,
+                                      spreadRadius: 2,
+                                      offset: const Offset(0, -2),
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
-                            child: ClipRRect(
-                              borderRadius: const BorderRadius.vertical(
-                                top: Radius.circular(24),
-                              ),
-                              child: Stack(
-                                children: [
-                                  ListView(
-                                    controller: scrollController,
-                                    padding: EdgeInsets.only(
-                                      top: 75,
-                                      bottom:
-                                          (isExpanded &&
-                                              (_cart.isNotEmpty ||
-                                                  _cartPacks.isNotEmpty))
-                                          ? 170 // botón + selector de pago
-                                          : 20,
-                                    ),
+                                child: ClipRRect(
+                                  borderRadius: const BorderRadius.vertical(
+                                    top: Radius.circular(24),
+                                  ),
+                                  child: Stack(
                                     children: [
-                                      CartItemsListWidget(
-                                        cart: _cart,
-                                        cartPacks: _cartPacks,
-                                        promotionsMap: _promotionsMap,
-                                        calculateItemTotal:
-                                            SaleCartPricingCalculator
-                                                .calculateItemTotal,
-                                        onRemoveFromCart: _removeFromCart,
-                                        onRemoveAllFromCart: _removeAllFromCart,
-                                        onRemovePackFromCart:
-                                            _removePackFromCart,
-                                        onRemoveAllPackFromCart:
-                                            _removeAllPackFromCart,
-                                      ),
-                                    ],
-                                  ),
-                                  Positioned(
-                                    top: 0,
-                                    left: 0,
-                                    right: 0,
-                                    child: IgnorePointer(
-                                      child: Container(
-                                        color: Theme.of(context).cardColor,
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            const SizedBox(height: 8),
-                                            Container(
-                                              width: 40,
-                                              height: 5,
-                                              decoration: BoxDecoration(
-                                                color: Theme.of(context)
-                                                    .colorScheme
-                                                    .outlineVariant,
-                                                borderRadius:
-                                                    BorderRadius.circular(10),
-                                              ),
-                                            ),
-                                            Padding(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    horizontal: 24.0,
-                                                    vertical: 12.0,
-                                                  ),
-                                              child: Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                children: [
-                                                  Text(
-                                                    context.l10n.cartItemsCount(
-                                                      _cartItemCount.toString(),
-                                                    ),
-                                                    style: const TextStyle(
-                                                      fontSize: 18,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                    ),
-                                                  ),
-                                                  Text(
-                                                    context.l10n.cartTotal(
-                                                      _cartTotal
-                                                          .toStringAsFixed(2),
-                                                    ),
-                                                    style: TextStyle(
-                                                      fontSize: 22,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      color: Theme.of(context)
-                                                          .colorScheme
-                                                          .primary,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                            const Divider(height: 1),
-                                          ],
+                                      ListView(
+                                        controller: scrollController,
+                                        padding: EdgeInsets.only(
+                                          top: 75,
+                                          bottom:
+                                              (isExpanded &&
+                                                  (_cart.isNotEmpty ||
+                                                      _cartPacks.isNotEmpty))
+                                              ? 170 // botón + selector de pago
+                                              : 20,
                                         ),
+                                        children: [
+                                          CartItemsListWidget(
+                                            cart: _cart,
+                                            cartPacks: _cartPacks,
+                                            promotionsMap: _promotionsMap,
+                                            calculateItemTotal:
+                                                SaleCartPricingCalculator
+                                                    .calculateItemTotal,
+                                            onRemoveFromCart: _removeFromCart,
+                                            onRemoveAllFromCart:
+                                                _removeAllFromCart,
+                                            onRemovePackFromCart:
+                                                _removePackFromCart,
+                                            onRemoveAllPackFromCart:
+                                                _removeAllPackFromCart,
+                                          ),
+                                        ],
                                       ),
-                                    ),
-                                  ),
-                                  if (isExpanded &&
-                                      (_cart.isNotEmpty ||
-                                          _cartPacks.isNotEmpty))
-                                    Positioned(
-                                      bottom: 0,
-                                      left: 0,
-                                      right: 0,
-                                      child: Container(
-                                        padding: const EdgeInsets.all(16.0),
-                                        decoration: BoxDecoration(
-                                          color: Theme.of(context).cardColor,
-                                          border: Border(
-                                            top: BorderSide(
-                                              color: Theme.of(context)
-                                                  .dividerColor,
+                                      Positioned(
+                                        top: 0,
+                                        left: 0,
+                                        right: 0,
+                                        child: IgnorePointer(
+                                          child: Container(
+                                            color: Theme.of(context).cardColor,
+                                            child: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                const SizedBox(height: 8),
+                                                Container(
+                                                  width: 40,
+                                                  height: 5,
+                                                  decoration: BoxDecoration(
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .outlineVariant,
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          10,
+                                                        ),
+                                                  ),
+                                                ),
+                                                Padding(
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 24.0,
+                                                        vertical: 12.0,
+                                                      ),
+                                                  child: Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .spaceBetween,
+                                                    children: [
+                                                      Text(
+                                                        context.l10n
+                                                            .cartItemsCount(
+                                                              _cartItemCount
+                                                                  .toString(),
+                                                            ),
+                                                        style: const TextStyle(
+                                                          fontSize: 18,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                        ),
+                                                      ),
+                                                      Text(
+                                                        context.l10n.cartTotal(
+                                                          _cartTotal
+                                                              .toStringAsFixed(
+                                                                2,
+                                                              ),
+                                                        ),
+                                                        style: TextStyle(
+                                                          fontSize: 22,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          color: Theme.of(
+                                                            context,
+                                                          ).colorScheme.primary,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                const Divider(height: 1),
+                                              ],
                                             ),
                                           ),
                                         ),
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            _buildPaymentMethodSelector(),
-                                            const SizedBox(height: 12),
-                                            SizedBox(
-                                              width: double.infinity,
-                                              child: ElevatedButton(
-                                                style: ElevatedButton.styleFrom(
-                                                  padding:
-                                                      const EdgeInsets.symmetric(
-                                                        vertical: 16,
-                                                      ),
-                                                  backgroundColor: Theme.of(
-                                                    context,
-                                                  ).colorScheme.primary,
-                                                  foregroundColor: Theme.of(
-                                                    context,
-                                                  ).colorScheme.onPrimary,
-                                                  elevation: 0,
-                                                ),
-                                                onPressed: _processSale,
-                                                child: Text(
-                                                  context.l10n.checkout,
-                                                  style: TextStyle(
-                                                    fontSize: 20,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
+                                      ),
+                                      if (isExpanded &&
+                                          (_cart.isNotEmpty ||
+                                              _cartPacks.isNotEmpty))
+                                        Positioned(
+                                          bottom: 0,
+                                          left: 0,
+                                          right: 0,
+                                          child: Container(
+                                            padding: const EdgeInsets.all(16.0),
+                                            decoration: BoxDecoration(
+                                              color: Theme.of(context)
+                                                  .cardColor,
+                                              border: Border(
+                                                top: BorderSide(
+                                                  color: Theme.of(context)
+                                                      .dividerColor,
                                                 ),
                                               ),
                                             ),
-                                          ],
+                                            child: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                _buildPaymentMethodSelector(),
+                                                const SizedBox(height: 12),
+                                                SizedBox(
+                                                  width: double.infinity,
+                                                  child: _buildCheckoutButton(
+                                                    large: true,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
                                         ),
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
                           );
                         },
-                      );
-                    },
                   ),
                 ],
               ),

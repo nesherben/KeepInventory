@@ -9,9 +9,10 @@ rc=0
 
 if [[ $mode == all || $mode == analyze ]]; then
   out=$(flutter analyze --no-pub 2>&1); arc=$?
-  e=$(grep -cE '^\s*error •' <<<"$out"); w=$(grep -cE '^\s*warning •' <<<"$out"); i=$(grep -cE '^\s*info •' <<<"$out")
+  # Formatos del analyzer: "error • msg • file" (antiguo) o "error - msg - file" (nuevo)
+  e=$(grep -cE '^\s*error (•|-) ' <<<"$out"); w=$(grep -cE '^\s*warning (•|-) ' <<<"$out"); i=$(grep -cE '^\s*info (•|-) ' <<<"$out")
   echo "ANALYZE: errors=$e warnings=$w infos=$i"
-  pat='^\s*(error|warning) •'; [[ ${VERBOSE:-0} == 1 ]] && pat='^\s*(error|warning|info) •'
+  pat='^\s*(error|warning) (•|-) '; [[ ${VERBOSE:-0} == 1 ]] && pat='^\s*(error|warning|info) (•|-) '
   grep -E "$pat" <<<"$out" | sed -E 's/^\s+//' | head -40
   if [[ $arc -ne 0 && $e -eq 0 && $w -eq 0 && $i -eq 0 ]]; then tail -15 <<<"$out"; fi
   [[ $e -gt 0 ]] && rc=1

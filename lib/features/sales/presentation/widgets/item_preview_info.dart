@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../../../../core/theme/app_colors.dart';
+
 import 'package:keepinventory/l10n/app_localizations_ext.dart';
 
 class ItemPreviewInfo extends StatefulWidget {
@@ -185,11 +188,11 @@ class _ItemPreviewInfoState extends State<ItemPreviewInfo> {
     final theme = Theme.of(context);
     final backgroundColor = isOutOfStock
         ? theme.colorScheme.surfaceContainerHighest
-        : (_justAdded ? Colors.green.shade600 : theme.colorScheme.primary);
+        : (_justAdded ? AppColors.success : theme.colorScheme.primary);
     final foregroundColor = isOutOfStock
         ? theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6)
-        : Colors.white;
-    final elevation = isOutOfStock ? 0.0 : (_justAdded ? 2.0 : 6.0);
+        : (_justAdded ? Colors.white : theme.colorScheme.onPrimary);
+    final elevation = isOutOfStock ? 0.0 : (_justAdded ? 1.0 : 3.0);
     final label = isOutOfStock
         ? context.l10n.outOfStock
         : (_justAdded
@@ -214,7 +217,7 @@ class _ItemPreviewInfoState extends State<ItemPreviewInfo> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: backgroundColor.withValues(alpha: 0.35),
+            color: backgroundColor.withValues(alpha: 0.25),
             blurRadius: elevation * 2.5,
             offset: Offset(0, elevation * 0.8),
           ),
@@ -294,7 +297,7 @@ class _ItemPreviewInfoState extends State<ItemPreviewInfo> {
               isOutOfStock
                   ? context.l10n.outOfStock
                   : context.l10n.unitsRemaining(_availableStock.toString()),
-              color: isOutOfStock ? Colors.red : null,
+              color: isOutOfStock ? theme.colorScheme.error : null,
               isBold: isOutOfStock,
             ),
           if (_localCartQty > 0)
@@ -306,18 +309,18 @@ class _ItemPreviewInfoState extends State<ItemPreviewInfo> {
               trailing: widget.onRemoveAction == null
                   ? null
                   : Material(
-                      color: Colors.red.withValues(alpha: 0.1),
+                      color: theme.colorScheme.errorContainer,
                       borderRadius: BorderRadius.circular(8),
                       clipBehavior: Clip.antiAlias,
                       child: InkWell(
                         onTap: _handleRemove,
                         onLongPress: _handleRemoveAll,
-                        child: const Padding(
-                          padding: EdgeInsets.all(6),
+                        child: Padding(
+                          padding: const EdgeInsets.all(6),
                           child: Icon(
                             Icons.remove,
                             size: 20,
-                            color: Colors.red,
+                            color: theme.colorScheme.onErrorContainer,
                           ),
                         ),
                       ),
@@ -352,7 +355,7 @@ class _ItemPreviewInfoState extends State<ItemPreviewInfo> {
                           )
                         : context.l10n.promotionShortfall),
               color: _localPromoActive
-                  ? Colors.green
+                  ? AppColors.success
                   : theme.colorScheme.tertiary,
               isBold: _localPromoActive,
             ),
