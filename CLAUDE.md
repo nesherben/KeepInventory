@@ -17,6 +17,7 @@ Flutter app (Android) for inventory + POS sales/tickets. Local SQLite (`sqflite`
 - Locate code with the `code-map` skill (outline + line numbers) before reading; read only line ranges.
 - Run checks with the `verify` skill, never raw `flutter analyze` / `flutter test`.
 - New UI text → `l10n-add` skill (don't read the ARB files).
+- Big features → only when the user runs `/feature` (agents in `.claude/agents/`: feature-analyst, product-designer, code-reviewer). Don't spawn agents otherwise.
 - Version bump → `bump-version` skill. Pushing to `main` triggers the APK build in CI.
 - Releases are built and published **manually** by the user (local keystore signature; in-app updater reads GitHub Releases). Don't automate releases in CI.
 
