@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:keepinventory/core/utils/app_numbers.dart';
 import 'package:keepinventory/l10n/app_localizations_ext.dart';
 
 // Rutas actualizadas a la arquitectura modular
@@ -191,7 +192,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (_isPrivacyModeEnabled) {
       return '•••••• €';
     }
-    return '${amount.toStringAsFixed(2)} €';
+    return context.money(amount);
   }
 
   Widget _buildMetricCard({

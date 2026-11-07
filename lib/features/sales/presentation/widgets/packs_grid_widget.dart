@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:keepinventory/core/utils/app_numbers.dart';
 
 import 'catalog_tile.dart';
 
@@ -39,7 +40,7 @@ class PacksGridWidget extends StatelessWidget {
       context,
       image: buildPackImage(pack),
       title: pack.name,
-      unitPrice: '${pack.price.toStringAsFixed(2)} €',
+      unitPrice: context.money(pack.price),
       stock: pack.units,
       cartQty: qtyInCart, // El popup ocultará el chip automáticamente si es 0
       packContents: contents.isNotEmpty ? contents : null,

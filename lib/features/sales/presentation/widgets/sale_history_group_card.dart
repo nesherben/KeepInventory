@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:keepinventory/core/utils/app_numbers.dart';
 
 import '../../../../core/shared_widgets/app_ui.dart';
 
@@ -79,7 +80,7 @@ class SaleHistoryGroupCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
-                '${group.total.toStringAsFixed(2)} €',
+                context.money(group.total),
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
@@ -191,7 +192,7 @@ class _SaleTicketCard extends StatelessWidget {
             ),
           ),
           Text(
-            '${(item.quantity * item.historicalPrice).toStringAsFixed(2)} €',
+            context.money(item.quantity * item.historicalPrice),
             style: const TextStyle(fontWeight: FontWeight.w600),
           ),
         ],
@@ -249,7 +250,7 @@ class _SaleTicketCard extends StatelessWidget {
             ),
           ),
           Text(
-            '${(packItem.quantity * packItem.historicalPrice).toStringAsFixed(2)} €',
+            context.money(packItem.quantity * packItem.historicalPrice),
             style: TextStyle(
               fontWeight: FontWeight.w600,
               color: colorScheme.secondary,
@@ -310,7 +311,7 @@ class _SaleTicketCard extends StatelessWidget {
             ),
           ),
           trailing: Text(
-            '${sale.totalAmount.toStringAsFixed(2)} €',
+            context.money(sale.totalAmount),
             style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
           ),
           children: [

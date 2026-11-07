@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:keepinventory/core/utils/app_numbers.dart';
 
 import '../../../../core/theme/app_colors.dart';
 
@@ -368,7 +369,7 @@ class _ItemPreviewInfoState extends State<ItemPreviewInfo> {
               context,
               Icons.payments_outlined,
               context.l10n.totalAccumulated,
-              '${_localTotal!.toStringAsFixed(2)} €',
+              context.money(_localTotal!.toDouble()),
               color: theme.colorScheme.primary,
               isBold: true,
             ),

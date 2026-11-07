@@ -1012,4 +1012,32 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chartNoDataForFilter => 'No data for this filter.';
+
+  @override
+  String get inventoryFilterAll => 'All';
+
+  @override
+  String get inventoryFilterLow => 'Low stock';
+
+  @override
+  String get inventoryFilterOut => 'Out of stock';
+
+  @override
+  String get inventoryFilterPromo => 'On promotion';
+
+  @override
+  String inventorySummary(String products, String units, String out) {
+    return '$products products · $units units · $out out of stock';
+  }
+
+  @override
+  String get inventoryMargin => 'Margin';
+
+  @override
+  String inventoryCostMargin(String cost, String margin) {
+    return 'Cost $cost · margin $margin';
+  }
+
+  @override
+  String get invalidNumber => 'Enter a valid number (e.g. 12.50)';
 }

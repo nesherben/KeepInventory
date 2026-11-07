@@ -349,5 +349,36 @@
   "chartMargin": "MARGEN",
   "chartTapHint": "Toca una barra para ver su detalle",
   "chartHistory": "HISTORIAL",
-  "chartNoDataForFilter": "No hay datos para este filtro."
+  "chartNoDataForFilter": "No hay datos para este filtro.",
+  "inventoryFilterAll": "Todos",
+  "inventoryFilterLow": "Stock bajo",
+  "inventoryFilterOut": "Agotados",
+  "inventoryFilterPromo": "Con promoción",
+  "inventorySummary": "{products} productos · {units} uds · {out} agotados",
+  "@inventorySummary": {
+    "placeholders": {
+      "products": {
+        "type": "String"
+      },
+      "units": {
+        "type": "String"
+      },
+      "out": {
+        "type": "String"
+      }
+    }
+  },
+  "inventoryMargin": "Margen",
+  "inventoryCostMargin": "Coste {cost} · margen {margin}",
+  "@inventoryCostMargin": {
+    "placeholders": {
+      "cost": {
+        "type": "String"
+      },
+      "margin": {
+        "type": "String"
+      }
+    }
+  },
+  "invalidNumber": "Introduce un número válido (ej. 12,50)"
 }

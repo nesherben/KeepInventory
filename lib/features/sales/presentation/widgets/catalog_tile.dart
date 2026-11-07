@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:keepinventory/core/utils/app_numbers.dart';
 
 import '../../../../core/shared_widgets/app_ui.dart';
 import '../../../../core/shared_widgets/auto_scroll_text.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../inventory/domain/inventory_view.dart';
 
 /// Ficha del catálogo del TPV (productos y packs).
 ///
@@ -32,8 +34,6 @@ class CatalogTile extends StatelessWidget {
   final VoidCallback onLongPress;
   final VoidCallback onRemove;
   final VoidCallback onRemoveAll;
-
-  static const int _lowStockThreshold = 3;
 
   bool get _inCart => quantityInCart > 0;
   bool get _outOfStock => stock <= 0;
@@ -84,7 +84,7 @@ class CatalogTile extends StatelessWidget {
                     const SizedBox(width: 4),
                     Expanded(
                       child: Text(
-                        '${price.toStringAsFixed(2)} €',
+                        context.money(price),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
@@ -123,7 +123,7 @@ class CatalogTile extends StatelessWidget {
 
   Widget _buildImage(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    final lowStock = !_outOfStock && stock <= _lowStockThreshold;
+    final lowStock = StockLevel.of(stock) == StockLevel.low;
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(AppRadius.md),

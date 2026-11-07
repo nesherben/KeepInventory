@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../theme/app_colors.dart';
+
 /// Medidas del sistema visual de la app. Úsalas en vez de números sueltos
 /// para que todas las pantallas compartan el mismo estilo.
 abstract final class AppRadius {
@@ -202,6 +204,86 @@ class StatTile extends StatelessWidget {
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Control compacto "− valor +" para ajustar unidades rápidamente.
+/// Rojo cuando [isEmpty] (sin unidades), naranja cuando [isLow].
+class QuantityStepper extends StatelessWidget {
+  const QuantityStepper({
+    super.key,
+    required this.label,
+    required this.onIncrement,
+    this.onDecrement,
+    this.onTapLabel,
+    this.isEmpty = false,
+    this.isLow = false,
+  });
+
+  final String label;
+  final VoidCallback onIncrement;
+
+  /// Nulo = botón "−" deshabilitado.
+  final VoidCallback? onDecrement;
+
+  /// Tocar el número (p. ej. para escribir la cantidad exacta).
+  final VoidCallback? onTapLabel;
+  final bool isEmpty;
+  final bool isLow;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final accent = isEmpty
+        ? colors.error
+        : isLow
+        ? AppColors.warning
+        : colors.primary;
+
+    Widget button(IconData icon, VoidCallback? onTap) => InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppRadius.sm),
+      child: Padding(
+        padding: const EdgeInsets.all(6),
+        child: Icon(
+          icon,
+          size: 16,
+          color: onTap == null
+              ? colors.onSurfaceVariant.withValues(alpha: 0.4)
+              : accent,
+        ),
+      ),
+    );
+
+    return Container(
+      decoration: BoxDecoration(
+        color: accent.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+        border: Border.all(color: accent.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          button(Icons.remove, onDecrement),
+          InkWell(
+            onTap: onTapLabel,
+            borderRadius: BorderRadius.circular(AppRadius.sm),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: isEmpty ? colors.error : colors.onSurface,
+                ),
+              ),
+            ),
+          ),
+          button(Icons.add, onIncrement),
         ],
       ),
     );

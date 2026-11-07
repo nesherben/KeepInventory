@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:keepinventory/core/utils/app_numbers.dart';
 import 'package:keepinventory/l10n/app_localizations_ext.dart';
 
 import '../../../core/shared_widgets/app_drawer.dart';
@@ -281,7 +282,7 @@ class _SalesScreenState extends State<SalesScreen>
       label: Text(
         isEmpty
             ? context.l10n.checkout
-            : '${context.l10n.checkout} · ${_cartTotal.toStringAsFixed(2)} €',
+            : '${context.l10n.checkout} · ${context.money(_cartTotal)}',
         style: TextStyle(
           fontSize: large ? 19 : 17,
           fontWeight: FontWeight.w800,
@@ -432,7 +433,7 @@ class _SalesScreenState extends State<SalesScreen>
                               ),
                               Text(
                                 context.l10n.cartTotal(
-                                  _cartTotal.toStringAsFixed(2),
+                                  context.amount(_cartTotal),
                                 ),
                                 style: const TextStyle(
                                   fontSize: 22,

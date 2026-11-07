@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:keepinventory/core/utils/app_numbers.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/shared_widgets/app_ui.dart';
@@ -74,7 +75,7 @@ class CartItemsListWidget extends StatelessWidget {
             name: product.name,
             quantity: qty,
             unitPriceLabel: context.l10n.pricePerUnit(
-              product.price.toStringAsFixed(2),
+              context.amount(product.price),
             ),
             total: itemTotal,
             extra: promo == null
@@ -111,7 +112,7 @@ class CartItemsListWidget extends StatelessWidget {
             name: pack.name,
             quantity: qty,
             unitPriceLabel: context.l10n.pricePerPack(
-              pack.price.toStringAsFixed(2),
+              context.amount(pack.price),
             ),
             total: itemTotal,
             extra: const _PackTag(),
@@ -237,7 +238,7 @@ class _CartLine extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                '${total.toStringAsFixed(2)} €',
+                context.money(total),
                 style: const TextStyle(
                   fontWeight: FontWeight.w800,
                   fontSize: 16,

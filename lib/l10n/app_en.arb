@@ -342,5 +342,13 @@
   "chartMargin": "MARGIN",
   "chartTapHint": "Tap a bar to see its details",
   "chartHistory": "HISTORY",
-  "chartNoDataForFilter": "No data for this filter."
+  "chartNoDataForFilter": "No data for this filter.",
+  "inventoryFilterAll": "All",
+  "inventoryFilterLow": "Low stock",
+  "inventoryFilterOut": "Out of stock",
+  "inventoryFilterPromo": "On promotion",
+  "inventorySummary": "{products} products · {units} units · {out} out of stock",
+  "inventoryMargin": "Margin",
+  "inventoryCostMargin": "Cost {cost} · margin {margin}",
+  "invalidNumber": "Enter a valid number (e.g. 12.50)"
 }

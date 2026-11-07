@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:keepinventory/core/utils/app_numbers.dart';
+
+import '../../../core/theme/app_colors.dart';
+import '../../../core/shared_widgets/app_ui.dart';
+
 import 'package:keepinventory/l10n/app_localizations_ext.dart';
 
 import '../../../core/shared_widgets/app_drawer.dart';
@@ -129,11 +134,15 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
                               labelText: context.l10n.minimumQuantity,
                             ),
                             keyboardType: TextInputType.number,
-                            validator: (value) =>
-                                value == null || int.tryParse(value) == null
-                                ? context.l10n.validNumberRequired
-                                : null,
-                            onSaved: (value) => threshold = int.parse(value!),
+                            inputFormatters: AppNumbers.integerInputFormatters,
+                            validator: (value) {
+                              final n = AppNumbers.parseInt(value);
+                              return n == null || n < 1
+                                  ? context.l10n.validNumberRequired
+                                  : null;
+                            },
+                            onSaved: (value) =>
+                                threshold = AppNumbers.parseInt(value)!,
                           ),
                         ),
                         SizedBox(
@@ -141,26 +150,33 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
                           child: TextFormField(
                             initialValue: discountValue == 0.0
                                 ? ''
-                                : discountValue.toString(),
+                                : type == 'bundle_fixed_price'
+                                ? context.amountInput(discountValue)
+                                : discountValue == discountValue.roundToDouble()
+                                ? discountValue.round().toString()
+                                : context.amount(discountValue),
                             decoration: InputDecoration(
                               labelText: type == 'bundle_fixed_price'
                                   ? context.l10n.bundleTotalPrice
                                   : context.l10n.discountPercentage,
+                              suffixText: type == 'bundle_fixed_price'
+                                  ? '€'
+                                  : '%',
                             ),
-                            keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true,
-                            ),
-                            validator: (value) =>
-                                value == null ||
-                                    double.tryParse(
-                                          value.replaceAll(',', '.'),
-                                        ) ==
-                                        null
-                                ? context.l10n.validValueRequired
-                                : null,
-                            onSaved: (value) => discountValue = double.parse(
-                              value!.replaceAll(',', '.'),
-                            ),
+                            keyboardType: AppNumbers.decimalKeyboard,
+                            inputFormatters: AppNumbers.decimalInputFormatters,
+                            validator: (value) {
+                              final v = AppNumbers.parseDecimal(value);
+                              final isPercent = type != 'bundle_fixed_price';
+                              // % entre 0 y 100; precio del lote > 0
+                              final invalid =
+                                  v == null || v <= 0 || (isPercent && v > 100);
+                              return invalid
+                                  ? context.l10n.validValueRequired
+                                  : null;
+                            },
+                            onSaved: (value) =>
+                                discountValue = AppNumbers.parseDecimal(value)!,
                           ),
                         ),
                       ],
@@ -287,10 +303,8 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
             : Column(
                 children: [
                   // --- 💡 BARRA DE BÚSQUEDA ---
-                  Container(
-                    padding: const EdgeInsets.all(12.0),
-                    color: Theme.of(context).colorScheme.surfaceContainerHighest
-                        .withValues(alpha: 0.3),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
                     child: TextField(
                       controller: _searchController,
                       onChanged: (value) =>
@@ -308,10 +322,6 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
                               )
                             : null,
                         isDense: true,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
                         filled: true,
                         fillColor: Theme.of(context).cardColor,
                       ),
@@ -321,18 +331,11 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
                   // --- LISTADO DE PROMOCIONES ---
                   Expanded(
                     child: filteredPromotions.isEmpty
-                        ? Center(
-                            child: Text(
-                              _promotions.isEmpty
-                                  ? context.l10n.promotionsEmpty
-                                  : context.l10n.promotionsNotFound,
-                              style: TextStyle(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurfaceVariant,
-                                fontSize: 16,
-                              ),
-                            ),
+                        ? EmptyState(
+                            icon: Icons.local_offer_outlined,
+                            title: _promotions.isEmpty
+                                ? context.l10n.promotionsEmpty
+                                : context.l10n.promotionsNotFound,
                           )
                         : ListView.builder(
                             padding: const EdgeInsets.all(12),
@@ -343,29 +346,31 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
                                   promo.type == 'bundle_fixed_price';
 
                               return Card(
-                                margin: const EdgeInsets.only(bottom: 12),
-                                elevation: 2,
+                                margin: const EdgeInsets.only(
+                                  bottom: AppSpacing.sm,
+                                ),
                                 child: ListTile(
-                                  leading: CircleAvatar(
-                                    backgroundColor: Colors.amber[700],
-                                    child: const Icon(
-                                      Icons.local_offer,
-                                      color: Colors.white,
-                                    ),
+                                  contentPadding: const EdgeInsets.fromLTRB(
+                                    12,
+                                    6,
+                                    4,
+                                    6,
+                                  ),
+                                  leading: IconBadge(
+                                    isBundle ? Icons.layers : Icons.percent,
+                                    color: AppColors.warning,
                                   ),
                                   title: Text(
                                     promo.name,
                                     style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
+                                      fontWeight: FontWeight.w600,
                                     ),
                                   ),
                                   subtitle: Text(
                                     isBundle
                                         ? context.l10n.promotionBundleSummary(
                                             promo.threshold.toString(),
-                                            promo.discountValue.toStringAsFixed(
-                                              2,
-                                            ),
+                                            context.amount(promo.discountValue),
                                           )
                                         : context.l10n.promotionPercentSummary(
                                             promo.discountValue.toStringAsFixed(
@@ -378,9 +383,11 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       IconButton(
-                                        icon: const Icon(
-                                          Icons.edit,
-                                          color: Colors.blue,
+                                        icon: Icon(
+                                          Icons.edit_outlined,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurfaceVariant,
                                         ),
                                         onPressed: () =>
                                             _showPromotionFormDialog(
@@ -388,9 +395,11 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
                                             ),
                                       ),
                                       IconButton(
-                                        icon: const Icon(
-                                          Icons.delete,
-                                          color: Colors.red,
+                                        icon: Icon(
+                                          Icons.delete_outline,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .error,
                                         ),
                                         onPressed: () => _confirmDelete(promo),
                                       ),

@@ -1861,6 +1861,54 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'No hay datos para este filtro.'**
   String get chartNoDataForFilter;
+
+  /// No description provided for @inventoryFilterAll.
+  ///
+  /// In es, this message translates to:
+  /// **'Todos'**
+  String get inventoryFilterAll;
+
+  /// No description provided for @inventoryFilterLow.
+  ///
+  /// In es, this message translates to:
+  /// **'Stock bajo'**
+  String get inventoryFilterLow;
+
+  /// No description provided for @inventoryFilterOut.
+  ///
+  /// In es, this message translates to:
+  /// **'Agotados'**
+  String get inventoryFilterOut;
+
+  /// No description provided for @inventoryFilterPromo.
+  ///
+  /// In es, this message translates to:
+  /// **'Con promoción'**
+  String get inventoryFilterPromo;
+
+  /// No description provided for @inventorySummary.
+  ///
+  /// In es, this message translates to:
+  /// **'{products} productos · {units} uds · {out} agotados'**
+  String inventorySummary(String products, String units, String out);
+
+  /// No description provided for @inventoryMargin.
+  ///
+  /// In es, this message translates to:
+  /// **'Margen'**
+  String get inventoryMargin;
+
+  /// No description provided for @inventoryCostMargin.
+  ///
+  /// In es, this message translates to:
+  /// **'Coste {cost} · margen {margin}'**
+  String inventoryCostMargin(String cost, String margin);
+
+  /// No description provided for @invalidNumber.
+  ///
+  /// In es, this message translates to:
+  /// **'Introduce un número válido (ej. 12,50)'**
+  String get invalidNumber;
 }
 
 class _AppLocalizationsDelegate

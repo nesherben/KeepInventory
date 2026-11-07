@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart' show Intl, NumberFormat;
+import 'package:keepinventory/core/utils/app_numbers.dart';
 import 'package:keepinventory/l10n/app_localizations_ext.dart';
 
 import '../../../../core/services/app_preferences.dart';
@@ -167,7 +169,7 @@ class _FullScreenChartScreenState extends State<FullScreenChartScreen> {
 
   String _formatCurrency(double amount) {
     if (_privacyActive) return '•••••• €';
-    return '${amount.toStringAsFixed(2)} €';
+    return context.money(amount);
   }
 
   String _formatPercent(double value) => '${value.toStringAsFixed(1)} %';
@@ -353,6 +355,7 @@ class _FullScreenChartScreenState extends State<FullScreenChartScreen> {
                 ticks: _privacyActive ? const [] : ticks,
                 scale: scale,
                 color: colors.onSurfaceVariant,
+                locale: Localizations.localeOf(context).toString(),
               ),
             ),
           ),
@@ -893,18 +896,19 @@ class _AxisLabelsPainter extends CustomPainter {
     required this.ticks,
     required this.scale,
     required this.color,
+    required this.locale,
   });
 
   final List<double> ticks;
   final _Scale scale;
   final Color color;
+  final String locale;
 
-  static String _compact(double v) {
-    if (v.abs() >= 1000) {
-      final k = v / 1000;
-      return '${k.toStringAsFixed(k == k.roundToDouble() ? 0 : 1)}k €';
-    }
-    return '${v.toStringAsFixed(0)} €';
+  /// "1,5k €" (es) / "1.5k €" (en); por debajo de mil, "200 €".
+  String _compact(double v) {
+    final format = NumberFormat('0.#', Intl.canonicalizedLocale(locale));
+    if (v.abs() >= 1000) return '${format.format(v / 1000)}k €';
+    return '${format.format(v)} €';
   }
 
   @override
@@ -924,7 +928,7 @@ class _AxisLabelsPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_AxisLabelsPainter old) =>
-      old.ticks != ticks || old.color != color;
+      old.ticks != ticks || old.color != color || old.locale != locale;
 }
 
 /// Barra apilada por método (separadores de 2px, extremo superior redondeado

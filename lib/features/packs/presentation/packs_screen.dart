@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import '../../../core/shared_widgets/app_ui.dart';
+
 import 'package:keepinventory/l10n/app_localizations_ext.dart';
 
 import '../../../core/shared_widgets/app_drawer.dart';
@@ -250,10 +253,8 @@ class _PacksScreenState extends State<PacksScreen> {
             : Column(
                 children: [
                   // --- 💡 BARRA DE BÚSQUEDA ---
-                  Container(
-                    padding: const EdgeInsets.all(12.0),
-                    color: Theme.of(context).colorScheme.surfaceContainerHighest
-                        .withValues(alpha: 0.3),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
                     child: TextField(
                       controller: _searchController,
                       onChanged: (value) =>
@@ -271,10 +272,6 @@ class _PacksScreenState extends State<PacksScreen> {
                               )
                             : null,
                         isDense: true,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
                         filled: true,
                         fillColor: Theme.of(context).cardColor,
                       ),
@@ -284,18 +281,11 @@ class _PacksScreenState extends State<PacksScreen> {
                   // --- LISTADO DE PACKS ---
                   Expanded(
                     child: filteredPacks.isEmpty
-                        ? Center(
-                            child: Text(
-                              _packs.isEmpty
-                                  ? context.l10n.packsEmpty
-                                  : context.l10n.packsNotFound,
-                              style: TextStyle(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurfaceVariant,
-                                fontSize: 16,
-                              ),
-                            ),
+                        ? EmptyState(
+                            icon: Icons.card_giftcard_outlined,
+                            title: _packs.isEmpty
+                                ? context.l10n.packsEmpty
+                                : context.l10n.packsNotFound,
                           )
                         : ListView.builder(
                             padding: const EdgeInsets.all(16),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:keepinventory/core/utils/app_numbers.dart';
 import 'package:keepinventory/l10n/app_localizations_ext.dart';
 
 import '../../domain/payment_method.dart';
@@ -174,7 +175,7 @@ class PaymentMethodTotals extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fmt = format ?? (double a) => '${a.toStringAsFixed(2)} €';
+    final fmt = format ?? (double a) => context.money(a);
     final entries = totals.entries
         .where((e) => showZero || e.value.abs() >= 0.005)
         .toList();

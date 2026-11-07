@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:keepinventory/core/utils/app_numbers.dart';
 
 import 'catalog_tile.dart';
 
@@ -56,7 +57,7 @@ class ProductGridWidget extends StatelessWidget {
       context,
       image: buildProductImage(product),
       title: product.name,
-      unitPrice: '${product.price.toStringAsFixed(2)} €',
+      unitPrice: context.money(product.price),
       stock: product.units,
       cartQty: qtyInCart,
 

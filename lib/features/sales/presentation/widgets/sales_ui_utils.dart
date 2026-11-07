@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:keepinventory/core/utils/app_numbers.dart';
 import 'package:keepinventory/l10n/app_localizations_ext.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -231,7 +232,7 @@ void showCartProductPreview(
     context,
     image: buildProductImage(product),
     title: product.name,
-    unitPrice: context.l10n.pricePerUnit(product.price.toStringAsFixed(2)),
+    unitPrice: context.l10n.pricePerUnit(context.amount(product.price)),
     rawPrice: product.price,
     cartQty: qty,
     otherItemsInPromo: otherItemsInPromo,
@@ -265,7 +266,7 @@ void showCartPackPreview(
     context,
     image: buildPackImage(pack),
     title: pack.name,
-    unitPrice: context.l10n.pricePerPack(pack.price.toStringAsFixed(2)),
+    unitPrice: context.l10n.pricePerPack(context.amount(pack.price)),
     rawPrice: pack.price,
     cartQty: qty,
     cartTotal: itemTotal,

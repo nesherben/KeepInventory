@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:keepinventory/core/utils/app_numbers.dart';
 import 'package:keepinventory/core/shared_widgets/app_alerts.dart';
 import 'package:keepinventory/l10n/app_localizations_ext.dart';
 
@@ -30,7 +31,7 @@ class PartialRefundDialog extends StatefulWidget {
 class _PartialRefundDialogState extends State<PartialRefundDialog> {
   late final Map<SaleItem, int> _refundItemQuantities;
   late final Map<SalePackItem, int> _refundPackQuantities;
-  final _refundAmountController = TextEditingController(text: '0.00');
+  final _refundAmountController = TextEditingController(text: '0');
   bool _restockAsComponents = false;
 
   int get _totalItemsToRefund =>
@@ -82,7 +83,7 @@ class _PartialRefundDialogState extends State<PartialRefundDialog> {
       double.infinity,
     );
 
-    _refundAmountController.text = refundAmount.toStringAsFixed(2);
+    _refundAmountController.text = context.amountInput(refundAmount);
   }
 
   Widget _buildProductRow(BuildContext context, SaleItem item) {
@@ -92,7 +93,7 @@ class _PartialRefundDialogState extends State<PartialRefundDialog> {
       title: item.productName ?? context.l10n.unknown,
       summary: context.l10n.purchasedItemSummary(
         item.quantity.toString(),
-        (item.quantity * item.historicalPrice).toStringAsFixed(2),
+        context.amount(item.quantity * item.historicalPrice),
       ),
       value: _refundItemQuantities[item] ?? 0,
       maxValue: item.quantity,
@@ -114,7 +115,7 @@ class _PartialRefundDialogState extends State<PartialRefundDialog> {
       ),
       summary: context.l10n.purchasedPackSummary(
         pack.quantity.toString(),
-        (pack.quantity * pack.historicalPrice).toStringAsFixed(2),
+        context.amount(pack.quantity * pack.historicalPrice),
       ),
       value: _refundPackQuantities[pack] ?? 0,
       maxValue: pack.quantity,
@@ -229,7 +230,8 @@ class _PartialRefundDialogState extends State<PartialRefundDialog> {
         const SizedBox(height: 8),
         TextField(
           controller: _refundAmountController,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          keyboardType: AppNumbers.decimalKeyboard,
+          inputFormatters: AppNumbers.decimalInputFormatters,
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.w900,
@@ -251,8 +253,7 @@ class _PartialRefundDialogState extends State<PartialRefundDialog> {
 
   Future<void> _confirmRefund() async {
     final refundAmount =
-        double.tryParse(_refundAmountController.text.replaceAll(',', '.')) ??
-        0.0;
+        AppNumbers.parseDecimal(_refundAmountController.text) ?? 0.0;
     if (refundAmount > widget.sale.totalAmount) {
       AppAlerts.showError(context, context.l10n.refundCannotExceed);
       return;
