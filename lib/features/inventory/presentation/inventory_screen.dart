@@ -1,8 +1,15 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:keepinventory/core/utils/app_numbers.dart';
+import 'package:flutter/services.dart';
+
+import 'widgets/inventory_product_widgets.dart';
+import '../domain/inventory_view.dart';
+
+import '../../../core/shared_widgets/app_ui.dart';
+
 import 'package:image_picker/image_picker.dart';
 import 'package:keepinventory/l10n/app_localizations_ext.dart';
 import 'package:keepinventory/core/services/image_compression_service.dart';
@@ -52,6 +59,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
   bool _isLoading = true;
 
   String _searchQuery = '';
+  InventoryFilter _filter = InventoryFilter.all;
+  InventorySort? _sort;
+  bool _sortAscending = true;
 
   final Map<int, Timer> _debounceTimers = {};
   final Map<int, Product> _baseProducts = {};
@@ -221,10 +231,16 @@ class _InventoryScreenState extends State<InventoryScreen> {
     required String initialValue,
     required TextInputType keyboardType,
     required Future<void> Function(String) onSave,
+    List<TextInputFormatter>? inputFormatters,
+    String? suffixText,
   }) {
-    final TextEditingController controller = TextEditingController(
-      text: initialValue,
-    );
+    // Texto seleccionado al abrir: se sobrescribe escribiendo directamente
+    final TextEditingController controller =
+        TextEditingController(text: initialValue)
+          ..selection = TextSelection(
+            baseOffset: 0,
+            extentOffset: initialValue.length,
+          );
 
     showDialog(
       context: context,
@@ -234,11 +250,13 @@ class _InventoryScreenState extends State<InventoryScreen> {
           content: TextField(
             controller: controller,
             keyboardType: keyboardType,
+            inputFormatters: inputFormatters,
             decoration: InputDecoration(
               labelText: context.l10n.newValue,
-              border: OutlineInputBorder(),
+              suffixText: suffixText,
             ),
             autofocus: true,
+            onSubmitted: (value) => onSave(value),
           ),
           actions: [
             TextButton(
@@ -379,6 +397,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
     late final String title;
     late final String initialValue;
     late final TextInputType keyboardType;
+    List<TextInputFormatter>? formatters;
+    String? suffix;
 
     switch (field) {
       case InventoryProductField.name:
@@ -389,14 +409,19 @@ class _InventoryScreenState extends State<InventoryScreen> {
         title = context.l10n.fieldUnits;
         initialValue = product.units.toString();
         keyboardType = TextInputType.number;
+        formatters = AppNumbers.integerInputFormatters;
       case InventoryProductField.price:
         title = context.l10n.fieldSalePrice;
-        initialValue = product.price.toString();
-        keyboardType = const TextInputType.numberWithOptions(decimal: true);
+        initialValue = context.amountInput(product.price);
+        keyboardType = AppNumbers.decimalKeyboard;
+        formatters = AppNumbers.decimalInputFormatters;
+        suffix = '€';
       case InventoryProductField.cost:
         title = context.l10n.fieldAcquisitionCost;
-        initialValue = product.cost.toString();
-        keyboardType = const TextInputType.numberWithOptions(decimal: true);
+        initialValue = context.amountInput(product.cost);
+        keyboardType = AppNumbers.decimalKeyboard;
+        formatters = AppNumbers.decimalInputFormatters;
+        suffix = '€';
     }
 
     _showEditSingleFieldDialog(
@@ -404,9 +429,14 @@ class _InventoryScreenState extends State<InventoryScreen> {
       title: title,
       initialValue: initialValue,
       keyboardType: keyboardType,
+      inputFormatters: formatters,
+      suffixText: suffix,
       onSave: (value) => _saveProductField(product, field, value),
     );
   }
+
+  void _showInvalidNumber() =>
+      AppAlerts.showError(context, context.l10n.invalidNumber);
 
   Future<void> _saveProductField(
     Product product,
@@ -422,18 +452,18 @@ class _InventoryScreenState extends State<InventoryScreen> {
         updatedProduct = _toModel(product, name: value);
         successMessage = context.l10n.nameUpdated;
       case InventoryProductField.units:
-        final units = int.tryParse(value);
-        if (units == null || units < 0) return;
+        final units = AppNumbers.parseInt(value);
+        if (units == null || units < 0) return _showInvalidNumber();
         updatedProduct = _toModel(product, units: units);
         successMessage = context.l10n.stockUpdated;
       case InventoryProductField.price:
-        final price = double.tryParse(value.replaceAll(',', '.'));
-        if (price == null || price < 0) return;
+        final price = AppNumbers.parseDecimal(value);
+        if (price == null || price < 0) return _showInvalidNumber();
         updatedProduct = _toModel(product, price: price);
         successMessage = context.l10n.salePriceUpdated;
       case InventoryProductField.cost:
-        final cost = double.tryParse(value.replaceAll(',', '.'));
-        if (cost == null || cost < 0) return;
+        final cost = AppNumbers.parseDecimal(value);
+        if (cost == null || cost < 0) return _showInvalidNumber();
         updatedProduct = _toModel(product, cost: cost);
         successMessage = context.l10n.costUpdated;
     }
@@ -446,11 +476,142 @@ class _InventoryScreenState extends State<InventoryScreen> {
     AppAlerts.showSuccess(context, successMessage);
   }
 
+  // --- Filtros, orden y vista (tarjetas en móvil / tabla en tablet) ---
+
+  void _onSort(InventorySort sort) {
+    setState(() {
+      if (_sort == sort) {
+        _sortAscending = !_sortAscending;
+      } else {
+        _sort = sort;
+        _sortAscending = true;
+      }
+    });
+  }
+
+  InventoryProductActions get _productActions => InventoryProductActions(
+    onEditProduct: (product) => _showProductFormDialog(productToEdit: product),
+    onDeleteProduct: (product) => _showDeleteConfirmation(product.id!),
+    onEditImage: _editSingleImage,
+    onEditField: _showProductFieldDialog,
+    onStockChange: _updateStockQuickly,
+    onEditPromotion: _showPromotionSelectDialog,
+  );
+
+  Widget _buildFilters(InventorySummary summary) {
+    final colors = Theme.of(context).colorScheme;
+    Widget chip(InventoryFilter filter, String label, {int? count}) {
+      final selected = _filter == filter;
+      return Padding(
+        padding: const EdgeInsets.only(right: AppSpacing.sm),
+        child: ChoiceChip(
+          label: Text(count == null ? label : '$label ($count)'),
+          selected: selected,
+          showCheckmark: false,
+          onSelected: (_) => setState(() => _filter = filter),
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.fromLTRB(16, 8, 8, 0),
+          child: Row(
+            children: [
+              chip(InventoryFilter.all, context.l10n.inventoryFilterAll),
+              chip(
+                InventoryFilter.lowStock,
+                context.l10n.inventoryFilterLow,
+                count: summary.lowStock,
+              ),
+              chip(
+                InventoryFilter.outOfStock,
+                context.l10n.inventoryFilterOut,
+                count: summary.outOfStock,
+              ),
+              chip(
+                InventoryFilter.withPromotion,
+                context.l10n.inventoryFilterPromo,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 16, 4),
+          child: Text(
+            context.l10n.inventorySummary(
+              summary.products.toString(),
+              summary.units.toString(),
+              summary.outOfStock.toString(),
+            ),
+            style: TextStyle(fontSize: 12, color: colors.onSurfaceVariant),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildProductList(List<Product> products) {
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
+      itemCount: products.length,
+      itemBuilder: (context, index) {
+        final product = products[index];
+        return InventoryProductCard(
+          product: product,
+          promotion: product.promotionId == null
+              ? null
+              : _promotionsMap[product.promotionId],
+          actions: _productActions,
+        );
+      },
+    );
+  }
+
+  Widget _buildProductTable(
+    List<Product> products,
+    BoxConstraints constraints,
+  ) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.only(bottom: 96),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        controller: _horizontalScrollController,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minWidth: constraints.maxWidth),
+          child: InventoryProductsTable(
+            products: products,
+            promotions: _promotionsMap,
+            onEditProduct: (product) =>
+                _showProductFormDialog(productToEdit: product),
+            onDeleteProduct: (product) => _showDeleteConfirmation(product.id!),
+            onEditImage: _editSingleImage,
+            onEditField: _showProductFieldDialog,
+            onStockChange: _updateStockQuickly,
+            onEditPromotion: _showPromotionSelectDialog,
+            sort: _sort,
+            ascending: _sortAscending,
+            onSort: _onSort,
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final filteredProducts = _products.where((product) {
-      return product.name.toLowerCase().contains(_searchQuery.toLowerCase());
-    }).toList();
+    final summary = InventorySummary.of(_products);
+    final filteredProducts = InventoryView.apply(
+      _products,
+      query: _searchQuery,
+      filter: _filter,
+      validPromotionIds: _promotionsMap.keys.toSet(),
+      sort: _sort,
+      ascending: _sortAscending,
+    );
 
     return Listener(
       onPointerDown: (event) {
@@ -484,81 +645,45 @@ class _InventoryScreenState extends State<InventoryScreen> {
             ? const Center(child: CircularProgressIndicator())
             : Column(
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(12.0),
-                    color: Theme.of(context).colorScheme.surfaceContainerHighest
-                        .withValues(alpha: 0.3),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
                     child: TextField(
                       controller: _searchController,
                       onChanged: (value) =>
                           setState(() => _searchQuery = value),
                       decoration: InputDecoration(
                         hintText: context.l10n.searchProduct,
-                        prefixIcon: const Icon(Icons.search),
+                        prefixIcon: const Icon(Icons.search, size: 20),
                         suffixIcon: _searchQuery.isNotEmpty
                             ? IconButton(
-                                icon: const Icon(Icons.clear),
+                                icon: const Icon(Icons.close, size: 18),
                                 onPressed: () {
                                   _searchController.clear();
                                   setState(() => _searchQuery = '');
                                 },
                               )
                             : null,
-                        isDense: true,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                        filled: true,
                         fillColor: Theme.of(context).cardColor,
                       ),
                     ),
                   ),
+                  if (_products.isNotEmpty) _buildFilters(summary),
                   Expanded(
                     child: filteredProducts.isEmpty
-                        ? Center(
-                            child: Text(
-                              _products.isEmpty
-                                  ? context.l10n.inventoryEmpty
-                                  : context.l10n.productsNotFound,
-                              style: TextStyle(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurfaceVariant,
-                                fontSize: 16,
-                              ),
-                            ),
+                        ? EmptyState(
+                            icon: Icons.inventory_2_outlined,
+                            title: _products.isEmpty
+                                ? context.l10n.inventoryEmpty
+                                : context.l10n.productsNotFound,
                           )
                         : LayoutBuilder(
-                            builder: (context, constraints) {
-                              return SingleChildScrollView(
-                                scrollDirection: Axis.vertical,
-                                child: SingleChildScrollView(
-                                  scrollDirection: Axis.horizontal,
-                                  controller: _horizontalScrollController,
-                                  child: ConstrainedBox(
-                                    constraints: BoxConstraints(
-                                      minWidth: constraints.maxWidth,
-                                    ),
-                                    child: InventoryProductsTable(
-                                      products: filteredProducts,
-                                      promotions: _promotionsMap,
-                                      onEditProduct: (product) =>
-                                          _showProductFormDialog(
-                                            productToEdit: product,
-                                          ),
-                                      onDeleteProduct: (product) =>
-                                          _showDeleteConfirmation(product.id!),
-                                      onEditImage: _editSingleImage,
-                                      onEditField: _showProductFieldDialog,
-                                      onStockChange: _updateStockQuickly,
-                                      onEditPromotion:
-                                          _showPromotionSelectDialog,
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
+                            builder: (context, constraints) =>
+                                constraints.maxWidth >= 700
+                                ? _buildProductTable(
+                                    filteredProducts,
+                                    constraints,
+                                  )
+                                : _buildProductList(filteredProducts),
                           ),
                   ),
                 ],

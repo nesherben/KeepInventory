@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+/// Celda de texto editable de la tabla de inventario: sin recuadro (más
+/// limpia de leer); al tocarla muestra el efecto y abre la edición.
 class InventoryTableCell extends StatelessWidget {
   final String text;
   final VoidCallback onTap;
@@ -26,22 +28,14 @@ class InventoryTableCell extends StatelessWidget {
       message: text.length > maxLength ? text : '',
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(6),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surfaceContainerHighest
-                .withValues(alpha: 0.3),
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(
-              color: Theme.of(context).colorScheme.outlineVariant,
-            ),
-          ),
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
           child: Text(
             displayText,
             style: TextStyle(
-              fontWeight: bold ? FontWeight.bold : FontWeight.w500,
-              fontSize: bold ? 15 : 14,
+              fontWeight: bold ? FontWeight.w600 : FontWeight.normal,
+              fontSize: 14,
               color: textColor ?? Theme.of(context).colorScheme.onSurface,
             ),
           ),

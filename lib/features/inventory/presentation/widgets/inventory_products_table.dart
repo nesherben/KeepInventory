@@ -1,14 +1,19 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
+import 'package:keepinventory/core/utils/app_numbers.dart';
 import 'package:keepinventory/l10n/app_localizations_ext.dart';
 
-import '../../domain/product.dart';
 import '../../../promotions/domain/promotion.dart';
+import '../../domain/inventory_view.dart';
+import '../../domain/product.dart';
+import 'inventory_product_widgets.dart';
 import 'inventory_table_cell.dart';
 
-enum InventoryProductField { name, units, price, cost }
+export 'inventory_product_widgets.dart' show InventoryProductField;
 
+/// Tabla de inventario para pantallas anchas (tablet).
+///
+/// Columnas ordenables (tocando la cabecera), stock con aviso de color,
+/// margen calculado y acciones al final. Las celdas se editan al tocarlas.
 class InventoryProductsTable extends StatelessWidget {
   const InventoryProductsTable({
     super.key,
@@ -20,6 +25,9 @@ class InventoryProductsTable extends StatelessWidget {
     required this.onEditField,
     required this.onStockChange,
     required this.onEditPromotion,
+    this.sort,
+    this.ascending = true,
+    this.onSort,
   });
 
   final List<Product> products;
@@ -31,169 +39,94 @@ class InventoryProductsTable extends StatelessWidget {
   final void Function(Product product, int amountChange) onStockChange;
   final ValueChanged<Product> onEditPromotion;
 
-  Widget _buildActionMenu(BuildContext context, Product product) {
+  final InventorySort? sort;
+  final bool ascending;
+  final ValueChanged<InventorySort>? onSort;
+
+  /// Columna de la tabla para cada criterio de orden.
+  static const _sortColumns = {
+    InventorySort.name: 1,
+    InventorySort.units: 2,
+    InventorySort.price: 3,
+    InventorySort.cost: 4,
+    InventorySort.margin: 5,
+  };
+
+  InventoryProductActions get _actions => InventoryProductActions(
+    onEditProduct: onEditProduct,
+    onDeleteProduct: onDeleteProduct,
+    onEditImage: onEditImage,
+    onEditField: onEditField,
+    onStockChange: onStockChange,
+    onEditPromotion: onEditPromotion,
+  );
+
+  DataColumn _column(
+    String label, {
+    InventorySort? sortBy,
+    bool numeric = false,
+  }) => DataColumn(
+    label: Text(label.toUpperCase()),
+    numeric: numeric,
+    onSort: sortBy == null || onSort == null ? null : (_, _) => onSort!(sortBy),
+  );
+
+  DataRow _buildRow(BuildContext context, Product product) {
     final colors = Theme.of(context).colorScheme;
-    return PopupMenuButton<String>(
-      icon: Icon(Icons.more_vert, color: colors.onSurfaceVariant),
-      onSelected: (value) {
-        if (value == 'edit') onEditProduct(product);
-        if (value == 'delete') onDeleteProduct(product);
-      },
-      itemBuilder: (context) => [
-        PopupMenuItem(
-          value: 'edit',
-          child: Row(
-            children: [
-              Icon(Icons.edit, color: colors.primary, size: 20),
-              const SizedBox(width: 8),
-              Text(context.l10n.editAll),
-            ],
-          ),
-        ),
-        PopupMenuItem(
-          value: 'delete',
-          child: Row(
-            children: [
-              Icon(Icons.delete, color: colors.error, size: 20),
-              const SizedBox(width: 8),
-              Text(context.l10n.delete),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildProductPhoto(BuildContext context, Product product) {
-    final colors = Theme.of(context).colorScheme;
-    Widget image;
-    if (product.imageBytes != null && product.imageBytes!.isNotEmpty) {
-      image = Image.memory(
-        product.imageBytes!,
-        fit: BoxFit.cover,
-        width: 42,
-        height: 42,
-      );
-    } else if (product.imagePath != null && product.imagePath!.isNotEmpty) {
-      image = Image.file(
-        File(product.imagePath!),
-        fit: BoxFit.cover,
-        width: 42,
-        height: 42,
-        errorBuilder: (context, error, stackTrace) => Icon(
-          Icons.image_not_supported_outlined,
-          color: colors.onSurfaceVariant,
-          size: 30,
-        ),
-      );
-    } else {
-      image = Container(
-        width: 42,
-        height: 42,
-        decoration: BoxDecoration(
-          color: colors.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(6),
-        ),
-        child: Icon(
-          Icons.add_a_photo,
-          color: colors.onSurfaceVariant,
-          size: 20,
-        ),
-      );
-    }
-
-    return InkWell(
-      onTap: () => onEditImage(product),
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        padding: const EdgeInsets.all(2),
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: colors.primary.withValues(alpha: 0.3),
-            width: 1.5,
-          ),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: ClipRRect(borderRadius: BorderRadius.circular(6), child: image),
-      ),
-    );
-  }
-
-  Widget _buildStockControls(BuildContext context, Product product) {
-    final colors = Theme.of(context).colorScheme;
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        IconButton(
-          icon: Icon(
-            Icons.remove_circle_outline,
-            color: colors.error,
-            size: 22,
-          ),
-          onPressed: product.units > 0
-              ? () => onStockChange(product, -1)
-              : null,
-        ),
-        InventoryTableCell(
-          text: product.units.toString(),
-          onTap: () => onEditField(product, InventoryProductField.units),
-          bold: true,
-        ),
-        IconButton(
-          icon: Icon(
-            Icons.add_circle_outline,
-            color: colors.tertiary,
-            size: 22,
-          ),
-          onPressed: () => onStockChange(product, 1),
-        ),
-      ],
-    );
-  }
-
-  DataRow _buildProductRow(BuildContext context, Product product) {
-    final hasPromotion =
-        product.promotionId != null &&
-        promotions.containsKey(product.promotionId);
-    final promotionName = hasPromotion
-        ? promotions[product.promotionId]!.name
-        : context.l10n.noPromotion;
+    final actions = _actions;
+    final promotion = product.promotionId == null
+        ? null
+        : promotions[product.promotionId];
+    final outOfStock = StockLevel.of(product.units) == StockLevel.out;
 
     return DataRow(
+      // Agotado: fila ligeramente tintada para localizarlo de un vistazo
+      color: outOfStock
+          ? WidgetStateProperty.all(colors.error.withValues(alpha: 0.04))
+          : null,
       cells: [
-        DataCell(_buildActionMenu(context, product)),
-        DataCell(_buildProductPhoto(context, product)),
+        DataCell(
+          InventoryProductPhoto(
+            product: product,
+            onTap: () => onEditImage(product),
+          ),
+        ),
         DataCell(
           InventoryTableCell(
             text: product.name,
             onTap: () => onEditField(product, InventoryProductField.name),
-            maxLength: 20,
+            bold: true,
+            maxLength: 28,
           ),
         ),
-        DataCell(_buildStockControls(context, product)),
+        DataCell(InventoryStockStepper(product: product, actions: actions)),
         DataCell(
           InventoryTableCell(
-            text: '${product.price.toStringAsFixed(2)} €',
+            text: context.money(product.price),
             onTap: () => onEditField(product, InventoryProductField.price),
+            bold: true,
           ),
         ),
         DataCell(
           InventoryTableCell(
-            text: '${product.cost.toStringAsFixed(2)} €',
+            text: context.money(product.cost),
             onTap: () => onEditField(product, InventoryProductField.cost),
+            textColor: colors.onSurfaceVariant,
           ),
         ),
         DataCell(
-          InventoryTableCell(
-            text: promotionName,
-            onTap: () => onEditPromotion(product),
-            textColor: hasPromotion
-                ? Theme.of(context).colorScheme.tertiary
-                : Theme.of(context).colorScheme.onSurfaceVariant,
-            bold: hasPromotion,
-            maxLength: 18,
+          InventoryMarginText(
+            product,
+            style: const TextStyle(fontWeight: FontWeight.w600),
           ),
         ),
+        DataCell(
+          InventoryPromotionChip(
+            promotion: promotion,
+            onTap: () => onEditPromotion(product),
+          ),
+        ),
+        DataCell(InventoryActionMenu(product: product, actions: actions)),
       ],
     );
   }
@@ -203,30 +136,43 @@ class InventoryProductsTable extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
     return DataTable(
       headingRowColor: WidgetStateProperty.all(
-        colors.primary.withValues(alpha: 0.08),
+        colors.surfaceContainerHighest.withValues(alpha: 0.5),
       ),
       headingTextStyle: TextStyle(
         fontWeight: FontWeight.bold,
-        color: colors.primary,
-        fontSize: 13,
-        letterSpacing: 0.5,
+        color: colors.onSurfaceVariant,
+        fontSize: 11,
+        letterSpacing: 0.6,
       ),
-      dataRowMinHeight: 60,
-      dataRowMaxHeight: 65,
+      sortColumnIndex: sort == null ? null : _sortColumns[sort],
+      sortAscending: ascending,
+      dataRowMinHeight: 64,
+      dataRowMaxHeight: 68,
       horizontalMargin: 16,
-      columnSpacing: 24,
+      columnSpacing: 20,
       columns: [
-        DataColumn(label: Text(context.l10n.tableActions)),
-        DataColumn(label: Text(context.l10n.tablePhoto)),
-        DataColumn(label: Text(context.l10n.tableName)),
-        DataColumn(label: Text(context.l10n.tableUnits)),
-        DataColumn(label: Text(context.l10n.tablePrice)),
-        DataColumn(label: Text(context.l10n.tableCost)),
-        DataColumn(label: Text(context.l10n.tablePromotion)),
+        _column(context.l10n.tablePhoto),
+        _column(context.l10n.tableName, sortBy: InventorySort.name),
+        _column(context.l10n.tableUnits, sortBy: InventorySort.units),
+        _column(
+          context.l10n.tablePrice,
+          sortBy: InventorySort.price,
+          numeric: true,
+        ),
+        _column(
+          context.l10n.tableCost,
+          sortBy: InventorySort.cost,
+          numeric: true,
+        ),
+        _column(
+          context.l10n.inventoryMargin,
+          sortBy: InventorySort.margin,
+          numeric: true,
+        ),
+        _column(context.l10n.tablePromotion),
+        _column(''),
       ],
-      rows: products
-          .map((product) => _buildProductRow(context, product))
-          .toList(),
+      rows: products.map((p) => _buildRow(context, p)).toList(),
     );
   }
 }
