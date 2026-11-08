@@ -1161,4 +1161,71 @@ class AppLocalizationsEn extends AppLocalizations {
   String syncRequestApproved(String device) {
     return 'Sending authorised to $device';
   }
+
+  @override
+  String get navTutorial => 'Tutorial';
+
+  @override
+  String get navTutorialSubtitle => 'How to use the app';
+
+  @override
+  String get tutorialSkip => 'Skip';
+
+  @override
+  String get tutorialNext => 'Next';
+
+  @override
+  String get tutorialBack => 'Back';
+
+  @override
+  String get tutorialStart => 'Get started';
+
+  @override
+  String get tutorialWelcomeTitle => 'Welcome to KeepInventory';
+
+  @override
+  String get tutorialWelcomeBody =>
+      'Your inventory and till on your phone, fully offline. Here are the basics in one minute.';
+
+  @override
+  String get tutorialInventoryTitle => '1. Add your products';
+
+  @override
+  String get tutorialInventoryBody =>
+      'In Inventory tap + and enter name, units, price and cost. With the cost the app works out your margin and warns you when stock runs low.';
+
+  @override
+  String get tutorialOffersTitle => '2. Packs and promotions';
+
+  @override
+  String get tutorialOffersBody =>
+      'Group products into Packs with their own price, or create Promotions (10% off, 3 for €12…) and assign them to your products. They apply automatically when selling.';
+
+  @override
+  String get tutorialSalesTitle => '3. Sell in seconds';
+
+  @override
+  String get tutorialSalesBody =>
+      'In Sales tap products to add them to the cart, press CHECK OUT and choose how the customer pays. Stock is updated automatically.';
+
+  @override
+  String get tutorialHistoryTitle => '4. History and refunds';
+
+  @override
+  String get tutorialHistoryBody =>
+      'History keeps the ticket of every sale. From there you can refund units and the amount is recalculated with promotions.';
+
+  @override
+  String get tutorialDashboardTitle => '5. Balance the till';
+
+  @override
+  String get tutorialDashboardBody =>
+      'The Dashboard sums up revenue, profit and what was paid with each method. Perfect for the end of the day.';
+
+  @override
+  String get tutorialDataTitle => '6. Keep your data safe';
+
+  @override
+  String get tutorialDataBody =>
+      'In Data Management you can back up your data or clone everything to another phone with a QR code, no Wi‑Fi needed. You can replay this tutorial from the menu.';
 }

@@ -6,6 +6,7 @@ void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
     AppPreferences.privacyModeEnabled.value = false;
+    AppPreferences.tutorialSeen = false;
   });
 
   test('loads the saved privacy mode preference', () async {
@@ -29,5 +30,22 @@ void main() {
     expect(notifications, 1);
 
     AppPreferences.privacyModeEnabled.removeListener(listener);
+  });
+
+  test('tutorial is pending on a fresh install', () async {
+    await AppPreferences.load();
+
+    expect(AppPreferences.tutorialSeen, isFalse);
+  });
+
+  test('marking the tutorial as seen persists across loads', () async {
+    await AppPreferences.markTutorialSeen();
+    AppPreferences.tutorialSeen = false;
+
+    await AppPreferences.load();
+
+    final preferences = await SharedPreferences.getInstance();
+    expect(preferences.getBool('tutorial_seen'), isTrue);
+    expect(AppPreferences.tutorialSeen, isTrue);
   });
 }

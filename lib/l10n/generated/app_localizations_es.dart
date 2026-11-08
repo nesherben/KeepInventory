@@ -1166,4 +1166,71 @@ class AppLocalizationsEs extends AppLocalizations {
   String syncRequestApproved(String device) {
     return 'Envío autorizado a $device';
   }
+
+  @override
+  String get navTutorial => 'Tutorial';
+
+  @override
+  String get navTutorialSubtitle => 'Cómo usar la app';
+
+  @override
+  String get tutorialSkip => 'Saltar';
+
+  @override
+  String get tutorialNext => 'Siguiente';
+
+  @override
+  String get tutorialBack => 'Atrás';
+
+  @override
+  String get tutorialStart => 'Empezar';
+
+  @override
+  String get tutorialWelcomeTitle => 'Bienvenido a KeepInventory';
+
+  @override
+  String get tutorialWelcomeBody =>
+      'Tu inventario y tu caja en el móvil, sin conexión. Te enseñamos lo básico en un minuto.';
+
+  @override
+  String get tutorialInventoryTitle => '1. Da de alta tus productos';
+
+  @override
+  String get tutorialInventoryBody =>
+      'En Inventario pulsa + y pon nombre, unidades, precio y coste. Con el coste la app calcula tu margen y te avisa cuando queda poco stock.';
+
+  @override
+  String get tutorialOffersTitle => '2. Packs y promociones';
+
+  @override
+  String get tutorialOffersBody =>
+      'Agrupa productos en Packs con su propio precio, o crea Promociones (10 % de descuento, 3 por 12 €…) y asígnalas a tus productos. Se aplican solas al vender.';
+
+  @override
+  String get tutorialSalesTitle => '3. Vende en segundos';
+
+  @override
+  String get tutorialSalesBody =>
+      'En Ventas toca los productos para añadirlos al carrito, pulsa COBRAR y elige cómo paga el cliente. El stock se descuenta automáticamente.';
+
+  @override
+  String get tutorialHistoryTitle => '4. Historial y devoluciones';
+
+  @override
+  String get tutorialHistoryBody =>
+      'En Historial tienes el ticket de cada venta. Desde ahí puedes devolver unidades y el importe se recalcula con las promociones.';
+
+  @override
+  String get tutorialDashboardTitle => '5. Cuadra la caja';
+
+  @override
+  String get tutorialDashboardBody =>
+      'El Panel resume ingresos, beneficio y lo cobrado por cada método de pago. Ideal para el final del día.';
+
+  @override
+  String get tutorialDataTitle => '6. Tus datos, a salvo';
+
+  @override
+  String get tutorialDataBody =>
+      'En Gestión de Datos puedes hacer copias de seguridad o clonar todo a otro móvil con un QR, sin Wi‑Fi. Puedes volver a ver este tutorial desde el menú.';
 }

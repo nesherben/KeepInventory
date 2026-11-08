@@ -2107,6 +2107,126 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Envío autorizado a {device}'**
   String syncRequestApproved(String device);
+
+  /// No description provided for @navTutorial.
+  ///
+  /// In es, this message translates to:
+  /// **'Tutorial'**
+  String get navTutorial;
+
+  /// No description provided for @navTutorialSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Cómo usar la app'**
+  String get navTutorialSubtitle;
+
+  /// No description provided for @tutorialSkip.
+  ///
+  /// In es, this message translates to:
+  /// **'Saltar'**
+  String get tutorialSkip;
+
+  /// No description provided for @tutorialNext.
+  ///
+  /// In es, this message translates to:
+  /// **'Siguiente'**
+  String get tutorialNext;
+
+  /// No description provided for @tutorialBack.
+  ///
+  /// In es, this message translates to:
+  /// **'Atrás'**
+  String get tutorialBack;
+
+  /// No description provided for @tutorialStart.
+  ///
+  /// In es, this message translates to:
+  /// **'Empezar'**
+  String get tutorialStart;
+
+  /// No description provided for @tutorialWelcomeTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Bienvenido a KeepInventory'**
+  String get tutorialWelcomeTitle;
+
+  /// No description provided for @tutorialWelcomeBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu inventario y tu caja en el móvil, sin conexión. Te enseñamos lo básico en un minuto.'**
+  String get tutorialWelcomeBody;
+
+  /// No description provided for @tutorialInventoryTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'1. Da de alta tus productos'**
+  String get tutorialInventoryTitle;
+
+  /// No description provided for @tutorialInventoryBody.
+  ///
+  /// In es, this message translates to:
+  /// **'En Inventario pulsa + y pon nombre, unidades, precio y coste. Con el coste la app calcula tu margen y te avisa cuando queda poco stock.'**
+  String get tutorialInventoryBody;
+
+  /// No description provided for @tutorialOffersTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'2. Packs y promociones'**
+  String get tutorialOffersTitle;
+
+  /// No description provided for @tutorialOffersBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Agrupa productos en Packs con su propio precio, o crea Promociones (10 % de descuento, 3 por 12 €…) y asígnalas a tus productos. Se aplican solas al vender.'**
+  String get tutorialOffersBody;
+
+  /// No description provided for @tutorialSalesTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'3. Vende en segundos'**
+  String get tutorialSalesTitle;
+
+  /// No description provided for @tutorialSalesBody.
+  ///
+  /// In es, this message translates to:
+  /// **'En Ventas toca los productos para añadirlos al carrito, pulsa COBRAR y elige cómo paga el cliente. El stock se descuenta automáticamente.'**
+  String get tutorialSalesBody;
+
+  /// No description provided for @tutorialHistoryTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'4. Historial y devoluciones'**
+  String get tutorialHistoryTitle;
+
+  /// No description provided for @tutorialHistoryBody.
+  ///
+  /// In es, this message translates to:
+  /// **'En Historial tienes el ticket de cada venta. Desde ahí puedes devolver unidades y el importe se recalcula con las promociones.'**
+  String get tutorialHistoryBody;
+
+  /// No description provided for @tutorialDashboardTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'5. Cuadra la caja'**
+  String get tutorialDashboardTitle;
+
+  /// No description provided for @tutorialDashboardBody.
+  ///
+  /// In es, this message translates to:
+  /// **'El Panel resume ingresos, beneficio y lo cobrado por cada método de pago. Ideal para el final del día.'**
+  String get tutorialDashboardBody;
+
+  /// No description provided for @tutorialDataTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'6. Tus datos, a salvo'**
+  String get tutorialDataTitle;
+
+  /// No description provided for @tutorialDataBody.
+  ///
+  /// In es, this message translates to:
+  /// **'En Gestión de Datos puedes hacer copias de seguridad o clonar todo a otro móvil con un QR, sin Wi‑Fi. Puedes volver a ver este tutorial desde el menú.'**
+  String get tutorialDataBody;
 }
 
 class _AppLocalizationsDelegate

@@ -18,6 +18,7 @@ import 'features/sales/presentation/sales_screen.dart';
 // 💡 Importamos el Drawer para acceder a su ValueNotifier del tema
 import 'core/shared_widgets/app_drawer.dart';
 import 'features/sync/presentation/data_management_screen.dart';
+import 'features/tutorial/presentation/tutorial_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -60,7 +61,8 @@ class KeepInventoryApp extends StatelessWidget {
               theme: AppTheme.light(dynamicPrimary: effectiveLightPrimary),
               darkTheme: AppTheme.dark(dynamicPrimary: effectiveDarkPrimary),
               themeMode: ThemeMode.system,
-              initialRoute: '/',
+              // El primer arranque abre el tutorial de bienvenida
+              initialRoute: AppPreferences.tutorialSeen ? '/' : '/tutorial',
               routes: {
                 '/': (context) => const DashboardScreen(),
                 '/inventory': (context) => const InventoryScreen(),
@@ -69,6 +71,7 @@ class KeepInventoryApp extends StatelessWidget {
                 '/promotions': (context) => const PromotionsScreen(),
                 '/packs': (context) => const PacksScreen(),
                 '/data-management': (context) => const DataManagementScreen(),
+                '/tutorial': (context) => const TutorialScreen(),
               },
             );
           },

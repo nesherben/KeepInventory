@@ -152,6 +152,23 @@ class AppDrawer extends StatelessWidget {
               context.l10n.navDataManagement,
               subtitle: context.l10n.navDataManagementSubtitle,
             ),
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
+              child: Divider(),
+            ),
+            // El tutorial se abre encima de la pantalla actual (push, no replace)
+            _NavItem(
+              icon: Icons.school_outlined,
+              selectedIcon: Icons.school,
+              label: context.l10n.navTutorial,
+              subtitle: context.l10n.navTutorialSubtitle,
+              selected: false,
+              onTap: () {
+                final navigator = Navigator.of(context);
+                navigator.pop();
+                navigator.pushNamed('/tutorial');
+              },
+            ),
           ],
         ),
       ),
