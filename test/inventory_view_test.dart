@@ -117,15 +117,81 @@ void main() {
       );
     });
 
-    test('sorts by margin amount', () {
+    test('sorts by margin percent, the value shown in the table', () {
       expect(
         InventoryView.apply(
           products,
           sort: InventorySort.margin,
         ).map((p) => p.name),
-        ['Anillo', 'Taza', 'collar'], // 2, 6, 10
+        ['Anillo', 'collar', 'Taza'], // 10 %, 67 %, 75 %
       );
     });
+
+    test('products without margin percent stay last in both directions', () {
+      final withFree = [...products, _p('Regalo', price: 0, cost: 1)];
+      for (final ascending in [true, false]) {
+        expect(
+          InventoryView.apply(
+            withFree,
+            sort: InventorySort.margin,
+            ascending: ascending,
+          ).last.name,
+          'Regalo',
+        );
+      }
+    });
+
+    test('ties are broken by name, whatever the direction', () {
+      final tied = [
+        _p('Zeta', price: 5),
+        _p('alfa', price: 5),
+        _p('Beta', price: 9),
+      ];
+      expect(
+        InventoryView.apply(tied, sort: InventorySort.price).map((p) => p.name),
+        ['alfa', 'Zeta', 'Beta'],
+      );
+      expect(
+        InventoryView.apply(
+          tied,
+          sort: InventorySort.price,
+          ascending: false,
+        ).map((p) => p.name),
+        ['Beta', 'alfa', 'Zeta'],
+      );
+    });
+
+    test(
+      'names ignore accents, put Ñ after N and compare numbers by value',
+      () {
+        final names = [
+          'Ñandú',
+          'Óvalo',
+          'Nube',
+          'Pendiente 10',
+          'oso',
+          'Pendiente 2',
+          'Árbol',
+          'zeta',
+        ];
+        expect(
+          InventoryView.apply(
+            names.map((n) => _p(n)),
+            sort: InventorySort.name,
+          ).map((p) => p.name),
+          [
+            'Árbol',
+            'Nube',
+            'Ñandú',
+            'oso',
+            'Óvalo',
+            'Pendiente 2',
+            'Pendiente 10',
+            'zeta',
+          ],
+        );
+      },
+    );
 
     test('keeps original order when no sort is given', () {
       expect(InventoryView.apply(products).map((p) => p.name), [
