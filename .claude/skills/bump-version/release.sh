@@ -44,8 +44,17 @@ if [ "$BUILD" = 1 ]; then
 fi
 [ -f "$APK" ] || { echo "ERROR: no existe $APK (usa --build)" >&2; exit 1; }
 # El APK debe ser posterior al último commit (no publicar uno viejo)
-APK_TIME=$(stat -c %Y "$APK"); COMMIT_TIME=$(git log -1 --format=%ct)
-[ "$APK_TIME" -ge "$COMMIT_TIME" ] || { echo "ERROR: el APK es anterior al último commit; recompila con --build" >&2; exit 1; }
+# Gradle no reescribe el APK renombrado si no hay cambios: en ese caso vale
+# si es idéntico al app-release.apk recién generado por flutter.
+FRESH="build/app/outputs/flutter-apk/app-release.apk"
+COMMIT_TIME=$(git log -1 --format=%ct)
+if [ "$(stat -c %Y "$APK")" -lt "$COMMIT_TIME" ]; then
+  if [ -f "$FRESH" ] && [ "$(stat -c %Y "$FRESH")" -ge "$COMMIT_TIME" ] && cmp -s "$APK" "$FRESH"; then
+    :
+  else
+    echo "ERROR: el APK es anterior al último commit; recompila con --build" >&2; exit 1
+  fi
+fi
 
 SIZE=$(du -h "$APK" | cut -f1)
 echo "Versión : $VERSION (tag $TAG)"
