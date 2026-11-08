@@ -30,6 +30,13 @@ jobs:
       - name: 📦 Instalar dependencias
         run: flutter pub get
 
+      # Si el análisis o los tests fallan, no se compila el APK
+      - name: 🔍 Analizar código
+        run: flutter analyze --no-fatal-infos
+
+      - name: 🧪 Tests
+        run: flutter test
+
       - name: 🔨 Compilar APK
         run: flutter build apk --release
 

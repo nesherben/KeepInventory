@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bash .claude/skills/verify/verify.sh:*)",
+      "Bash(bash .claude/skills/code-map/code_map.sh:*)",
+      "Bash(bash .claude/skills/code-map/usages.sh:*)",
+      "Bash(bash .claude/skills/device/device.sh status)",
+      "Bash(bash .claude/skills/device/device.sh launch)",
+      "Bash(bash .claude/skills/device/device.sh shot:*)",
+      "Bash(bash .claude/skills/device/device.sh log)",
+      "Bash(dart run .claude/skills/l10n-add/l10n_add.dart:*)",
+      "Bash(flutter gen-l10n)",
+      "Bash(flutter pub get)",
+      "Bash(dart format:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "Bash(git tag --sort:*)"
+    ],
+    "ask": [
+      "Bash(git push:*)",
+      "Bash(git tag -a:*)",
+      "Bash(bash .claude/skills/bump-version/release.sh:*)"
+    ]
+  }
+}
