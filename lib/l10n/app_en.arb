@@ -403,5 +403,12 @@
   "tutorialDashboardTitle": "5. Balance the till",
   "tutorialDashboardBody": "The Dashboard sums up revenue, profit and what was paid with each method. Perfect for the end of the day.",
   "tutorialDataTitle": "6. Keep your data safe",
-  "tutorialDataBody": "In Data Management you can back up your data or clone everything to another phone with a QR code, no Wi‑Fi needed. You can replay this tutorial from the menu."
+  "tutorialDataBody": "In Data Management you can back up your data or clone everything to another phone with a QR code, no Wi‑Fi needed. You can replay this tutorial from the menu.",
+  "inventorySortReset": "Tap to restore the default order",
+  "inventorySortTitle": "Sort",
+  "inventorySortDefault": "Default",
+  "inventorySortName": "Name",
+  "inventorySortUnits": "Units",
+  "inventorySortPrice": "Price",
+  "inventorySortCost": "Cost"
 }

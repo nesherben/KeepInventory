@@ -28,6 +28,7 @@ class InventoryProductsTable extends StatelessWidget {
     this.sort,
     this.ascending = true,
     this.onSort,
+    this.onResetSort,
   });
 
   final List<Product> products;
@@ -42,6 +43,9 @@ class InventoryProductsTable extends StatelessWidget {
   final InventorySort? sort;
   final bool ascending;
   final ValueChanged<InventorySort>? onSort;
+
+  /// Tocar la cabecera FOTO quita el orden y vuelve al orden por defecto.
+  final VoidCallback? onResetSort;
 
   /// Columna de la tabla para cada criterio de orden.
   static const _sortColumns = {
@@ -151,7 +155,13 @@ class InventoryProductsTable extends StatelessWidget {
       horizontalMargin: 16,
       columnSpacing: 20,
       columns: [
-        _column(context.l10n.tablePhoto),
+        DataColumn(
+          label: Text(context.l10n.tablePhoto.toUpperCase()),
+          tooltip: sort == null ? null : context.l10n.inventorySortReset,
+          onSort: sort == null || onResetSort == null
+              ? null
+              : (_, _) => onResetSort!(),
+        ),
         _column(context.l10n.tableName, sortBy: InventorySort.name),
         _column(context.l10n.tableUnits, sortBy: InventorySort.units),
         _column(

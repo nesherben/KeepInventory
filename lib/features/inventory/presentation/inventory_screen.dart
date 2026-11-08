@@ -40,6 +40,9 @@ class InventoryScreen extends StatefulWidget {
 }
 
 class _InventoryScreenState extends State<InventoryScreen> {
+  /// Ancho a partir del cual se muestra la tabla en vez de tarjetas.
+  static const double _tableMinWidth = 700;
+
   final _productRepository = ProductRepositoryImpl(ProductLocalDatasource());
   final _promotionRepository = PromotionRepositoryImpl(
     PromotionLocalDatasource(),
@@ -489,6 +492,104 @@ class _InventoryScreenState extends State<InventoryScreen> {
     });
   }
 
+  void _resetSort() => setState(() {
+    _sort = null;
+    _sortAscending = true;
+  });
+
+  String _sortLabel(InventorySort sort) => switch (sort) {
+    InventorySort.name => context.l10n.inventorySortName,
+    InventorySort.units => context.l10n.inventorySortUnits,
+    InventorySort.price => context.l10n.inventorySortPrice,
+    InventorySort.cost => context.l10n.inventorySortCost,
+    InventorySort.margin => context.l10n.inventoryMargin,
+  };
+
+  /// Menú de orden para móvil (las tarjetas no tienen cabeceras que tocar).
+  /// Comparte estado con la tabla. Elegir el criterio activo invierte el sentido.
+  Widget _buildSortButton() {
+    final colors = Theme.of(context).colorScheme;
+    final active = _sort;
+    final arrow = _sortAscending ? Icons.arrow_upward : Icons.arrow_downward;
+    const defaultChoice = -1;
+
+    PopupMenuItem<int> option(int value, String label, bool selected) =>
+        PopupMenuItem<int>(
+          value: value,
+          child: Row(
+            children: [
+              SizedBox(
+                width: 28,
+                child: selected
+                    ? Icon(
+                        value == defaultChoice ? Icons.check : arrow,
+                        size: 18,
+                        color: colors.primary,
+                      )
+                    : null,
+              ),
+              Text(
+                label,
+                style: TextStyle(
+                  fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+                  color: selected ? colors.primary : null,
+                ),
+              ),
+            ],
+          ),
+        );
+
+    return PopupMenuButton<int>(
+      tooltip: context.l10n.inventorySortTitle,
+      onSelected: (value) => value == defaultChoice
+          ? _resetSort()
+          : _onSort(InventorySort.values[value]),
+      itemBuilder: (context) => [
+        option(
+          defaultChoice,
+          context.l10n.inventorySortDefault,
+          active == null,
+        ),
+        const PopupMenuDivider(),
+        for (final sort in InventorySort.values)
+          option(sort.index, _sortLabel(sort), active == sort),
+      ],
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.sm,
+          vertical: AppSpacing.xs,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.sort,
+              size: 18,
+              color: active == null ? colors.onSurfaceVariant : colors.primary,
+            ),
+            const SizedBox(width: AppSpacing.xs),
+            Text(
+              active == null
+                  ? context.l10n.inventorySortTitle
+                  : _sortLabel(active),
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: active == null
+                    ? colors.onSurfaceVariant
+                    : colors.primary,
+              ),
+            ),
+            if (active != null) ...[
+              const SizedBox(width: 2),
+              Icon(arrow, size: 14, color: colors.primary),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
   InventoryProductActions get _productActions => InventoryProductActions(
     onEditProduct: (product) => _showProductFormDialog(productToEdit: product),
     onDeleteProduct: (product) => _showDeleteConfirmation(product.id!),
@@ -500,6 +601,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
 
   Widget _buildFilters(InventorySummary summary) {
     final colors = Theme.of(context).colorScheme;
+    final isNarrow = MediaQuery.sizeOf(context).width < _tableMinWidth;
     Widget chip(InventoryFilter filter, String label, {int? count}) {
       final selected = _filter == filter;
       return Padding(
@@ -540,14 +642,25 @@ class _InventoryScreenState extends State<InventoryScreen> {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 8, 16, 4),
-          child: Text(
-            context.l10n.inventorySummary(
-              summary.products.toString(),
-              summary.units.toString(),
-              summary.outOfStock.toString(),
-            ),
-            style: TextStyle(fontSize: 12, color: colors.onSurfaceVariant),
+          padding: EdgeInsets.fromLTRB(20, isNarrow ? 4 : 8, 8, 4),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  context.l10n.inventorySummary(
+                    summary.products.toString(),
+                    summary.units.toString(),
+                    summary.outOfStock.toString(),
+                  ),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: colors.onSurfaceVariant,
+                  ),
+                ),
+              ),
+              // En tablet se ordena tocando las cabeceras de la tabla
+              if (isNarrow) _buildSortButton(),
+            ],
           ),
         ),
       ],
@@ -595,6 +708,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
             sort: _sort,
             ascending: _sortAscending,
             onSort: _onSort,
+            onResetSort: _resetSort,
           ),
         ),
       ),
@@ -678,7 +792,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                           )
                         : LayoutBuilder(
                             builder: (context, constraints) =>
-                                constraints.maxWidth >= 700
+                                constraints.maxWidth >= _tableMinWidth
                                 ? _buildProductTable(
                                     filteredProducts,
                                     constraints,

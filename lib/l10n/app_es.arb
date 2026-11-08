@@ -475,5 +475,12 @@
   "tutorialDashboardTitle": "5. Cuadra la caja",
   "tutorialDashboardBody": "El Panel resume ingresos, beneficio y lo cobrado por cada método de pago. Ideal para el final del día.",
   "tutorialDataTitle": "6. Tus datos, a salvo",
-  "tutorialDataBody": "En Gestión de Datos puedes hacer copias de seguridad o clonar todo a otro móvil con un QR, sin Wi‑Fi. Puedes volver a ver este tutorial desde el menú."
+  "tutorialDataBody": "En Gestión de Datos puedes hacer copias de seguridad o clonar todo a otro móvil con un QR, sin Wi‑Fi. Puedes volver a ver este tutorial desde el menú.",
+  "inventorySortReset": "Tocar para volver al orden por defecto",
+  "inventorySortTitle": "Ordenar",
+  "inventorySortDefault": "Por defecto",
+  "inventorySortName": "Nombre",
+  "inventorySortUnits": "Unidades",
+  "inventorySortPrice": "Precio",
+  "inventorySortCost": "Coste"
 }

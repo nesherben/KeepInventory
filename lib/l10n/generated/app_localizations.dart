@@ -2227,6 +2227,48 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'En Gestión de Datos puedes hacer copias de seguridad o clonar todo a otro móvil con un QR, sin Wi‑Fi. Puedes volver a ver este tutorial desde el menú.'**
   String get tutorialDataBody;
+
+  /// No description provided for @inventorySortReset.
+  ///
+  /// In es, this message translates to:
+  /// **'Tocar para volver al orden por defecto'**
+  String get inventorySortReset;
+
+  /// No description provided for @inventorySortTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Ordenar'**
+  String get inventorySortTitle;
+
+  /// No description provided for @inventorySortDefault.
+  ///
+  /// In es, this message translates to:
+  /// **'Por defecto'**
+  String get inventorySortDefault;
+
+  /// No description provided for @inventorySortName.
+  ///
+  /// In es, this message translates to:
+  /// **'Nombre'**
+  String get inventorySortName;
+
+  /// No description provided for @inventorySortUnits.
+  ///
+  /// In es, this message translates to:
+  /// **'Unidades'**
+  String get inventorySortUnits;
+
+  /// No description provided for @inventorySortPrice.
+  ///
+  /// In es, this message translates to:
+  /// **'Precio'**
+  String get inventorySortPrice;
+
+  /// No description provided for @inventorySortCost.
+  ///
+  /// In es, this message translates to:
+  /// **'Coste'**
+  String get inventorySortCost;
 }
 
 class _AppLocalizationsDelegate

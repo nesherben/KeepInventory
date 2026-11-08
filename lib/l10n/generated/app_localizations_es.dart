@@ -1233,4 +1233,25 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get tutorialDataBody =>
       'En Gestión de Datos puedes hacer copias de seguridad o clonar todo a otro móvil con un QR, sin Wi‑Fi. Puedes volver a ver este tutorial desde el menú.';
+
+  @override
+  String get inventorySortReset => 'Tocar para volver al orden por defecto';
+
+  @override
+  String get inventorySortTitle => 'Ordenar';
+
+  @override
+  String get inventorySortDefault => 'Por defecto';
+
+  @override
+  String get inventorySortName => 'Nombre';
+
+  @override
+  String get inventorySortUnits => 'Unidades';
+
+  @override
+  String get inventorySortPrice => 'Precio';
+
+  @override
+  String get inventorySortCost => 'Coste';
 }

@@ -1228,4 +1228,25 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get tutorialDataBody =>
       'In Data Management you can back up your data or clone everything to another phone with a QR code, no Wi‑Fi needed. You can replay this tutorial from the menu.';
+
+  @override
+  String get inventorySortReset => 'Tap to restore the default order';
+
+  @override
+  String get inventorySortTitle => 'Sort';
+
+  @override
+  String get inventorySortDefault => 'Default';
+
+  @override
+  String get inventorySortName => 'Name';
+
+  @override
+  String get inventorySortUnits => 'Units';
+
+  @override
+  String get inventorySortPrice => 'Price';
+
+  @override
+  String get inventorySortCost => 'Cost';
 }
