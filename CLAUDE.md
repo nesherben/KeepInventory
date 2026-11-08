@@ -19,7 +19,7 @@ Flutter app (Android) for inventory + POS sales/tickets. Local SQLite (`sqflite`
 - New UI text → `l10n-add` skill (don't read the ARB files).
 - Big features → only when the user runs `/feature` (agents in `.claude/agents/`: feature-analyst, product-designer, code-reviewer). Don't spawn agents otherwise.
 - Version bump → `bump-version` skill. Pushing to `main` triggers the APK build in CI.
-- Releases are built and published **manually** by the user (local keystore signature; in-app updater reads GitHub Releases). Don't automate releases in CI.
+- Releases are built **locally** (local keystore signature; in-app updater reads GitHub Releases) — never in CI. Claude may build, tag and publish them via the `bump-version` skill (`release.sh`), but only after the user OKs version + notes.
 
 ## Conventions
 - Commits: `feat: ...` style; version bumps: `feat: update version to X.Y.Z in pubspec.yaml`.
