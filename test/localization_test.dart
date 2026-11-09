@@ -17,12 +17,27 @@ void main() {
     );
   });
 
-  test('falls back to Spanish for unsupported or missing device locales', () {
+  test('falls back to English for unsupported or missing device locales', () {
     expect(
       resolveAppLocale(const Locale('fr'), supportedLocales),
+      const Locale('en'),
+    );
+    expect(resolveAppLocale(null, supportedLocales), const Locale('en'));
+  });
+
+  test('uses the first supported language in the device preference list', () {
+    expect(
+      resolveAppLocaleList(const [
+        Locale('fr'),
+        Locale('es', 'ES'),
+      ], supportedLocales),
       const Locale('es'),
     );
-    expect(resolveAppLocale(null, supportedLocales), const Locale('es'));
+    expect(
+      resolveAppLocaleList(const [Locale('de')], supportedLocales),
+      const Locale('en'),
+    );
+    expect(resolveAppLocaleList(null, supportedLocales), const Locale('en'));
   });
 
   test('loads translated messages from both ARB catalogs', () async {

@@ -57,7 +57,9 @@ class KeepInventoryApp extends StatelessWidget {
               debugShowCheckedModeBanner: false,
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
-              localeResolutionCallback: resolveAppLocale,
+              // Idioma del dispositivo (por orden de preferencia); si no hay
+              // traducción, inglés
+              localeListResolutionCallback: resolveAppLocaleList,
               theme: AppTheme.light(dynamicPrimary: effectiveLightPrimary),
               darkTheme: AppTheme.dark(dynamicPrimary: effectiveDarkPrimary),
               themeMode: ThemeMode.system,
