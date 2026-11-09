@@ -1249,4 +1249,123 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get inventorySortCost => 'Cost';
+
+  @override
+  String get promotionsTab => 'Promotions';
+
+  @override
+  String get combosTab => 'Combos';
+
+  @override
+  String get comboNewTitle => 'New combo';
+
+  @override
+  String get comboEditTitle => 'Edit combo';
+
+  @override
+  String get comboNameLabel => 'Combo name';
+
+  @override
+  String get comboSlotsSection => 'Combo products';
+
+  @override
+  String get comboSlotAdd => 'Add product';
+
+  @override
+  String get comboSlotQuantity => 'Quantity';
+
+  @override
+  String get comboSlotNoProducts => 'Tap to choose the product';
+
+  @override
+  String get comboSlotPickTitle => 'Choose the product';
+
+  @override
+  String get comboPriceLabel => 'Combo price';
+
+  @override
+  String comboSeparateTotal(String amount) {
+    return 'Separately €$amount';
+  }
+
+  @override
+  String comboSaving(String amount) {
+    return 'You save €$amount';
+  }
+
+  @override
+  String get comboNoSavingWarning =>
+      'This combo saves nothing compared to buying separately. Save anyway?';
+
+  @override
+  String get comboErrorName => 'Give the combo a name';
+
+  @override
+  String get comboErrorMinSlots => 'Add at least 2 products';
+
+  @override
+  String get comboErrorEmptySlot => 'Choose a product for each slot';
+
+  @override
+  String comboOwnPromoWarning(String products) {
+    return '$products already have their own promotion. Inside the combo the combo price applies and loose units keep their promotion. If you\'d rather not mix them, remove the product\'s promotion in Inventory.';
+  }
+
+  @override
+  String get comboOwnPromoTitle => 'Products with a promotion';
+
+  @override
+  String comboProductInOtherCombo(String name) {
+    return 'Already in “$name”';
+  }
+
+  @override
+  String get comboProductInOtherSlot => 'Already in this combo';
+
+  @override
+  String get comboDeleteTitle => 'Delete combo';
+
+  @override
+  String comboDeleteConfirm(String name) {
+    return 'Delete “$name”? Past sales are not affected.';
+  }
+
+  @override
+  String get comboSaved => 'Combo saved';
+
+  @override
+  String get comboDeleted => 'Combo deleted';
+
+  @override
+  String get combosEmpty =>
+      'No combos yet. Create one to sell sets at a fixed price without building packs.';
+
+  @override
+  String get comboBadge => 'Combo';
+
+  @override
+  String comboMissingHint(String slots) {
+    return 'Missing: $slots';
+  }
+
+  @override
+  String comboCartTitle(String name) {
+    return 'Combo · $name';
+  }
+
+  @override
+  String comboRefundBreaks(String name) {
+    return 'This breaks the “$name” combo: what\'s left is charged at the normal price';
+  }
+
+  @override
+  String get comboRefundWhole => 'Refund combo';
+
+  @override
+  String comboCount(int count) {
+    return '×$count';
+  }
+
+  @override
+  String get comboNoSavingTitle => 'This combo saves nothing';
 }

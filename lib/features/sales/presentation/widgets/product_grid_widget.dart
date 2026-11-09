@@ -30,7 +30,15 @@ class ProductGridWidget extends StatelessWidget {
     required this.onAddToCart,
     required this.onRemoveFromCart,
     required this.onRemoveAllFromCart,
+    this.comboProductIds = const {},
+    this.missingProductIds = const {},
   });
+
+  /// Productos que forman parte de algún combo (insignia).
+  final Set<int> comboProductIds;
+
+  /// Productos que completarían un combo a medias (resaltado).
+  final Set<int> missingProductIds;
 
   /// Mantener pulsada la tarjeta => se amplía con todos los datos.
   Future<void> _showPreview(
@@ -107,6 +115,11 @@ class ProductGridWidget extends StatelessWidget {
           onLongPress: () => _showPreview(context, product, qtyInCart),
           onRemove: () => onRemoveFromCart(product),
           onRemoveAll: () => onRemoveAllFromCart(product),
+          comboLabel: comboProductIds.contains(product.id)
+              ? context.l10n.comboBadge
+              : null,
+          highlight:
+              product.units > 0 && missingProductIds.contains(product.id),
         );
       },
     );

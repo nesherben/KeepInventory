@@ -2269,6 +2269,204 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Coste'**
   String get inventorySortCost;
+
+  /// No description provided for @promotionsTab.
+  ///
+  /// In es, this message translates to:
+  /// **'Promociones'**
+  String get promotionsTab;
+
+  /// No description provided for @combosTab.
+  ///
+  /// In es, this message translates to:
+  /// **'Combos'**
+  String get combosTab;
+
+  /// No description provided for @comboNewTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Nuevo combo'**
+  String get comboNewTitle;
+
+  /// No description provided for @comboEditTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Editar combo'**
+  String get comboEditTitle;
+
+  /// No description provided for @comboNameLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Nombre del combo'**
+  String get comboNameLabel;
+
+  /// No description provided for @comboSlotsSection.
+  ///
+  /// In es, this message translates to:
+  /// **'Productos del combo'**
+  String get comboSlotsSection;
+
+  /// No description provided for @comboSlotAdd.
+  ///
+  /// In es, this message translates to:
+  /// **'Añadir producto'**
+  String get comboSlotAdd;
+
+  /// No description provided for @comboSlotQuantity.
+  ///
+  /// In es, this message translates to:
+  /// **'Cantidad'**
+  String get comboSlotQuantity;
+
+  /// No description provided for @comboSlotNoProducts.
+  ///
+  /// In es, this message translates to:
+  /// **'Toca para elegir el producto'**
+  String get comboSlotNoProducts;
+
+  /// No description provided for @comboSlotPickTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Elige el producto'**
+  String get comboSlotPickTitle;
+
+  /// No description provided for @comboPriceLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Precio del combo'**
+  String get comboPriceLabel;
+
+  /// No description provided for @comboSeparateTotal.
+  ///
+  /// In es, this message translates to:
+  /// **'Por separado {amount} €'**
+  String comboSeparateTotal(String amount);
+
+  /// No description provided for @comboSaving.
+  ///
+  /// In es, this message translates to:
+  /// **'Ahorras {amount} €'**
+  String comboSaving(String amount);
+
+  /// No description provided for @comboNoSavingWarning.
+  ///
+  /// In es, this message translates to:
+  /// **'Este combo no ahorra nada frente a comprar por separado. ¿Guardar igualmente?'**
+  String get comboNoSavingWarning;
+
+  /// No description provided for @comboErrorName.
+  ///
+  /// In es, this message translates to:
+  /// **'Pon un nombre al combo'**
+  String get comboErrorName;
+
+  /// No description provided for @comboErrorMinSlots.
+  ///
+  /// In es, this message translates to:
+  /// **'Añade al menos 2 productos'**
+  String get comboErrorMinSlots;
+
+  /// No description provided for @comboErrorEmptySlot.
+  ///
+  /// In es, this message translates to:
+  /// **'Elige un producto en cada hueco'**
+  String get comboErrorEmptySlot;
+
+  /// No description provided for @comboOwnPromoWarning.
+  ///
+  /// In es, this message translates to:
+  /// **'{products} ya tiene(n) promoción propia. Dentro del combo se cobra el precio del combo y las unidades sueltas mantienen su promoción. Si prefieres que no se mezclen, quita la promoción del producto en Inventario.'**
+  String comboOwnPromoWarning(String products);
+
+  /// No description provided for @comboOwnPromoTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Productos con promoción'**
+  String get comboOwnPromoTitle;
+
+  /// No description provided for @comboProductInOtherCombo.
+  ///
+  /// In es, this message translates to:
+  /// **'Ya está en «{name}»'**
+  String comboProductInOtherCombo(String name);
+
+  /// No description provided for @comboProductInOtherSlot.
+  ///
+  /// In es, this message translates to:
+  /// **'Ya está en este combo'**
+  String get comboProductInOtherSlot;
+
+  /// No description provided for @comboDeleteTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Eliminar combo'**
+  String get comboDeleteTitle;
+
+  /// No description provided for @comboDeleteConfirm.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Eliminar «{name}»? Las ventas anteriores no cambian.'**
+  String comboDeleteConfirm(String name);
+
+  /// No description provided for @comboSaved.
+  ///
+  /// In es, this message translates to:
+  /// **'Combo guardado'**
+  String get comboSaved;
+
+  /// No description provided for @comboDeleted.
+  ///
+  /// In es, this message translates to:
+  /// **'Combo eliminado'**
+  String get comboDeleted;
+
+  /// No description provided for @combosEmpty.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin combos. Crea uno para vender conjuntos a precio fijo sin montar packs.'**
+  String get combosEmpty;
+
+  /// No description provided for @comboBadge.
+  ///
+  /// In es, this message translates to:
+  /// **'Combo'**
+  String get comboBadge;
+
+  /// No description provided for @comboMissingHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Te falta: {slots}'**
+  String comboMissingHint(String slots);
+
+  /// No description provided for @comboCartTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Combo · {name}'**
+  String comboCartTitle(String name);
+
+  /// No description provided for @comboRefundBreaks.
+  ///
+  /// In es, this message translates to:
+  /// **'Esto rompe el combo «{name}»: lo que queda se cobra a precio normal'**
+  String comboRefundBreaks(String name);
+
+  /// No description provided for @comboRefundWhole.
+  ///
+  /// In es, this message translates to:
+  /// **'Devolver combo'**
+  String get comboRefundWhole;
+
+  /// No description provided for @comboCount.
+  ///
+  /// In es, this message translates to:
+  /// **'×{count}'**
+  String comboCount(int count);
+
+  /// No description provided for @comboNoSavingTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'El combo no ahorra'**
+  String get comboNoSavingTitle;
 }
 
 class _AppLocalizationsDelegate

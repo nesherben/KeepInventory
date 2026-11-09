@@ -1,3 +1,4 @@
+import '../../promotions/domain/combo.dart';
 import 'payment_method.dart';
 
 export 'payment_method.dart';
@@ -16,6 +17,9 @@ class SaleItem {
   final int? promoThreshold;
   final double? promoDiscount;
 
+  /// Combo de la venta al que pertenece esta línea (null = suelta).
+  final int? saleComboId;
+
   SaleItem({
     this.id,
     this.saleId,
@@ -28,6 +32,7 @@ class SaleItem {
     this.promoType,
     this.promoThreshold,
     this.promoDiscount,
+    this.saleComboId,
   });
 
   double get refundUnitPrice => originalPrice == 0 && historicalPrice > 0
@@ -54,6 +59,33 @@ class SalePackItem {
   });
 }
 
+/// Combo aplicado en una venta, con su definición congelada: aunque luego
+/// se edite o borre el combo, el ticket y las devoluciones no cambian.
+class SaleCombo {
+  final int? id;
+  final int? comboId;
+  final String name;
+
+  /// Precio de un combo.
+  final double price;
+
+  /// Veces que se aplicó.
+  final int quantity;
+  final List<ComboSlot> slots;
+
+  SaleCombo({
+    this.id,
+    this.comboId,
+    required this.name,
+    required this.price,
+    required this.quantity,
+    required this.slots,
+  });
+
+  Combo get asCombo =>
+      Combo(id: comboId, name: name, price: price, slots: slots);
+}
+
 class Sale {
   final int? id;
   final DateTime date;
@@ -62,6 +94,7 @@ class Sale {
   final List<SaleItem> items;
   final List<SalePackItem> packItems; // <--- Nuevo para los packs vendidos
   final PaymentMethod paymentMethod;
+  final List<SaleCombo> combos;
 
   Sale({
     this.id,
@@ -71,5 +104,6 @@ class Sale {
     required this.items,
     this.packItems = const [],
     this.paymentMethod = PaymentMethod.defaultMethod,
+    this.combos = const [],
   });
 }

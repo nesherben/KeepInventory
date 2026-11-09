@@ -482,5 +482,101 @@
   "inventorySortName": "Nombre",
   "inventorySortUnits": "Unidades",
   "inventorySortPrice": "Precio",
-  "inventorySortCost": "Coste"
+  "inventorySortCost": "Coste",
+  "promotionsTab": "Promociones",
+  "combosTab": "Combos",
+  "comboNewTitle": "Nuevo combo",
+  "comboEditTitle": "Editar combo",
+  "comboNameLabel": "Nombre del combo",
+  "comboSlotsSection": "Productos del combo",
+  "comboSlotAdd": "Añadir producto",
+  "comboSlotQuantity": "Cantidad",
+  "comboSlotNoProducts": "Toca para elegir el producto",
+  "comboSlotPickTitle": "Elige el producto",
+  "comboPriceLabel": "Precio del combo",
+  "comboSeparateTotal": "Por separado {amount} €",
+  "@comboSeparateTotal": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "comboSaving": "Ahorras {amount} €",
+  "@comboSaving": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "comboNoSavingWarning": "Este combo no ahorra nada frente a comprar por separado. ¿Guardar igualmente?",
+  "comboErrorName": "Pon un nombre al combo",
+  "comboErrorMinSlots": "Añade al menos 2 productos",
+  "comboErrorEmptySlot": "Elige un producto en cada hueco",
+  "comboOwnPromoWarning": "{products} ya tiene(n) promoción propia. Dentro del combo se cobra el precio del combo y las unidades sueltas mantienen su promoción. Si prefieres que no se mezclen, quita la promoción del producto en Inventario.",
+  "@comboOwnPromoWarning": {
+    "placeholders": {
+      "products": {
+        "type": "String"
+      }
+    }
+  },
+  "comboOwnPromoTitle": "Productos con promoción",
+  "comboProductInOtherCombo": "Ya está en «{name}»",
+  "@comboProductInOtherCombo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "comboProductInOtherSlot": "Ya está en este combo",
+  "comboDeleteTitle": "Eliminar combo",
+  "comboDeleteConfirm": "¿Eliminar «{name}»? Las ventas anteriores no cambian.",
+  "@comboDeleteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "comboSaved": "Combo guardado",
+  "comboDeleted": "Combo eliminado",
+  "combosEmpty": "Sin combos. Crea uno para vender conjuntos a precio fijo sin montar packs.",
+  "comboBadge": "Combo",
+  "comboMissingHint": "Te falta: {slots}",
+  "@comboMissingHint": {
+    "placeholders": {
+      "slots": {
+        "type": "String"
+      }
+    }
+  },
+  "comboCartTitle": "Combo · {name}",
+  "@comboCartTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "comboRefundBreaks": "Esto rompe el combo «{name}»: lo que queda se cobra a precio normal",
+  "@comboRefundBreaks": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "comboRefundWhole": "Devolver combo",
+  "comboCount": "×{count}",
+  "@comboCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "comboNoSavingTitle": "El combo no ahorra"
 }

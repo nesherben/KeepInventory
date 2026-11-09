@@ -1,10 +1,15 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:keepinventory/core/database/database_migration_runner.dart';
+import 'package:keepinventory/core/database/database_schema_creator.dart';
 
 void main() {
   group('DatabaseMigrationRunner', () {
     const paymentMethodAlter =
         'ALTER TABLE sales ADD COLUMN payment_method TEXT';
+    final comboStatements = [
+      ...DatabaseSchemaCreator.comboTables,
+      DatabaseMigrationRunner.saleComboColumnAlter,
+    ];
 
     test(
       'runs only image blob and payment migrations for version 10',
@@ -21,6 +26,7 @@ void main() {
           'ALTER TABLE products ADD COLUMN image_bytes BLOB',
           'ALTER TABLE packs ADD COLUMN image_bytes BLOB',
           paymentMethodAlter,
+          ...comboStatements,
         ]);
       },
     );
@@ -34,14 +40,26 @@ void main() {
         query: (_) async => [],
       );
 
-      expect(statements, [paymentMethodAlter]);
+      expect(statements, [paymentMethodAlter, ...comboStatements]);
     });
 
-    test('runs nothing for version 12', () async {
+    test('runs only the combo migration for version 12', () async {
       final statements = <String>[];
 
       await DatabaseMigrationRunner.upgrade(
         oldVersion: 12,
+        execute: (sql) async => statements.add(sql),
+        query: (_) async => [],
+      );
+
+      expect(statements, comboStatements);
+    });
+
+    test('runs nothing for version 13', () async {
+      final statements = <String>[];
+
+      await DatabaseMigrationRunner.upgrade(
+        oldVersion: 13,
         execute: (sql) async => statements.add(sql),
         query: (_) async => [],
       );
@@ -52,7 +70,11 @@ void main() {
     test('ignores payment column already existing', () async {
       await DatabaseMigrationRunner.upgrade(
         oldVersion: 11,
-        execute: (sql) async => throw StateError('duplicate column name'),
+        execute: (sql) async {
+          if (sql.startsWith('ALTER')) {
+            throw StateError('duplicate column name');
+          }
+        },
         query: (_) async => [],
       );
     });

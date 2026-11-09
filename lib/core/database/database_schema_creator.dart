@@ -1,6 +1,49 @@
 class DatabaseSchemaCreator {
   const DatabaseSchemaCreator._();
 
+  /// v13: combos (precio fijo por completar huecos) y combos aplicados en
+  /// ventas, con la definición congelada en JSON. Compartido con la migración.
+  static const comboTables = [
+    '''
+      CREATE TABLE IF NOT EXISTS combos (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        price REAL NOT NULL
+      )
+    ''',
+    '''
+      CREATE TABLE IF NOT EXISTS combo_slots (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        combo_id INTEGER NOT NULL,
+        name TEXT NOT NULL,
+        quantity INTEGER NOT NULL DEFAULT 1,
+        position INTEGER NOT NULL DEFAULT 0,
+        FOREIGN KEY (combo_id) REFERENCES combos (id) ON DELETE CASCADE
+      )
+    ''',
+    '''
+      CREATE TABLE IF NOT EXISTS combo_slot_products (
+        slot_id INTEGER NOT NULL,
+        product_id INTEGER NOT NULL,
+        PRIMARY KEY (slot_id, product_id),
+        FOREIGN KEY (slot_id) REFERENCES combo_slots (id) ON DELETE CASCADE,
+        FOREIGN KEY (product_id) REFERENCES products (id) ON DELETE CASCADE
+      )
+    ''',
+    '''
+      CREATE TABLE IF NOT EXISTS sale_combos (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        sale_id INTEGER NOT NULL,
+        combo_id INTEGER,
+        name TEXT NOT NULL,
+        price REAL NOT NULL,
+        quantity INTEGER NOT NULL,
+        definition TEXT NOT NULL,
+        FOREIGN KEY (sale_id) REFERENCES sales (id) ON DELETE CASCADE
+      )
+    ''',
+  ];
+
   static Future<void> create({
     required Future<void> Function(String sql) execute,
   }) async {
@@ -56,6 +99,7 @@ class DatabaseSchemaCreator {
         promo_type TEXT,
         promo_threshold INTEGER,
         promo_discount REAL,
+        sale_combo_id INTEGER,
         FOREIGN KEY (sale_id) REFERENCES sales (id) ON DELETE CASCADE,
         FOREIGN KEY (product_id) REFERENCES products (id) ON DELETE RESTRICT
       )
@@ -94,5 +138,9 @@ class DatabaseSchemaCreator {
         FOREIGN KEY (pack_id) REFERENCES packs (id) ON DELETE CASCADE
       )
     ''');
+
+    for (final sql in comboTables) {
+      await execute(sql);
+    }
   }
 }

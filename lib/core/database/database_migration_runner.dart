@@ -1,3 +1,5 @@
+import 'database_schema_creator.dart';
+
 typedef DatabaseSqlExecutor = Future<void> Function(String sql);
 typedef DatabaseMetadataQuery = Future<List<Map<String, Object?>>> Function(
   String sql,
@@ -21,6 +23,25 @@ class DatabaseMigrationRunner {
     await _repairPromotionDetails(oldVersion, execute);
     await _upgradeImageBlobs(oldVersion, execute);
     await _upgradePaymentMethod(oldVersion, execute);
+    await _upgradeCombos(oldVersion, execute);
+  }
+
+  static const saleComboColumnAlter =
+      'ALTER TABLE sale_items ADD COLUMN sale_combo_id INTEGER';
+
+  /// v13: combos. Las ventas existentes quedan sin combo (NULL).
+  static Future<void> _upgradeCombos(
+    int oldVersion,
+    DatabaseSqlExecutor execute,
+  ) async {
+    if (oldVersion >= 13) return;
+
+    for (final sql in DatabaseSchemaCreator.comboTables) {
+      await execute(sql);
+    }
+    try {
+      await execute(saleComboColumnAlter);
+    } catch (_) {}
   }
 
   /// v12: método de pago por venta. Las ventas existentes quedan en NULL ("sin especificar").

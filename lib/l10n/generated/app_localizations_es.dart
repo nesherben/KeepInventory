@@ -1254,4 +1254,123 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get inventorySortCost => 'Coste';
+
+  @override
+  String get promotionsTab => 'Promociones';
+
+  @override
+  String get combosTab => 'Combos';
+
+  @override
+  String get comboNewTitle => 'Nuevo combo';
+
+  @override
+  String get comboEditTitle => 'Editar combo';
+
+  @override
+  String get comboNameLabel => 'Nombre del combo';
+
+  @override
+  String get comboSlotsSection => 'Productos del combo';
+
+  @override
+  String get comboSlotAdd => 'Añadir producto';
+
+  @override
+  String get comboSlotQuantity => 'Cantidad';
+
+  @override
+  String get comboSlotNoProducts => 'Toca para elegir el producto';
+
+  @override
+  String get comboSlotPickTitle => 'Elige el producto';
+
+  @override
+  String get comboPriceLabel => 'Precio del combo';
+
+  @override
+  String comboSeparateTotal(String amount) {
+    return 'Por separado $amount €';
+  }
+
+  @override
+  String comboSaving(String amount) {
+    return 'Ahorras $amount €';
+  }
+
+  @override
+  String get comboNoSavingWarning =>
+      'Este combo no ahorra nada frente a comprar por separado. ¿Guardar igualmente?';
+
+  @override
+  String get comboErrorName => 'Pon un nombre al combo';
+
+  @override
+  String get comboErrorMinSlots => 'Añade al menos 2 productos';
+
+  @override
+  String get comboErrorEmptySlot => 'Elige un producto en cada hueco';
+
+  @override
+  String comboOwnPromoWarning(String products) {
+    return '$products ya tiene(n) promoción propia. Dentro del combo se cobra el precio del combo y las unidades sueltas mantienen su promoción. Si prefieres que no se mezclen, quita la promoción del producto en Inventario.';
+  }
+
+  @override
+  String get comboOwnPromoTitle => 'Productos con promoción';
+
+  @override
+  String comboProductInOtherCombo(String name) {
+    return 'Ya está en «$name»';
+  }
+
+  @override
+  String get comboProductInOtherSlot => 'Ya está en este combo';
+
+  @override
+  String get comboDeleteTitle => 'Eliminar combo';
+
+  @override
+  String comboDeleteConfirm(String name) {
+    return '¿Eliminar «$name»? Las ventas anteriores no cambian.';
+  }
+
+  @override
+  String get comboSaved => 'Combo guardado';
+
+  @override
+  String get comboDeleted => 'Combo eliminado';
+
+  @override
+  String get combosEmpty =>
+      'Sin combos. Crea uno para vender conjuntos a precio fijo sin montar packs.';
+
+  @override
+  String get comboBadge => 'Combo';
+
+  @override
+  String comboMissingHint(String slots) {
+    return 'Te falta: $slots';
+  }
+
+  @override
+  String comboCartTitle(String name) {
+    return 'Combo · $name';
+  }
+
+  @override
+  String comboRefundBreaks(String name) {
+    return 'Esto rompe el combo «$name»: lo que queda se cobra a precio normal';
+  }
+
+  @override
+  String get comboRefundWhole => 'Devolver combo';
+
+  @override
+  String comboCount(int count) {
+    return '×$count';
+  }
+
+  @override
+  String get comboNoSavingTitle => 'El combo no ahorra';
 }

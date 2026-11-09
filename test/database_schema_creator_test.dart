@@ -9,7 +9,7 @@ void main() {
       execute: (sql) async => statements.add(sql),
     );
 
-    expect(statements, hasLength(7));
+    expect(statements, hasLength(11));
     expect(statements[0], contains('CREATE TABLE promotions'));
     expect(statements[1], contains('CREATE TABLE products'));
     expect(statements[1], contains('image_bytes BLOB'));
@@ -20,5 +20,10 @@ void main() {
     expect(statements[4], contains('image_bytes BLOB'));
     expect(statements[5], contains('CREATE TABLE pack_items'));
     expect(statements[6], contains('CREATE TABLE sale_packs'));
+    expect(statements[3], contains('sale_combo_id INTEGER'));
+    expect(statements[7], contains('combos ('));
+    expect(statements[8], contains('combo_slots ('));
+    expect(statements[9], contains('combo_slot_products ('));
+    expect(statements[10], contains('sale_combos ('));
   });
 }

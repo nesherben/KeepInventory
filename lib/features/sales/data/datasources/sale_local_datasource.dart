@@ -1,6 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 
 import '../../../../core/database/database_helper.dart';
+import '../../../promotions/domain/combo.dart';
 import '../../domain/sale.dart';
 import '../../domain/sale_refund_calculator.dart';
 
@@ -19,6 +20,21 @@ class SaleLocalDatasource {
         'payment_method': sale.paymentMethod.dbValue,
       });
 
+      // Combos con su definición congelada; los ids de la venta en memoria
+      // son provisionales y se traducen a los reales
+      final comboIds = <int, int>{};
+      for (final combo in sale.combos) {
+        final id = await txn.insert('sale_combos', {
+          'sale_id': saleId,
+          'combo_id': combo.comboId,
+          'name': combo.name,
+          'price': combo.price,
+          'quantity': combo.quantity,
+          'definition': combo.asCombo.encodeDefinition(),
+        });
+        if (combo.id != null) comboIds[combo.id!] = id;
+      }
+
       for (var item in sale.items) {
         await txn.insert('sale_items', {
           'sale_id': saleId,
@@ -30,6 +46,9 @@ class SaleLocalDatasource {
           'promo_type': item.promoType,
           'promo_threshold': item.promoThreshold,
           'promo_discount': item.promoDiscount,
+          'sale_combo_id': item.saleComboId == null
+              ? null
+              : comboIds[item.saleComboId],
         });
 
         await txn.rawUpdate(
@@ -86,6 +105,7 @@ class SaleLocalDatasource {
               promoType: itemMap['promo_type'] as String?,
               promoThreshold: itemMap['promo_threshold'] as int?,
               promoDiscount: (itemMap['promo_discount'] as num?)?.toDouble(),
+              saleComboId: itemMap['sale_combo_id'] as int?,
             ),
           )
           .toList();
@@ -113,6 +133,23 @@ class SaleLocalDatasource {
           )
           .toList();
 
+      final comboMaps = await database.query(
+        'sale_combos',
+        where: 'sale_id = ?',
+        whereArgs: [saleId],
+      );
+      final combosList = [
+        for (final c in comboMaps)
+          SaleCombo(
+            id: c['id'] as int,
+            comboId: c['combo_id'] as int?,
+            name: c['name'] as String,
+            price: (c['price'] as num).toDouble(),
+            quantity: c['quantity'] as int,
+            slots: Combo.decodeDefinition(c['definition'] as String?),
+          ),
+      ];
+
       salesList.add(
         Sale(
           id: saleId,
@@ -122,6 +159,7 @@ class SaleLocalDatasource {
           items: itemsList,
           packItems: packItemsList,
           paymentMethod: PaymentMethod.fromDb(saleMap['payment_method']),
+          combos: combosList,
         ),
       );
     }
@@ -159,6 +197,11 @@ class SaleLocalDatasource {
       );
       await txn.delete(
         'sale_packs',
+        where: 'sale_id = ?',
+        whereArgs: [sale.id],
+      );
+      await txn.delete(
+        'sale_combos',
         where: 'sale_id = ?',
         whereArgs: [sale.id],
       );
@@ -218,20 +261,46 @@ class SaleLocalDatasource {
         }
       }
 
-      // 3. LIMPIEZA DE LA VENTA: SALE_ITEMS
-      for (var entry in itemsToRefund.entries) {
-        if (entry.value >= entry.key.quantity) {
-          await txn.delete(
-            'sale_items',
-            where: 'id = ?',
-            whereArgs: [entry.key.id],
-          );
-        } else if (entry.value > 0) {
-          await txn.rawUpdate(
-            'UPDATE sale_items SET quantity = quantity - ? WHERE id = ?',
-            [entry.value, entry.key.id],
-          );
-        }
+      // 3. LÍNEAS QUE QUEDAN: se recalculan en lógica pura (promociones y
+      // combos afectados) y se reescriben para que la suma cuadre
+      final remaining = SaleRefundCalculator.remainingAfterRefund(
+        sale: originalSale,
+        itemsToRefund: itemsToRefund,
+      );
+      await txn.delete(
+        'sale_items',
+        where: 'sale_id = ?',
+        whereArgs: [originalSale.id],
+      );
+      await txn.delete(
+        'sale_combos',
+        where: 'sale_id = ?',
+        whereArgs: [originalSale.id],
+      );
+      for (final combo in remaining.combos) {
+        await txn.insert('sale_combos', {
+          'id': combo.id,
+          'sale_id': originalSale.id,
+          'combo_id': combo.comboId,
+          'name': combo.name,
+          'price': combo.price,
+          'quantity': combo.quantity,
+          'definition': combo.asCombo.encodeDefinition(),
+        });
+      }
+      for (final item in remaining.items) {
+        await txn.insert('sale_items', {
+          'sale_id': originalSale.id,
+          'product_id': item.productId,
+          'quantity': item.quantity,
+          'historical_price': item.historicalPrice,
+          'original_price': item.originalPrice,
+          'promotion_id': item.promotionId,
+          'promo_type': item.promoType,
+          'promo_threshold': item.promoThreshold,
+          'promo_discount': item.promoDiscount,
+          'sale_combo_id': item.saleComboId,
+        });
       }
 
       // 4. LIMPIEZA DE LA VENTA: SALE_PACKS
@@ -250,7 +319,7 @@ class SaleLocalDatasource {
         }
       }
 
-      // 5. CONTABILIDAD: solo se repreciaran los grupos de promoción afectados
+      // 5. CONTABILIDAD: venta vacía => se borra; si no, nuevo total
       final remainingItemRows = await txn.query(
         'sale_items',
         where: 'sale_id = ?',
@@ -263,6 +332,11 @@ class SaleLocalDatasource {
       );
 
       if (remainingItemRows.isEmpty && remainingPackRows.isEmpty) {
+        await txn.delete(
+          'sale_combos',
+          where: 'sale_id = ?',
+          whereArgs: [originalSale.id],
+        );
         await txn.delete(
           'sales',
           where: 'id = ?',
@@ -278,55 +352,6 @@ class SaleLocalDatasource {
         where: 'id = ?',
         whereArgs: [originalSale.id],
       );
-
-      // Promociones tocadas por la devolución
-      final affectedPromotionIds = <int>{
-        for (final entry in itemsToRefund.entries)
-          if (entry.value > 0 && entry.key.promotionId != null)
-            entry.key.promotionId!,
-      };
-
-      for (final promotionId in affectedPromotionIds) {
-        final groupItems = originalSale.items
-            .where((i) => i.promotionId == promotionId)
-            .toList();
-        final keptQuantities = <SaleItem, int>{
-          for (final item in groupItems)
-            item: item.quantity - (itemsToRefund[item] ?? 0),
-        };
-        final keptItems = groupItems
-            .where((i) => keptQuantities[i]! > 0)
-            .toList();
-        if (keptItems.isEmpty) continue;
-
-        final newTotalGroup = SaleRefundCalculator.calculateGroupValue(
-          keptItems: keptItems,
-          keptQuantities: keptQuantities,
-        );
-        final keptUnits = keptItems.fold<int>(
-          0,
-          (t, i) => t + keptQuantities[i]!,
-        );
-        if (keptUnits == 0) continue;
-
-        // Reparto proporcional al precio completo de cada línea
-        final fullValue = keptItems.fold<double>(
-          0,
-          (t, i) => t + i.refundUnitPrice * keptQuantities[i]!,
-        );
-        for (final item in keptItems) {
-          final share = fullValue > 0
-              ? (item.refundUnitPrice * keptQuantities[item]!) / fullValue
-              : keptQuantities[item]! / keptUnits;
-          final lineTotal = newTotalGroup * share;
-          await txn.update(
-            'sale_items',
-            {'historical_price': lineTotal / keptQuantities[item]!},
-            where: 'id = ?',
-            whereArgs: [item.id],
-          );
-        }
-      }
     });
   }
 

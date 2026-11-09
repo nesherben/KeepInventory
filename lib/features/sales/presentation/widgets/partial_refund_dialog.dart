@@ -77,6 +77,7 @@ class _PartialRefundDialogState extends State<PartialRefundDialog> {
       originalItemQuantities: originalItemQuantities,
       keptItemQuantities: keptItemQuantities,
       keptPackQuantities: keptPackQuantities,
+      combos: widget.sale.combos,
     );
     final refundAmount = (widget.sale.totalAmount - remainingValue).clamp(
       0.0,
@@ -104,6 +105,91 @@ class _PartialRefundDialogState extends State<PartialRefundDialog> {
         _recalculateDefaultRefund();
       },
     );
+  }
+
+  /// Combos de la venta con sus líneas, y líneas sueltas.
+  List<Widget> _buildProductRows(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final widgets = <Widget>[];
+    final grouped = <SaleItem>{};
+    for (final combo in widget.sale.combos) {
+      final lines = widget.sale.items
+          .where((i) => i.saleComboId == combo.id)
+          .toList();
+      if (lines.isEmpty) continue;
+      grouped.addAll(lines);
+      final selected = lines.any((i) => (_refundItemQuantities[i] ?? 0) > 0);
+      final whole = lines.every(
+        (i) => (_refundItemQuantities[i] ?? 0) == i.quantity,
+      );
+      widgets.add(
+        Padding(
+          padding: const EdgeInsets.only(bottom: 4),
+          child: Row(
+            children: [
+              Icon(Icons.extension, size: 16, color: colors.primary),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  context.l10n.comboCartTitle(combo.name),
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+              ),
+              TextButton(
+                onPressed: whole
+                    ? null
+                    : () {
+                        setState(() {
+                          for (final line in lines) {
+                            _refundItemQuantities[line] = line.quantity;
+                          }
+                        });
+                        _recalculateDefaultRefund();
+                      },
+                child: Text(context.l10n.comboRefundWhole),
+              ),
+            ],
+          ),
+        ),
+      );
+      if (selected && !whole) {
+        widgets.add(
+          Container(
+            margin: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: colors.errorContainer,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.warning_amber_rounded,
+                  size: 18,
+                  color: colors.onErrorContainer,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    context.l10n.comboRefundBreaks(combo.name),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: colors.onErrorContainer,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+      widgets.addAll(lines.map((line) => _buildProductRow(context, line)));
+      widgets.add(const SizedBox(height: 8));
+    }
+    for (final item in widget.sale.items) {
+      if (!grouped.contains(item)) widgets.add(_buildProductRow(context, item));
+    }
+    return widgets;
   }
 
   Widget _buildPackRow(BuildContext context, SalePackItem pack) {
@@ -300,9 +386,7 @@ class _PartialRefundDialogState extends State<PartialRefundDialog> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                ...widget.sale.items.map(
-                  (item) => _buildProductRow(context, item),
-                ),
+                ..._buildProductRows(context),
                 const SizedBox(height: 8),
               ],
               if (widget.sale.packItems.isNotEmpty) ...[

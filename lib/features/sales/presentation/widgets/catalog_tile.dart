@@ -23,6 +23,8 @@ class CatalogTile extends StatelessWidget {
     required this.onLongPress,
     required this.onRemove,
     required this.onRemoveAll,
+    this.comboLabel,
+    this.highlight = false,
   });
 
   final Widget image;
@@ -34,6 +36,12 @@ class CatalogTile extends StatelessWidget {
   final VoidCallback onLongPress;
   final VoidCallback onRemove;
   final VoidCallback onRemoveAll;
+
+  /// Si forma parte de un combo, etiqueta de la insignia ("Combo").
+  final String? comboLabel;
+
+  /// Resaltado: completa un combo que ya está a medias en el carrito.
+  final bool highlight;
 
   bool get _inCart => quantityInCart > 0;
   bool get _outOfStock => stock <= 0;
@@ -53,8 +61,12 @@ class CatalogTile extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppRadius.lg),
         side: BorderSide(
-          color: _inCart ? colors.primary : theme.dividerColor,
-          width: _inCart ? 2 : 1,
+          color: _inCart
+              ? colors.primary
+              : highlight
+              ? colors.tertiary
+              : theme.dividerColor,
+          width: _inCart || highlight ? 2 : 1,
         ),
       ),
       clipBehavior: Clip.antiAlias,
@@ -164,6 +176,34 @@ class CatalogTile extends StatelessWidget {
               ),
             ),
           ),
+          // Forma parte de un combo (icono + texto, no solo color)
+          if (comboLabel != null)
+            Positioned(
+              bottom: 6,
+              left: 6,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                decoration: BoxDecoration(
+                  color: colors.surface.withValues(alpha: 0.92),
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.extension, size: 11, color: colors.tertiary),
+                    const SizedBox(width: 3),
+                    Text(
+                      comboLabel!,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: colors.onSurface,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           // Unidades en el carrito
           if (_inCart)
             Positioned(

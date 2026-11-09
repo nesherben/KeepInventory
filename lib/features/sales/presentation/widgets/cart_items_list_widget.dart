@@ -9,7 +9,9 @@ import 'package:keepinventory/l10n/app_localizations_ext.dart';
 import '../../../../core/shared_widgets/auto_scroll_text.dart';
 import '../../../inventory/domain/product.dart';
 import '../../../packs/domain/pack.dart';
+import '../../../promotions/domain/combo_matcher.dart';
 import '../../../promotions/domain/promotion.dart';
+import '../../domain/sale_cart_pricing_calculator.dart';
 
 import 'sales_ui_utils.dart';
 
@@ -18,8 +20,8 @@ class CartItemsListWidget extends StatelessWidget {
   final Map<Pack, int> cartPacks;
   final Map<int, Promotion> promotionsMap;
 
-  final double Function(Product, Map<Product, int>, Map<int, Promotion>)
-  calculateItemTotal;
+  /// Precio ya calculado del carrito (combos + promociones).
+  final CartPricing pricing;
 
   final Function(Product) onRemoveFromCart;
   final Function(Product) onRemoveAllFromCart;
@@ -31,7 +33,7 @@ class CartItemsListWidget extends StatelessWidget {
     required this.cart,
     required this.cartPacks,
     required this.promotionsMap,
-    required this.calculateItemTotal,
+    required this.pricing,
     required this.onRemoveFromCart,
     required this.onRemoveAllFromCart,
     required this.onRemovePackFromCart,
@@ -55,20 +57,30 @@ class CartItemsListWidget extends StatelessWidget {
       shrinkWrap: true, // 💡 Evita el crash: la lista no se expande al infinito
       physics: const ClampingScrollPhysics(), // 💡 No pelea con el scroll de la pantalla
       children: [
+        // --- COMBOS APLICADOS Y A MEDIAS ---
+        for (final application in pricing.combos.applications)
+          _ComboSummary(application: application),
+        for (final hint in pricing.combos.hints) _ComboHintCard(hint: hint),
+
         // --- PRODUCTOS SUELTOS (con lógica Mix & Match) ---
         ...cart.keys.map((product) {
           final qty = cart[product]!;
-          final itemTotal = calculateItemTotal(product, cart, promotionsMap);
+          final itemTotal = pricing.totalOf(product);
+          final comboUnits = pricing.comboUnitsOf(product);
           final Promotion? promo = promotionsMap[product.promotionId];
 
+          // Las unidades en combo no cuentan para la promoción propia
+          final looseQty = pricing.loose[product] ?? 0;
           int otherItemsInPromo = 0;
           if (promo != null) {
-            otherItemsInPromo = cart.keys
+            otherItemsInPromo = pricing.loose.keys
                 .where((p) => p.promotionId == promo.id && p.id != product.id)
-                .fold(0, (sum, p) => sum + cart[p]!);
+                .fold(0, (sum, p) => sum + pricing.loose[p]!);
           }
           final promoActive =
-              promo != null && qty + otherItemsInPromo >= promo.threshold;
+              promo != null &&
+              looseQty > 0 &&
+              looseQty + otherItemsInPromo >= promo.threshold;
 
           return _CartLine(
             image: buildProductImage(product),
@@ -78,7 +90,36 @@ class CartItemsListWidget extends StatelessWidget {
               context.amount(product.price),
             ),
             total: itemTotal,
-            extra: promo == null
+            extra: comboUnits > 0 && promo != null && looseQty > 0
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _ComboTag(
+                        label: context.l10n.comboCartTitle(
+                          pricing.combos.applications
+                              .where((a) => a.usedUnits.containsKey(product.id))
+                              .map((a) => a.combo.name)
+                              .join(', '),
+                        ),
+                      ),
+                      _PromoTag(
+                        label: promoActive
+                            ? context.l10n.promoAppliedName(promo.name)
+                            : context.l10n.promoAvailableName(promo.name),
+                        active: promoActive,
+                      ),
+                    ],
+                  )
+                : comboUnits > 0
+                ? _ComboTag(
+                    label: context.l10n.comboCartTitle(
+                      pricing.combos.applications
+                          .where((a) => a.usedUnits.containsKey(product.id))
+                          .map((a) => a.combo.name)
+                          .join(', '),
+                    ),
+                  )
+                : promo == null
                 ? null
                 : _PromoTag(
                     label: promoActive
@@ -327,6 +368,138 @@ class _PackTag extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _ComboTag extends StatelessWidget {
+  const _ComboTag({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Row(
+      children: [
+        Icon(Icons.extension, size: 12, color: colors.primary),
+        const SizedBox(width: 4),
+        Expanded(
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              color: colors.onSurface,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Combo completo en el carrito: nombre, veces, precio y ahorro.
+class _ComboSummary extends StatelessWidget {
+  const _ComboSummary({required this.application});
+
+  final ComboApplication application;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final saving = application.saving;
+    final title = context.l10n.comboCartTitle(application.combo.name);
+    return Semantics(
+      container: true,
+      label: '$title, ${context.money(application.total)}',
+      child: AppCard(
+        margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+        padding: const EdgeInsets.all(AppSpacing.md),
+        borderColor: colors.primary,
+        child: Row(
+          children: [
+            const IconBadge(Icons.extension),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    application.count > 1
+                        ? '$title ${context.l10n.comboCount(application.count)}'
+                        : title,
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  if (saving > 0.005)
+                    Text(
+                      context.l10n.comboSaving(context.amount(saving)),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: colors.onSurfaceVariant,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            Text(
+              context.money(application.total),
+              style: const TextStyle(fontWeight: FontWeight.w800),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Combo a medias: "Te falta: Ratón". Ayuda a sugerir la venta.
+class _ComboHintCard extends StatelessWidget {
+  const _ComboHintCard({required this.hint});
+
+  final ComboHint hint;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final missing = hint.missing
+        .map((s) => s.quantity > 1 ? '${s.quantity} × ${s.name}' : s.name)
+        .join(', ');
+    return Semantics(
+      liveRegion: true,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.sm,
+        ),
+        decoration: BoxDecoration(
+          color: colors.secondaryContainer,
+          borderRadius: BorderRadius.circular(AppRadius.md),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              Icons.info_outline,
+              size: 18,
+              color: colors.onSecondaryContainer,
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Text(
+                '${context.l10n.comboCartTitle(hint.combo.name)} · '
+                '${context.l10n.comboMissingHint(missing)}',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: colors.onSecondaryContainer,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

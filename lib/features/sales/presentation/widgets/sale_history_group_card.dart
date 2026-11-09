@@ -200,6 +200,74 @@ class _SaleTicketCard extends StatelessWidget {
     );
   }
 
+  /// Líneas del ticket: primero cada combo (cabecera + sus productos) y
+  /// después los productos sueltos.
+  List<Widget> _buildItems(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final widgets = <Widget>[];
+    final grouped = <SaleItem>{};
+    for (final combo in sale.combos) {
+      final lines = sale.items.where((i) => i.saleComboId == combo.id).toList();
+      if (lines.isEmpty) continue;
+      grouped.addAll(lines);
+      final total = lines.fold<double>(
+        0,
+        (t, i) => t + i.historicalPrice * i.quantity,
+      );
+      final full = lines.fold<double>(
+        0,
+        (t, i) => t + i.refundUnitPrice * i.quantity,
+      );
+      final title = context.l10n.comboCartTitle(combo.name);
+      widgets.add(
+        Padding(
+          padding: const EdgeInsets.only(top: 6),
+          child: Row(
+            children: [
+              Icon(Icons.extension, size: 16, color: colors.primary),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  combo.quantity > 1
+                      ? '$title ${context.l10n.comboCount(combo.quantity)}'
+                      : title,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+              ),
+              Text(
+                context.money(total),
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
+            ],
+          ),
+        ),
+      );
+      if (full - total > 0.005) {
+        widgets.add(
+          Padding(
+            padding: const EdgeInsets.only(left: 24),
+            child: Text(
+              context.l10n.comboSaving(context.amount(full - total)),
+              style: TextStyle(fontSize: 11, color: colors.onSurfaceVariant),
+            ),
+          ),
+        );
+      }
+      for (final line in lines) {
+        widgets.add(
+          Padding(
+            padding: const EdgeInsets.only(left: 24),
+            child: _buildSaleItem(context, line),
+          ),
+        );
+      }
+    }
+    for (final item in sale.items) {
+      if (!grouped.contains(item)) widgets.add(_buildSaleItem(context, item));
+    }
+    return widgets;
+  }
+
   Widget _buildPackItem(BuildContext context, SalePackItem packItem) {
     final colorScheme = Theme.of(context).colorScheme;
     return Padding(
@@ -329,7 +397,7 @@ class _SaleTicketCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Divider(height: 16),
-                  ...sale.items.map((item) => _buildSaleItem(context, item)),
+                  ..._buildItems(context),
                   if (sale.packItems.isNotEmpty && sale.items.isNotEmpty)
                     const SizedBox(height: 8),
                   ...sale.packItems.map(

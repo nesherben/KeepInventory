@@ -1,5 +1,6 @@
 import '../../inventory/domain/product.dart';
 import '../../packs/domain/pack.dart';
+import '../../promotions/domain/combo.dart';
 import '../../promotions/domain/promotion.dart';
 import 'sale.dart';
 import 'sale_cart_pricing_calculator.dart';
@@ -12,20 +13,31 @@ class SaleFromCartFactory {
     required Map<Product, int> products,
     required Map<Pack, int> packs,
     required Map<int, Promotion> promotions,
+    List<Combo> combos = const [],
     PaymentMethod paymentMethod = PaymentMethod.defaultMethod,
   }) {
-    final saleItems = products.entries.map((entry) {
-      final product = entry.key;
-      final quantity = entry.value;
+    final pricing = SaleCartPricingCalculator.price(
+      products: products,
+      packs: packs,
+      promotions: promotions,
+      combos: combos,
+    );
+    final byId = {
+      for (final p in products.keys)
+        if (p.id != null) p.id!: p,
+    };
+
+    SaleItem line(
+      Product product,
+      int quantity,
+      double subtotal, {
+      int? saleComboId,
+    }) {
+      // La promo propia se congela también en las líneas de combo: si una
+      // devolución rompe el combo, las unidades que quedan vuelven a su promo.
       final promotion = product.promotionId == null
           ? null
           : promotions[product.promotionId];
-      final subtotal = SaleCartPricingCalculator.calculateItemTotal(
-        product,
-        products,
-        promotions,
-      );
-
       return SaleItem(
         saleId: 0,
         productId: product.id!,
@@ -37,8 +49,52 @@ class SaleFromCartFactory {
         promoType: promotion?.type,
         promoThreshold: promotion?.threshold,
         promoDiscount: promotion?.discountValue,
+        saleComboId: saleComboId,
       );
-    }).toList();
+    }
+
+    // Los ids de SaleCombo son provisionales (índice); el datasource los
+    // sustituye por los reales al guardar.
+    final saleCombos = <SaleCombo>[];
+    final saleItems = <SaleItem>[];
+    final applications = pricing.combos.applications;
+    for (var i = 0; i < applications.length; i++) {
+      final application = applications[i];
+      saleCombos.add(
+        SaleCombo(
+          id: i,
+          comboId: application.combo.id,
+          name: application.combo.name,
+          price: application.combo.price,
+          quantity: application.count,
+          slots: application.combo.slots,
+        ),
+      );
+      for (final e in application.usedUnits.entries) {
+        saleItems.add(
+          line(
+            byId[e.key]!,
+            e.value,
+            application.lineTotals[e.key]!,
+            saleComboId: i,
+          ),
+        );
+      }
+    }
+
+    for (final e in pricing.loose.entries) {
+      saleItems.add(
+        line(
+          e.key,
+          e.value,
+          SaleCartPricingCalculator.calculateItemTotal(
+            e.key,
+            pricing.loose,
+            promotions,
+          ),
+        ),
+      );
+    }
 
     final salePacks = packs.entries
         .map(
@@ -54,14 +110,11 @@ class SaleFromCartFactory {
 
     return Sale(
       date: date,
-      totalAmount: SaleCartPricingCalculator.calculateCartTotal(
-        products: products,
-        packs: packs,
-        promotions: promotions,
-      ),
+      totalAmount: pricing.total,
       items: saleItems,
       packItems: salePacks,
       paymentMethod: paymentMethod,
+      combos: saleCombos,
     );
   }
 }

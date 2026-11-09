@@ -12,6 +12,13 @@ import '../../../core/shared_widgets/app_alerts.dart'; // 💡 Sistema de alerta
 import '../data/repositories/promotion_repository_impl.dart';
 import '../domain/promotion.dart';
 import '../data/datasources/promotion_local_datasource.dart';
+import '../../inventory/data/datasources/product_local_datasource.dart';
+import '../../inventory/data/repositories/product_repository_impl.dart';
+import '../../inventory/domain/product.dart';
+import '../data/datasources/combo_local_datasource.dart';
+import '../data/repositories/combo_repository_impl.dart';
+import '../domain/combo.dart';
+import 'combo_form_screen.dart';
 
 class PromotionsScreen extends StatefulWidget {
   const PromotionsScreen({super.key});
@@ -22,6 +29,8 @@ class PromotionsScreen extends StatefulWidget {
 
 class _PromotionsScreenState extends State<PromotionsScreen> {
   final _repository = PromotionRepositoryImpl(PromotionLocalDatasource());
+  final _comboRepository = ComboRepositoryImpl(ComboLocalDatasource());
+  final _productRepository = ProductRepositoryImpl(ProductLocalDatasource());
 
   // Llave y variables para el gesto global de deslizamiento
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
@@ -33,6 +42,11 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
   List<Promotion> _promotions = [];
   bool _isLoading = true;
   String _searchQuery = ''; // 💡 Variable para el buscador
+
+  /// 0 = promociones, 1 = combos.
+  int _tab = 0;
+  List<Combo> _combos = [];
+  List<Product> _products = [];
 
   @override
   void initState() {
@@ -49,11 +63,113 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
   Future<void> _loadPromotions() async {
     setState(() => _isLoading = true);
     final promotions = await _repository.getPromotions();
+    final combos = await _comboRepository.getCombos();
+    final products = await _productRepository.getProducts();
     if (!mounted) return;
     setState(() {
       _promotions = promotions;
+      _combos = combos;
+      _products = products;
       _isLoading = false;
     });
+  }
+
+  // --- Combos ---
+
+  Future<void> _openComboForm([Combo? combo]) async {
+    final saved = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ComboFormScreen(
+          combo: combo,
+          products: _products,
+          otherCombos: _combos.where((c) => c.id != combo?.id).toList(),
+        ),
+      ),
+    );
+    if (saved == true) _loadPromotions();
+  }
+
+  void _confirmDeleteCombo(Combo combo) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(context.l10n.comboDeleteTitle),
+        content: Text(context.l10n.comboDeleteConfirm(combo.name)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(context.l10n.cancel),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+              foregroundColor: Theme.of(context).colorScheme.onError,
+            ),
+            onPressed: () async {
+              await _comboRepository.deleteCombo(combo.id!);
+              if (context.mounted) {
+                Navigator.pop(context);
+                _loadPromotions();
+                AppAlerts.showWarning(context, context.l10n.comboDeleted);
+              }
+            },
+            child: Text(context.l10n.delete),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildComboList() {
+    final colors = Theme.of(context).colorScheme;
+    final byId = {for (final p in _products) p.id: p};
+    final combos = _combos
+        .where((c) => c.name.toLowerCase().contains(_searchQuery.toLowerCase()))
+        .toList();
+    if (combos.isEmpty) {
+      return EmptyState(
+        icon: Icons.extension_outlined,
+        title: _combos.isEmpty
+            ? context.l10n.combosEmpty
+            : context.l10n.promotionsNotFound,
+      );
+    }
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 96),
+      itemCount: combos.length,
+      itemBuilder: (context, index) {
+        final combo = combos[index];
+        final separate = combo.separatePrice((id) => byId[id]?.price ?? 0);
+        final saving = separate - combo.price;
+        final slots = combo.slots
+            .map((s) => s.quantity > 1 ? '${s.quantity} × ${s.name}' : s.name)
+            .join(' + ');
+        return Card(
+          margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+          child: ListTile(
+            contentPadding: const EdgeInsets.fromLTRB(12, 6, 4, 6),
+            onTap: () => _openComboForm(combo),
+            leading: const IconBadge(Icons.extension),
+            title: Text(
+              combo.name,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+            subtitle: Text(
+              saving > 0
+                  ? '$slots · ${context.money(combo.price)}\n'
+                        '${context.l10n.comboSaving(context.amount(saving))}'
+                  : '$slots · ${context.money(combo.price)}',
+            ),
+            isThreeLine: saving > 0,
+            trailing: IconButton(
+              icon: Icon(Icons.delete_outline, color: colors.error),
+              onPressed: () => _confirmDeleteCombo(combo),
+            ),
+          ),
+        );
+      },
+    );
   }
 
   void _showPromotionFormDialog({Promotion? promotionToEdit}) {
@@ -328,92 +444,124 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
                     ),
                   ),
 
-                  // --- LISTADO DE PROMOCIONES ---
-                  Expanded(
-                    child: filteredPromotions.isEmpty
-                        ? EmptyState(
-                            icon: Icons.local_offer_outlined,
-                            title: _promotions.isEmpty
-                                ? context.l10n.promotionsEmpty
-                                : context.l10n.promotionsNotFound,
-                          )
-                        : ListView.builder(
-                            padding: const EdgeInsets.all(12),
-                            itemCount: filteredPromotions.length,
-                            itemBuilder: (context, index) {
-                              final promo = filteredPromotions[index];
-                              final isBundle =
-                                  promo.type == 'bundle_fixed_price';
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: SegmentedButton<int>(
+                        showSelectedIcon: false,
+                        segments: [
+                          ButtonSegment(
+                            value: 0,
+                            icon: const Icon(Icons.local_offer_outlined),
+                            label: Text(context.l10n.promotionsTab),
+                          ),
+                          ButtonSegment(
+                            value: 1,
+                            icon: const Icon(Icons.extension_outlined),
+                            label: Text(context.l10n.combosTab),
+                          ),
+                        ],
+                        selected: {_tab},
+                        onSelectionChanged: (v) =>
+                            setState(() => _tab = v.first),
+                      ),
+                    ),
+                  ),
 
-                              return Card(
-                                margin: const EdgeInsets.only(
-                                  bottom: AppSpacing.sm,
-                                ),
-                                child: ListTile(
-                                  contentPadding: const EdgeInsets.fromLTRB(
-                                    12,
-                                    6,
-                                    4,
-                                    6,
+                  // --- LISTADO DE PROMOCIONES ---
+                  if (_tab == 1)
+                    Expanded(child: _buildComboList())
+                  else
+                    Expanded(
+                      child: filteredPromotions.isEmpty
+                          ? EmptyState(
+                              icon: Icons.local_offer_outlined,
+                              title: _promotions.isEmpty
+                                  ? context.l10n.promotionsEmpty
+                                  : context.l10n.promotionsNotFound,
+                            )
+                          : ListView.builder(
+                              padding: const EdgeInsets.all(12),
+                              itemCount: filteredPromotions.length,
+                              itemBuilder: (context, index) {
+                                final promo = filteredPromotions[index];
+                                final isBundle =
+                                    promo.type == 'bundle_fixed_price';
+
+                                return Card(
+                                  margin: const EdgeInsets.only(
+                                    bottom: AppSpacing.sm,
                                   ),
-                                  leading: IconBadge(
-                                    isBundle ? Icons.layers : Icons.percent,
-                                    color: AppColors.warning,
-                                  ),
-                                  title: Text(
-                                    promo.name,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.w600,
+                                  child: ListTile(
+                                    contentPadding: const EdgeInsets.fromLTRB(
+                                      12,
+                                      6,
+                                      4,
+                                      6,
+                                    ),
+                                    leading: IconBadge(
+                                      isBundle ? Icons.layers : Icons.percent,
+                                      color: AppColors.warning,
+                                    ),
+                                    title: Text(
+                                      promo.name,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    subtitle: Text(
+                                      isBundle
+                                          ? context.l10n.promotionBundleSummary(
+                                              promo.threshold.toString(),
+                                              context.amount(
+                                                promo.discountValue,
+                                              ),
+                                            )
+                                          : context.l10n
+                                                .promotionPercentSummary(
+                                                  promo.discountValue
+                                                      .toStringAsFixed(0),
+                                                  promo.threshold.toString(),
+                                                ),
+                                    ),
+                                    trailing: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        IconButton(
+                                          icon: Icon(
+                                            Icons.edit_outlined,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onSurfaceVariant,
+                                          ),
+                                          onPressed: () =>
+                                              _showPromotionFormDialog(
+                                                promotionToEdit: promo,
+                                              ),
+                                        ),
+                                        IconButton(
+                                          icon: Icon(
+                                            Icons.delete_outline,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .error,
+                                          ),
+                                          onPressed: () =>
+                                              _confirmDelete(promo),
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                  subtitle: Text(
-                                    isBundle
-                                        ? context.l10n.promotionBundleSummary(
-                                            promo.threshold.toString(),
-                                            context.amount(promo.discountValue),
-                                          )
-                                        : context.l10n.promotionPercentSummary(
-                                            promo.discountValue.toStringAsFixed(
-                                              0,
-                                            ),
-                                            promo.threshold.toString(),
-                                          ),
-                                  ),
-                                  trailing: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      IconButton(
-                                        icon: Icon(
-                                          Icons.edit_outlined,
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .onSurfaceVariant,
-                                        ),
-                                        onPressed: () =>
-                                            _showPromotionFormDialog(
-                                              promotionToEdit: promo,
-                                            ),
-                                      ),
-                                      IconButton(
-                                        icon: Icon(
-                                          Icons.delete_outline,
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .error,
-                                        ),
-                                        onPressed: () => _confirmDelete(promo),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                  ),
+                                );
+                              },
+                            ),
+                    ),
                 ],
               ),
         floatingActionButton: FloatingActionButton(
-          onPressed: () => _showPromotionFormDialog(),
+          onPressed: () =>
+              _tab == 1 ? _openComboForm() : _showPromotionFormDialog(),
           child: const Icon(Icons.add),
         ),
       ),

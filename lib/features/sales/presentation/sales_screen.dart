@@ -28,6 +28,9 @@ import '../../packs/data/datasources/pack_local_datasource.dart';
 // Promotions
 import '../../promotions/domain/promotion.dart';
 import '../../promotions/data/datasources/promotion_local_datasource.dart';
+import '../../promotions/data/datasources/combo_local_datasource.dart';
+import '../../promotions/data/repositories/combo_repository_impl.dart';
+import '../../promotions/domain/combo.dart';
 
 // Widget Composition
 import 'widgets/product_grid_widget.dart';
@@ -50,6 +53,7 @@ class _SalesScreenState extends State<SalesScreen>
   final _saleRepository = SaleRepositoryImpl(SaleLocalDatasource());
   final _productRepository = ProductRepositoryImpl(ProductLocalDatasource());
   final _packRepository = PackRepositoryImpl(PackLocalDatasource());
+  final _comboRepository = ComboRepositoryImpl(ComboLocalDatasource());
   final _promotionRepository = PromotionRepositoryImpl(
     PromotionLocalDatasource(),
   );
@@ -66,6 +70,7 @@ class _SalesScreenState extends State<SalesScreen>
   List<Product> _products = [];
   List<Pack> _packs = [];
   Map<int, Promotion> _promotionsMap = {};
+  List<Combo> _combos = [];
   bool _isLoading = true;
 
   String _productSearchQuery = '';
@@ -103,6 +108,7 @@ class _SalesScreenState extends State<SalesScreen>
     final products = await _productRepository.getProducts();
     final packs = await _packRepository.getPacks();
     final promotions = await _promotionRepository.getPromotions();
+    final combos = await _comboRepository.getCombos();
 
     final Map<int, Promotion> promoMap = {for (var p in promotions) p.id!: p};
 
@@ -111,6 +117,7 @@ class _SalesScreenState extends State<SalesScreen>
       _products = products;
       _packs = packs;
       _promotionsMap = promoMap;
+      _combos = combos.where((c) => c.isComplete).toList();
       _isLoading = false;
     });
   }
@@ -188,11 +195,14 @@ class _SalesScreenState extends State<SalesScreen>
     AppAlerts.showInfo(context, context.l10n.packRemovedFromCart(pack.name));
   }
 
-  double get _cartTotal => SaleCartPricingCalculator.calculateCartTotal(
+  CartPricing get _pricing => SaleCartPricingCalculator.price(
     products: _cart,
     packs: _cartPacks,
     promotions: _promotionsMap,
+    combos: _combos,
   );
+
+  double get _cartTotal => _pricing.total;
 
   int get _cartItemCount =>
       SaleCartPricingCalculator.countItems(products: _cart, packs: _cartPacks);
@@ -209,6 +219,7 @@ class _SalesScreenState extends State<SalesScreen>
       products: _cart,
       packs: _cartPacks,
       promotions: _promotionsMap,
+      combos: _combos,
       paymentMethod: _paymentMethod,
     );
 
@@ -303,6 +314,11 @@ class _SalesScreenState extends State<SalesScreen>
         ProductGridWidget(
           products: filteredProducts,
           cart: _cart,
+          comboProductIds: {for (final c in _combos) ...c.productIds},
+          missingProductIds: {
+            for (final hint in _pricing.combos.hints)
+              for (final slot in hint.missing) ...slot.productIds,
+          },
           bottomPadding: bottomPadding,
           crossAxisCount: crossAxisCount,
           onAddToCart: _addToCart,
@@ -449,8 +465,7 @@ class _SalesScreenState extends State<SalesScreen>
                             cart: _cart,
                             cartPacks: _cartPacks,
                             promotionsMap: _promotionsMap,
-                            calculateItemTotal:
-                                SaleCartPricingCalculator.calculateItemTotal,
+                            pricing: _pricing,
                             onRemoveFromCart: _removeFromCart,
                             onRemoveAllFromCart: _removeAllFromCart,
                             onRemovePackFromCart: _removePackFromCart,
@@ -542,9 +557,7 @@ class _SalesScreenState extends State<SalesScreen>
                                             cart: _cart,
                                             cartPacks: _cartPacks,
                                             promotionsMap: _promotionsMap,
-                                            calculateItemTotal:
-                                                SaleCartPricingCalculator
-                                                    .calculateItemTotal,
+                                            pricing: _pricing,
                                             onRemoveFromCart: _removeFromCart,
                                             onRemoveAllFromCart:
                                                 _removeAllFromCart,
