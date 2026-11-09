@@ -158,7 +158,6 @@
   "editPackTitle": "Modificar Pack",
   "packComponents": "Componentes del Pack:",
   "packEmpty": "No hay productos en este pack.",
-  "createPack": "Crear Pack",
   "packName": "Nombre del Pack",
   "packPrice": "Precio (€)",
   "packStartingStock": "Stock inicial",
@@ -782,6 +781,23 @@
       },
       "name": {
         "type": "String"
+      }
+    }
+  },
+  "packCanAssemble": "Con el stock actual se pueden montar {count} más",
+  "@packCanAssemble": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "packCannotAssemble": "No hay stock para montar otro",
+  "packComponentStock": "{count} en stock",
+  "@packComponentStock": {
+    "placeholders": {
+      "count": {
+        "type": "int"
       }
     }
   }

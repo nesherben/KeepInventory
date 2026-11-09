@@ -926,12 +926,6 @@ abstract class AppLocalizations {
   /// **'No hay productos en este pack.'**
   String get packEmpty;
 
-  /// No description provided for @createPack.
-  ///
-  /// In es, this message translates to:
-  /// **'Crear Pack'**
-  String get createPack;
-
   /// No description provided for @packName.
   ///
   /// In es, this message translates to:
@@ -2725,6 +2719,24 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Promoción aplicada a {count} productos de «{name}»'**
   String promotionAppliedToCategory(int count, String name);
+
+  /// No description provided for @packCanAssemble.
+  ///
+  /// In es, this message translates to:
+  /// **'Con el stock actual se pueden montar {count} más'**
+  String packCanAssemble(int count);
+
+  /// No description provided for @packCannotAssemble.
+  ///
+  /// In es, this message translates to:
+  /// **'No hay stock para montar otro'**
+  String get packCannotAssemble;
+
+  /// No description provided for @packComponentStock.
+  ///
+  /// In es, this message translates to:
+  /// **'{count} en stock'**
+  String packComponentStock(int count);
 }
 
 class _AppLocalizationsDelegate

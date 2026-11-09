@@ -424,12 +424,13 @@ class _PackFormDialogState extends State<PackFormDialog> {
                       onPressed: () => Navigator.pop(context),
                       child: Text(context.l10n.cancel),
                     ),
-                    ElevatedButton(
+                    // Igual que el resto de formularios: Guardar / Actualizar
+                    FilledButton(
                       onPressed: _savePack,
                       child: Text(
                         widget.existingPack == null
-                            ? context.l10n.createPack
-                            : context.l10n.save,
+                            ? context.l10n.save
+                            : context.l10n.update,
                       ),
                     ),
                   ],

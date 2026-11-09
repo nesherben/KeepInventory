@@ -158,7 +158,6 @@
   "editPackTitle": "Edit Pack",
   "packComponents": "Pack components:",
   "packEmpty": "There are no products in this pack.",
-  "createPack": "Create Pack",
   "packName": "Pack name",
   "packPrice": "Price (€)",
   "packStartingStock": "Initial stock",
@@ -486,5 +485,8 @@
   "tableCategory": "CATEGORY",
   "promotionApplyToCategory": "Apply to a category (optional)",
   "promotionApplyToCategoryHint": "All its products will get this promotion; you can still change any of them individually.",
-  "promotionAppliedToCategory": "Promotion applied to {count} products in “{name}”"
+  "promotionAppliedToCategory": "Promotion applied to {count} products in “{name}”",
+  "packCanAssemble": "With current stock you can assemble {count} more",
+  "packCannotAssemble": "Not enough stock to assemble another",
+  "packComponentStock": "{count} in stock"
 }

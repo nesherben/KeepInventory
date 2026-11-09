@@ -463,9 +463,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get packEmpty => 'There are no products in this pack.';
 
   @override
-  String get createPack => 'Create Pack';
-
-  @override
   String get packName => 'Pack name';
 
   @override
@@ -1537,5 +1534,18 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String promotionAppliedToCategory(int count, String name) {
     return 'Promotion applied to $count products in “$name”';
+  }
+
+  @override
+  String packCanAssemble(int count) {
+    return 'With current stock you can assemble $count more';
+  }
+
+  @override
+  String get packCannotAssemble => 'Not enough stock to assemble another';
+
+  @override
+  String packComponentStock(int count) {
+    return '$count in stock';
   }
 }

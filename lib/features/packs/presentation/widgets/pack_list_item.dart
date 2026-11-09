@@ -6,6 +6,7 @@ import '../../../../core/shared_widgets/app_ui.dart';
 import '../../../inventory/domain/inventory_view.dart';
 import '../../../sales/presentation/widgets/sales_ui_utils.dart';
 import '../../domain/pack.dart';
+import '../../../inventory/domain/product.dart';
 
 /// Pack en la lista de gestión: imagen, nombre, precio, unidades montadas
 /// (ajuste rápido + / −), acciones y, desplegado, sus componentes.
@@ -15,13 +16,35 @@ class PackListItem extends StatelessWidget {
   final Function(Pack) onDelete;
   final Function(Pack, int) onQuickAdjust;
 
+  /// Productos por id: precio por separado (ahorro) y stock de componentes.
+  final Map<int, Product> products;
+
   const PackListItem({
     super.key,
     required this.pack,
     required this.onEdit,
     required this.onDelete,
     required this.onQuickAdjust,
+    this.products = const {},
   });
+
+  /// Lo que costarían sus componentes sueltos.
+  double get _separatePrice => pack.items.fold(
+    0.0,
+    (t, i) => t + (products[i.productId]?.price ?? 0) * i.quantity,
+  );
+
+  /// Cuántos packs más se pueden montar con el stock de los componentes.
+  int get _canAssemble {
+    if (pack.items.isEmpty) return 0;
+    var max = -1;
+    for (final item in pack.items) {
+      final units = products[item.productId]?.units ?? 0;
+      final possible = item.quantity <= 0 ? 0 : units ~/ item.quantity;
+      if (max < 0 || possible < max) max = possible;
+    }
+    return max < 0 ? 0 : max;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -68,6 +91,16 @@ class PackListItem extends StatelessWidget {
                     fontSize: 14,
                   ),
                 ),
+                if (_separatePrice - pack.price > 0.005)
+                  Text(
+                    context.l10n.comboSaving(
+                      context.amount(_separatePrice - pack.price),
+                    ),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: colors.onSurfaceVariant,
+                    ),
+                  ),
                 // Control rápido de unidades montadas
                 QuantityStepper(
                   label: context.l10n.packUnitCount(pack.units.toString()),
@@ -124,6 +157,21 @@ class PackListItem extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(width: AppSpacing.sm),
+                          // Stock del componente (rojo si no da para otro)
+                          Text(
+                            context.l10n.packComponentStock(
+                              products[item.productId]?.units ?? 0,
+                            ),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color:
+                                  (products[item.productId]?.units ?? 0) <
+                                      item.quantity
+                                  ? colors.error
+                                  : colors.onSurfaceVariant,
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.md),
                           Text(
                             context.l10n.packComponentCount(
                               item.quantity.toString(),
@@ -136,6 +184,30 @@ class PackListItem extends StatelessWidget {
                         ],
                       ),
                     ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Row(
+                    children: [
+                      Icon(
+                        _canAssemble > 0
+                            ? Icons.construction_outlined
+                            : Icons.block_outlined,
+                        size: 16,
+                        color: _canAssemble > 0 ? colors.primary : colors.error,
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: Text(
+                          _canAssemble > 0
+                              ? context.l10n.packCanAssemble(_canAssemble)
+                              : context.l10n.packCannotAssemble,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: colors.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

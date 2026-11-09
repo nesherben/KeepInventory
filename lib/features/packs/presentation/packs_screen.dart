@@ -299,6 +299,10 @@ class _PacksScreenState extends State<PacksScreen> {
                                     _showPackDialog(existingPack: pack),
                                 onDelete: (pack) => _confirmDelete(pack),
                                 onQuickAdjust: _quickAdjustStock,
+                                products: {
+                                  for (final p in _availableProducts)
+                                    if (p.id != null) p.id!: p,
+                                },
                               );
                             },
                           ),
