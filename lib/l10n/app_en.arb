@@ -490,5 +490,15 @@
   "packCannotAssemble": "Not enough stock to assemble another",
   "packComponentStock": "{count} in stock",
   "comboSlotNoCategories": "You have no categories yet. Create them from a product (Inventory → product → Category) to pick “any product of…”.",
-  "comboSlotEmptyCategory": "No products yet"
+  "comboSlotEmptyCategory": "No products yet",
+  "categoriesTitle": "Categories",
+  "categoryNew": "New category",
+  "categoryRename": "Rename category",
+  "categoryNameLabel": "Category name",
+  "categoryNameTaken": "A category with that name already exists",
+  "categoryProductsCount": "{count} products",
+  "categoriesEmpty": "No categories. Create one to group products (e.g. Polaroid, Print A5). They are optional.",
+  "categoryProductsTitle": "Products in “{name}”",
+  "categoryUpdated": "Category updated",
+  "categoryInOther": "Currently in “{name}”"
 }

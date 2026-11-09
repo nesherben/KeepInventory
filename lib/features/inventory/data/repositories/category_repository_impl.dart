@@ -19,4 +19,17 @@ class CategoryRepositoryImpl implements CategoryRepository {
 
   @override
   Future<int> countProducts(int id) => datasource.countProducts(id);
+
+  @override
+  Future<bool> rename(int id, String name) => datasource.rename(id, name);
+
+  @override
+  Future<Map<int, int>> countAll() => datasource.countAll();
+
+  @override
+  Future<void> setProducts(
+    int id, {
+    required Set<int> add,
+    required Set<int> remove,
+  }) => datasource.setProducts(id, add: add, remove: remove);
 }

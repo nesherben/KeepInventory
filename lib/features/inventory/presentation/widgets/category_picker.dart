@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:keepinventory/l10n/app_localizations_ext.dart';
 
-import '../../../../core/shared_widgets/app_alerts.dart';
 import '../../../../core/shared_widgets/name_picker_sheet.dart';
 import '../../data/datasources/category_local_datasource.dart';
 import '../../data/repositories/category_repository_impl.dart';
@@ -13,8 +12,8 @@ class CategoryPick {
   final ProductCategory? category;
 }
 
-/// Panel para elegir, crear o borrar categorías (mismo panel que las ferias).
-/// Devuelve null si se cerró sin elegir.
+/// Panel para elegir o crear categorías (mismo panel que las ferias). Para
+/// renombrar o borrar: Inventario → Categorías. Null si se cerró sin elegir.
 Future<CategoryPick?> pickCategory(
   BuildContext context, {
   int? currentId,
@@ -34,27 +33,7 @@ Future<CategoryPick?> pickCategory(
     createLabel: l10n.categoryCreate,
     current: current?.name,
     removeLabel: l10n.categoryRemove,
-    deleteTooltip: l10n.categoryDeleteTitle,
     icon: Icons.sell_outlined,
-    onDelete: (sheetContext, name) async {
-      final category = byName[name];
-      if (category == null) return false;
-      final count = await repository.countProducts(category.id);
-      if (!sheetContext.mounted) return false;
-      final ok = await confirmDeleteDialog(
-        sheetContext,
-        title: l10n.categoryDeleteTitle,
-        message: count > 0
-            ? l10n.categoryDeleteConfirmUsed(count, name)
-            : l10n.categoryDeleteConfirmEmpty(name),
-        cancelLabel: l10n.cancel,
-        deleteLabel: l10n.delete,
-      );
-      if (!ok) return false;
-      await repository.delete(category.id);
-      if (context.mounted) AppAlerts.showWarning(context, l10n.categoryDeleted);
-      return true;
-    },
   );
 
   if (chosen == null) return null;

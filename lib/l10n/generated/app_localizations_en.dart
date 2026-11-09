@@ -1555,4 +1555,41 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get comboSlotEmptyCategory => 'No products yet';
+
+  @override
+  String get categoriesTitle => 'Categories';
+
+  @override
+  String get categoryNew => 'New category';
+
+  @override
+  String get categoryRename => 'Rename category';
+
+  @override
+  String get categoryNameLabel => 'Category name';
+
+  @override
+  String get categoryNameTaken => 'A category with that name already exists';
+
+  @override
+  String categoryProductsCount(int count) {
+    return '$count products';
+  }
+
+  @override
+  String get categoriesEmpty =>
+      'No categories. Create one to group products (e.g. Polaroid, Print A5). They are optional.';
+
+  @override
+  String categoryProductsTitle(String name) {
+    return 'Products in “$name”';
+  }
+
+  @override
+  String get categoryUpdated => 'Category updated';
+
+  @override
+  String categoryInOther(String name) {
+    return 'Currently in “$name”';
+  }
 }

@@ -1,3 +1,4 @@
+import 'categories_screen.dart';
 import '../data/datasources/category_local_datasource.dart';
 import '../data/repositories/category_repository_impl.dart';
 import 'widgets/category_picker.dart';
@@ -836,7 +837,23 @@ class _InventoryScreenState extends State<InventoryScreen> {
       },
       child: Scaffold(
         key: _scaffoldKey,
-        appBar: AppBar(title: Text(context.l10n.inventoryTitle)),
+        appBar: AppBar(
+          title: Text(context.l10n.inventoryTitle),
+          actions: [
+            IconButton(
+              tooltip: context.l10n.categoriesTitle,
+              icon: const Icon(Icons.sell_outlined),
+              onPressed: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const CategoriesScreen()),
+                );
+                // Al volver: nombres, filtros y asignaciones al día
+                if (mounted) _loadProducts();
+              },
+            ),
+          ],
+        ),
         drawer: const AppDrawer(),
         body: _isLoading
             ? const Center(child: CircularProgressIndicator())

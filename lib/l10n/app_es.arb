@@ -802,5 +802,36 @@
     }
   },
   "comboSlotNoCategories": "Aún no tienes categorías. Créalas desde el producto (Inventario → producto → Categoría) para elegir «cualquier producto de…».",
-  "comboSlotEmptyCategory": "Sin productos todavía"
+  "comboSlotEmptyCategory": "Sin productos todavía",
+  "categoriesTitle": "Categorías",
+  "categoryNew": "Nueva categoría",
+  "categoryRename": "Renombrar categoría",
+  "categoryNameLabel": "Nombre de la categoría",
+  "categoryNameTaken": "Ya existe una categoría con ese nombre",
+  "categoryProductsCount": "{count} productos",
+  "@categoryProductsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "categoriesEmpty": "Sin categorías. Crea una para agrupar productos (p. ej. Polaroid, Print A5). Son opcionales.",
+  "categoryProductsTitle": "Productos de «{name}»",
+  "@categoryProductsTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "categoryUpdated": "Categoría actualizada",
+  "categoryInOther": "Ahora en «{name}»",
+  "@categoryInOther": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }

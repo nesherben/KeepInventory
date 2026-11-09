@@ -2749,6 +2749,66 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Sin productos todavía'**
   String get comboSlotEmptyCategory;
+
+  /// No description provided for @categoriesTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Categorías'**
+  String get categoriesTitle;
+
+  /// No description provided for @categoryNew.
+  ///
+  /// In es, this message translates to:
+  /// **'Nueva categoría'**
+  String get categoryNew;
+
+  /// No description provided for @categoryRename.
+  ///
+  /// In es, this message translates to:
+  /// **'Renombrar categoría'**
+  String get categoryRename;
+
+  /// No description provided for @categoryNameLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Nombre de la categoría'**
+  String get categoryNameLabel;
+
+  /// No description provided for @categoryNameTaken.
+  ///
+  /// In es, this message translates to:
+  /// **'Ya existe una categoría con ese nombre'**
+  String get categoryNameTaken;
+
+  /// No description provided for @categoryProductsCount.
+  ///
+  /// In es, this message translates to:
+  /// **'{count} productos'**
+  String categoryProductsCount(int count);
+
+  /// No description provided for @categoriesEmpty.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin categorías. Crea una para agrupar productos (p. ej. Polaroid, Print A5). Son opcionales.'**
+  String get categoriesEmpty;
+
+  /// No description provided for @categoryProductsTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Productos de «{name}»'**
+  String categoryProductsTitle(String name);
+
+  /// No description provided for @categoryUpdated.
+  ///
+  /// In es, this message translates to:
+  /// **'Categoría actualizada'**
+  String get categoryUpdated;
+
+  /// No description provided for @categoryInOther.
+  ///
+  /// In es, this message translates to:
+  /// **'Ahora en «{name}»'**
+  String categoryInOther(String name);
 }
 
 class _AppLocalizationsDelegate

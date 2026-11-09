@@ -35,6 +35,11 @@ class ComboLocalDatasource {
           .add(row['id'] as int);
     }
 
+    final categoryNames = {
+      for (final r in await database.query('categories'))
+        r['id'] as int: r['name'] as String,
+    };
+
     final productsBySlot = <int, List<int>>{};
     for (final row in productRows) {
       productsBySlot
@@ -50,7 +55,7 @@ class ComboLocalDatasource {
           .add(
             ComboSlot(
               id: slotId,
-              name: row['name'] as String,
+              name: categoryNames[categoryId] ?? row['name'] as String,
               quantity: row['quantity'] as int,
               productIds: categoryId != null
                   ? productsByCategory[categoryId] ?? const []
