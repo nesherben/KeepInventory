@@ -46,6 +46,28 @@ class ProductLocalDatasource {
     );
   }
 
+  /// Actualiza solo las columnas indicadas (no pisa el resto del producto).
+  Future<int> updateFields(int id, Map<String, Object?> values) async {
+    if (values.isEmpty) return 0;
+    final database = await db;
+    return database.update(
+      'products',
+      values,
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  /// Suma (o resta) unidades en una sola operación, sin bajar de 0.
+  Future<void> addUnits(int id, int delta) async {
+    if (delta == 0) return;
+    final database = await db;
+    await database.rawUpdate(
+      'UPDATE products SET units = MAX(0, units + ?) WHERE id = ?',
+      [delta, id],
+    );
+  }
+
   Future<int> deleteProduct(int id) async {
     final database = await db;
     // Borrado lógico para no romper el historial de tickets antiguos

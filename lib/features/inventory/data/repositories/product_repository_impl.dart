@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import '../../data/datasources/product_local_datasource.dart';
 import '../../data/product_model.dart';
 import '../../domain/product.dart';
@@ -48,6 +50,34 @@ class ProductRepositoryImpl implements ProductRepository {
     );
     return await datasource.updateProduct(model);
   }
+
+  @override
+  Future<void> updateFields(
+    int id, {
+    String? name,
+    int? units,
+    double? price,
+    double? cost,
+    int? promotionId,
+    bool clearPromotion = false,
+    Uint8List? imageBytes,
+  }) async {
+    await datasource.updateFields(id, {
+      'name': ?name,
+      'units': ?units,
+      'price': ?price,
+      'cost': ?cost,
+      if (promotionId != null || clearPromotion) 'promotion_id': promotionId,
+      // Foto nueva: se guarda en la BD y se olvida la ruta antigua
+      if (imageBytes != null) ...{
+        'image_bytes': imageBytes,
+        'image_path': null,
+      },
+    });
+  }
+
+  @override
+  Future<void> addUnits(int id, int delta) => datasource.addUnits(id, delta);
 
   @override
   Future<int> deleteProduct(int id) async {

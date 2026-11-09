@@ -21,7 +21,6 @@ import '../../../core/shared_widgets/app_alerts.dart'; // 💡 Importante para l
 import '../../promotions/data/repositories/promotion_repository_impl.dart';
 import '../data/repositories/product_repository_impl.dart';
 import '../domain/product.dart';
-import '../data/product_model.dart';
 import '../data/datasources/product_local_datasource.dart';
 
 // Imports de la feature PROMOTIONS
@@ -71,8 +70,14 @@ class _InventoryScreenState extends State<InventoryScreen> {
   InventorySort? _sort;
   bool _sortAscending = true;
 
+  /// +/− de stock aún sin guardar (por producto): se agrupan los toques
+  /// rápidos y se guardan como una suma en la BD.
   final Map<int, Timer> _debounceTimers = {};
-  final Map<int, Product> _baseProducts = {};
+  final Map<int, int> _pendingStock = {};
+
+  /// Cada recarga lleva un número: si termina una antigua después de una
+  /// nueva, se descarta.
+  int _loadSeq = 0;
 
   @override
   void initState() {
@@ -85,33 +90,14 @@ class _InventoryScreenState extends State<InventoryScreen> {
     for (var timer in _debounceTimers.values) {
       timer.cancel();
     }
+    // Al salir de la pantalla se guarda lo pendiente (no se pierde)
+    for (final entry in _pendingStock.entries) {
+      _productRepository.addUnits(entry.key, entry.value);
+    }
+    _pendingStock.clear();
     _horizontalScrollController.dispose();
     _searchController.dispose();
     super.dispose();
-  }
-
-  ProductModel _toModel(
-    Product p, {
-    String? name,
-    int? units,
-    double? price,
-    double? cost,
-    String? imagePath,
-    bool clearImagePath = false,
-    Uint8List? imageBytes,
-    int? promotionId,
-    bool clearPromotion = false,
-  }) {
-    return ProductModel(
-      id: p.id,
-      name: name ?? p.name,
-      units: units ?? p.units,
-      price: price ?? p.price,
-      cost: cost ?? p.cost,
-      imagePath: clearImagePath ? null : (imagePath ?? p.imagePath),
-      imageBytes: imageBytes ?? p.imageBytes,
-      promotionId: clearPromotion ? null : (promotionId ?? p.promotionId),
-    );
   }
 
   Future<void> _processAndSaveNewImage(
@@ -123,12 +109,10 @@ class _InventoryScreenState extends State<InventoryScreen> {
       final file = File(pickedFile.path);
       final compressedBytes = await ImageCompressionService.compressFile(file);
 
-      final updatedProduct = _toModel(
-        product,
+      await _productRepository.updateFields(
+        product.id!,
         imageBytes: compressedBytes,
-        clearImagePath: true,
       );
-      await _productRepository.updateProduct(updatedProduct);
       _loadProducts();
 
       if (mounted) {
@@ -141,14 +125,22 @@ class _InventoryScreenState extends State<InventoryScreen> {
   /// (`_isLoading` empieza en true): al recargar tras editar no se sustituye
   /// la lista, así se conserva la posición del scroll.
   Future<void> _loadProducts() async {
-    final products = await _productRepository.getProducts();
+    final seq = ++_loadSeq;
+    final fresh = await _productRepository.getProducts();
     final promotions = await _promotionRepository.getPromotions();
     final combos = await ComboRepositoryImpl(ComboLocalDatasource())
         .getCombos();
 
     final Map<int, Promotion> promoMap = {for (var p in promotions) p.id!: p};
 
-    if (!mounted) return;
+    if (!mounted || seq != _loadSeq) return;
+    // Los +/− aún no guardados se mantienen sobre los datos recién leídos
+    final products = [
+      for (final p in fresh)
+        _pendingStock.containsKey(p.id)
+            ? p.copyWith(units: p.units + _pendingStock[p.id]!)
+            : p,
+    ];
     setState(() {
       _products = products;
       _promotionsMap = promoMap;
@@ -161,6 +153,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
   }
 
   Future<void> _deleteProduct(int id) async {
+    _discardPendingStock(id);
     await _productRepository.deleteProduct(id);
     _loadProducts();
 
@@ -207,38 +200,31 @@ class _InventoryScreenState extends State<InventoryScreen> {
     final newUnits = currentProduct.units + amountChange;
     if (newUnits < 0) return;
 
-    if (!_baseProducts.containsKey(productId)) {
-      _baseProducts[productId] = currentProduct;
-    }
-
-    final updatedModel = _toModel(currentProduct, units: newUnits);
-
+    _pendingStock[productId] = (_pendingStock[productId] ?? 0) + amountChange;
     setState(() {
-      _products[prodIndex] = updatedModel;
+      _products[prodIndex] = currentProduct.copyWith(units: newUnits);
     });
 
     _debounceTimers[productId]?.cancel();
     _debounceTimers[productId] = Timer(
       const Duration(milliseconds: 600),
-      () async {
-        final baseProduct = _baseProducts[productId];
-        final finalProduct = _products.firstWhere((p) => p.id == productId);
-
-        if (baseProduct != null && baseProduct.units != finalProduct.units) {
-          await _productRepository.updateProduct(_toModel(finalProduct));
-        }
-
-        _baseProducts.remove(productId);
-        _debounceTimers.remove(productId);
-
-        if (mounted) {
-          final freshProducts = await _productRepository.getProducts();
-          setState(() {
-            _products = freshProducts;
-          });
-        }
-      },
+      () => _flushStock(productId),
     );
+  }
+
+  /// Guarda los +/− pendientes de un producto como una suma atómica.
+  Future<void> _flushStock(int productId) async {
+    _debounceTimers.remove(productId)?.cancel();
+    final delta = _pendingStock.remove(productId) ?? 0;
+    if (delta != 0) await _productRepository.addUnits(productId, delta);
+    if (mounted) _loadProducts();
+  }
+
+  /// Antes de escribir un stock exacto se descartan los +/− pendientes (el
+  /// valor escrito ya los incluye: es lo que se veía en pantalla).
+  void _discardPendingStock(int productId) {
+    _debounceTimers.remove(productId)?.cancel();
+    _pendingStock.remove(productId);
   }
 
   void _showEditSingleFieldDialog({
@@ -258,6 +244,17 @@ class _InventoryScreenState extends State<InventoryScreen> {
             extentOffset: initialValue.length,
           );
 
+    var saving = false;
+    Future<void> save() async {
+      if (saving) return;
+      saving = true;
+      try {
+        await onSave(controller.text);
+      } finally {
+        saving = false;
+      }
+    }
+
     showDialog(
       context: context,
       builder: (context) {
@@ -272,19 +269,14 @@ class _InventoryScreenState extends State<InventoryScreen> {
               suffixText: suffixText,
             ),
             autofocus: true,
-            onSubmitted: (value) => onSave(value),
+            onSubmitted: (_) => save(),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
               child: Text(context.l10n.cancel),
             ),
-            ElevatedButton(
-              onPressed: () async {
-                await onSave(controller.text);
-              },
-              child: Text(context.l10n.save),
-            ),
+            ElevatedButton(onPressed: save, child: Text(context.l10n.save)),
           ],
         );
       },
@@ -327,12 +319,10 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 ),
                 ElevatedButton(
                   onPressed: () async {
-                    await _productRepository.updateProduct(
-                      _toModel(
-                        product,
-                        promotionId: selectedPromotionId,
-                        clearPromotion: selectedPromotionId == null,
-                      ),
+                    await _productRepository.updateFields(
+                      product.id!,
+                      promotionId: selectedPromotionId,
+                      clearPromotion: selectedPromotionId == null,
                     );
                     if (context.mounted) {
                       Navigator.pop(context);
@@ -389,6 +379,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
           promotionsMap: _promotionsMap,
           onSave: (productModel, isEditing) async {
             if (isEditing) {
+              _discardPendingStock(productModel.id!);
               await _productRepository.updateProduct(productModel);
             } else {
               await _productRepository.insertProduct(productModel);
@@ -459,33 +450,35 @@ class _InventoryScreenState extends State<InventoryScreen> {
     InventoryProductField field,
     String value,
   ) async {
-    late final ProductModel updatedProduct;
     late final String successMessage;
+    final id = product.id!;
 
     switch (field) {
       case InventoryProductField.name:
-        if (value.isEmpty) return;
-        updatedProduct = _toModel(product, name: value);
+        if (value.trim().isEmpty) return;
+        await _productRepository.updateFields(id, name: value.trim());
+        if (!mounted) return;
         successMessage = context.l10n.nameUpdated;
       case InventoryProductField.units:
         final units = AppNumbers.parseInt(value);
         if (units == null || units < 0) return _showInvalidNumber();
-        updatedProduct = _toModel(product, units: units);
+        _discardPendingStock(id);
+        await _productRepository.updateFields(id, units: units);
+        if (!mounted) return;
         successMessage = context.l10n.stockUpdated;
       case InventoryProductField.price:
         final price = AppNumbers.parseDecimal(value);
         if (price == null || price < 0) return _showInvalidNumber();
-        updatedProduct = _toModel(product, price: price);
+        await _productRepository.updateFields(id, price: price);
+        if (!mounted) return;
         successMessage = context.l10n.salePriceUpdated;
       case InventoryProductField.cost:
         final cost = AppNumbers.parseDecimal(value);
         if (cost == null || cost < 0) return _showInvalidNumber();
-        updatedProduct = _toModel(product, cost: cost);
+        await _productRepository.updateFields(id, cost: cost);
+        if (!mounted) return;
         successMessage = context.l10n.costUpdated;
     }
-
-    await _productRepository.updateProduct(updatedProduct);
-    if (!mounted) return;
 
     Navigator.pop(context);
     _loadProducts();
