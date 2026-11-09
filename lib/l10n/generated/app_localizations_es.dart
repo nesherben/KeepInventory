@@ -1630,4 +1630,23 @@ class AppLocalizationsEs extends AppLocalizations {
   String saleRegistered(String id, String amount, String method) {
     return 'Venta #$id registrada · $amount € · $method';
   }
+
+  @override
+  String stockLastUnit(String name) {
+    return 'Última unidad de $name';
+  }
+
+  @override
+  String cartStockLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Quedan $count en stock',
+      one: 'Queda 1 en stock',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get cartStockOut => 'Se agota con esta venta';
 }

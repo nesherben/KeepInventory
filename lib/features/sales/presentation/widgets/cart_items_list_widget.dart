@@ -1,3 +1,5 @@
+import '../../../inventory/domain/inventory_view.dart';
+
 import 'package:flutter/material.dart';
 import 'package:keepinventory/core/utils/app_numbers.dart';
 
@@ -124,6 +126,10 @@ class CartItemsListWidget extends StatelessWidget {
               for (final p in cart.keys)
                 if (application.usedUnits.containsKey(p.id)) p.id!: p,
             },
+            cartQuantities: {
+              for (final e in cart.entries)
+                if (e.key.id != null) e.key.id!: e.value,
+            },
             onRemove: onRemoveFromCart,
           ),
         for (final hint in pricing.combos.hints)
@@ -165,14 +171,18 @@ class CartItemsListWidget extends StatelessWidget {
               context.amount(product.price),
             ),
             total: itemTotal,
-            extra: promo == null
-                ? null
-                : _PromoTag(
-                    label: promoActive
-                        ? context.l10n.promoAppliedName(promo.name)
-                        : context.l10n.promoAvailableName(promo.name),
-                    active: promoActive,
-                  ),
+            extra: _lineExtras(
+              context,
+              promo: promo == null
+                  ? null
+                  : _PromoTag(
+                      label: promoActive
+                          ? context.l10n.promoAppliedName(promo.name)
+                          : context.l10n.promoAvailableName(promo.name),
+                      active: promoActive,
+                    ),
+              stock: _StockLeftTag.forProduct(product, cart[product] ?? 0),
+            ),
             onRemove: () => onRemoveFromCart(product),
             onRemoveAll: () => onRemoveAllFromCart(product),
             onLongPress: () => showCartProductPreview(
@@ -425,10 +435,14 @@ class _ComboGroup extends StatelessWidget {
     required this.application,
     required this.products,
     required this.onRemove,
+    this.cartQuantities = const {},
   });
 
   final ComboApplication application;
   final Map<int, Product> products;
+
+  /// Unidades de cada producto en todo el carrito (para el aviso de stock).
+  final Map<int, int> cartQuantities;
   final Function(Product) onRemove;
 
   @override
@@ -495,6 +509,7 @@ class _ComboGroup extends StatelessWidget {
                 _ComboItemLine(
                   product: products[entry.key]!,
                   quantity: entry.value,
+                  inCart: cartQuantities[entry.key] ?? entry.value,
                   onRemove: () => onRemove(products[entry.key]!),
                 ),
           ],
@@ -510,11 +525,15 @@ class _ComboItemLine extends StatelessWidget {
     required this.product,
     required this.quantity,
     required this.onRemove,
+    this.inCart = 0,
   });
 
   final Product product;
   final int quantity;
   final VoidCallback onRemove;
+
+  /// Unidades del producto en todo el carrito.
+  final int inCart;
 
   @override
   Widget build(BuildContext context) {
@@ -551,6 +570,7 @@ class _ComboItemLine extends StatelessWidget {
               style: const TextStyle(fontSize: 13),
             ),
           ),
+          ?_StockLeftTag.forProduct(product, inCart),
           IconButton(
             tooltip: context.l10n.delete,
             visualDensity: VisualDensity.compact,
@@ -649,6 +669,52 @@ class _ComboHintCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Etiquetas extra de una línea del carrito (promoción y stock), apiladas.
+Widget? _lineExtras(BuildContext context, {Widget? promo, Widget? stock}) {
+  if (promo == null && stock == null) return null;
+  if (promo == null) return stock;
+  if (stock == null) return promo;
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [promo, const SizedBox(height: 2), stock],
+  );
+}
+
+/// "Quedan 2 en stock" / "Se agota con esta venta" cuando la venta deja el
+/// producto con poco stock (umbral de stock bajo del inventario).
+class _StockLeftTag extends StatelessWidget {
+  const _StockLeftTag(this.left);
+
+  final int left;
+
+  static _StockLeftTag? forProduct(Product product, int inCart) {
+    final left = product.units - inCart;
+    return left <= StockLevel.lowThreshold ? _StockLeftTag(left) : null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final out = left <= 0;
+    final color = out ? colors.error : AppColors.warning;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.inventory_2_outlined, size: 12, color: color),
+        const SizedBox(width: 4),
+        Text(
+          out ? context.l10n.cartStockOut : context.l10n.cartStockLeft(left),
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+            color: out ? colors.error : colors.onSurfaceVariant,
+          ),
+        ),
+      ],
     );
   }
 }

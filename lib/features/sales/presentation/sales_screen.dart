@@ -163,6 +163,14 @@ class _SalesScreenState extends State<SalesScreen>
     setState(() {
       _cart[product] = currentQtyInCart + 1;
     });
+    // Aviso al meter la última unidad que queda
+    if (currentQtyInCart + 1 == product.units) {
+      AppAlerts.showWarning(
+        context,
+        context.l10n.stockLastUnit(product.name),
+        duration: const Duration(seconds: 2),
+      );
+    }
   }
 
   void _removeFromCart(Product product) {
@@ -641,8 +649,10 @@ class _SalesScreenState extends State<SalesScreen>
                         builder: (BuildContext context, ScrollController scrollController) {
                           return LayoutBuilder(
                             builder: (context, constraints) {
+                              // Plegado = solo la cabecera (artículos y total)
                               final bool isExpanded =
-                                  constraints.maxHeight > 150;
+                                  constraints.maxHeight >
+                                  _cartMinSize * bodyConstraints.maxHeight + 8;
 
                               return Container(
                                 decoration: BoxDecoration(
@@ -683,22 +693,25 @@ class _SalesScreenState extends State<SalesScreen>
                                               : 20,
                                         ),
                                         children: [
-                                          CartItemsListWidget(
-                                            cart: _cart,
-                                            catalog: _products,
-                                            onAddToCart: _addToCart,
-                                            onLocateProduct: _locateProduct,
-                                            cartPacks: _cartPacks,
-                                            promotionsMap: _promotionsMap,
-                                            pricing: _pricing,
-                                            onRemoveFromCart: _removeFromCart,
-                                            onRemoveAllFromCart:
-                                                _removeAllFromCart,
-                                            onRemovePackFromCart:
-                                                _removePackFromCart,
-                                            onRemoveAllPackFromCart:
-                                                _removeAllPackFromCart,
-                                          ),
+                                          // Plegado no se pinta la lista: si no,
+                                          // asoma bajo la barra de navegación
+                                          if (isExpanded)
+                                            CartItemsListWidget(
+                                              cart: _cart,
+                                              catalog: _products,
+                                              onAddToCart: _addToCart,
+                                              onLocateProduct: _locateProduct,
+                                              cartPacks: _cartPacks,
+                                              promotionsMap: _promotionsMap,
+                                              pricing: _pricing,
+                                              onRemoveFromCart: _removeFromCart,
+                                              onRemoveAllFromCart:
+                                                  _removeAllFromCart,
+                                              onRemovePackFromCart:
+                                                  _removePackFromCart,
+                                              onRemoveAllPackFromCart:
+                                                  _removeAllPackFromCart,
+                                            ),
                                         ],
                                       ),
                                       Positioned(

@@ -2863,6 +2863,24 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Venta #{id} registrada · {amount} € · {method}'**
   String saleRegistered(String id, String amount, String method);
+
+  /// No description provided for @stockLastUnit.
+  ///
+  /// In es, this message translates to:
+  /// **'Última unidad de {name}'**
+  String stockLastUnit(String name);
+
+  /// No description provided for @cartStockLeft.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =1{Queda 1 en stock} other{Quedan {count} en stock}}'**
+  String cartStockLeft(int count);
+
+  /// No description provided for @cartStockOut.
+  ///
+  /// In es, this message translates to:
+  /// **'Se agota con esta venta'**
+  String get cartStockOut;
 }
 
 class _AppLocalizationsDelegate

@@ -882,5 +882,22 @@
         "type": "String"
       }
     }
-  }
+  },
+  "stockLastUnit": "Última unidad de {name}",
+  "@stockLastUnit": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cartStockLeft": "{count, plural, =1{Queda 1 en stock} other{Quedan {count} en stock}}",
+  "@cartStockLeft": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cartStockOut": "Se agota con esta venta"
 }

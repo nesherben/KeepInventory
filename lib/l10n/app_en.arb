@@ -509,5 +509,8 @@
   "promotionApplyConfirm": "Set “{promo}” on the {count} products in “{category}”? You can still change any of them individually.",
   "apply": "Apply",
   "promotionRefundBreaks": "This refund undoes the “{promo}” offer: what the customer keeps goes back to the normal price, so less is refunded.",
-  "saleRegistered": "Sale #{id} saved · €{amount} · {method}"
+  "saleRegistered": "Sale #{id} saved · €{amount} · {method}",
+  "stockLastUnit": "Last unit of {name}",
+  "cartStockLeft": "{count, plural, =1{1 left in stock} other{{count} left in stock}}",
+  "cartStockOut": "Sells out with this sale"
 }
