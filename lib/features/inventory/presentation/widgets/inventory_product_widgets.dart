@@ -244,6 +244,35 @@ class InventoryPromotionChip extends StatelessWidget {
   }
 }
 
+/// Informativa: el producto forma parte de un combo (se gestiona en
+/// Promociones → Combos).
+class InventoryComboTag extends StatelessWidget {
+  const InventoryComboTag({super.key, required this.comboName});
+
+  final String comboName;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.extension, size: 13, color: colors.primary),
+        const SizedBox(width: 4),
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 150),
+          child: Text(
+            context.l10n.comboCartTitle(comboName),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(fontSize: 12, color: colors.onSurfaceVariant),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 /// Tarjeta de producto para pantallas estrechas (móvil).
 ///
 /// Tocar la tarjeta = editar todo; foto = cambiar foto; − / + = stock;
@@ -254,11 +283,15 @@ class InventoryProductCard extends StatelessWidget {
     required this.product,
     required this.promotion,
     required this.actions,
+    this.comboName,
   });
 
   final Product product;
   final Promotion? promotion;
   final InventoryProductActions actions;
+
+  /// Combo al que pertenece (solo informativo).
+  final String? comboName;
 
   @override
   Widget build(BuildContext context) {
@@ -333,6 +366,8 @@ class InventoryProductCard extends StatelessWidget {
                       promotion: promotion,
                       onTap: () => actions.onEditPromotion(product),
                     ),
+                    if (comboName != null)
+                      InventoryComboTag(comboName: comboName!),
                   ],
                 ),
               ],

@@ -27,6 +27,8 @@ import '../data/datasources/product_local_datasource.dart';
 // Imports de la feature PROMOTIONS
 import '../../promotions/domain/promotion.dart';
 import '../../promotions/data/datasources/promotion_local_datasource.dart';
+import '../../promotions/data/datasources/combo_local_datasource.dart';
+import '../../promotions/data/repositories/combo_repository_impl.dart';
 
 // Widgets modularizados
 import 'widgets/inventory_products_table.dart';
@@ -59,6 +61,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
 
   List<Product> _products = [];
   Map<int, Promotion> _promotionsMap = {};
+
+  /// Nombre del combo de cada producto (informativo).
+  Map<int, String> _comboNames = {};
   bool _isLoading = true;
 
   String _searchQuery = '';
@@ -136,6 +141,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
     setState(() => _isLoading = true);
     final products = await _productRepository.getProducts();
     final promotions = await _promotionRepository.getPromotions();
+    final combos = await ComboRepositoryImpl(ComboLocalDatasource())
+        .getCombos();
 
     final Map<int, Promotion> promoMap = {for (var p in promotions) p.id!: p};
 
@@ -143,6 +150,10 @@ class _InventoryScreenState extends State<InventoryScreen> {
     setState(() {
       _products = products;
       _promotionsMap = promoMap;
+      _comboNames = {
+        for (final combo in combos)
+          for (final id in combo.productIds) id: combo.name,
+      };
       _isLoading = false;
     });
   }
@@ -679,6 +690,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
               ? null
               : _promotionsMap[product.promotionId],
           actions: _productActions,
+          comboName: _comboNames[product.id],
         );
       },
     );
@@ -698,6 +710,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
           child: InventoryProductsTable(
             products: products,
             promotions: _promotionsMap,
+            comboNames: _comboNames,
             onEditProduct: (product) =>
                 _showProductFormDialog(productToEdit: product),
             onDeleteProduct: (product) => _showDeleteConfirmation(product.id!),

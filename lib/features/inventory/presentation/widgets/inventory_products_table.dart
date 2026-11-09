@@ -29,7 +29,11 @@ class InventoryProductsTable extends StatelessWidget {
     this.ascending = true,
     this.onSort,
     this.onResetSort,
+    this.comboNames = const {},
   });
+
+  /// Combo de cada producto (por id), solo informativo.
+  final Map<int, String> comboNames;
 
   final List<Product> products;
   final Map<int, Promotion> promotions;
@@ -125,9 +129,20 @@ class InventoryProductsTable extends StatelessWidget {
           ),
         ),
         DataCell(
-          InventoryPromotionChip(
-            promotion: promotion,
-            onTap: () => onEditPromotion(product),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              InventoryPromotionChip(
+                promotion: promotion,
+                onTap: () => onEditPromotion(product),
+              ),
+              if (comboNames[product.id] != null) ...[
+                const SizedBox(height: 4),
+                InventoryComboTag(comboName: comboNames[product.id]!),
+              ],
+            ],
           ),
         ),
         DataCell(InventoryActionMenu(product: product, actions: actions)),
