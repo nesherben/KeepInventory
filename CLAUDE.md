@@ -23,6 +23,7 @@ Flutter app (Android) for inventory + POS sales/tickets. Local SQLite (`sqflite`
 
 ## Conventions
 - Commits: `feat: ...` style; version bumps: `feat: update version to X.Y.Z in pubspec.yaml`.
+- After any big user-visible change (new feature, new screen/flow, behaviour change), update `README.md` (features table + "Guía de uso", in Spanish) in the same batch of commits.
 - Code comments are in Spanish.
 - Money/numbers: never `toStringAsFixed` + "€" or `double.parse`. Display with `context.money(x)` ("1.234,50 €") or `context.amount(x)` inside l10n strings that already contain "€"; prefill fields with `context.amountInput(x)`; read with `AppNumbers.parseDecimal/parseInt` + `AppNumbers.decimalInputFormatters` (`lib/core/utils/app_numbers.dart`).
 - UI: reuse `lib/core/shared_widgets/app_ui.dart` (AppCard, StatTile, SectionLabel, IconBadge, QuantityStepper, EmptyState, AppRadius/AppSpacing). Flat cards with 1px border, no shadows; text in ink colours, identity colour only on icons/marks.
