@@ -4,7 +4,7 @@
 
 # keepinventory
 
-**Sales manager with customizable options powered by flutter and AI.**
+**Gestor de ventas e inventario personalizable, hecho con Flutter e IA.**
 
 Inventario + punto de venta (TPV) para Android, pensado para ferias, mercadillos y pequeños negocios.
 Funciona 100 % sin conexión: tus datos viven en tu móvil.
@@ -28,8 +28,8 @@ Funciona 100 % sin conexión: tus datos viven en tu móvil.
 - [Sincronizar entre móviles](#-sincronizar-entre-móviles)
 - [Copias de seguridad](#-copias-de-seguridad)
 - [Desarrollo](#-desarrollo)
-- [Localization](#localization)
-- [Donaciones](#donations-if-you-like-the-project)
+- [Idiomas](#-idiomas)
+- [Donaciones](#-donaciones)
 
 ---
 
@@ -116,7 +116,7 @@ Ideal para pasar el inventario a otro móvil del puesto. Ve a **Gestión de Dato
 4. El receptor descarga la base de datos y la app se reinicia con los datos nuevos.
 
 > ⚠️ La sincronización **sustituye** los datos del receptor por los del emisor. Haz un backup antes si lo necesitas.
-> 📲 Los dos móviles deben tener la **misma versión** de la app (las versiones nuevas pueden actualizar la base de datos).
+> 📲 Los dos móviles deben tener **exactamente la misma versión** de la app. Si no coinciden, la app lo avisa y no sincroniza (las versiones nuevas pueden cambiar la base de datos).
 > 🔐 Cada QR lleva un token de un solo uso.
 
 ---
@@ -127,6 +127,8 @@ En **Gestión de Datos** puedes:
 
 - **Exportar / compartir** la base de datos (por correo, Drive, Telegram…).
 - **Importar** un backup anterior para restaurarlo.
+
+> 📲 El backup debe ser de la **misma versión** de la app. Si es de otra versión, la app lo avisa y no cambia nada. Los backups hechos antes de la 1.14.1 no guardan su versión: la app avisa y te deja elegir *Restaurar igualmente*.
 
 Como la app no usa la nube, haz backups de vez en cuando para no perder nada si cambias de móvil.
 
@@ -168,13 +170,13 @@ Cada feature se divide en `domain/` (entidades y lógica pura) → `data/` (mode
 
 ---
 
-## Localization
+## 🌍 Idiomas
 
-The app follows the device language for Spanish (`lib/l10n/app_es.arb`) and English (`lib/l10n/app_en.arb`), checking the device's preferred languages in order. Unsupported languages fall back to English. Add translations to the matching ARB catalog and run `flutter gen-l10n` to regenerate the localization API.
+La app sigue el idioma del móvil: español (`lib/l10n/app_es.arb`) e inglés (`lib/l10n/app_en.arb`), mirando los idiomas preferidos del móvil por orden. Si ninguno está traducido, se muestra en inglés. Para añadir o cambiar textos, edita el catálogo ARB correspondiente y ejecuta `flutter gen-l10n` para regenerar la API de traducciones.
 
 ---
 
-## Donations if you like the project:
+## ☕ Donaciones
 
 Si la app te resulta útil, puedes invitarme a un café ☕ (también desde el botón al final del menú lateral de la app).
 
