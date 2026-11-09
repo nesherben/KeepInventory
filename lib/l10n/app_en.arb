@@ -488,5 +488,7 @@
   "promotionAppliedToCategory": "Promotion applied to {count} products in “{name}”",
   "packCanAssemble": "With current stock you can assemble {count} more",
   "packCannotAssemble": "Not enough stock to assemble another",
-  "packComponentStock": "{count} in stock"
+  "packComponentStock": "{count} in stock",
+  "comboSlotNoCategories": "You have no categories yet. Create them from a product (Inventory → product → Category) to pick “any product of…”.",
+  "comboSlotEmptyCategory": "No products yet"
 }

@@ -46,22 +46,24 @@ Future<ProductOrCategory?> showProductOrCategoryPicker(
   int? selectedId,
   int? selectedCategoryId,
   String? Function(Product product)? disabledReason,
+
+  /// Se ofrecen categorías (p. ej. huecos de combo): si no hay ninguna, se
+  /// explica cómo crearlas.
+  bool offerCategories = false,
 }) {
   final sorted = [...products]
     ..sort((a, b) => InventoryView.compareNames(a.name, b.name));
   var query = '';
 
-  // Nº de productos de cada categoría (las vacías no se ofrecen)
+  // Nº de productos de cada categoría (las vacías también se ofrecen, con
+  // su aviso: el combo se activará cuando tengan productos)
   final counts = <int, int>{};
   for (final p in products) {
     if (p.categoryId != null) {
       counts[p.categoryId!] = (counts[p.categoryId!] ?? 0) + 1;
     }
   }
-  final usableCategories = [
-    for (final c in categories)
-      if ((counts[c.id] ?? 0) > 0) c,
-  ];
+  final usableCategories = [...categories];
 
   return showModalBottomSheet<ProductOrCategory>(
     context: context,
@@ -108,6 +110,29 @@ Future<ProductOrCategory?> showProductOrCategoryPicker(
                   ),
                 ),
                 const SizedBox(height: AppSpacing.sm),
+                if (offerCategories && categories.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                    child: AppCard(
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.sell_outlined,
+                            size: 18,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Expanded(
+                            child: Text(
+                              context.l10n.comboSlotNoCategories,
+                              style: const TextStyle(fontSize: 13),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 Expanded(
                   child: visible.isEmpty && visibleCategories.isEmpty
                       ? EmptyState(
@@ -144,9 +169,11 @@ Future<ProductOrCategory?> showProductOrCategoryPicker(
                                     context.l10n.comboSlotAnyOf(c.name),
                                   ),
                                   subtitle: Text(
-                                    context.l10n.unitCount(
-                                      '${counts[c.id] ?? 0}',
-                                    ),
+                                    (counts[c.id] ?? 0) == 0
+                                        ? context.l10n.comboSlotEmptyCategory
+                                        : context.l10n.unitCount(
+                                            '${counts[c.id]}',
+                                          ),
                                   ),
                                   trailing: selected
                                       ? const Icon(Icons.check)

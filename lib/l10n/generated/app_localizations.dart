@@ -2737,6 +2737,18 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'{count} en stock'**
   String packComponentStock(int count);
+
+  /// No description provided for @comboSlotNoCategories.
+  ///
+  /// In es, this message translates to:
+  /// **'Aún no tienes categorías. Créalas desde el producto (Inventario → producto → Categoría) para elegir «cualquier producto de…».'**
+  String get comboSlotNoCategories;
+
+  /// No description provided for @comboSlotEmptyCategory.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin productos todavía'**
+  String get comboSlotEmptyCategory;
 }
 
 class _AppLocalizationsDelegate

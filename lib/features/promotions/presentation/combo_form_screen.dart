@@ -136,6 +136,7 @@ class _ComboFormScreenState extends State<ComboFormScreen> {
       context,
       products: widget.products,
       categories: widget.categories,
+      offerCategories: true,
       selectedId: slot.productId,
       selectedCategoryId: slot.categoryId,
       disabledReason: (p) {

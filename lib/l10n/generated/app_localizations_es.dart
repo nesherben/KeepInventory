@@ -1552,4 +1552,11 @@ class AppLocalizationsEs extends AppLocalizations {
   String packComponentStock(int count) {
     return '$count en stock';
   }
+
+  @override
+  String get comboSlotNoCategories =>
+      'Aún no tienes categorías. Créalas desde el producto (Inventario → producto → Categoría) para elegir «cualquier producto de…».';
+
+  @override
+  String get comboSlotEmptyCategory => 'Sin productos todavía';
 }

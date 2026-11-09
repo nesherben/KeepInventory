@@ -800,5 +800,7 @@
         "type": "int"
       }
     }
-  }
+  },
+  "comboSlotNoCategories": "Aún no tienes categorías. Créalas desde el producto (Inventario → producto → Categoría) para elegir «cualquier producto de…».",
+  "comboSlotEmptyCategory": "Sin productos todavía"
 }
