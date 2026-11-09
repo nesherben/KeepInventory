@@ -1,3 +1,6 @@
+import '../../../../core/shared_widgets/app_ui.dart';
+import '../../../../core/shared_widgets/adaptive_form.dart';
+
 import 'package:flutter/material.dart';
 import 'package:keepinventory/core/utils/app_numbers.dart';
 import 'package:keepinventory/core/shared_widgets/app_alerts.dart';
@@ -410,90 +413,61 @@ class _PartialRefundDialogState extends State<PartialRefundDialog> {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      title: Text(
-        context.l10n.refundTitle(widget.sale.id.toString()),
-        style: const TextStyle(fontWeight: FontWeight.bold),
-      ),
-      content: SizedBox(
-        width: MediaQuery.of(context).size.width * 0.85,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                context.l10n.refundInstruction,
-                style: TextStyle(fontSize: 14, color: colors.onSurfaceVariant),
-              ),
-              const SizedBox(height: 16),
-              if (widget.sale.items.isNotEmpty) ...[
-                Text(
-                  context.l10n.looseProducts,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
-                    letterSpacing: 1.2,
-                    color: colors.primary,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                ..._buildProductRows(context),
-                const SizedBox(height: 8),
-              ],
-              if (widget.sale.packItems.isNotEmpty) ...[
-                Text(
-                  context.l10n.packsBundles,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
-                    letterSpacing: 1.2,
-                    color: colors.secondary,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                ...widget.sale.packItems.map(
-                  (pack) => _buildPackRow(context, pack),
-                ),
-                if (_hasPacksSelected) ...[
-                  const SizedBox(height: 8),
-                  _buildRestockSwitch(context),
-                ],
-              ],
-              ..._buildPromotionWarnings(context),
-              const Divider(height: 32),
-              _buildRefundAmountField(context),
-            ],
-          ),
-        ),
-      ),
-      actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+    // Mismo formato que el resto de formularios (panel en el móvil,
+    // lateral en tablet horizontal, diálogo en vertical)
+    return AdaptiveFormScaffold(
+      title: context.l10n.refundTitle(widget.sale.id.toString()),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: Text(
-            context.l10n.cancel,
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
+          child: Text(context.l10n.cancel),
         ),
+        // En rojo: devuelve dinero y repone stock
         FilledButton.icon(
           style: FilledButton.styleFrom(
             backgroundColor: colors.error,
             foregroundColor: colors.onError,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           ),
           onPressed: _totalItemsToRefund == 0 ? null : _confirmRefund,
           icon: const Icon(Icons.undo, size: 18),
-          label: Text(
-            context.l10n.confirm,
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
+          label: Text(context.l10n.confirm),
         ),
       ],
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            context.l10n.refundInstruction,
+            style: TextStyle(fontSize: 14, color: colors.onSurfaceVariant),
+          ),
+          const SizedBox(height: 16),
+          if (widget.sale.items.isNotEmpty) ...[
+            SectionLabel(
+              context.l10n.looseProducts,
+              padding: const EdgeInsets.only(bottom: 8),
+            ),
+            ..._buildProductRows(context),
+            const SizedBox(height: 8),
+          ],
+          if (widget.sale.packItems.isNotEmpty) ...[
+            SectionLabel(
+              context.l10n.packsBundles,
+              padding: const EdgeInsets.only(bottom: 8),
+            ),
+            ...widget.sale.packItems.map(
+              (pack) => _buildPackRow(context, pack),
+            ),
+            if (_hasPacksSelected) ...[
+              const SizedBox(height: 8),
+              _buildRestockSwitch(context),
+            ],
+          ],
+          ..._buildPromotionWarnings(context),
+          const Divider(height: 32),
+          _buildRefundAmountField(context),
+        ],
+      ),
     );
   }
 }

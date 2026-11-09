@@ -1,3 +1,4 @@
+import '../../../core/shared_widgets/adaptive_form.dart';
 import '../../../core/shared_widgets/name_picker_sheet.dart';
 
 import 'package:flutter/material.dart';
@@ -63,8 +64,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   void _showPartialRefundDialog(Sale sale) {
-    showDialog<void>(
-      context: context,
+    AdaptiveForm.show<void>(
+      context,
       builder: (_) => PartialRefundDialog(
         sale: sale,
         onConfirm:
