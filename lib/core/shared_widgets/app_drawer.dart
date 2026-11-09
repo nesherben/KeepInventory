@@ -193,7 +193,7 @@ class AppDrawer extends StatelessWidget {
 class _DrawerFooter extends StatelessWidget {
   const _DrawerFooter();
 
-  static const _authorName = 'Néstor Hernández';
+  static const _authorName = 'Néstor';
   static final _donateUrl = Uri.parse('https://www.paypal.me/nestor8299');
   static final _repoUrl = Uri.parse(
     'https://github.com/nesherben/KeepInventory',
