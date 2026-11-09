@@ -137,8 +137,10 @@ class _InventoryScreenState extends State<InventoryScreen> {
     }
   }
 
+  /// Recarga los datos. El indicador de carga solo se ve en la primera carga
+  /// (`_isLoading` empieza en true): al recargar tras editar no se sustituye
+  /// la lista, así se conserva la posición del scroll.
   Future<void> _loadProducts() async {
-    setState(() => _isLoading = true);
     final products = await _productRepository.getProducts();
     final promotions = await _promotionRepository.getPromotions();
     final combos = await ComboRepositoryImpl(ComboLocalDatasource())

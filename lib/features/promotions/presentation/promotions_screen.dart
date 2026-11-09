@@ -61,7 +61,7 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
   }
 
   Future<void> _loadPromotions() async {
-    setState(() => _isLoading = true);
+    // Sin indicador de carga al recargar: se conserva la posición del scroll
     final promotions = await _repository.getPromotions();
     final combos = await _comboRepository.getCombos();
     final products = await _productRepository.getProducts();

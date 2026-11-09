@@ -103,7 +103,7 @@ class _SalesScreenState extends State<SalesScreen>
   }
 
   Future<void> _loadData() async {
-    setState(() => _isLoading = true);
+    // Sin indicador de carga al recargar: se conserva la posición del scroll
 
     final products = await _productRepository.getProducts();
     final packs = await _packRepository.getPacks();

@@ -60,7 +60,7 @@ class _PacksScreenState extends State<PacksScreen> {
   }
 
   Future<void> _loadData() async {
-    setState(() => _isLoading = true);
+    // Sin indicador de carga al recargar: se conserva la posición del scroll
 
     final packs = await _packRepository.getPacks();
     final products = await _productRepository.getProducts();

@@ -49,7 +49,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   Future<void> _loadSales() async {
-    setState(() => _isLoading = true);
+    // Sin indicador de carga al recargar: se conserva la posición del scroll
     final sales = await _saleRepository.getSales();
     sales.sort((a, b) => b.date.compareTo(a.date));
 
