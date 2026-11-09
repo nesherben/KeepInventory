@@ -98,7 +98,7 @@ El menú lateral (desliza desde el borde izquierdo o pulsa ☰) da acceso a toda
 
 ### 4. Vende
 1. Abre **Caja (TPV)**, busca o toca los productos / packs para añadirlos al carrito (si usas categorías, los chips bajo el buscador filtran el catálogo). Los productos que forman parte de un combo llevan la insignia **Combo**.
-2. Ajusta cantidades: el total ya incluye promociones y combos. Los combos aparecen agrupados en el carrito, con sus productos dentro. Si tienes medio combo, el carrito te avisa (*"falta Gorra"*): toca el aviso para ir al producto en el catálogo, o pulsa **＋ Añadir** para meterlo en el carrito de un toque.
+2. Ajusta cantidades: el total ya incluye promociones y combos. Si un producto tiene descuento, verás el precio original tachado junto al precio aplicado, tanto en el carrito como en el ticket. Los combos aparecen agrupados en el carrito, con sus productos dentro. Si tienes medio combo, el carrito te avisa (*"falta Gorra"*): toca el aviso para ir al producto en el catálogo, o pulsa **＋ Añadir** para meterlo en el carrito de un toque.
 3. Pulsa **COBRAR**, elige el método de pago y confirma. El stock se descuenta solo y un aviso confirma la venta (*"Venta #12 registrada · 22,00 € · Efectivo"*).
 4. Si vendes las últimas unidades de un producto, la app te avisa (*"Última unidad de…"*, *"Quedan 2 en stock"*).
 
