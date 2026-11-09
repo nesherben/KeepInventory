@@ -354,6 +354,39 @@ class SaleRefundCalculator {
     );
   }
 
+  /// Promociones (no combos) que deja de cumplir lo que queda tras devolver
+  /// [itemsToRefund]: p. ej. en "3 por 12 €" devolver 1 de 3 deshace la
+  /// oferta y lo que queda vuelve a precio normal (por eso se devuelve
+  /// menos). Devuelve una línea representativa de cada promoción afectada.
+  static List<SaleItem> brokenPromotions({
+    required Sale sale,
+    required Map<SaleItem, int> itemsToRefund,
+  }) {
+    final groups = <int, List<SaleItem>>{};
+    for (final item in sale.items) {
+      if (item.saleComboId != null || item.promotionId == null) continue;
+      if (item.promoType == null || item.promoThreshold == null) continue;
+      groups.putIfAbsent(item.promotionId!, () => []).add(item);
+    }
+    final broken = <SaleItem>[];
+    for (final lines in groups.values) {
+      final threshold = lines.first.promoThreshold!;
+      if (threshold <= 0) continue;
+      final before = lines.fold<int>(0, (t, i) => t + i.quantity);
+      final after = lines.fold<int>(
+        0,
+        (t, i) => t + i.quantity - (itemsToRefund[i] ?? 0),
+      );
+      if (after == before) continue;
+      final isBundle = lines.first.promoType == 'bundle_fixed_price';
+      final lost = isBundle
+          ? after ~/ threshold < before ~/ threshold
+          : before >= threshold && after < threshold;
+      if (lost) broken.add(lines.first);
+    }
+    return broken;
+  }
+
   /// Valor total de un grupo de promoción con las unidades que se conservan.
   static double calculateGroupValue({
     required List<SaleItem> keptItems,

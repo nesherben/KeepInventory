@@ -218,12 +218,12 @@
   "refundInstruction": "Indica cuántas unidades devuelves de cada artículo:",
   "looseProducts": "Productos Sueltos",
   "unknown": "Desconocido",
-  "purchasedItemSummary": "Compradas: {quantity}  •  Abonado: {amount} €",
+  "purchasedItemSummary": "Compradas: {quantity}  •  Abonado: {amount} €",
   "@purchasedItemSummary": { "placeholders": { "quantity": {}, "amount": {} } },
   "packsBundles": "Packs / Bundles",
   "packNameLabel": "{name} (Pack)",
   "@packNameLabel": { "placeholders": { "name": {} } },
-  "purchasedPackSummary": "Comprados: {quantity}  •  Abonado: {amount} €",
+  "purchasedPackSummary": "Comprados: {quantity}  •  Abonado: {amount} €",
   "@purchasedPackSummary": { "placeholders": { "quantity": {}, "amount": {} } },
   "openPackRestock": "Pack abierto (Devolver piezas)",
   "openPackRestockSubtitle": "Suma stock a los artículos individuales.",
@@ -600,7 +600,7 @@
       }
     }
   },
-  "promotionAutoNameBundle": "{count} por {price} €",
+  "promotionAutoNameBundle": "{count} por {price} €",
   "@promotionAutoNameBundle": {
     "placeholders": {
       "count": {
@@ -860,5 +860,13 @@
       }
     }
   },
-  "apply": "Aplicar"
+  "apply": "Aplicar",
+  "promotionRefundBreaks": "Esta devolución deshace la oferta «{promo}»: lo que se queda el cliente vuelve a precio normal, por eso se devuelve menos.",
+  "@promotionRefundBreaks": {
+    "placeholders": {
+      "promo": {
+        "type": "String"
+      }
+    }
+  }
 }

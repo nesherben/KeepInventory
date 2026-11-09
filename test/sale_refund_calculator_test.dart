@@ -229,6 +229,55 @@ void main() {
       expect(total, 32);
     });
   });
+
+  group('brokenPromotions', () {
+    SaleItem line(int qty, {String type = 'bundle_fixed_price'}) => SaleItem(
+      productId: 1,
+      quantity: qty,
+      historicalPrice: 4,
+      originalPrice: 6,
+      promotionId: 7,
+      promoType: type,
+      promoThreshold: 3,
+      promoDiscount: type == 'percentage' ? 10 : 12,
+    );
+
+    Sale sale(List<SaleItem> items) =>
+        Sale(date: DateTime(2026), totalAmount: 12, items: items);
+
+    test('returning 1 of a "3 for 12" bundle breaks it', () {
+      final l = line(3);
+      expect(
+        SaleRefundCalculator.brokenPromotions(
+          sale: sale([l]),
+          itemsToRefund: {l: 1},
+        ),
+        [l],
+      );
+    });
+
+    test('returning 1 of 4 keeps the bundle of 3', () {
+      final l = line(4);
+      expect(
+        SaleRefundCalculator.brokenPromotions(
+          sale: sale([l]),
+          itemsToRefund: {l: 1},
+        ),
+        isEmpty,
+      );
+    });
+
+    test('percentage below its minimum is broken', () {
+      final l = line(3, type: 'percentage');
+      expect(
+        SaleRefundCalculator.brokenPromotions(
+          sale: sale([l]),
+          itemsToRefund: {l: 1},
+        ),
+        [l],
+      );
+    });
+  });
 }
 
 SaleItem _promotedItem(

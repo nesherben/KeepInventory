@@ -1199,7 +1199,7 @@ abstract class AppLocalizations {
   /// No description provided for @purchasedItemSummary.
   ///
   /// In es, this message translates to:
-  /// **'Compradas: {quantity}  •  Abonado: {amount} €'**
+  /// **'Compradas: {quantity}  •  Abonado: {amount} €'**
   String purchasedItemSummary(Object quantity, Object amount);
 
   /// No description provided for @packsBundles.
@@ -1217,7 +1217,7 @@ abstract class AppLocalizations {
   /// No description provided for @purchasedPackSummary.
   ///
   /// In es, this message translates to:
-  /// **'Comprados: {quantity}  •  Abonado: {amount} €'**
+  /// **'Comprados: {quantity}  •  Abonado: {amount} €'**
   String purchasedPackSummary(Object quantity, Object amount);
 
   /// No description provided for @openPackRestock.
@@ -2417,7 +2417,7 @@ abstract class AppLocalizations {
   /// No description provided for @promotionAutoNameBundle.
   ///
   /// In es, this message translates to:
-  /// **'{count} por {price} €'**
+  /// **'{count} por {price} €'**
   String promotionAutoNameBundle(int count, String price);
 
   /// No description provided for @promotionAutoNamePercent.
@@ -2851,6 +2851,12 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Aplicar'**
   String get apply;
+
+  /// No description provided for @promotionRefundBreaks.
+  ///
+  /// In es, this message translates to:
+  /// **'Esta devolución deshace la oferta «{promo}»: lo que se queda el cliente vuelve a precio normal, por eso se devuelve menos.'**
+  String promotionRefundBreaks(String promo);
 }
 
 class _AppLocalizationsDelegate

@@ -218,12 +218,12 @@
   "refundInstruction": "Choose how many units of each item to return:",
   "looseProducts": "Individual Products",
   "unknown": "Unknown",
-  "purchasedItemSummary": "Purchased: {quantity}  •  Paid: {amount} €",
+  "purchasedItemSummary": "Purchased: {quantity}  •  Paid: {amount} €",
   "@purchasedItemSummary": { "placeholders": { "quantity": {}, "amount": {} } },
   "packsBundles": "Packs / Bundles",
   "packNameLabel": "{name} (Pack)",
   "@packNameLabel": { "placeholders": { "name": {} } },
-  "purchasedPackSummary": "Purchased: {quantity}  •  Paid: {amount} €",
+  "purchasedPackSummary": "Purchased: {quantity}  •  Paid: {amount} €",
   "@purchasedPackSummary": { "placeholders": { "quantity": {}, "amount": {} } },
   "openPackRestock": "Open pack (Return components)",
   "openPackRestockSubtitle": "Add stock back to individual products.",
@@ -507,5 +507,6 @@
   "promotionProductsCount": "Applies to {count} products",
   "promotionApplyConfirmTitle": "Apply promotion",
   "promotionApplyConfirm": "Set “{promo}” on the {count} products in “{category}”? You can still change any of them individually.",
-  "apply": "Apply"
+  "apply": "Apply",
+  "promotionRefundBreaks": "This refund undoes the “{promo}” offer: what the customer keeps goes back to the normal price, so less is refunded."
 }

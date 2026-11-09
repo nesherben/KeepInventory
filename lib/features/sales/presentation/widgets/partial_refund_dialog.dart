@@ -295,6 +295,59 @@ class _PartialRefundDialogState extends State<PartialRefundDialog> {
     );
   }
 
+  /// Aviso por cada promoción que deshace la devolución (p. ej. devolver 1
+  /// de "3 por 12 €"): explica por qué se devuelve menos o nada.
+  List<Widget> _buildPromotionWarnings(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final broken = SaleRefundCalculator.brokenPromotions(
+      sale: widget.sale,
+      itemsToRefund: _refundItemQuantities,
+    );
+    return [
+      for (final item in broken)
+        Container(
+          margin: const EdgeInsets.only(top: 8),
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: colors.errorContainer,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                Icons.warning_amber_rounded,
+                size: 18,
+                color: colors.onErrorContainer,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  context.l10n.promotionRefundBreaks(
+                    item.promoType == 'bundle_fixed_price'
+                        ? context.l10n.promotionAutoNameBundle(
+                            item.promoThreshold!,
+                            context.amount(item.promoDiscount ?? 0),
+                          )
+                        : context.l10n.promotionAutoNamePercent(
+                            item.promoThreshold!,
+                            context.percent(
+                              item.promoDiscount ?? 0,
+                              maxDecimals: 2,
+                            ),
+                          ),
+                  ),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: colors.onErrorContainer,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+    ];
+  }
+
   Widget _buildRefundAmountField(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     final method = widget.sale.paymentMethod;
@@ -408,6 +461,7 @@ class _PartialRefundDialogState extends State<PartialRefundDialog> {
                   _buildRestockSwitch(context),
                 ],
               ],
+              ..._buildPromotionWarnings(context),
               const Divider(height: 32),
               _buildRefundAmountField(context),
             ],

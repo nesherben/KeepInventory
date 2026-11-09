@@ -632,7 +632,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String purchasedItemSummary(Object quantity, Object amount) {
-    return 'Purchased: $quantity  •  Paid: $amount €';
+    return 'Purchased: $quantity  •  Paid: $amount €';
   }
 
   @override
@@ -645,7 +645,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String purchasedPackSummary(Object quantity, Object amount) {
-    return 'Purchased: $quantity  •  Paid: $amount €';
+    return 'Purchased: $quantity  •  Paid: $amount €';
   }
 
   @override
@@ -1616,4 +1616,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get apply => 'Apply';
+
+  @override
+  String promotionRefundBreaks(String promo) {
+    return 'This refund undoes the “$promo” offer: what the customer keeps goes back to the normal price, so less is refunded.';
+  }
 }

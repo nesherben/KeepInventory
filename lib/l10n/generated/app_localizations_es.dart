@@ -633,7 +633,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String purchasedItemSummary(Object quantity, Object amount) {
-    return 'Compradas: $quantity  •  Abonado: $amount €';
+    return 'Compradas: $quantity  •  Abonado: $amount €';
   }
 
   @override
@@ -646,7 +646,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String purchasedPackSummary(Object quantity, Object amount) {
-    return 'Comprados: $quantity  •  Abonado: $amount €';
+    return 'Comprados: $quantity  •  Abonado: $amount €';
   }
 
   @override
@@ -1354,7 +1354,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String promotionAutoNameBundle(int count, String price) {
-    return '$count por $price €';
+    return '$count por $price €';
   }
 
   @override
@@ -1620,4 +1620,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get apply => 'Aplicar';
+
+  @override
+  String promotionRefundBreaks(String promo) {
+    return 'Esta devolución deshace la oferta «$promo»: lo que se queda el cliente vuelve a precio normal, por eso se devuelve menos.';
+  }
 }
