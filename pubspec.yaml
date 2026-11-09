@@ -68,6 +68,9 @@ flutter_launcher_icons:
   adaptive_icon_background: "assets/icon/icon_background.png" 
   adaptive_icon_foreground: "assets/icon/icon_foreground.png"
   adaptive_icon_monochrome: "assets/icon/icon_monochrome.png"
+  # Margen del primer plano: Android solo muestra el centro del icono
+  # adaptativo (66 de 108 dp); sin margen el logo se ve recortado/con zoom
+  adaptive_icon_foreground_inset: 16
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
