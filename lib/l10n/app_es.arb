@@ -868,5 +868,19 @@
         "type": "String"
       }
     }
+  },
+  "saleRegistered": "Venta #{id} registrada · {amount} € · {method}",
+  "@saleRegistered": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      },
+      "method": {
+        "type": "String"
+      }
+    }
   }
 }

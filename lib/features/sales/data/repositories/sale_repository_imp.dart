@@ -8,7 +8,7 @@ class SaleRepositoryImpl implements SaleRepository {
   SaleRepositoryImpl(this.datasource);
 
   @override
-  Future<void> processSale(Sale sale) async =>
+  Future<int> processSale(Sale sale) async =>
       await datasource.processSale(sale);
 
   @override

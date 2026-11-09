@@ -2857,6 +2857,12 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Esta devolución deshace la oferta «{promo}»: lo que se queda el cliente vuelve a precio normal, por eso se devuelve menos.'**
   String promotionRefundBreaks(String promo);
+
+  /// No description provided for @saleRegistered.
+  ///
+  /// In es, this message translates to:
+  /// **'Venta #{id} registrada · {amount} € · {method}'**
+  String saleRegistered(String id, String amount, String method);
 }
 
 class _AppLocalizationsDelegate

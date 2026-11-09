@@ -286,7 +286,8 @@ class _SalesScreenState extends State<SalesScreen>
       paymentMethod: _paymentMethod,
     );
 
-    await _saleRepository.processSale(sale);
+    final saleId = await _saleRepository.processSale(sale);
+    final method = _paymentMethod;
 
     setState(() {
       _cart.clear();
@@ -296,8 +297,22 @@ class _SalesScreenState extends State<SalesScreen>
 
     await _loadData();
 
-    if (mounted) {
-      AppAlerts.showSuccess(context, context.l10n.saleCompleted);
+    if (!mounted) return;
+    AppAlerts.showSuccess(
+      context,
+      context.l10n.saleRegistered(
+        saleId.toString(),
+        context.amount(sale.totalAmount),
+        method.label(context),
+      ),
+    );
+    // Carrito plegado: el catálogo queda listo para la siguiente venta
+    if (_cartSheetController.isAttached) {
+      _cartSheetController.animateTo(
+        _cartMinSize,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
     }
   }
 

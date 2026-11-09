@@ -10,9 +10,10 @@ class SaleLocalDatasource {
 
   Future<Database> get db async => await _databaseHelper.database;
 
-  Future<void> processSale(Sale sale) async {
+  /// Guarda la venta (y descuenta stock); devuelve su id.
+  Future<int> processSale(Sale sale) async {
     final database = await db;
-    await database.transaction((txn) async {
+    return database.transaction((txn) async {
       final saleId = await txn.insert('sales', {
         'date': sale.date.toIso8601String(),
         'total_amount': sale.totalAmount,
@@ -70,6 +71,7 @@ class SaleLocalDatasource {
           packItem.packId,
         ]);
       }
+      return saleId;
     });
   }
 

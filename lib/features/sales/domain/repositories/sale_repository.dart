@@ -1,7 +1,8 @@
 import '../sale.dart';
 
 abstract class SaleRepository {
-  Future<void> processSale(Sale sale);
+  /// Guarda la venta y devuelve su número (id).
+  Future<int> processSale(Sale sale);
   Future<List<Sale>> getSales();
   Future<void> refundSale(Sale sale);
   Future<void> processPartialRefund({

@@ -1625,4 +1625,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String promotionRefundBreaks(String promo) {
     return 'Esta devolución deshace la oferta «$promo»: lo que se queda el cliente vuelve a precio normal, por eso se devuelve menos.';
   }
+
+  @override
+  String saleRegistered(String id, String amount, String method) {
+    return 'Venta #$id registrada · $amount € · $method';
+  }
 }

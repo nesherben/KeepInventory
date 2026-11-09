@@ -1621,4 +1621,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String promotionRefundBreaks(String promo) {
     return 'This refund undoes the “$promo” offer: what the customer keeps goes back to the normal price, so less is refunded.';
   }
+
+  @override
+  String saleRegistered(String id, String amount, String method) {
+    return 'Sale #$id saved · €$amount · $method';
+  }
 }
