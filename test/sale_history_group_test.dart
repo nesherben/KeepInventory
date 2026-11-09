@@ -32,9 +32,9 @@ void main() {
         standaloneSale,
       ], '');
 
-      expect(groups.map((group) => group.key).toList(), [
-        '🎪 Autumn Fair',
-        '📅 01/10/2026',
+      expect(groups.map((group) => group.label).toList(), [
+        'Autumn Fair',
+        '01/10/2026',
       ]);
       expect(groups.first.sales, [recentFairSale, olderFairSale]);
       expect(groups.first.datePrefix, '2026-10-02');
@@ -51,7 +51,8 @@ void main() {
       ], 'RED MUG');
 
       expect(groups, hasLength(1));
-      expect(groups.single.key, '🎪 Autumn Fair');
+      expect(groups.single.label, 'Autumn Fair');
+      expect(groups.single.isFair, isTrue);
       expect(groups.single.sales, [recentFairSale]);
     });
   });

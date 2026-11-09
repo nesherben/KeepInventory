@@ -713,7 +713,7 @@ abstract class AppLocalizations {
   /// No description provided for @minimumQuantity.
   ///
   /// In es, this message translates to:
-  /// **'Cantidad mínima (Unidades a llevar)'**
+  /// **'Cantidad mínima'**
   String get minimumQuantity;
 
   /// No description provided for @validNumberRequired.
@@ -935,8 +935,8 @@ abstract class AppLocalizations {
   /// No description provided for @packUnitCount.
   ///
   /// In es, this message translates to:
-  /// **'{count} uds'**
-  String packUnitCount(Object count);
+  /// **'{count, plural, =1{1 montado} other{{count} montados}}'**
+  String packUnitCount(int count);
 
   /// No description provided for @packComponentCount.
   ///
@@ -980,12 +980,6 @@ abstract class AppLocalizations {
   /// **'Pack {name} eliminado del carrito'**
   String packRemovedFromCart(Object name);
 
-  /// No description provided for @saleCompleted.
-  ///
-  /// In es, this message translates to:
-  /// **'¡Cobro realizado con éxito!'**
-  String get saleCompleted;
-
   /// No description provided for @salesTitle.
   ///
   /// In es, this message translates to:
@@ -995,13 +989,13 @@ abstract class AppLocalizations {
   /// No description provided for @salesProductsTab.
   ///
   /// In es, this message translates to:
-  /// **'Productos Sueltos'**
+  /// **'Productos'**
   String get salesProductsTab;
 
   /// No description provided for @salesPacksTab.
   ///
   /// In es, this message translates to:
-  /// **'Packs y Bundles'**
+  /// **'Packs'**
   String get salesPacksTab;
 
   /// No description provided for @searchProducts.
@@ -1085,8 +1079,8 @@ abstract class AppLocalizations {
   /// No description provided for @unitsRemaining.
   ///
   /// In es, this message translates to:
-  /// **'Quedan {count} uds'**
-  String unitsRemaining(Object count);
+  /// **'{count, plural, =1{Queda 1 ud.} other{Quedan {count} uds.}}'**
+  String unitsRemaining(int count);
 
   /// No description provided for @inCart.
   ///
@@ -1097,8 +1091,8 @@ abstract class AppLocalizations {
   /// No description provided for @unitCount.
   ///
   /// In es, this message translates to:
-  /// **'{count} uds'**
-  String unitCount(Object count);
+  /// **'{count, plural, =1{1 ud.} other{{count} uds.}}'**
+  String unitCount(int count);
 
   /// No description provided for @packContents.
   ///
@@ -1301,8 +1295,8 @@ abstract class AppLocalizations {
   /// No description provided for @ticketCount.
   ///
   /// In es, this message translates to:
-  /// **'{count} tickets registrados'**
-  String ticketCount(Object count);
+  /// **'{count, plural, =1{1 ticket registrado} other{{count} tickets registrados}}'**
+  String ticketCount(int count);
 
   /// No description provided for @changeFair.
   ///
@@ -1403,7 +1397,7 @@ abstract class AppLocalizations {
   /// No description provided for @syncByQrDescription.
   ///
   /// In es, this message translates to:
-  /// **'Clona la base de datos completa en otro móvil cercano escaneando un QR, sin necesidad de Wi‑Fi.'**
+  /// **'Copia todos los datos a otro móvil cercano escaneando un QR, sin Wi‑Fi. Los datos del móvil que recibe se sustituyen.'**
   String get syncByQrDescription;
 
   /// No description provided for @backupSectionTitle.
@@ -1811,8 +1805,8 @@ abstract class AppLocalizations {
   /// No description provided for @inventorySummary.
   ///
   /// In es, this message translates to:
-  /// **'{products} productos · {units} uds · {out} agotados'**
-  String inventorySummary(String products, String units, String out);
+  /// **'{products, plural, =1{1 producto} other{{products} productos}} · {units, plural, =1{1 ud.} other{{units} uds.}} · {out, plural, =1{1 agotado} other{{out} agotados}}'**
+  String inventorySummary(int products, int units, int out);
 
   /// No description provided for @inventoryMargin.
   ///
@@ -2561,7 +2555,7 @@ abstract class AppLocalizations {
   /// No description provided for @fairDeleteConfirmUsed.
   ///
   /// In es, this message translates to:
-  /// **'«{name}» tiene {count} tickets. Se quitarán de la feria (los tickets no se borran). ¿Eliminar la feria de la lista?'**
+  /// **'{count, plural, =1{«{name}» tiene 1 ticket. Se quitará de la feria (no se borra). ¿Eliminar la feria de la lista?} other{«{name}» tiene {count} tickets. Se quitarán de la feria (los tickets no se borran). ¿Eliminar la feria de la lista?}}'**
   String fairDeleteConfirmUsed(int count, String name);
 
   /// No description provided for @fairDeleteConfirmEmpty.
@@ -2633,7 +2627,7 @@ abstract class AppLocalizations {
   /// No description provided for @categoryDeleteConfirmUsed.
   ///
   /// In es, this message translates to:
-  /// **'«{name}» tiene {count} productos. Se quedarán sin categoría (no se borran) y se quitará de los combos que la usen. ¿Eliminar la categoría?'**
+  /// **'{count, plural, =1{«{name}» tiene 1 producto. Se quedará sin categoría (no se borra) y se quitará de los combos que la usen. ¿Eliminar la categoría?} other{«{name}» tiene {count} productos. Se quedarán sin categoría (no se borran) y se quitará de los combos que la usen. ¿Eliminar la categoría?}}'**
   String categoryDeleteConfirmUsed(int count, String name);
 
   /// No description provided for @categoryDeleteConfirmEmpty.
@@ -2657,7 +2651,7 @@ abstract class AppLocalizations {
   /// No description provided for @comboSlotAnyOf.
   ///
   /// In es, this message translates to:
-  /// **'Cualquier {name}'**
+  /// **'Cualquiera de «{name}»'**
   String comboSlotAnyOf(String name);
 
   /// No description provided for @comboSlotCategories.
@@ -2687,7 +2681,7 @@ abstract class AppLocalizations {
   /// No description provided for @promotionAppliedToCategory.
   ///
   /// In es, this message translates to:
-  /// **'Promoción aplicada a {count} productos de «{name}»'**
+  /// **'{count, plural, =0{«{name}» no tiene productos} =1{Promoción aplicada a 1 producto de «{name}»} other{Promoción aplicada a {count} productos de «{name}»}}'**
   String promotionAppliedToCategory(int count, String name);
 
   /// No description provided for @packCanAssemble.
@@ -2753,7 +2747,7 @@ abstract class AppLocalizations {
   /// No description provided for @categoryProductsCount.
   ///
   /// In es, this message translates to:
-  /// **'{count} productos'**
+  /// **'{count, plural, =0{Sin productos} =1{1 producto} other{{count} productos}}'**
   String categoryProductsCount(int count);
 
   /// No description provided for @categoriesEmpty.
@@ -2831,7 +2825,7 @@ abstract class AppLocalizations {
   /// No description provided for @promotionProductsCount.
   ///
   /// In es, this message translates to:
-  /// **'Se aplica a {count} productos'**
+  /// **'{count, plural, =0{Aún no se aplica a ningún producto} =1{Se aplica a 1 producto} other{Se aplica a {count} productos}}'**
   String promotionProductsCount(int count);
 
   /// No description provided for @promotionApplyConfirmTitle.
@@ -2843,7 +2837,7 @@ abstract class AppLocalizations {
   /// No description provided for @promotionApplyConfirm.
   ///
   /// In es, this message translates to:
-  /// **'¿Poner «{promo}» a los {count} productos de «{category}»? Después puedes cambiar cualquiera por separado.'**
+  /// **'{count, plural, =0{«{category}» no tiene productos todavía. ¿Aplicar «{promo}» igualmente?} =1{¿Poner «{promo}» al producto de «{category}»? Después puedes cambiarlo por separado.} other{¿Poner «{promo}» a los {count} productos de «{category}»? Después puedes cambiar cualquiera por separado.}}'**
   String promotionApplyConfirm(int count, String promo, String category);
 
   /// No description provided for @apply.
@@ -2935,6 +2929,30 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Devuelto {amount} € · {when}'**
   String ticketRefundLine(String amount, String when);
+
+  /// No description provided for @unitsShortLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'uds.'**
+  String get unitsShortLabel;
+
+  /// No description provided for @comboSavingUpTo.
+  ///
+  /// In es, this message translates to:
+  /// **'Ahorras hasta {amount} €'**
+  String comboSavingUpTo(String amount);
+
+  /// No description provided for @categoryChooseTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Elige una categoría'**
+  String get categoryChooseTitle;
+
+  /// No description provided for @databaseExportFirst.
+  ///
+  /// In es, this message translates to:
+  /// **'Exportar copia antes'**
+  String get databaseExportFirst;
 }
 
 class _AppLocalizationsDelegate

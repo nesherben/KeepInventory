@@ -165,8 +165,11 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
           icon: Icons.extension,
           title: combo.name,
           lines: ['$slots · ${context.money(combo.price)}'],
+          // Con huecos por categoría el ahorro depende del producto elegido
           highlight: saving > 0
-              ? context.l10n.comboSaving(context.amount(saving))
+              ? (combo.slots.any((s) => s.isCategory)
+                    ? context.l10n.comboSavingUpTo(context.amount(saving))
+                    : context.l10n.comboSaving(context.amount(saving)))
               : null,
           onTap: () => _openComboForm(combo),
           actions: [
@@ -260,7 +263,10 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
   /// Pone la promoción a todos los productos de una categoría (una vez;
   /// después cada producto se puede cambiar por separado).
   Future<void> _applyToCategory(Promotion promo) async {
-    final pick = await pickCategory(context);
+    final pick = await pickCategory(
+      context,
+      title: context.l10n.categoryChooseTitle,
+    );
     final category = pick?.category;
     if (category == null || !mounted) return;
     final count = _products.where((p) => p.categoryId == category.id).length;

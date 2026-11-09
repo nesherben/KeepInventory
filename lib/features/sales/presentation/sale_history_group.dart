@@ -11,9 +11,13 @@ class SaleHistoryGroup {
   final String datePrefix;
   final List<Sale> sales;
 
-  bool get isFair => key.startsWith('🎪');
+  /// Clave interna: `fair:nombre` o `day:dd/mm/aaaa`.
+  bool get isFair => key.startsWith('fair:');
 
-  String get fairName => isFair ? key.replaceFirst('🎪 ', '') : '';
+  String get fairName => isFair ? key.substring('fair:'.length) : '';
+
+  /// Lo que se muestra: nombre de la feria o la fecha.
+  String get label => key.substring(key.indexOf(':') + 1);
 
   double get total => sales.fold(0, (sum, sale) => sum + sale.totalAmount);
 }
@@ -46,8 +50,8 @@ List<SaleHistoryGroup> filterAndGroupSales(
     final dateKey = '$day/$month/$year';
     final datePrefix = '$year-$month-$day';
     final groupKey = sale.fairName != null && sale.fairName!.isNotEmpty
-        ? '🎪 ${sale.fairName}'
-        : '📅 $dateKey';
+        ? 'fair:${sale.fairName}'
+        : 'day:$dateKey';
 
     groupedSales.putIfAbsent(groupKey, () => []).add(sale);
     groupDatePrefixes[groupKey] = datePrefix;

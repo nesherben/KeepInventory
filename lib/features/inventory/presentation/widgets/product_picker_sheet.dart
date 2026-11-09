@@ -171,8 +171,8 @@ Future<ProductOrCategory?> showProductOrCategoryPicker(
                                   subtitle: Text(
                                     (counts[c.id] ?? 0) == 0
                                         ? context.l10n.comboSlotEmptyCategory
-                                        : context.l10n.unitCount(
-                                            '${counts[c.id]}',
+                                        : context.l10n.categoryProductsCount(
+                                            counts[c.id]!,
                                           ),
                                   ),
                                   trailing: selected
@@ -212,7 +212,7 @@ Future<ProductOrCategory?> showProductOrCategoryPicker(
                               subtitle: Text(
                                 reason ??
                                     '${context.money(product.price)} · '
-                                        '${context.l10n.unitCount(product.units.toString())}',
+                                        '${context.l10n.unitCount(product.units)}',
                               ),
                               trailing: selected
                                   ? const Icon(Icons.check)

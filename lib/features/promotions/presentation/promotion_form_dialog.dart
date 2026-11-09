@@ -190,7 +190,7 @@ class _PromotionFormDialogState extends State<PromotionFormDialog> {
                       textInputAction: TextInputAction.next,
                       decoration: InputDecoration(
                         labelText: context.l10n.minimumQuantity,
-                        suffixText: context.l10n.unitCount('').trim(),
+                        suffixText: context.l10n.unitsShortLabel,
                       ),
                       keyboardType: TextInputType.number,
                       inputFormatters: AppNumbers.integerInputFormatters,

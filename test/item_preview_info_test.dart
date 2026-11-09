@@ -50,7 +50,7 @@ void main() {
     await tester.pump();
 
     expect(removeCalls, 1);
-    expect(find.text(localizations.unitsRemaining('2')), findsOneWidget);
+    expect(find.text(localizations.unitsRemaining(2)), findsOneWidget);
     expect(
       find.text(localizations.promotionShortfallCombined('0', '1')),
       findsOneWidget,

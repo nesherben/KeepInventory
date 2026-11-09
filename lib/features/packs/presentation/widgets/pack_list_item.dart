@@ -103,7 +103,7 @@ class PackListItem extends StatelessWidget {
                   ),
                 // Control rápido de unidades montadas
                 QuantityStepper(
-                  label: context.l10n.packUnitCount(pack.units.toString()),
+                  label: context.l10n.packUnitCount(pack.units),
                   isEmpty: pack.units <= 0,
                   isLow: StockLevel.of(pack.units) == StockLevel.low,
                   onDecrement: pack.units > 0

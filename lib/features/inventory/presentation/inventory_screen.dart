@@ -730,9 +730,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
               Expanded(
                 child: Text(
                   context.l10n.inventorySummary(
-                    summary.products.toString(),
-                    summary.units.toString(),
-                    summary.outOfStock.toString(),
+                    summary.products,
+                    summary.units,
+                    summary.outOfStock,
                   ),
                   style: TextStyle(
                     fontSize: 12,
@@ -751,7 +751,13 @@ class _InventoryScreenState extends State<InventoryScreen> {
 
   Widget _buildProductList(List<Product> products) {
     return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
+      // Hueco para el botón ＋ y la barra de navegación
+      padding: EdgeInsets.fromLTRB(
+        16,
+        8,
+        16,
+        96 + MediaQuery.viewPaddingOf(context).bottom,
+      ),
       itemCount: products.length,
       itemBuilder: (context, index) {
         final product = products[index];

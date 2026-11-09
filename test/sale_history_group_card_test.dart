@@ -24,7 +24,7 @@ void main() {
       ],
     );
     final group = SaleHistoryGroup(
-      key: '🎪 Autumn Fair',
+      key: 'fair:Autumn Fair',
       datePrefix: '2026-10-02',
       sales: [sale],
     );
@@ -50,7 +50,7 @@ void main() {
       ),
     );
 
-    expect(find.text(group.key), findsOneWidget);
+    expect(find.text(group.label), findsOneWidget);
     await tester.tap(find.text(localizations.changeFair));
     await tester.pump();
     expect(assignedDate, '2026-10-02');

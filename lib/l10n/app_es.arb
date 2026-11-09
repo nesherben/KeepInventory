@@ -115,7 +115,7 @@
   "promotionFormEditTitle": "Editar Promoción",
   "promotionFormNewTitle": "Nueva Promoción",
   "offerName": "Nombre de la oferta",
-  "minimumQuantity": "Cantidad mínima (Unidades a llevar)",
+  "minimumQuantity": "Cantidad mínima",
   "validNumberRequired": "Número válido requerido",
   "bundleTotalPrice": "Precio total del lote (€)",
   "discountPercentage": "Porcentaje de descuento (%)",
@@ -160,8 +160,8 @@
   "packStockDetails": "Almacén: {available} (Req: {required})",
   "@packStockDetails": { "placeholders": { "available": {}, "required": {} } },
   "packComponentsPerUnit": "Componentes de 1 unidad de este pack:",
-  "packUnitCount": "{count} uds",
-  "@packUnitCount": { "placeholders": { "count": {} } },
+  "packUnitCount": "{count, plural, =1{1 montado} other{{count} montados}}",
+  "@packUnitCount": {"placeholders": {"count": {"type": "int"}}},
   "packComponentCount": "{count} uds/pack",
   "@packComponentCount": { "placeholders": { "count": {} } },
   "productOutOfStock": "Este producto está sin stock.",
@@ -172,10 +172,9 @@
   "@productRemovedFromCart": { "placeholders": { "name": {} } },
   "packRemovedFromCart": "Pack {name} eliminado del carrito",
   "@packRemovedFromCart": { "placeholders": { "name": {} } },
-  "saleCompleted": "¡Cobro realizado con éxito!",
   "salesTitle": "Caja (TPV)",
-  "salesProductsTab": "Productos Sueltos",
-  "salesPacksTab": "Packs y Bundles",
+  "salesProductsTab": "Productos",
+  "salesPacksTab": "Packs",
   "searchProducts": "Buscar producto...",
   "searchPacksOrComponents": "Buscar pack o componente...",
   "noPacksFound": "No se encontraron packs.",
@@ -195,11 +194,11 @@
   "@pricePerPack": { "placeholders": { "amount": {} } },
   "stockAvailable": "Stock disponible",
   "outOfStock": "Agotado",
-  "unitsRemaining": "Quedan {count} uds",
-  "@unitsRemaining": { "placeholders": { "count": {} } },
+  "unitsRemaining": "{count, plural, =1{Queda 1 ud.} other{Quedan {count} uds.}}",
+  "@unitsRemaining": {"placeholders": {"count": {"type": "int"}}},
   "inCart": "En el carrito",
-  "unitCount": "{count} uds",
-  "@unitCount": { "placeholders": { "count": {} } },
+  "unitCount": "{count, plural, =1{1 ud.} other{{count} uds.}}",
+  "@unitCount": {"placeholders": {"count": {"type": "int"}}},
   "packContents": "Contenido",
   "promotion": "Promoción",
   "status": "Estado",
@@ -239,8 +238,8 @@
   "searchHistory": "Buscar ticket, artículo, feria...",
   "salesHistoryEmpty": "No hay ventas registradas aún.",
   "historyNoResults": "No hay resultados para tu búsqueda.",
-  "ticketCount": "{count} tickets registrados",
-  "@ticketCount": { "placeholders": { "count": {} } },
+  "ticketCount": "{count, plural, =1{1 ticket registrado} other{{count} tickets registrados}}",
+  "@ticketCount": {"placeholders": {"count": {"type": "int"}}},
   "changeFair": "Cambiar Feria",
   "groupIntoFair": "Agrupar en Feria",
   "ticketTitle": "Ticket #{ticket}",
@@ -258,7 +257,7 @@
   "restartNow": "Reiniciar ahora",
   "dataManagementTitle": "Copias y sincronización",
   "syncByQrTitle": "Sincronización por QR (Ferias)",
-  "syncByQrDescription": "Clona la base de datos completa en otro móvil cercano escaneando un QR, sin necesidad de Wi‑Fi.",
+  "syncByQrDescription": "Copia todos los datos a otro móvil cercano escaneando un QR, sin Wi‑Fi. Los datos del móvil que recibe se sustituyen.",
   "backupSectionTitle": "COPIAS DE SEGURIDAD EN ARCHIVO",
   "exportBackupTitle": "Exportar copia de seguridad",
   "exportBackupDescription": "Guarda un archivo de respaldo de tu base de datos.",
@@ -341,20 +340,8 @@
   "inventoryFilterLow": "Stock bajo",
   "inventoryFilterOut": "Agotados",
   "inventoryFilterPromo": "Con promoción",
-  "inventorySummary": "{products} productos · {units} uds · {out} agotados",
-  "@inventorySummary": {
-    "placeholders": {
-      "products": {
-        "type": "String"
-      },
-      "units": {
-        "type": "String"
-      },
-      "out": {
-        "type": "String"
-      }
-    }
-  },
+  "inventorySummary": "{products, plural, =1{1 producto} other{{products} productos}} · {units, plural, =1{1 ud.} other{{units} uds.}} · {out, plural, =1{1 agotado} other{{out} agotados}}",
+  "@inventorySummary": {"placeholders": {"products": {"type": "int"}, "units": {"type": "int"}, "out": {"type": "int"}}},
   "inventoryMargin": "Margen",
   "inventoryCostMargin": "Coste {cost} · margen {margin}",
   "@inventoryCostMargin": {
@@ -692,7 +679,7 @@
   "syncVersionUnknown": "El otro móvil tiene una versión anterior a la 1.14.1. Actualiza los dos a la misma versión para sincronizar.",
   "understood": "Entendido",
   "fairDeleteTitle": "Eliminar feria",
-  "fairDeleteConfirmUsed": "«{name}» tiene {count} tickets. Se quitarán de la feria (los tickets no se borran). ¿Eliminar la feria de la lista?",
+  "fairDeleteConfirmUsed": "{count, plural, =1{«{name}» tiene 1 ticket. Se quitará de la feria (no se borra). ¿Eliminar la feria de la lista?} other{«{name}» tiene {count} tickets. Se quitarán de la feria (los tickets no se borran). ¿Eliminar la feria de la lista?}}",
   "@fairDeleteConfirmUsed": {
     "placeholders": {
       "count": {
@@ -735,7 +722,7 @@
   },
   "categoryRemove": "Quitar categoría",
   "categoryDeleteTitle": "Eliminar categoría",
-  "categoryDeleteConfirmUsed": "«{name}» tiene {count} productos. Se quedarán sin categoría (no se borran) y se quitará de los combos que la usen. ¿Eliminar la categoría?",
+  "categoryDeleteConfirmUsed": "{count, plural, =1{«{name}» tiene 1 producto. Se quedará sin categoría (no se borra) y se quitará de los combos que la usen. ¿Eliminar la categoría?} other{«{name}» tiene {count} productos. Se quedarán sin categoría (no se borran) y se quitará de los combos que la usen. ¿Eliminar la categoría?}}",
   "@categoryDeleteConfirmUsed": {
     "placeholders": {
       "count": {
@@ -756,7 +743,7 @@
   },
   "categoryDeleted": "Categoría eliminada",
   "categoryAll": "Todas",
-  "comboSlotAnyOf": "Cualquier {name}",
+  "comboSlotAnyOf": "Cualquiera de «{name}»",
   "@comboSlotAnyOf": {
     "placeholders": {
       "name": {
@@ -768,7 +755,7 @@
   "comboSlotProducts": "Productos",
   "tableCategory": "CATEGORÍA",
   "promotionApplyToCategory": "Aplicar a una categoría…",
-  "promotionAppliedToCategory": "Promoción aplicada a {count} productos de «{name}»",
+  "promotionAppliedToCategory": "{count, plural, =0{«{name}» no tiene productos} =1{Promoción aplicada a 1 producto de «{name}»} other{Promoción aplicada a {count} productos de «{name}»}}",
   "@promotionAppliedToCategory": {
     "placeholders": {
       "count": {
@@ -803,7 +790,7 @@
   "categoryRename": "Renombrar categoría",
   "categoryNameLabel": "Nombre de la categoría",
   "categoryNameTaken": "Ya existe una categoría con ese nombre",
-  "categoryProductsCount": "{count} productos",
+  "categoryProductsCount": "{count, plural, =0{Sin productos} =1{1 producto} other{{count} productos}}",
   "@categoryProductsCount": {
     "placeholders": {
       "count": {
@@ -837,7 +824,7 @@
   "navSectionData": "DATOS",
   "navSectionHelp": "AYUDA",
   "edit": "Editar",
-  "promotionProductsCount": "Se aplica a {count} productos",
+  "promotionProductsCount": "{count, plural, =0{Aún no se aplica a ningún producto} =1{Se aplica a 1 producto} other{Se aplica a {count} productos}}",
   "@promotionProductsCount": {
     "placeholders": {
       "count": {
@@ -846,7 +833,7 @@
     }
   },
   "promotionApplyConfirmTitle": "Aplicar promoción",
-  "promotionApplyConfirm": "¿Poner «{promo}» a los {count} productos de «{category}»? Después puedes cambiar cualquiera por separado.",
+  "promotionApplyConfirm": "{count, plural, =0{«{category}» no tiene productos todavía. ¿Aplicar «{promo}» igualmente?} =1{¿Poner «{promo}» al producto de «{category}»? Después puedes cambiarlo por separado.} other{¿Poner «{promo}» a los {count} productos de «{category}»? Después puedes cambiar cualquiera por separado.}}",
   "@promotionApplyConfirm": {
     "placeholders": {
       "count": {
@@ -932,5 +919,16 @@
         "type": "String"
       }
     }
-  }
+  },
+  "unitsShortLabel": "uds.",
+  "comboSavingUpTo": "Ahorras hasta {amount} €",
+  "@comboSavingUpTo": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "categoryChooseTitle": "Elige una categoría",
+  "databaseExportFirst": "Exportar copia antes"
 }

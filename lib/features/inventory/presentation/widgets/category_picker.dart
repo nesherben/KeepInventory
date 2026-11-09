@@ -17,6 +17,7 @@ class CategoryPick {
 Future<CategoryPick?> pickCategory(
   BuildContext context, {
   int? currentId,
+  String? title,
 }) async {
   final repository = CategoryRepositoryImpl(CategoryLocalDatasource());
   final categories = await repository.getCategories();
@@ -27,7 +28,7 @@ Future<CategoryPick?> pickCategory(
 
   final chosen = await showNamePickerSheet(
     context,
-    title: l10n.categoryPickTitle,
+    title: title ?? l10n.categoryPickTitle,
     searchHint: l10n.categorySearchOrCreate,
     names: [for (final c in categories) c.name],
     createLabel: l10n.categoryCreate,

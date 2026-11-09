@@ -297,7 +297,7 @@ class _ItemPreviewInfoState extends State<ItemPreviewInfo> {
               context.l10n.stockAvailable,
               isOutOfStock
                   ? context.l10n.outOfStock
-                  : context.l10n.unitsRemaining(_availableStock.toString()),
+                  : context.l10n.unitsRemaining(_availableStock),
               color: isOutOfStock ? theme.colorScheme.error : null,
               isBold: isOutOfStock,
             ),
@@ -306,7 +306,7 @@ class _ItemPreviewInfoState extends State<ItemPreviewInfo> {
               context,
               Icons.shopping_cart_outlined,
               context.l10n.inCart,
-              context.l10n.unitCount(_localCartQty.toString()),
+              context.l10n.unitCount(_localCartQty),
               trailing: widget.onRemoveAction == null
                   ? null
                   : Material(

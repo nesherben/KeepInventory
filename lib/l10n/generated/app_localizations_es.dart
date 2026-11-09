@@ -338,7 +338,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get offerName => 'Nombre de la oferta';
 
   @override
-  String get minimumQuantity => 'Cantidad mínima (Unidades a llevar)';
+  String get minimumQuantity => 'Cantidad mínima';
 
   @override
   String get validNumberRequired => 'Número válido requerido';
@@ -470,8 +470,14 @@ class AppLocalizationsEs extends AppLocalizations {
   String get packComponentsPerUnit => 'Componentes de 1 unidad de este pack:';
 
   @override
-  String packUnitCount(Object count) {
-    return '$count uds';
+  String packUnitCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count montados',
+      one: '1 montado',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -503,16 +509,13 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get saleCompleted => '¡Cobro realizado con éxito!';
-
-  @override
   String get salesTitle => 'Caja (TPV)';
 
   @override
-  String get salesProductsTab => 'Productos Sueltos';
+  String get salesProductsTab => 'Productos';
 
   @override
-  String get salesPacksTab => 'Packs y Bundles';
+  String get salesPacksTab => 'Packs';
 
   @override
   String get searchProducts => 'Buscar producto...';
@@ -566,16 +569,28 @@ class AppLocalizationsEs extends AppLocalizations {
   String get outOfStock => 'Agotado';
 
   @override
-  String unitsRemaining(Object count) {
-    return 'Quedan $count uds';
+  String unitsRemaining(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Quedan $count uds.',
+      one: 'Queda 1 ud.',
+    );
+    return '$_temp0';
   }
 
   @override
   String get inCart => 'En el carrito';
 
   @override
-  String unitCount(Object count) {
-    return '$count uds';
+  String unitCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count uds.',
+      one: '1 ud.',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -695,8 +710,14 @@ class AppLocalizationsEs extends AppLocalizations {
   String get historyNoResults => 'No hay resultados para tu búsqueda.';
 
   @override
-  String ticketCount(Object count) {
-    return '$count tickets registrados';
+  String ticketCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tickets registrados',
+      one: '1 ticket registrado',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -753,7 +774,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get syncByQrDescription =>
-      'Clona la base de datos completa en otro móvil cercano escaneando un QR, sin necesidad de Wi‑Fi.';
+      'Copia todos los datos a otro móvil cercano escaneando un QR, sin Wi‑Fi. Los datos del móvil que recibe se sustituyen.';
 
   @override
   String get backupSectionTitle => 'COPIAS DE SEGURIDAD EN ARCHIVO';
@@ -991,8 +1012,26 @@ class AppLocalizationsEs extends AppLocalizations {
   String get inventoryFilterPromo => 'Con promoción';
 
   @override
-  String inventorySummary(String products, String units, String out) {
-    return '$products productos · $units uds · $out agotados';
+  String inventorySummary(int products, int units, int out) {
+    String _temp0 = intl.Intl.pluralLogic(
+      products,
+      locale: localeName,
+      other: '$products productos',
+      one: '1 producto',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      units,
+      locale: localeName,
+      other: '$units uds.',
+      one: '1 ud.',
+    );
+    String _temp2 = intl.Intl.pluralLogic(
+      out,
+      locale: localeName,
+      other: '$out agotados',
+      one: '1 agotado',
+    );
+    return '$_temp0 · $_temp1 · $_temp2';
   }
 
   @override
@@ -1444,7 +1483,15 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String fairDeleteConfirmUsed(int count, String name) {
-    return '«$name» tiene $count tickets. Se quitarán de la feria (los tickets no se borran). ¿Eliminar la feria de la lista?';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '«$name» tiene $count tickets. Se quitarán de la feria (los tickets no se borran). ¿Eliminar la feria de la lista?',
+      one:
+          '«$name» tiene 1 ticket. Se quitará de la feria (no se borra). ¿Eliminar la feria de la lista?',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -1488,7 +1535,15 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String categoryDeleteConfirmUsed(int count, String name) {
-    return '«$name» tiene $count productos. Se quedarán sin categoría (no se borran) y se quitará de los combos que la usen. ¿Eliminar la categoría?';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '«$name» tiene $count productos. Se quedarán sin categoría (no se borran) y se quitará de los combos que la usen. ¿Eliminar la categoría?',
+      one:
+          '«$name» tiene 1 producto. Se quedará sin categoría (no se borra) y se quitará de los combos que la usen. ¿Eliminar la categoría?',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -1504,7 +1559,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String comboSlotAnyOf(String name) {
-    return 'Cualquier $name';
+    return 'Cualquiera de «$name»';
   }
 
   @override
@@ -1521,7 +1576,14 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String promotionAppliedToCategory(int count, String name) {
-    return 'Promoción aplicada a $count productos de «$name»';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Promoción aplicada a $count productos de «$name»',
+      one: 'Promoción aplicada a 1 producto de «$name»',
+      zero: '«$name» no tiene productos',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -1561,7 +1623,14 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String categoryProductsCount(int count) {
-    return '$count productos';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count productos',
+      one: '1 producto',
+      zero: 'Sin productos',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -1607,7 +1676,14 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String promotionProductsCount(int count) {
-    return 'Se aplica a $count productos';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Se aplica a $count productos',
+      one: 'Se aplica a 1 producto',
+      zero: 'Aún no se aplica a ningún producto',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -1615,7 +1691,17 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String promotionApplyConfirm(int count, String promo, String category) {
-    return '¿Poner «$promo» a los $count productos de «$category»? Después puedes cambiar cualquiera por separado.';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '¿Poner «$promo» a los $count productos de «$category»? Después puedes cambiar cualquiera por separado.',
+      one:
+          '¿Poner «$promo» al producto de «$category»? Después puedes cambiarlo por separado.',
+      zero:
+          '«$category» no tiene productos todavía. ¿Aplicar «$promo» igualmente?',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -1689,4 +1775,18 @@ class AppLocalizationsEs extends AppLocalizations {
   String ticketRefundLine(String amount, String when) {
     return 'Devuelto $amount € · $when';
   }
+
+  @override
+  String get unitsShortLabel => 'uds.';
+
+  @override
+  String comboSavingUpTo(String amount) {
+    return 'Ahorras hasta $amount €';
+  }
+
+  @override
+  String get categoryChooseTitle => 'Elige una categoría';
+
+  @override
+  String get databaseExportFirst => 'Exportar copia antes';
 }

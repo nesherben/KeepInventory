@@ -48,18 +48,32 @@ class SaleHistoryGroupCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    group.key,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w900,
-                      fontSize: 18,
-                      color: theme.colorScheme.onSurface,
-                    ),
-                    overflow: TextOverflow.ellipsis,
+                  Row(
+                    children: [
+                      Icon(
+                        group.isFair
+                            ? Icons.storefront_outlined
+                            : Icons.calendar_today_outlined,
+                        size: 20,
+                        color: baseColor,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          group.label,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w900,
+                            fontSize: 18,
+                            color: theme.colorScheme.onSurface,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    context.l10n.ticketCount(group.sales.length.toString()),
+                    context.l10n.ticketCount(group.sales.length),
                     style: TextStyle(
                       fontSize: 13,
                       color: theme.colorScheme.onSurfaceVariant,

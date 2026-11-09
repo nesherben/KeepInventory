@@ -131,7 +131,7 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
   Future<void> _confirmDatabaseDeletion() async {
     if (_isExporting || _isImporting || _isDeleting) return;
 
-    final firstConfirmation = await showDialog<bool>(
+    final firstConfirmation = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
         icon: Icon(
@@ -141,19 +141,31 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
         title: Text(context.l10n.databaseDeleteTitle),
         content: Text(context.l10n.databaseDeleteWarning),
         actions: [
+          // Antes de borrar todo, la opción de guardar una copia
+          TextButton.icon(
+            onPressed: () => Navigator.pop(context, 'export'),
+            icon: const Icon(Icons.save_alt, size: 18),
+            label: Text(context.l10n.databaseExportFirst),
+          ),
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => Navigator.pop(context),
             child: Text(context.l10n.cancel),
           ),
           FilledButton.tonal(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => Navigator.pop(context, 'continue'),
             child: Text(context.l10n.databaseDeleteContinue),
           ),
         ],
       ),
     );
 
-    if (firstConfirmation != true || !mounted) return;
+    if (!mounted) return;
+    if (firstConfirmation == 'export') {
+      // "Exportar copia antes": se exporta y no se borra nada
+      await _handleExport();
+      return;
+    }
+    if (firstConfirmation != 'continue') return;
 
     final finalConfirmation = await showDialog<bool>(
       context: context,

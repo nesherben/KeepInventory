@@ -417,7 +417,10 @@ class _ComboFormScreenState extends State<ComboFormScreen> {
                   ),
                   if (saving != null && saving > 0)
                     Text(
-                      context.l10n.comboSaving(context.amount(saving)),
+                      // Con huecos por categoría depende del producto elegido
+                      _slots.any((s) => s.categoryId != null)
+                          ? context.l10n.comboSavingUpTo(context.amount(saving))
+                          : context.l10n.comboSaving(context.amount(saving)),
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                 ],
