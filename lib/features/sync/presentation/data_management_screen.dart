@@ -139,14 +139,21 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
           color: Theme.of(context).colorScheme.error,
         ),
         title: Text(context.l10n.databaseDeleteTitle),
-        content: Text(context.l10n.databaseDeleteWarning),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(context.l10n.databaseDeleteWarning),
+            const SizedBox(height: 16),
+            // Antes de borrar todo, la opción de guardar una copia
+            OutlinedButton.icon(
+              onPressed: () => Navigator.pop(context, 'export'),
+              icon: const Icon(Icons.save_alt, size: 18),
+              label: Text(context.l10n.databaseExportFirst),
+            ),
+          ],
+        ),
         actions: [
-          // Antes de borrar todo, la opción de guardar una copia
-          TextButton.icon(
-            onPressed: () => Navigator.pop(context, 'export'),
-            icon: const Icon(Icons.save_alt, size: 18),
-            label: Text(context.l10n.databaseExportFirst),
-          ),
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(context.l10n.cancel),
