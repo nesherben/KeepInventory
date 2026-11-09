@@ -2075,7 +2075,7 @@ abstract class AppLocalizations {
   /// No description provided for @tutorialWelcomeBody.
   ///
   /// In es, this message translates to:
-  /// **'Tu inventario y tu caja en el móvil, sin conexión. Te enseñamos lo básico en un minuto.'**
+  /// **'Tu inventario y tu caja en el móvil, sin conexión. Todo está en el menú lateral: Venta, Catálogo y Datos. Te enseñamos lo básico en un minuto.'**
   String get tutorialWelcomeBody;
 
   /// No description provided for @tutorialInventoryTitle.
@@ -2087,7 +2087,7 @@ abstract class AppLocalizations {
   /// No description provided for @tutorialInventoryBody.
   ///
   /// In es, this message translates to:
-  /// **'En Inventario pulsa + y pon nombre, precio, coste y unidades (la categoría es opcional). Verás tu margen al momento y la app te avisa cuando queda poco stock.'**
+  /// **'En Inventario pulsa + y pon nombre, precio, coste y unidades; verás tu margen al momento. Si quieres, agrúpalos por categorías (opcional, botón 🏷️ arriba). Para retocar, toca − / + o directamente el dato.'**
   String get tutorialInventoryBody;
 
   /// No description provided for @tutorialOffersTitle.
@@ -2099,7 +2099,7 @@ abstract class AppLocalizations {
   /// No description provided for @tutorialOffersBody.
   ///
   /// In es, this message translates to:
-  /// **'En Ofertas crea promociones (10 % de descuento, 3 por 12 €…) y combos (teclado + ratón = 10 €): se aplican solas al vender. En Packs agrupa productos con su propio precio.'**
+  /// **'En Ofertas crea promociones (10 % de descuento, 3 por 12 €…) y combos (teclado + ratón = 10 €, o cualquier producto de una categoría). Se aplican solas al vender. Desde el menú ⋮ de una promoción puedes ponérsela a toda una categoría. En Packs agrupa productos con su propio precio.'**
   String get tutorialOffersBody;
 
   /// No description provided for @tutorialSalesTitle.
@@ -2111,7 +2111,7 @@ abstract class AppLocalizations {
   /// No description provided for @tutorialSalesBody.
   ///
   /// In es, this message translates to:
-  /// **'En Caja toca los productos para añadirlos al carrito, pulsa COBRAR y elige cómo paga el cliente. El stock se descuenta automáticamente.'**
+  /// **'En Caja toca los productos para añadirlos al carrito, pulsa COBRAR y elige cómo paga el cliente. Si falta algo para completar un combo, el carrito te avisa: toca el aviso para ir al producto o ＋ Añadir para meterlo.'**
   String get tutorialSalesBody;
 
   /// No description provided for @tutorialHistoryTitle.
@@ -2123,7 +2123,7 @@ abstract class AppLocalizations {
   /// No description provided for @tutorialHistoryBody.
   ///
   /// In es, this message translates to:
-  /// **'En Tickets y ferias tienes el ticket de cada venta, agrupado por día o por feria. Desde ahí puedes devolver unidades y el importe se recalcula con las ofertas.'**
+  /// **'En Tickets y ferias tienes el ticket de cada venta. Agrupa los días de una feria con el botón de feria (las ferias quedan guardadas para la próxima). Desde un ticket puedes devolver unidades y el importe se recalcula con las ofertas.'**
   String get tutorialHistoryBody;
 
   /// No description provided for @tutorialDashboardTitle.
@@ -2147,7 +2147,7 @@ abstract class AppLocalizations {
   /// No description provided for @tutorialDataBody.
   ///
   /// In es, this message translates to:
-  /// **'En Copias y sincronización puedes hacer copias de seguridad o pasar todo a otro móvil con un QR, sin Wi‑Fi. Puedes volver a ver este tutorial desde el menú.'**
+  /// **'En Copias y sincronización haz copias de seguridad o pasa todo a otro móvil con un QR, sin Wi‑Fi (los dos móviles deben tener la misma versión de la app). Puedes volver a ver este tutorial desde el menú, en Ayuda.'**
   String get tutorialDataBody;
 
   /// No description provided for @inventorySortReset.

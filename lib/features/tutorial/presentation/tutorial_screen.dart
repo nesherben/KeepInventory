@@ -61,7 +61,7 @@ class _TutorialScreenState extends State<TutorialScreen> {
         l10n.tutorialHistoryBody,
       ),
       _TutorialStep(
-        Icons.dashboard_outlined,
+        Icons.home_outlined,
         l10n.tutorialDashboardTitle,
         l10n.tutorialDashboardBody,
       ),

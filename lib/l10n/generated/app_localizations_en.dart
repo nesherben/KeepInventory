@@ -1146,35 +1146,35 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tutorialWelcomeBody =>
-      'Your inventory and till on your phone, fully offline. Here are the basics in one minute.';
+      'Your inventory and till on your phone, fully offline. Everything is in the side menu: Selling, Catalog and Data. Here are the basics in one minute.';
 
   @override
   String get tutorialInventoryTitle => '1. Add your products';
 
   @override
   String get tutorialInventoryBody =>
-      'In Inventory tap + and enter name, price, cost and units (category is optional). You\'ll see your margin right away and the app warns you when stock runs low.';
+      'In Inventory tap + and enter name, price, cost and units; you\'ll see your margin right away. Optionally group them into categories (🏷️ button at the top). To adjust, tap − / + or the value itself.';
 
   @override
   String get tutorialOffersTitle => '2. Offers and packs';
 
   @override
   String get tutorialOffersBody =>
-      'In Offers create promotions (10% off, 3 for €12…) and combos (keyboard + mouse = €10): they apply automatically when selling. In Packs group products with their own price.';
+      'In Offers create promotions (10% off, 3 for €12…) and combos (keyboard + mouse = €10, or any product of a category). They apply automatically when selling. From a promotion\'s ⋮ menu you can set it on a whole category. In Packs group products with their own price.';
 
   @override
   String get tutorialSalesTitle => '3. Sell in seconds';
 
   @override
   String get tutorialSalesBody =>
-      'In Checkout tap products to add them to the cart, press CHECK OUT and choose how the customer pays. Stock is updated automatically.';
+      'In Checkout tap products to add them to the cart, press CHECK OUT and choose how the customer pays. If something is missing to complete a combo, the cart tells you: tap the hint to go to the product or ＋ Add to put it in.';
 
   @override
   String get tutorialHistoryTitle => '4. Tickets and fairs';
 
   @override
   String get tutorialHistoryBody =>
-      'In Tickets and fairs you have every sale\'s ticket, grouped by day or by fair. From there you can refund units and the amount is recalculated with offers.';
+      'In Tickets and fairs you have every sale\'s ticket. Group a fair\'s days with the fair button (fairs are saved for next time). From a ticket you can refund units and the amount is recalculated with offers.';
 
   @override
   String get tutorialDashboardTitle => '5. Balance the till';
@@ -1188,7 +1188,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tutorialDataBody =>
-      'In Backups and sync you can back up your data or move everything to another phone with a QR code, no Wi‑Fi needed. You can replay this tutorial from the menu.';
+      'In Backups and sync back up your data or move everything to another phone with a QR code, no Wi‑Fi needed (both phones must have the same app version). You can replay this tutorial from the menu, under Help.';
 
   @override
   String get inventorySortReset => 'Tap to restore the default order';

@@ -1150,35 +1150,35 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get tutorialWelcomeBody =>
-      'Tu inventario y tu caja en el móvil, sin conexión. Te enseñamos lo básico en un minuto.';
+      'Tu inventario y tu caja en el móvil, sin conexión. Todo está en el menú lateral: Venta, Catálogo y Datos. Te enseñamos lo básico en un minuto.';
 
   @override
   String get tutorialInventoryTitle => '1. Da de alta tus productos';
 
   @override
   String get tutorialInventoryBody =>
-      'En Inventario pulsa + y pon nombre, precio, coste y unidades (la categoría es opcional). Verás tu margen al momento y la app te avisa cuando queda poco stock.';
+      'En Inventario pulsa + y pon nombre, precio, coste y unidades; verás tu margen al momento. Si quieres, agrúpalos por categorías (opcional, botón 🏷️ arriba). Para retocar, toca − / + o directamente el dato.';
 
   @override
   String get tutorialOffersTitle => '2. Ofertas y packs';
 
   @override
   String get tutorialOffersBody =>
-      'En Ofertas crea promociones (10 % de descuento, 3 por 12 €…) y combos (teclado + ratón = 10 €): se aplican solas al vender. En Packs agrupa productos con su propio precio.';
+      'En Ofertas crea promociones (10 % de descuento, 3 por 12 €…) y combos (teclado + ratón = 10 €, o cualquier producto de una categoría). Se aplican solas al vender. Desde el menú ⋮ de una promoción puedes ponérsela a toda una categoría. En Packs agrupa productos con su propio precio.';
 
   @override
   String get tutorialSalesTitle => '3. Vende en segundos';
 
   @override
   String get tutorialSalesBody =>
-      'En Caja toca los productos para añadirlos al carrito, pulsa COBRAR y elige cómo paga el cliente. El stock se descuenta automáticamente.';
+      'En Caja toca los productos para añadirlos al carrito, pulsa COBRAR y elige cómo paga el cliente. Si falta algo para completar un combo, el carrito te avisa: toca el aviso para ir al producto o ＋ Añadir para meterlo.';
 
   @override
   String get tutorialHistoryTitle => '4. Tickets y ferias';
 
   @override
   String get tutorialHistoryBody =>
-      'En Tickets y ferias tienes el ticket de cada venta, agrupado por día o por feria. Desde ahí puedes devolver unidades y el importe se recalcula con las ofertas.';
+      'En Tickets y ferias tienes el ticket de cada venta. Agrupa los días de una feria con el botón de feria (las ferias quedan guardadas para la próxima). Desde un ticket puedes devolver unidades y el importe se recalcula con las ofertas.';
 
   @override
   String get tutorialDashboardTitle => '5. Cuadra la caja';
@@ -1192,7 +1192,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get tutorialDataBody =>
-      'En Copias y sincronización puedes hacer copias de seguridad o pasar todo a otro móvil con un QR, sin Wi‑Fi. Puedes volver a ver este tutorial desde el menú.';
+      'En Copias y sincronización haz copias de seguridad o pasa todo a otro móvil con un QR, sin Wi‑Fi (los dos móviles deben tener la misma versión de la app). Puedes volver a ver este tutorial desde el menú, en Ayuda.';
 
   @override
   String get inventorySortReset => 'Tocar para volver al orden por defecto';
