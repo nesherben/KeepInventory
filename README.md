@@ -94,11 +94,11 @@ El menú lateral (desliza desde el borde izquierdo o pulsa ☰) da acceso a toda
 
 ### 4. Vende
 1. Abre **Ventas**, busca o toca los productos / packs para añadirlos al carrito. Los productos que forman parte de un combo llevan la insignia **Combo**.
-2. Ajusta cantidades: el total ya incluye promociones y combos. Si tienes medio combo, el carrito te avisa (*"Te falta: Ratón"*) y resalta en el catálogo lo que lo completa.
+2. Ajusta cantidades: el total ya incluye promociones y combos. Si tienes medio combo, el carrito te avisa (*"falta Ratón"*), resalta en el catálogo lo que lo completa y con el botón **＋ Añadir** lo mete en el carrito de un toque.
 3. Pulsa **COBRAR**, elige el método de pago y confirma. El stock se descuenta solo.
 
 ### 5. Consulta el historial y haz devoluciones
-1. En **Historial** verás las ventas agrupadas por día con su ticket. Para agrupar un día bajo una **feria**, pulsa el botón de feria: busca una existente o escribe una nueva y toca *Crear*.
+1. En **Historial** verás las ventas agrupadas por día con su ticket. Para agrupar un día bajo una **feria**, pulsa el botón de feria: busca una de tu lista o escribe una nueva y toca *Crear*. En un grupo de feria, cambiarla o quitarla afecta a **todos** sus tickets (de todos los días); al quitarla, cada ticket vuelve a su día. Las ferias se quedan en la lista aunque no tengan tickets, y puedes borrarlas con la papelera (sus tickets no se borran, solo se quedan sin feria).
 2. Para devolver, abre la venta y elige qué y cuántas unidades devolver (o **Devolver combo** de golpe). El importe se recalcula teniendo en cuenta promociones y combos (si la devolución rompe un combo, lo que queda se cobra a precio normal) y el stock vuelve al inventario.
 
 ### 6. Revisa el panel
