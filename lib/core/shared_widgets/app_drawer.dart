@@ -75,7 +75,7 @@ class AppDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final currentRoute = ModalRoute.of(context)?.settings.name ?? '/';
+    final currentRoute = ModalRoute.of(context)?.settings.name;
 
     Widget item(
       String route,
@@ -93,7 +93,7 @@ class AppDrawer extends StatelessWidget {
         if (currentRoute == route) {
           Navigator.pop(context);
         } else {
-          Navigator.pushReplacementNamed(context, route);
+          Navigator.pushNamedAndRemoveUntil(context, route, (_) => false);
         }
       },
     );
@@ -161,9 +161,10 @@ class AppDrawer extends StatelessWidget {
                           if (currentRoute == '/inventory') {
                             Navigator.pop(context);
                           } else {
-                            Navigator.pushReplacementNamed(
+                            Navigator.pushNamedAndRemoveUntil(
                               context,
                               '/inventory',
+                              (_) => false,
                             );
                           }
                         },
