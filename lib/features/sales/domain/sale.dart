@@ -86,6 +86,21 @@ class SaleCombo {
       Combo(id: comboId, name: name, price: price, slots: slots);
 }
 
+/// Devolución parcial registrada en una venta.
+class SaleRefund {
+  final DateTime date;
+  final double amount;
+
+  /// Qué se devolvió ("1× Taza Bosque, 2× Llavero").
+  final String summary;
+
+  const SaleRefund({
+    required this.date,
+    required this.amount,
+    required this.summary,
+  });
+}
+
 class Sale {
   final int? id;
   final DateTime date;
@@ -96,6 +111,9 @@ class Sale {
   final PaymentMethod paymentMethod;
   final List<SaleCombo> combos;
 
+  /// Devoluciones parciales ya hechas (la más antigua primero).
+  final List<SaleRefund> refunds;
+
   Sale({
     this.id,
     required this.date,
@@ -105,5 +123,8 @@ class Sale {
     this.packItems = const [],
     this.paymentMethod = PaymentMethod.defaultMethod,
     this.combos = const [],
+    this.refunds = const [],
   });
+
+  double get refundedAmount => refunds.fold(0.0, (t, r) => t + r.amount);
 }

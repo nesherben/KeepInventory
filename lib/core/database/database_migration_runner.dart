@@ -27,6 +27,16 @@ class DatabaseMigrationRunner {
     await _upgradeAppMeta(oldVersion, execute);
     await _upgradeFairsCatalog(oldVersion, execute);
     await _upgradeCategories(oldVersion, execute);
+    await _upgradeSaleRefunds(oldVersion, execute);
+  }
+
+  /// v17: historial de devoluciones parciales por venta.
+  static Future<void> _upgradeSaleRefunds(
+    int oldVersion,
+    DatabaseSqlExecutor execute,
+  ) async {
+    if (oldVersion >= 17) return;
+    await execute(DatabaseSchemaCreator.saleRefundsTable);
   }
 
   static const productCategoryAlter =

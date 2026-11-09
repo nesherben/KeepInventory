@@ -1684,4 +1684,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get inventoryAddFirst => 'Añadir producto';
+
+  @override
+  String ticketRefundLine(String amount, String when) {
+    return 'Devuelto $amount € · $when';
+  }
 }

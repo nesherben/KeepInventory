@@ -9,7 +9,7 @@ void main() {
       execute: (sql) async => statements.add(sql),
     );
 
-    expect(statements, hasLength(14));
+    expect(statements, hasLength(15));
     expect(statements[0], contains('categories ('));
     expect(statements[1], contains('CREATE TABLE promotions'));
     expect(statements[2], contains('CREATE TABLE products'));

@@ -2929,6 +2929,12 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Añadir producto'**
   String get inventoryAddFirst;
+
+  /// No description provided for @ticketRefundLine.
+  ///
+  /// In es, this message translates to:
+  /// **'Devuelto {amount} € · {when}'**
+  String ticketRefundLine(String amount, String when);
 }
 
 class _AppLocalizationsDelegate

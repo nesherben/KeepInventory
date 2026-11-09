@@ -154,6 +154,60 @@ class _SaleTicketCard extends StatelessWidget {
   final Color headerTextColor;
   final VoidCallback onRefund;
 
+  /// Devoluciones parciales ya hechas: importe, cuándo y qué se devolvió.
+  List<Widget> _buildRefunds(BuildContext context) {
+    if (sale.refunds.isEmpty) return const [];
+    final colors = Theme.of(context).colorScheme;
+    String when(DateTime d) {
+      final sameDay =
+          d.year == sale.date.year &&
+          d.month == sale.date.month &&
+          d.day == sale.date.day;
+      final day =
+          '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}';
+      return sameDay ? _formatDateTime(d) : '$day ${_formatDateTime(d)}';
+    }
+
+    return [
+      const Divider(height: 16),
+      for (final refund in sale.refunds)
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.undo, size: 16, color: colors.error),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      context.l10n.ticketRefundLine(
+                        context.amount(refund.amount),
+                        when(refund.date),
+                      ),
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: colors.error,
+                      ),
+                    ),
+                    Text(
+                      refund.summary,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: colors.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+    ];
+  }
+
   String _formatDateTime(DateTime date) {
     final hour = date.hour.toString().padLeft(2, '0');
     final minute = date.minute.toString().padLeft(2, '0');
@@ -398,6 +452,7 @@ class _SaleTicketCard extends StatelessWidget {
                 children: [
                   const Divider(height: 16),
                   ..._buildItems(context),
+                  ..._buildRefunds(context),
                   if (sale.packItems.isNotEmpty && sale.items.isNotEmpty)
                     const SizedBox(height: 8),
                   ...sale.packItems.map(

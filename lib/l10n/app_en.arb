@@ -520,5 +520,6 @@
   "promotionAppliedToProducts": "{count, plural, =0{The promotion no longer applies to any product} =1{Promotion applied to 1 product} other{Promotion applied to {count} products}}",
   "productsPickTitle": "Choose products",
   "drawerStartHint": "Start by adding products!",
-  "inventoryAddFirst": "Add product"
+  "inventoryAddFirst": "Add product",
+  "ticketRefundLine": "Refunded €{amount} · {when}"
 }

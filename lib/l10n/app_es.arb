@@ -921,5 +921,16 @@
   },
   "productsPickTitle": "Elige productos",
   "drawerStartHint": "¡Empieza añadiendo productos!",
-  "inventoryAddFirst": "Añadir producto"
+  "inventoryAddFirst": "Añadir producto",
+  "ticketRefundLine": "Devuelto {amount} € · {when}",
+  "@ticketRefundLine": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "when": {
+        "type": "String"
+      }
+    }
+  }
 }

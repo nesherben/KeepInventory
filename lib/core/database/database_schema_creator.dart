@@ -71,6 +71,18 @@ class DatabaseSchemaCreator {
       )
     ''';
 
+  /// v17: devoluciones parciales de cada venta (para verlas en el ticket).
+  static const saleRefundsTable = '''
+      CREATE TABLE IF NOT EXISTS sale_refunds (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        sale_id INTEGER NOT NULL,
+        date TEXT NOT NULL,
+        amount REAL NOT NULL,
+        summary TEXT NOT NULL,
+        FOREIGN KEY (sale_id) REFERENCES sales (id) ON DELETE CASCADE
+      )
+    ''';
+
   static Future<void> create({
     required Future<void> Function(String sql) execute,
   }) async {
@@ -175,5 +187,6 @@ class DatabaseSchemaCreator {
 
     await execute(metaTable);
     await execute(fairsTable);
+    await execute(saleRefundsTable);
   }
 }

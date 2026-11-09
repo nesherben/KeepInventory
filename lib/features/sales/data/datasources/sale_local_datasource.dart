@@ -162,6 +162,19 @@ class SaleLocalDatasource {
           packItems: packItemsList,
           paymentMethod: PaymentMethod.fromDb(saleMap['payment_method']),
           combos: combosList,
+          refunds: [
+            for (final r in await database.query(
+              'sale_refunds',
+              where: 'sale_id = ?',
+              whereArgs: [saleId],
+              orderBy: 'date',
+            ))
+              SaleRefund(
+                date: DateTime.parse(r['date'] as String),
+                amount: (r['amount'] as num).toDouble(),
+                summary: r['summary'] as String,
+              ),
+          ],
         ),
       );
     }
@@ -220,6 +233,22 @@ class SaleLocalDatasource {
   }) async {
     final database = await db;
     await database.transaction((txn) async {
+      // 0. HUELLA DE LA DEVOLUCIÓN: se ve en el ticket
+      final summary = [
+        for (final e in itemsToRefund.entries)
+          if (e.value > 0) '${e.value}× ${e.key.productName ?? '?'}',
+        for (final e in packsToRefund.entries)
+          if (e.value > 0) '${e.value}× ${e.key.packName ?? '?'}',
+      ].join(', ');
+      if (summary.isNotEmpty) {
+        await txn.insert('sale_refunds', {
+          'sale_id': originalSale.id,
+          'date': DateTime.now().toIso8601String(),
+          'amount': customRefundAmount,
+          'summary': summary,
+        });
+      }
+
       // 1. DEVOLUCIÓN DE PRODUCTOS SUELTOS
       for (var entry in itemsToRefund.entries) {
         if (entry.value > 0) {
