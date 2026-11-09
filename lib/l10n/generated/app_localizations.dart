@@ -2378,12 +2378,6 @@ abstract class AppLocalizations {
   /// **'Combo'**
   String get comboBadge;
 
-  /// No description provided for @comboMissingHint.
-  ///
-  /// In es, this message translates to:
-  /// **'Te falta: {slots}'**
-  String comboMissingHint(String slots);
-
   /// No description provided for @comboCartTitle.
   ///
   /// In es, this message translates to:
@@ -2611,6 +2605,18 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Feria eliminada'**
   String get fairDeleted;
+
+  /// No description provided for @comboAddMissing.
+  ///
+  /// In es, this message translates to:
+  /// **'Añadir'**
+  String get comboAddMissing;
+
+  /// No description provided for @comboMissingShort.
+  ///
+  /// In es, this message translates to:
+  /// **'falta {slots}'**
+  String comboMissingShort(String slots);
 }
 
 class _AppLocalizationsDelegate

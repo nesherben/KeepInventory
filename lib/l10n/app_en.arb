@@ -429,7 +429,6 @@
   "comboDeleted": "Combo deleted",
   "combosEmpty": "No combos yet. Create one to sell sets at a fixed price without building packs.",
   "comboBadge": "Combo",
-  "comboMissingHint": "Missing: {slots}",
   "comboCartTitle": "Combo · {name}",
   "comboRefundBreaks": "This breaks the “{name}” combo: what's left is charged at the normal price",
   "comboRefundWhole": "Refund combo",
@@ -467,5 +466,7 @@
   "fairDeleteTitle": "Delete fair",
   "fairDeleteConfirmUsed": "“{name}” has {count} tickets. They will be removed from the fair (tickets are not deleted). Delete the fair from the list?",
   "fairDeleteConfirmEmpty": "Delete “{name}” from the fairs list?",
-  "fairDeleted": "Fair deleted"
+  "fairDeleted": "Fair deleted",
+  "comboAddMissing": "Add",
+  "comboMissingShort": "missing {slots}"
 }

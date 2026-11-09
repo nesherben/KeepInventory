@@ -1321,11 +1321,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get comboBadge => 'Combo';
 
   @override
-  String comboMissingHint(String slots) {
-    return 'Te falta: $slots';
-  }
-
-  @override
   String comboCartTitle(String name) {
     return 'Combo · $name';
   }
@@ -1474,4 +1469,12 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get fairDeleted => 'Feria eliminada';
+
+  @override
+  String get comboAddMissing => 'Añadir';
+
+  @override
+  String comboMissingShort(String slots) {
+    return 'falta $slots';
+  }
 }

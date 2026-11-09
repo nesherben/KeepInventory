@@ -78,14 +78,12 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
   // --- Combos ---
 
   Future<void> _openComboForm([Combo? combo]) async {
-    final saved = await Navigator.push<bool>(
-      context,
-      MaterialPageRoute(
-        builder: (_) => ComboFormScreen(
-          combo: combo,
-          products: _products,
-          otherCombos: _combos.where((c) => c.id != combo?.id).toList(),
-        ),
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (_) => ComboFormScreen(
+        combo: combo,
+        products: _products,
+        otherCombos: _combos.where((c) => c.id != combo?.id).toList(),
       ),
     );
     if (saved == true) _loadPromotions();

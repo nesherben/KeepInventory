@@ -293,28 +293,20 @@ class _ComboFormScreenState extends State<ComboFormScreen> {
     final price = _priceValue;
     final saving = price == null ? null : separate - price;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          widget.combo == null
-              ? context.l10n.comboNewTitle
-              : context.l10n.comboEditTitle,
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: AppSpacing.sm),
-            child: FilledButton(
-              onPressed: _saving ? null : _save,
-              child: Text(context.l10n.save),
-            ),
-          ),
-        ],
+    // Mismo formato que el formulario de promociones: diálogo con
+    // Cancelar / Guardar abajo
+    return AlertDialog(
+      title: Text(
+        widget.combo == null
+            ? context.l10n.comboNewTitle
+            : context.l10n.comboEditTitle,
       ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 640),
-          child: ListView(
-            padding: EdgeInsets.all(AppSpacing.page(context)),
+      content: SizedBox(
+        width: 520,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               TextField(
                 controller: _name,
@@ -375,6 +367,18 @@ class _ComboFormScreenState extends State<ComboFormScreen> {
           ),
         ),
       ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(context.l10n.cancel),
+        ),
+        FilledButton(
+          onPressed: _saving ? null : _save,
+          child: Text(
+            widget.combo == null ? context.l10n.save : context.l10n.update,
+          ),
+        ),
+      ],
     );
   }
 }

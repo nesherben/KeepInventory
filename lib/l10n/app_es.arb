@@ -536,14 +536,6 @@
   "comboDeleted": "Combo eliminado",
   "combosEmpty": "Sin combos. Crea uno para vender conjuntos a precio fijo sin montar packs.",
   "comboBadge": "Combo",
-  "comboMissingHint": "Te falta: {slots}",
-  "@comboMissingHint": {
-    "placeholders": {
-      "slots": {
-        "type": "String"
-      }
-    }
-  },
   "comboCartTitle": "Combo · {name}",
   "@comboCartTitle": {
     "placeholders": {
@@ -724,5 +716,14 @@
       }
     }
   },
-  "fairDeleted": "Feria eliminada"
+  "fairDeleted": "Feria eliminada",
+  "comboAddMissing": "Añadir",
+  "comboMissingShort": "falta {slots}",
+  "@comboMissingShort": {
+    "placeholders": {
+      "slots": {
+        "type": "String"
+      }
+    }
+  }
 }

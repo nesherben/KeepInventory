@@ -463,6 +463,8 @@ class _SalesScreenState extends State<SalesScreen>
                         Expanded(
                           child: CartItemsListWidget(
                             cart: _cart,
+                            catalog: _products,
+                            onAddToCart: _addToCart,
                             cartPacks: _cartPacks,
                             promotionsMap: _promotionsMap,
                             pricing: _pricing,
@@ -555,6 +557,8 @@ class _SalesScreenState extends State<SalesScreen>
                                         children: [
                                           CartItemsListWidget(
                                             cart: _cart,
+                                            catalog: _products,
+                                            onAddToCart: _addToCart,
                                             cartPacks: _cartPacks,
                                             promotionsMap: _promotionsMap,
                                             pricing: _pricing,

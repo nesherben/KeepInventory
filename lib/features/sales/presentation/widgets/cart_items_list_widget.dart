@@ -28,6 +28,10 @@ class CartItemsListWidget extends StatelessWidget {
   final Function(Pack) onRemovePackFromCart;
   final Function(Pack) onRemoveAllPackFromCart;
 
+  /// Catálogo y acción de añadir: para el botón "Añadir" de un combo a medias.
+  final List<Product> catalog;
+  final Function(Product)? onAddToCart;
+
   const CartItemsListWidget({
     super.key,
     required this.cart,
@@ -38,7 +42,44 @@ class CartItemsListWidget extends StatelessWidget {
     required this.onRemoveAllFromCart,
     required this.onRemovePackFromCart,
     required this.onRemoveAllPackFromCart,
+    this.catalog = const [],
+    this.onAddToCart,
   });
+
+  /// Añade al carrito lo que falta para completar el combo (null si no hay
+  /// stock o no se puede añadir).
+  VoidCallback? _completeComboAction(ComboHint hint) {
+    final add = onAddToCart;
+    if (add == null) return null;
+    final byId = {for (final p in catalog) p.id: p};
+    final toAdd = <Product>[];
+    for (final slot in hint.missing) {
+      final have = slot.productIds.fold<int>(
+        0,
+        (t, id) => t + (pricing.combos.remaining[id] ?? 0),
+      );
+      var need = slot.quantity - have;
+      for (final id in slot.productIds) {
+        final product = byId[id];
+        if (product == null) continue;
+        // Stock libre = unidades - las que ya están en el carrito
+        var free = product.units - (cart[product] ?? 0);
+        while (need > 0 && free > 0) {
+          toAdd.add(product);
+          need--;
+          free--;
+        }
+        if (need == 0) break;
+      }
+      if (need > 0) return null; // no hay stock suficiente
+    }
+    if (toAdd.isEmpty) return null;
+    return () {
+      for (final product in toAdd) {
+        add(product);
+      }
+    };
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -60,7 +101,8 @@ class CartItemsListWidget extends StatelessWidget {
         // --- COMBOS APLICADOS Y A MEDIAS ---
         for (final application in pricing.combos.applications)
           _ComboSummary(application: application),
-        for (final hint in pricing.combos.hints) _ComboHintCard(hint: hint),
+        for (final hint in pricing.combos.hints)
+          _ComboHintCard(hint: hint, onAdd: _completeComboAction(hint)),
 
         // --- PRODUCTOS SUELTOS (con lógica Mix & Match) ---
         ...cart.keys.map((product) {
@@ -401,7 +443,8 @@ class _ComboTag extends StatelessWidget {
   }
 }
 
-/// Combo completo en el carrito: nombre, veces, precio y ahorro.
+/// Combo completo en el carrito: una sola línea compacta (icono, nombre y
+/// veces, ahorro y precio).
 class _ComboSummary extends StatelessWidget {
   const _ComboSummary({required this.application});
 
@@ -411,39 +454,42 @@ class _ComboSummary extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     final saving = application.saving;
-    final title = context.l10n.comboCartTitle(application.combo.name);
+    final name = application.count > 1
+        ? '${application.combo.name} ${context.l10n.comboCount(application.count)}'
+        : application.combo.name;
     return Semantics(
       container: true,
-      label: '$title, ${context.money(application.total)}',
-      child: AppCard(
+      label:
+          '${context.l10n.comboCartTitle(name)}, ${context.money(application.total)}',
+      child: Container(
         margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-        padding: const EdgeInsets.all(AppSpacing.md),
-        borderColor: colors.primary,
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.sm,
+        ),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          border: Border.all(color: colors.primary),
+        ),
         child: Row(
           children: [
-            const IconBadge(Icons.extension),
-            const SizedBox(width: AppSpacing.md),
+            Icon(Icons.extension, size: 18, color: colors.primary),
+            const SizedBox(width: AppSpacing.sm),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    application.count > 1
-                        ? '$title ${context.l10n.comboCount(application.count)}'
-                        : title,
-                    style: const TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                  if (saving > 0.005)
-                    Text(
-                      context.l10n.comboSaving(context.amount(saving)),
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: colors.onSurfaceVariant,
-                      ),
-                    ),
-                ],
+              child: Text(
+                name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontWeight: FontWeight.w700),
               ),
             ),
+            if (saving > 0.005) ...[
+              Text(
+                '−${context.money(saving)}',
+                style: TextStyle(fontSize: 12, color: colors.onSurfaceVariant),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+            ],
             Text(
               context.money(application.total),
               style: const TextStyle(fontWeight: FontWeight.w800),
@@ -455,11 +501,14 @@ class _ComboSummary extends StatelessWidget {
   }
 }
 
-/// Combo a medias: "Te falta: Ratón". Ayuda a sugerir la venta.
+/// Combo a medias, en una línea: "Teclado + Ratón · falta Ratón [＋ Añadir]".
 class _ComboHintCard extends StatelessWidget {
-  const _ComboHintCard({required this.hint});
+  const _ComboHintCard({required this.hint, this.onAdd});
 
   final ComboHint hint;
+
+  /// Añade lo que falta (null = sin stock: no se muestra el botón).
+  final VoidCallback? onAdd;
 
   @override
   Widget build(BuildContext context) {
@@ -471,9 +520,11 @@ class _ComboHintCard extends StatelessWidget {
       liveRegion: true,
       child: Container(
         margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.sm,
+        padding: EdgeInsets.fromLTRB(
+          AppSpacing.md,
+          onAdd == null ? AppSpacing.sm : 2,
+          onAdd == null ? AppSpacing.md : 4,
+          onAdd == null ? AppSpacing.sm : 2,
         ),
         decoration: BoxDecoration(
           color: colors.secondaryContainer,
@@ -482,21 +533,42 @@ class _ComboHintCard extends StatelessWidget {
         child: Row(
           children: [
             Icon(
-              Icons.info_outline,
+              Icons.extension_outlined,
               size: 18,
               color: colors.onSecondaryContainer,
             ),
             const SizedBox(width: AppSpacing.sm),
             Expanded(
-              child: Text(
-                '${context.l10n.comboCartTitle(hint.combo.name)} · '
-                '${context.l10n.comboMissingHint(missing)}',
+              child: Text.rich(
+                TextSpan(
+                  children: [
+                    TextSpan(
+                      text: hint.combo.name,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    TextSpan(
+                      text: ' · ${context.l10n.comboMissingShort(missing)}',
+                    ),
+                  ],
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontSize: 13,
                   color: colors.onSecondaryContainer,
                 ),
               ),
             ),
+            if (onAdd != null)
+              TextButton.icon(
+                onPressed: onAdd,
+                style: TextButton.styleFrom(
+                  foregroundColor: colors.onSecondaryContainer,
+                  visualDensity: VisualDensity.compact,
+                ),
+                icon: const Icon(Icons.add, size: 18),
+                label: Text(context.l10n.comboAddMissing),
+              ),
           ],
         ),
       ),
