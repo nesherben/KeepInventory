@@ -229,6 +229,11 @@ class _SaleTicketCard extends StatelessWidget {
   }
 
   Widget _buildSaleItem(BuildContext context, SaleItem item) {
+    final colors = Theme.of(context).colorScheme;
+    final originalTotal = item.originalPrice * item.quantity;
+    final discountedTotal = item.historicalPrice * item.quantity;
+    final hasDiscount = originalTotal > discountedTotal + 0.005;
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
@@ -247,7 +252,7 @@ class _SaleTicketCard extends StatelessWidget {
                   item.productName ?? context.l10n.unknown,
                   style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
-                if (item.historicalPrice < item.originalPrice)
+                if (hasDiscount)
                   Text(
                     context.l10n.discountApplied,
                     style: TextStyle(
@@ -259,9 +264,23 @@ class _SaleTicketCard extends StatelessWidget {
               ],
             ),
           ),
-          Text(
-            context.money(item.quantity * item.historicalPrice),
-            style: const TextStyle(fontWeight: FontWeight.w600),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              if (hasDiscount)
+                Text(
+                  context.money(originalTotal),
+                  style: TextStyle(
+                    color: colors.error,
+                    decoration: TextDecoration.lineThrough,
+                    fontSize: 12,
+                  ),
+                ),
+              Text(
+                context.money(discountedTotal),
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ],
           ),
         ],
       ),

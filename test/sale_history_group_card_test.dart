@@ -19,7 +19,8 @@ void main() {
           productId: 1,
           productName: 'Taza',
           quantity: 2,
-          historicalPrice: 5,
+          historicalPrice: 4,
+          originalPrice: 5,
         ),
       ],
     );
@@ -58,6 +59,18 @@ void main() {
 
     await tester.tap(find.text(localizations.ticketTitle('8')));
     await tester.pumpAndSettle();
+    final originalPriceFinder = find.byWidgetPredicate(
+      (widget) =>
+          widget is Text &&
+          widget.data?.contains('10,00') == true &&
+          widget.style?.decoration == TextDecoration.lineThrough,
+    );
+    expect(originalPriceFinder, findsOneWidget);
+    final originalPrice = tester.widget<Text>(originalPriceFinder);
+    expect(
+      originalPrice.style?.color,
+      Theme.of(tester.element(originalPriceFinder)).colorScheme.error,
+    );
     await tester.tap(find.text(localizations.refund));
     await tester.pump();
     expect(refundedSale, sale);

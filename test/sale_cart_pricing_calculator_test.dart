@@ -121,6 +121,7 @@ void main() {
     expect(sale.date, saleDate);
     expect(sale.totalAmount, 24);
     expect(sale.items.single.historicalPrice, 9);
+    expect(sale.items.single.originalPrice, 10);
     expect(sale.items.single.promoType, 'percentage');
     expect(sale.items.single.promoThreshold, 2);
     expect(sale.items.single.promoDiscount, 10);

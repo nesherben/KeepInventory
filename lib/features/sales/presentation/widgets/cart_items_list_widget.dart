@@ -171,6 +171,7 @@ class CartItemsListWidget extends StatelessWidget {
               context.amount(product.price),
             ),
             total: itemTotal,
+            originalTotal: product.price * qty,
             extra: _lineExtras(
               context,
               promo: promo == null
@@ -240,6 +241,7 @@ class _CartLine extends StatelessWidget {
     required this.quantity,
     required this.unitPriceLabel,
     required this.total,
+    this.originalTotal,
     required this.onRemove,
     required this.onRemoveAll,
     required this.onLongPress,
@@ -251,6 +253,7 @@ class _CartLine extends StatelessWidget {
   final int quantity;
   final String unitPriceLabel;
   final double total;
+  final double? originalTotal;
   final Widget? extra;
   final VoidCallback onRemove;
   final VoidCallback onRemoveAll;
@@ -259,6 +262,11 @@ class _CartLine extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final originalTotal = this.originalTotal;
+    final discountedOriginalTotal =
+        originalTotal != null && originalTotal > total + 0.005
+        ? originalTotal
+        : null;
 
     return AppCard(
       margin: const EdgeInsets.only(bottom: AppSpacing.sm),
@@ -334,6 +342,15 @@ class _CartLine extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
+              if (discountedOriginalTotal != null)
+                Text(
+                  context.money(discountedOriginalTotal),
+                  style: TextStyle(
+                    color: colors.error,
+                    decoration: TextDecoration.lineThrough,
+                    fontSize: 12,
+                  ),
+                ),
               Text(
                 context.money(total),
                 style: const TextStyle(
@@ -484,21 +501,25 @@ class _ComboGroup extends StatelessWidget {
                     style: const TextStyle(fontWeight: FontWeight.w700),
                   ),
                 ),
-                if (saving > 0.005) ...[
-                  Text(
-                    '−${context.money(saving)}',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: colors.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                ],
                 Padding(
                   padding: const EdgeInsets.only(right: AppSpacing.xs),
-                  child: Text(
-                    context.money(application.total),
-                    style: const TextStyle(fontWeight: FontWeight.w800),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      if (saving > 0.005)
+                        Text(
+                          context.money(application.fullPrice),
+                          style: TextStyle(
+                            color: colors.error,
+                            decoration: TextDecoration.lineThrough,
+                            fontSize: 12,
+                          ),
+                        ),
+                      Text(
+                        context.money(application.total),
+                        style: const TextStyle(fontWeight: FontWeight.w800),
+                      ),
+                    ],
                   ),
                 ),
               ],
