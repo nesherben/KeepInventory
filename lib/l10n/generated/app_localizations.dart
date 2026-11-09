@@ -104,71 +104,47 @@ abstract class AppLocalizations {
   /// **'Gestión y POS'**
   String get drawerSubtitle;
 
-  /// No description provided for @navSectionMain.
-  ///
-  /// In es, this message translates to:
-  /// **'PRINCIPAL'**
-  String get navSectionMain;
-
   /// No description provided for @navDashboard.
   ///
   /// In es, this message translates to:
-  /// **'Dashboard'**
+  /// **'Inicio'**
   String get navDashboard;
 
   /// No description provided for @navSales.
   ///
   /// In es, this message translates to:
-  /// **'Panel de Ventas (TPV)'**
+  /// **'Caja (TPV)'**
   String get navSales;
-
-  /// No description provided for @navSectionStockOffers.
-  ///
-  /// In es, this message translates to:
-  /// **'ALMACÉN Y OFERTAS'**
-  String get navSectionStockOffers;
 
   /// No description provided for @navInventory.
   ///
   /// In es, this message translates to:
-  /// **'Gestión de Inventario'**
+  /// **'Inventario'**
   String get navInventory;
 
   /// No description provided for @navPromotions.
   ///
   /// In es, this message translates to:
-  /// **'Gestor de Promociones'**
+  /// **'Ofertas'**
   String get navPromotions;
 
   /// No description provided for @navPacks.
   ///
   /// In es, this message translates to:
-  /// **'Packs y Bundles'**
+  /// **'Packs'**
   String get navPacks;
-
-  /// No description provided for @navSectionRecords.
-  ///
-  /// In es, this message translates to:
-  /// **'REGISTROS'**
-  String get navSectionRecords;
 
   /// No description provided for @navHistory.
   ///
   /// In es, this message translates to:
-  /// **'Historial y Ferias'**
+  /// **'Tickets y ferias'**
   String get navHistory;
 
   /// No description provided for @navDataManagement.
   ///
   /// In es, this message translates to:
-  /// **'Gestión de Datos'**
+  /// **'Copias y sincronización'**
   String get navDataManagement;
-
-  /// No description provided for @navDataManagementSubtitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Copias de seguridad y Sync'**
-  String get navDataManagementSubtitle;
 
   /// No description provided for @themeNameDefault.
   ///
@@ -293,7 +269,7 @@ abstract class AppLocalizations {
   /// No description provided for @dashboardTitle.
   ///
   /// In es, this message translates to:
-  /// **'Panel de Control'**
+  /// **'Inicio'**
   String get dashboardTitle;
 
   /// No description provided for @privacyOff.
@@ -479,7 +455,7 @@ abstract class AppLocalizations {
   /// No description provided for @inventoryTitle.
   ///
   /// In es, this message translates to:
-  /// **'Gestión de Inventario'**
+  /// **'Inventario'**
   String get inventoryTitle;
 
   /// No description provided for @photoUpdated.
@@ -827,7 +803,7 @@ abstract class AppLocalizations {
   /// No description provided for @packsTitle.
   ///
   /// In es, this message translates to:
-  /// **'Gestión de Packs y Bundles'**
+  /// **'Packs'**
   String get packsTitle;
 
   /// No description provided for @searchPacks.
@@ -1013,7 +989,7 @@ abstract class AppLocalizations {
   /// No description provided for @salesTitle.
   ///
   /// In es, this message translates to:
-  /// **'Panel de Ventas (TPV)'**
+  /// **'Caja (TPV)'**
   String get salesTitle;
 
   /// No description provided for @salesProductsTab.
@@ -1361,7 +1337,7 @@ abstract class AppLocalizations {
   /// No description provided for @refundTitleHistory.
   ///
   /// In es, this message translates to:
-  /// **'Historial y Ferias'**
+  /// **'Tickets y ferias'**
   String get refundTitleHistory;
 
   /// No description provided for @exportPrompt.
@@ -1415,7 +1391,7 @@ abstract class AppLocalizations {
   /// No description provided for @dataManagementTitle.
   ///
   /// In es, this message translates to:
-  /// **'Gestión de Datos'**
+  /// **'Copias y sincronización'**
   String get dataManagementTitle;
 
   /// No description provided for @syncByQrTitle.
@@ -2111,19 +2087,19 @@ abstract class AppLocalizations {
   /// No description provided for @tutorialInventoryBody.
   ///
   /// In es, this message translates to:
-  /// **'En Inventario pulsa + y pon nombre, unidades, precio y coste. Con el coste la app calcula tu margen y te avisa cuando queda poco stock.'**
+  /// **'En Inventario pulsa + y pon nombre, precio, coste y unidades (la categoría es opcional). Verás tu margen al momento y la app te avisa cuando queda poco stock.'**
   String get tutorialInventoryBody;
 
   /// No description provided for @tutorialOffersTitle.
   ///
   /// In es, this message translates to:
-  /// **'2. Packs y promociones'**
+  /// **'2. Ofertas y packs'**
   String get tutorialOffersTitle;
 
   /// No description provided for @tutorialOffersBody.
   ///
   /// In es, this message translates to:
-  /// **'Agrupa productos en Packs con su propio precio, o crea Promociones (10 % de descuento, 3 por 12 €…) y asígnalas a tus productos. Se aplican solas al vender.'**
+  /// **'En Ofertas crea promociones (10 % de descuento, 3 por 12 €…) y combos (teclado + ratón = 10 €): se aplican solas al vender. En Packs agrupa productos con su propio precio.'**
   String get tutorialOffersBody;
 
   /// No description provided for @tutorialSalesTitle.
@@ -2135,19 +2111,19 @@ abstract class AppLocalizations {
   /// No description provided for @tutorialSalesBody.
   ///
   /// In es, this message translates to:
-  /// **'En Ventas toca los productos para añadirlos al carrito, pulsa COBRAR y elige cómo paga el cliente. El stock se descuenta automáticamente.'**
+  /// **'En Caja toca los productos para añadirlos al carrito, pulsa COBRAR y elige cómo paga el cliente. El stock se descuenta automáticamente.'**
   String get tutorialSalesBody;
 
   /// No description provided for @tutorialHistoryTitle.
   ///
   /// In es, this message translates to:
-  /// **'4. Historial y devoluciones'**
+  /// **'4. Tickets y ferias'**
   String get tutorialHistoryTitle;
 
   /// No description provided for @tutorialHistoryBody.
   ///
   /// In es, this message translates to:
-  /// **'En Historial tienes el ticket de cada venta. Desde ahí puedes devolver unidades y el importe se recalcula con las promociones.'**
+  /// **'En Tickets y ferias tienes el ticket de cada venta, agrupado por día o por feria. Desde ahí puedes devolver unidades y el importe se recalcula con las ofertas.'**
   String get tutorialHistoryBody;
 
   /// No description provided for @tutorialDashboardTitle.
@@ -2159,7 +2135,7 @@ abstract class AppLocalizations {
   /// No description provided for @tutorialDashboardBody.
   ///
   /// In es, this message translates to:
-  /// **'El Panel resume ingresos, beneficio y lo cobrado por cada método de pago. Ideal para el final del día.'**
+  /// **'En Inicio ves ingresos, beneficio y lo cobrado por cada método de pago. Ideal para cuadrar la caja al final del día.'**
   String get tutorialDashboardBody;
 
   /// No description provided for @tutorialDataTitle.
@@ -2171,7 +2147,7 @@ abstract class AppLocalizations {
   /// No description provided for @tutorialDataBody.
   ///
   /// In es, this message translates to:
-  /// **'En Gestión de Datos puedes hacer copias de seguridad o clonar todo a otro móvil con un QR, sin Wi‑Fi. Puedes volver a ver este tutorial desde el menú.'**
+  /// **'En Copias y sincronización puedes hacer copias de seguridad o pasar todo a otro móvil con un QR, sin Wi‑Fi. Puedes volver a ver este tutorial desde el menú.'**
   String get tutorialDataBody;
 
   /// No description provided for @inventorySortReset.
@@ -2809,6 +2785,48 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Ahora en «{name}»'**
   String categoryInOther(String name);
+
+  /// No description provided for @navInventorySubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Productos y categorías'**
+  String get navInventorySubtitle;
+
+  /// No description provided for @navPromotionsSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Promociones y combos'**
+  String get navPromotionsSubtitle;
+
+  /// No description provided for @navHistorySubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Historial y devoluciones'**
+  String get navHistorySubtitle;
+
+  /// No description provided for @navSectionSell.
+  ///
+  /// In es, this message translates to:
+  /// **'VENTA'**
+  String get navSectionSell;
+
+  /// No description provided for @navSectionCatalog.
+  ///
+  /// In es, this message translates to:
+  /// **'CATÁLOGO'**
+  String get navSectionCatalog;
+
+  /// No description provided for @navSectionData.
+  ///
+  /// In es, this message translates to:
+  /// **'DATOS'**
+  String get navSectionData;
+
+  /// No description provided for @navSectionHelp.
+  ///
+  /// In es, this message translates to:
+  /// **'AYUDA'**
+  String get navSectionHelp;
 }
 
 class _AppLocalizationsDelegate

@@ -44,7 +44,7 @@ void main() {
     final spanish = await AppLocalizations.delegate.load(const Locale('es'));
     final english = await AppLocalizations.delegate.load(const Locale('en'));
 
-    expect(spanish.salesTitle, 'Panel de Ventas (TPV)');
-    expect(english.salesTitle, 'Sales (POS)');
+    expect(spanish.salesTitle, 'Caja (TPV)');
+    expect(english.salesTitle, 'Checkout (POS)');
   });
 }

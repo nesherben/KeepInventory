@@ -13,37 +13,25 @@ class AppLocalizationsEs extends AppLocalizations {
   String get drawerSubtitle => 'Gestión y POS';
 
   @override
-  String get navSectionMain => 'PRINCIPAL';
+  String get navDashboard => 'Inicio';
 
   @override
-  String get navDashboard => 'Dashboard';
+  String get navSales => 'Caja (TPV)';
 
   @override
-  String get navSales => 'Panel de Ventas (TPV)';
+  String get navInventory => 'Inventario';
 
   @override
-  String get navSectionStockOffers => 'ALMACÉN Y OFERTAS';
+  String get navPromotions => 'Ofertas';
 
   @override
-  String get navInventory => 'Gestión de Inventario';
+  String get navPacks => 'Packs';
 
   @override
-  String get navPromotions => 'Gestor de Promociones';
+  String get navHistory => 'Tickets y ferias';
 
   @override
-  String get navPacks => 'Packs y Bundles';
-
-  @override
-  String get navSectionRecords => 'REGISTROS';
-
-  @override
-  String get navHistory => 'Historial y Ferias';
-
-  @override
-  String get navDataManagement => 'Gestión de Datos';
-
-  @override
-  String get navDataManagementSubtitle => 'Copias de seguridad y Sync';
+  String get navDataManagement => 'Copias y sincronización';
 
   @override
   String get themeNameDefault => 'Por defecto / Sistema';
@@ -116,7 +104,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get updateConnectionError => 'No se pudo conectar con el servidor.';
 
   @override
-  String get dashboardTitle => 'Panel de Control';
+  String get dashboardTitle => 'Inicio';
 
   @override
   String get privacyOff => 'Desactivar modo privacidad';
@@ -218,7 +206,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get gallery => 'Galería';
 
   @override
-  String get inventoryTitle => 'Gestión de Inventario';
+  String get inventoryTitle => 'Inventario';
 
   @override
   String get photoUpdated => '📸 ¡Foto actualizada con éxito!';
@@ -403,7 +391,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get promotionUpdatedSuccess => '✨ ¡Promoción actualizada con éxito!';
 
   @override
-  String get packsTitle => 'Gestión de Packs y Bundles';
+  String get packsTitle => 'Packs';
 
   @override
   String get searchPacks => 'Buscar pack o producto dentro de los packs...';
@@ -518,7 +506,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get saleCompleted => '¡Cobro realizado con éxito!';
 
   @override
-  String get salesTitle => 'Panel de Ventas (TPV)';
+  String get salesTitle => 'Caja (TPV)';
 
   @override
   String get salesProductsTab => 'Productos Sueltos';
@@ -729,7 +717,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get refund => 'Devolución';
 
   @override
-  String get refundTitleHistory => 'Historial y Ferias';
+  String get refundTitleHistory => 'Tickets y ferias';
 
   @override
   String get exportPrompt => 'Selecciona dónde guardar la copia...';
@@ -758,7 +746,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get restartNow => 'Reiniciar ahora';
 
   @override
-  String get dataManagementTitle => 'Gestión de Datos';
+  String get dataManagementTitle => 'Copias y sincronización';
 
   @override
   String get syncByQrTitle => 'Sincronización por QR (Ferias)';
@@ -1169,42 +1157,42 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get tutorialInventoryBody =>
-      'En Inventario pulsa + y pon nombre, unidades, precio y coste. Con el coste la app calcula tu margen y te avisa cuando queda poco stock.';
+      'En Inventario pulsa + y pon nombre, precio, coste y unidades (la categoría es opcional). Verás tu margen al momento y la app te avisa cuando queda poco stock.';
 
   @override
-  String get tutorialOffersTitle => '2. Packs y promociones';
+  String get tutorialOffersTitle => '2. Ofertas y packs';
 
   @override
   String get tutorialOffersBody =>
-      'Agrupa productos en Packs con su propio precio, o crea Promociones (10 % de descuento, 3 por 12 €…) y asígnalas a tus productos. Se aplican solas al vender.';
+      'En Ofertas crea promociones (10 % de descuento, 3 por 12 €…) y combos (teclado + ratón = 10 €): se aplican solas al vender. En Packs agrupa productos con su propio precio.';
 
   @override
   String get tutorialSalesTitle => '3. Vende en segundos';
 
   @override
   String get tutorialSalesBody =>
-      'En Ventas toca los productos para añadirlos al carrito, pulsa COBRAR y elige cómo paga el cliente. El stock se descuenta automáticamente.';
+      'En Caja toca los productos para añadirlos al carrito, pulsa COBRAR y elige cómo paga el cliente. El stock se descuenta automáticamente.';
 
   @override
-  String get tutorialHistoryTitle => '4. Historial y devoluciones';
+  String get tutorialHistoryTitle => '4. Tickets y ferias';
 
   @override
   String get tutorialHistoryBody =>
-      'En Historial tienes el ticket de cada venta. Desde ahí puedes devolver unidades y el importe se recalcula con las promociones.';
+      'En Tickets y ferias tienes el ticket de cada venta, agrupado por día o por feria. Desde ahí puedes devolver unidades y el importe se recalcula con las ofertas.';
 
   @override
   String get tutorialDashboardTitle => '5. Cuadra la caja';
 
   @override
   String get tutorialDashboardBody =>
-      'El Panel resume ingresos, beneficio y lo cobrado por cada método de pago. Ideal para el final del día.';
+      'En Inicio ves ingresos, beneficio y lo cobrado por cada método de pago. Ideal para cuadrar la caja al final del día.';
 
   @override
   String get tutorialDataTitle => '6. Tus datos, a salvo';
 
   @override
   String get tutorialDataBody =>
-      'En Gestión de Datos puedes hacer copias de seguridad o clonar todo a otro móvil con un QR, sin Wi‑Fi. Puedes volver a ver este tutorial desde el menú.';
+      'En Copias y sincronización puedes hacer copias de seguridad o pasar todo a otro móvil con un QR, sin Wi‑Fi. Puedes volver a ver este tutorial desde el menú.';
 
   @override
   String get inventorySortReset => 'Tocar para volver al orden por defecto';
@@ -1596,4 +1584,25 @@ class AppLocalizationsEs extends AppLocalizations {
   String categoryInOther(String name) {
     return 'Ahora en «$name»';
   }
+
+  @override
+  String get navInventorySubtitle => 'Productos y categorías';
+
+  @override
+  String get navPromotionsSubtitle => 'Promociones y combos';
+
+  @override
+  String get navHistorySubtitle => 'Historial y devoluciones';
+
+  @override
+  String get navSectionSell => 'VENTA';
+
+  @override
+  String get navSectionCatalog => 'CATÁLOGO';
+
+  @override
+  String get navSectionData => 'DATOS';
+
+  @override
+  String get navSectionHelp => 'AYUDA';
 }

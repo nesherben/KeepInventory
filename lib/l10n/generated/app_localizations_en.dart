@@ -13,37 +13,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get drawerSubtitle => 'Inventory and POS';
 
   @override
-  String get navSectionMain => 'MAIN';
+  String get navDashboard => 'Home';
 
   @override
-  String get navDashboard => 'Dashboard';
-
-  @override
-  String get navSales => 'Sales (POS)';
-
-  @override
-  String get navSectionStockOffers => 'STOCK & OFFERS';
+  String get navSales => 'Checkout (POS)';
 
   @override
   String get navInventory => 'Inventory';
 
   @override
-  String get navPromotions => 'Promotions';
+  String get navPromotions => 'Offers';
 
   @override
-  String get navPacks => 'Packs and Bundles';
+  String get navPacks => 'Packs';
 
   @override
-  String get navSectionRecords => 'RECORDS';
+  String get navHistory => 'Tickets and fairs';
 
   @override
-  String get navHistory => 'History and Fairs';
-
-  @override
-  String get navDataManagement => 'Data Management';
-
-  @override
-  String get navDataManagementSubtitle => 'Backups and Sync';
+  String get navDataManagement => 'Backups and sync';
 
   @override
   String get themeNameDefault => 'Default / System';
@@ -116,7 +104,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get updateConnectionError => 'Could not connect to the server.';
 
   @override
-  String get dashboardTitle => 'Dashboard';
+  String get dashboardTitle => 'Home';
 
   @override
   String get privacyOff => 'Turn privacy mode off';
@@ -218,7 +206,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get gallery => 'Gallery';
 
   @override
-  String get inventoryTitle => 'Inventory Management';
+  String get inventoryTitle => 'Inventory';
 
   @override
   String get photoUpdated => '📸 Photo updated successfully!';
@@ -402,7 +390,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get promotionUpdatedSuccess => '✨ Promotion updated successfully!';
 
   @override
-  String get packsTitle => 'Pack and Bundle Management';
+  String get packsTitle => 'Packs';
 
   @override
   String get searchPacks => 'Search packs or products inside packs...';
@@ -517,7 +505,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get saleCompleted => 'Payment completed successfully!';
 
   @override
-  String get salesTitle => 'Sales (POS)';
+  String get salesTitle => 'Checkout (POS)';
 
   @override
   String get salesProductsTab => 'Individual Products';
@@ -727,7 +715,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get refund => 'Refund';
 
   @override
-  String get refundTitleHistory => 'History and Fairs';
+  String get refundTitleHistory => 'Tickets and fairs';
 
   @override
   String get exportPrompt => 'Choose where to save the backup...';
@@ -755,7 +743,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get restartNow => 'Restart now';
 
   @override
-  String get dataManagementTitle => 'Data Management';
+  String get dataManagementTitle => 'Backups and sync';
 
   @override
   String get syncByQrTitle => 'Sync by QR (Fairs)';
@@ -1165,42 +1153,42 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tutorialInventoryBody =>
-      'In Inventory tap + and enter name, units, price and cost. With the cost the app works out your margin and warns you when stock runs low.';
+      'In Inventory tap + and enter name, price, cost and units (category is optional). You\'ll see your margin right away and the app warns you when stock runs low.';
 
   @override
-  String get tutorialOffersTitle => '2. Packs and promotions';
+  String get tutorialOffersTitle => '2. Offers and packs';
 
   @override
   String get tutorialOffersBody =>
-      'Group products into Packs with their own price, or create Promotions (10% off, 3 for €12…) and assign them to your products. They apply automatically when selling.';
+      'In Offers create promotions (10% off, 3 for €12…) and combos (keyboard + mouse = €10): they apply automatically when selling. In Packs group products with their own price.';
 
   @override
   String get tutorialSalesTitle => '3. Sell in seconds';
 
   @override
   String get tutorialSalesBody =>
-      'In Sales tap products to add them to the cart, press CHECK OUT and choose how the customer pays. Stock is updated automatically.';
+      'In Checkout tap products to add them to the cart, press CHECK OUT and choose how the customer pays. Stock is updated automatically.';
 
   @override
-  String get tutorialHistoryTitle => '4. History and refunds';
+  String get tutorialHistoryTitle => '4. Tickets and fairs';
 
   @override
   String get tutorialHistoryBody =>
-      'History keeps the ticket of every sale. From there you can refund units and the amount is recalculated with promotions.';
+      'In Tickets and fairs you have every sale\'s ticket, grouped by day or by fair. From there you can refund units and the amount is recalculated with offers.';
 
   @override
   String get tutorialDashboardTitle => '5. Balance the till';
 
   @override
   String get tutorialDashboardBody =>
-      'The Dashboard sums up revenue, profit and what was paid with each method. Perfect for the end of the day.';
+      'Home shows revenue, profit and what was paid with each method. Perfect for balancing the till at the end of the day.';
 
   @override
   String get tutorialDataTitle => '6. Keep your data safe';
 
   @override
   String get tutorialDataBody =>
-      'In Data Management you can back up your data or clone everything to another phone with a QR code, no Wi‑Fi needed. You can replay this tutorial from the menu.';
+      'In Backups and sync you can back up your data or move everything to another phone with a QR code, no Wi‑Fi needed. You can replay this tutorial from the menu.';
 
   @override
   String get inventorySortReset => 'Tap to restore the default order';
@@ -1592,4 +1580,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String categoryInOther(String name) {
     return 'Currently in “$name”';
   }
+
+  @override
+  String get navInventorySubtitle => 'Products and categories';
+
+  @override
+  String get navPromotionsSubtitle => 'Promotions and combos';
+
+  @override
+  String get navHistorySubtitle => 'History and refunds';
+
+  @override
+  String get navSectionSell => 'SELLING';
+
+  @override
+  String get navSectionCatalog => 'CATALOG';
+
+  @override
+  String get navSectionData => 'DATA';
+
+  @override
+  String get navSectionHelp => 'HELP';
 }

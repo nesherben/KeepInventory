@@ -110,31 +110,42 @@ class AppDrawer extends StatelessWidget {
                   padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
                   child: Divider(),
                 ),
-                section(context.l10n.navSectionMain),
+                // Inicio va suelto arriba: es lo primero que se ve
+                const SizedBox(height: AppSpacing.sm),
                 item(
                   '/',
-                  Icons.dashboard_outlined,
-                  Icons.dashboard,
+                  Icons.home_outlined,
+                  Icons.home,
                   context.l10n.navDashboard,
                 ),
+                section(context.l10n.navSectionSell),
                 item(
                   '/sales',
                   Icons.point_of_sale_outlined,
                   Icons.point_of_sale,
                   context.l10n.navSales,
                 ),
-                section(context.l10n.navSectionStockOffers),
+                item(
+                  '/history',
+                  Icons.receipt_long_outlined,
+                  Icons.receipt_long,
+                  context.l10n.navHistory,
+                  subtitle: context.l10n.navHistorySubtitle,
+                ),
+                section(context.l10n.navSectionCatalog),
                 item(
                   '/inventory',
                   Icons.inventory_2_outlined,
                   Icons.inventory_2,
                   context.l10n.navInventory,
+                  subtitle: context.l10n.navInventorySubtitle,
                 ),
                 item(
                   '/promotions',
                   Icons.local_offer_outlined,
                   Icons.local_offer,
                   context.l10n.navPromotions,
+                  subtitle: context.l10n.navPromotionsSubtitle,
                 ),
                 item(
                   '/packs',
@@ -142,24 +153,14 @@ class AppDrawer extends StatelessWidget {
                   Icons.card_giftcard,
                   context.l10n.navPacks,
                 ),
-                section(context.l10n.navSectionRecords),
-                item(
-                  '/history',
-                  Icons.history_outlined,
-                  Icons.history,
-                  context.l10n.navHistory,
-                ),
+                section(context.l10n.navSectionData),
                 item(
                   '/data-management',
                   Icons.storage_outlined,
                   Icons.storage,
                   context.l10n.navDataManagement,
-                  subtitle: context.l10n.navDataManagementSubtitle,
                 ),
-                const Padding(
-                  padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
-                  child: Divider(),
-                ),
+                section(context.l10n.navSectionHelp),
                 // El tutorial se abre encima de la pantalla actual (push, no replace)
                 _NavItem(
                   icon: Icons.school_outlined,

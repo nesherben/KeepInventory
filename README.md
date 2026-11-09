@@ -42,9 +42,9 @@ Funciona 100 % sin conexión: tus datos viven en tu móvil.
 | 🎁 **Packs** | Agrupa varios productos en un pack con su propio precio y stock de unidades montadas. Muestra cuánto ahorra el cliente frente a comprarlos por separado y cuántos más se pueden montar con el stock actual. |
 | 🏷️ **Promociones** | Descuento por porcentaje (p. ej. 10 % a partir de 2 uds.) o precio fijo por lote (p. ej. *3 por 12 €*), con soporte Mix & Match entre productos de la misma promoción. Al crearla, una frase explica la regla y se sugiere el nombre. |
 | 🧩 **Combos** | Precio fijo por un conjunto de productos distintos (p. ej. *teclado + ratón = 10 €*) o de categorías (*cualquier Polaroid + cualquier Print A5 = 10 €*). Se detectan solos en el carrito, sin stock propio: cada producto descuenta el suyo. |
-| 🛒 **Ventas** | Catálogo con buscador, carrito con las promociones y combos aplicados automáticamente (con aviso *"Te falta: …"* para completar un combo) y cobro indicando el método de pago (efectivo, PayPal, Bizum). |
-| 🧾 **Tickets e historial** | Historial de ventas agrupado por día o por feria, ticket de cada venta y devoluciones parciales o totales (los packs pueden devolverse enteros o por componentes) calculadas correctamente aunque hubiera promociones o combos. |
-| 📊 **Panel** | Ingresos, beneficio y desglose por método de pago, con gráfica de ventas a pantalla completa. |
+| 🧾 **Caja (TPV)** | Catálogo con buscador, carrito con las promociones y combos aplicados automáticamente (con aviso *"Te falta: …"* para completar un combo) y cobro indicando el método de pago (efectivo, PayPal, Bizum). |
+| 🕘 **Tickets y ferias** | Historial de ventas agrupado por día o por feria, ticket de cada venta y devoluciones parciales o totales (los packs pueden devolverse enteros o por componentes) calculadas correctamente aunque hubiera promociones o combos. |
+| 🏠 **Inicio** | Ingresos, beneficio y desglose por método de pago, con gráfica de ventas a pantalla completa. |
 | 🔄 **Sincronización** | Pasa toda la base de datos a otro móvil con un QR. **No hace falta Wi‑Fi compartida**: la app crea su propio punto de acceso. |
 | 💾 **Backups** | Exporta / comparte la base de datos y restáurala cuando quieras. |
 | 🎨 **Personalización** | Tema claro / oscuro, colores dinámicos (Material You), español e inglés (idioma del móvil; inglés si no está traducido). |
@@ -65,7 +65,7 @@ Funciona 100 % sin conexión: tus datos viven en tu móvil.
 
 ## 🧭 Guía de uso
 
-El menú lateral (desliza desde el borde izquierdo o pulsa ☰) da acceso a todas las secciones.
+El menú lateral (desliza desde el borde izquierdo o pulsa ☰) da acceso a todas las secciones: **Inicio**; **Venta** (Caja y Tickets y ferias); **Catálogo** (Inventario, Ofertas y Packs); **Datos** (Copias y sincronización) y **Ayuda** (Tutorial).
 
 > 🎓 La primera vez que abres la app aparece un **tutorial** rápido. Puedes volver a verlo cuando quieras desde **menú → Tutorial**.
 
@@ -82,35 +82,35 @@ El menú lateral (desliza desde el borde izquierdo o pulsa ☰) da acceso a toda
 3. Indica cuántos packs tienes montados: es el stock que se descuenta al venderlos. Con − / + en la lista montas o desmontas packs; al desplegar uno verás el stock de cada componente y cuántos más puedes montar.
 
 ### 3. Configura promociones y combos (opcional)
-1. En **Promociones → Promociones**, crea una promoción eligiendo el tipo:
+1. En **Ofertas → Promociones**, crea una promoción eligiendo el tipo:
    - **Lote a precio fijo** → N unidades por X € (p. ej. *3 por 12 €*).
    - **% de descuento** → X % a partir de N unidades.
 
    Una frase te explica la regla y el nombre se rellena solo (puedes cambiarlo). Con **Aplicar a una categoría** todos sus productos reciben la promoción de golpe (luego puedes cambiar cualquiera por separado).
 2. Asigna la promoción a los productos desde su ficha de inventario. Los productos que comparten promoción se combinan entre sí (Mix & Match).
-3. En **Promociones → Combos** crea un combo cuando quieras vender **productos distintos juntos** a un precio fijo (p. ej. *1 teclado + 1 ratón = 10 €*):
+3. En **Ofertas → Combos** crea un combo cuando quieras vender **productos distintos juntos** a un precio fijo (p. ej. *1 teclado + 1 ratón = 10 €*):
    - Elige cada producto (o *cualquier producto de una categoría*) y su cantidad, y el precio del combo; verás el ahorro frente a comprarlos por separado.
    - Solo se aplica si el carrito tiene **todos** los productos del combo (2 teclados no cuentan), se repite por cada combo completo y lo que sobra va a precio normal.
    - Si un producto tiene además su propia promoción, dentro del combo gana el combo y las unidades sueltas mantienen su promoción.
    - En el inventario verás qué productos forman parte de un combo.
 
 ### 4. Vende
-1. Abre **Ventas**, busca o toca los productos / packs para añadirlos al carrito (si usas categorías, los chips bajo el buscador filtran el catálogo). Los productos que forman parte de un combo llevan la insignia **Combo**.
+1. Abre **Caja (TPV)**, busca o toca los productos / packs para añadirlos al carrito (si usas categorías, los chips bajo el buscador filtran el catálogo). Los productos que forman parte de un combo llevan la insignia **Combo**.
 2. Ajusta cantidades: el total ya incluye promociones y combos. Los combos aparecen agrupados en el carrito, con sus productos dentro. Si tienes medio combo, el carrito te avisa (*"falta Ratón"*): toca el aviso para ir al producto en el catálogo, o pulsa **＋ Añadir** para meterlo en el carrito de un toque.
 3. Pulsa **COBRAR**, elige el método de pago y confirma. El stock se descuenta solo.
 
 ### 5. Consulta el historial y haz devoluciones
-1. En **Historial** verás las ventas agrupadas por día con su ticket. Para agrupar un día bajo una **feria**, pulsa el botón de feria: busca una de tu lista o escribe una nueva y toca *Crear*. En un grupo de feria, cambiarla o quitarla afecta a **todos** sus tickets (de todos los días); al quitarla, cada ticket vuelve a su día. Las ferias se quedan en la lista aunque no tengan tickets, y puedes borrarlas con la papelera (sus tickets no se borran, solo se quedan sin feria).
+1. En **Tickets y ferias** verás las ventas agrupadas por día con su ticket. Para agrupar un día bajo una **feria**, pulsa el botón de feria: busca una de tu lista o escribe una nueva y toca *Crear*. En un grupo de feria, cambiarla o quitarla afecta a **todos** sus tickets (de todos los días); al quitarla, cada ticket vuelve a su día. Las ferias se quedan en la lista aunque no tengan tickets, y puedes borrarlas con la papelera (sus tickets no se borran, solo se quedan sin feria).
 2. Para devolver, abre la venta y elige qué y cuántas unidades devolver (o **Devolver combo** de golpe). El importe se recalcula teniendo en cuenta promociones y combos (si la devolución rompe un combo, lo que queda se cobra a precio normal) y el stock vuelve al inventario.
 
-### 6. Revisa el panel
-El **Panel** resume ingresos, beneficio y cuánto se ha cobrado por cada método de pago: perfecto para cuadrar la caja al final del día. Toca la gráfica para verla a pantalla completa.
+### 6. Revisa el Inicio
+**Inicio** resume ingresos, beneficio y cuánto se ha cobrado por cada método de pago: perfecto para cuadrar la caja al final del día. Toca la gráfica para verla a pantalla completa.
 
 ---
 
 ## 🔄 Sincronizar entre móviles
 
-Ideal para pasar el inventario a otro móvil del puesto. Ve a **Gestión de Datos → Sincronización por QR**:
+Ideal para pasar el inventario a otro móvil del puesto. Ve a **Copias y sincronización → Sincronización por QR**:
 
 1. **Emisor** (el que tiene los datos): elige *enviar*. La app crea un punto de acceso propio y muestra un **QR**.
 2. **Receptor**: elige *recibir* y escanea el QR. Se conecta solo, sin necesidad de Wi‑Fi común.
@@ -125,7 +125,7 @@ Ideal para pasar el inventario a otro móvil del puesto. Ve a **Gestión de Dato
 
 ## 💾 Copias de seguridad
 
-En **Gestión de Datos** puedes:
+En **Copias y sincronización** puedes:
 
 - **Exportar / compartir** la base de datos (por correo, Drive, Telegram…).
 - **Importar** un backup anterior para restaurarlo.
