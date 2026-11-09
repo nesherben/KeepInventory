@@ -2,6 +2,9 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+
+import '../../../inventory/presentation/widgets/product_picker_sheet.dart';
+
 import 'package:keepinventory/core/utils/app_numbers.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:keepinventory/l10n/app_localizations_ext.dart';
@@ -41,7 +44,6 @@ class _PackFormDialogState extends State<PackFormDialog> {
   String? oldImagePath;
 
   late Map<Product, int> selectedItems;
-  Product? _productToAdd;
 
   final ImagePicker _picker = ImagePicker();
 
@@ -228,54 +230,54 @@ class _PackFormDialogState extends State<PackFormDialog> {
   }
 
   Widget _buildProductSelector(List<Product> availableOptions) {
-    return Row(
-      children: [
-        Expanded(
-          child: DropdownButtonFormField<Product>(
-            decoration: InputDecoration(
-              hintText: context.l10n.addProduct,
-              isDense: true,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 12,
-              ),
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: OutlinedButton.icon(
+        icon: const Icon(Icons.add),
+        label: Text(context.l10n.packAddProductButton),
+        onPressed: availableOptions.isEmpty
+            ? null
+            : () async {
+                final product = await showProductPicker(
+                  context,
+                  products: availableOptions,
+                );
+                if (product != null) {
+                  setState(() => selectedItems[product] = 1);
+                }
+              },
+      ),
+    );
+  }
+
+  /// "Por separado 14,00 € · Ahorras 2,00 €" mientras se monta el pack.
+  Widget _buildSavingHint() {
+    if (selectedItems.isEmpty) return const SizedBox.shrink();
+    final colors = Theme.of(context).colorScheme;
+    final separate = selectedItems.entries.fold<double>(
+      0,
+      (t, e) => t + e.key.price * e.value,
+    );
+    final saving = separate - packPrice;
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Row(
+        children: [
+          Icon(Icons.savings_outlined, size: 18, color: colors.primary),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              context.l10n.packSeparatePrice(context.amount(separate)),
+              style: TextStyle(fontSize: 13, color: colors.onSurfaceVariant),
             ),
-            initialValue: _productToAdd,
-            isExpanded: true,
-            items: availableOptions
-                .map(
-                  (product) => DropdownMenuItem(
-                    value: product,
-                    child: Text(
-                      product.name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 13),
-                    ),
-                  ),
-                )
-                .toList(),
-            onChanged: (product) => setState(() => _productToAdd = product),
           ),
-        ),
-        const SizedBox(width: 8),
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Theme.of(context).colorScheme.primary,
-            foregroundColor: Theme.of(context).colorScheme.onPrimary,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-          ),
-          onPressed: _productToAdd == null
-              ? null
-              : () {
-                  setState(() {
-                    selectedItems[_productToAdd!] = 1;
-                    _productToAdd = null;
-                  });
-                },
-          child: const Icon(Icons.add, size: 20),
-        ),
-      ],
+          if (packPrice > 0 && saving > 0.005)
+            Text(
+              context.l10n.comboSaving(context.amount(saving)),
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+            ),
+        ],
+      ),
     );
   }
 
@@ -303,6 +305,7 @@ class _PackFormDialogState extends State<PackFormDialog> {
         ),
         const SizedBox(height: 8),
         _buildProductSelector(availableOptions),
+        _buildSavingHint(),
         const SizedBox(height: 12),
         if (constrainList)
           Flexible(
@@ -469,6 +472,8 @@ class _PackFormDialogState extends State<PackFormDialog> {
         final price = AppNumbers.parseDecimal(value);
         return price == null || price < 0 ? context.l10n.invalidNumber : null;
       },
+      onChanged: (value) =>
+          setState(() => packPrice = AppNumbers.parseDecimal(value) ?? 0.0),
       onSaved: (value) => packPrice = AppNumbers.parseDecimal(value) ?? 0.0,
     );
   }

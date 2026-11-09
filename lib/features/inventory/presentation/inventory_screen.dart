@@ -393,8 +393,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
             } else {
               await _productRepository.insertProduct(productModel);
             }
+            // El diálogo se cierra solo tras guardar
             if (context.mounted) {
-              Navigator.pop(context);
               _loadProducts();
               AppAlerts.showSuccess(
                 context,

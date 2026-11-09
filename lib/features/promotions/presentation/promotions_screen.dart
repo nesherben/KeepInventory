@@ -19,6 +19,7 @@ import '../data/datasources/combo_local_datasource.dart';
 import '../data/repositories/combo_repository_impl.dart';
 import '../domain/combo.dart';
 import 'combo_form_screen.dart';
+import 'promotion_form_dialog.dart';
 
 class PromotionsScreen extends StatefulWidget {
   const PromotionsScreen({super.key});
@@ -173,179 +174,27 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
   }
 
   void _showPromotionFormDialog({Promotion? promotionToEdit}) {
-    final formKey = GlobalKey<FormState>();
     final isEditing = promotionToEdit != null;
-
-    String name = isEditing ? promotionToEdit.name : '';
-    String type = isEditing ? promotionToEdit.type : 'bundle_fixed_price';
-    int threshold = isEditing ? promotionToEdit.threshold : 3;
-    double discountValue = isEditing ? promotionToEdit.discountValue : 0.0;
-
     showDialog(
       context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            final isLandscape =
-                MediaQuery.of(context).size.width >
-                MediaQuery.of(context).size.height;
-            final fieldWidth = isLandscape ? 320.0 : 520.0;
-
-            return AlertDialog(
-              title: Text(
-                isEditing
-                    ? context.l10n.promotionFormEditTitle
-                    : context.l10n.promotionFormNewTitle,
-              ),
-              content: SizedBox(
-                width: isLandscape ? 680 : 520,
-                child: Form(
-                  key: formKey,
-                  child: SingleChildScrollView(
-                    child: Wrap(
-                      alignment: WrapAlignment.center,
-                      spacing: 12,
-                      runSpacing: 12,
-                      children: [
-                        SizedBox(
-                          width: fieldWidth,
-                          child: TextFormField(
-                            initialValue: name,
-                            decoration: InputDecoration(
-                              labelText: context.l10n.offerName,
-                            ),
-                            validator: (value) => value == null || value.isEmpty
-                                ? context.l10n.required
-                                : null,
-                            onSaved: (value) => name = value!,
-                          ),
-                        ),
-                        SizedBox(
-                          width: fieldWidth,
-                          child: DropdownButtonFormField<String>(
-                            initialValue: type,
-                            decoration: InputDecoration(
-                              labelText: context.l10n.promotionType,
-                            ),
-                            items: [
-                              DropdownMenuItem(
-                                value: 'bundle_fixed_price',
-                                child: Text(context.l10n.bundleFixedPrice),
-                              ),
-                              DropdownMenuItem(
-                                value: 'percentage',
-                                child: Text(context.l10n.percentageDiscount),
-                              ),
-                            ],
-                            onChanged: (value) {
-                              setDialogState(() => type = value!);
-                            },
-                          ),
-                        ),
-                        SizedBox(
-                          width: fieldWidth,
-                          child: TextFormField(
-                            initialValue: threshold.toString(),
-                            decoration: InputDecoration(
-                              labelText: context.l10n.minimumQuantity,
-                            ),
-                            keyboardType: TextInputType.number,
-                            inputFormatters: AppNumbers.integerInputFormatters,
-                            validator: (value) {
-                              final n = AppNumbers.parseInt(value);
-                              return n == null || n < 1
-                                  ? context.l10n.validNumberRequired
-                                  : null;
-                            },
-                            onSaved: (value) =>
-                                threshold = AppNumbers.parseInt(value)!,
-                          ),
-                        ),
-                        SizedBox(
-                          width: fieldWidth,
-                          child: TextFormField(
-                            initialValue: discountValue == 0.0
-                                ? ''
-                                : type == 'bundle_fixed_price'
-                                ? context.amountInput(discountValue)
-                                : discountValue == discountValue.roundToDouble()
-                                ? discountValue.round().toString()
-                                : context.amount(discountValue),
-                            decoration: InputDecoration(
-                              labelText: type == 'bundle_fixed_price'
-                                  ? context.l10n.bundleTotalPrice
-                                  : context.l10n.discountPercentage,
-                              suffixText: type == 'bundle_fixed_price'
-                                  ? '€'
-                                  : '%',
-                            ),
-                            keyboardType: AppNumbers.decimalKeyboard,
-                            inputFormatters: AppNumbers.decimalInputFormatters,
-                            validator: (value) {
-                              final v = AppNumbers.parseDecimal(value);
-                              final isPercent = type != 'bundle_fixed_price';
-                              // % entre 0 y 100; precio del lote > 0
-                              final invalid =
-                                  v == null || v <= 0 || (isPercent && v > 100);
-                              return invalid
-                                  ? context.l10n.validValueRequired
-                                  : null;
-                            },
-                            onSaved: (value) =>
-                                discountValue = AppNumbers.parseDecimal(value)!,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text(context.l10n.cancel),
-                ),
-                ElevatedButton(
-                  onPressed: () async {
-                    if (formKey.currentState!.validate()) {
-                      formKey.currentState!.save();
-
-                      final newPromo = Promotion(
-                        id: isEditing ? promotionToEdit.id : null,
-                        name: name,
-                        type: type,
-                        threshold: threshold,
-                        discountValue: discountValue,
-                      );
-
-                      if (isEditing) {
-                        await _repository.updatePromotion(newPromo);
-                      } else {
-                        await _repository.insertPromotion(newPromo);
-                      }
-
-                      if (context.mounted) {
-                        Navigator.pop(context);
-                        _loadPromotions();
-                        // 💡 Alerta de éxito unificada
-                        AppAlerts.showSuccess(
-                          context,
-                          isEditing
-                              ? context.l10n.promotionUpdatedSuccess
-                              : context.l10n.promotionCreated,
-                        );
-                      }
-                    }
-                  },
-                  child: Text(
-                    isEditing ? context.l10n.update : context.l10n.save,
-                  ),
-                ),
-              ],
-            );
-          },
-        );
-      },
+      builder: (dialogContext) => PromotionFormDialog(
+        promotion: promotionToEdit,
+        onSave: (promotion) async {
+          if (isEditing) {
+            await _repository.updatePromotion(promotion);
+          } else {
+            await _repository.insertPromotion(promotion);
+          }
+          if (!mounted) return;
+          _loadPromotions();
+          AppAlerts.showSuccess(
+            context,
+            isEditing
+                ? context.l10n.promotionUpdatedSuccess
+                : context.l10n.promotionCreated,
+          );
+        },
+      ),
     );
   }
 

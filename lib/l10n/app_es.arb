@@ -119,9 +119,6 @@
   "promotionFormEditTitle": "Editar Promoción",
   "promotionFormNewTitle": "Nueva Promoción",
   "offerName": "Nombre de la oferta",
-  "promotionType": "Tipo de Promoción",
-  "bundleFixedPrice": "Precio fijo por lote",
-  "percentageDiscount": "Descuento porcentual (%)",
   "minimumQuantity": "Cantidad mínima (Unidades a llevar)",
   "validNumberRequired": "Número válido requerido",
   "bundleTotalPrice": "Precio total del lote (€)",
@@ -160,7 +157,6 @@
   "createPackTitle": "Crear Nuevo Pack / Bundle",
   "editPackTitle": "Modificar Pack",
   "packComponents": "Componentes del Pack:",
-  "addProduct": "Añadir producto...",
   "packEmpty": "No hay productos en este pack.",
   "createPack": "Crear Pack",
   "packName": "Nombre del Pack",
@@ -242,10 +238,6 @@
   "refundSuccess": "Devolución procesada y contabilidad rebalanceada.",
   "confirm": "Confirmar",
   "assignFairTitle": "Agrupar en Feria",
-  "selectFairPrompt": "Selecciona una feria guardada o escribe una nueva:",
-  "availableFairs": "Ferias disponibles",
-  "enterNewFairOrNone": "-- Escribir nueva / Ninguna --",
-  "fairName": "Nombre de la Feria",
   "fairUnassigned": "Feria desasignada correctamente.",
   "salesGroupedFair": "Ventas agrupadas en \"{fair}\" con éxito.",
   "@salesGroupedFair": { "placeholders": { "fair": {} } },
@@ -492,7 +484,6 @@
   "comboSlotAdd": "Añadir producto",
   "comboSlotQuantity": "Cantidad",
   "comboSlotNoProducts": "Toca para elegir el producto",
-  "comboSlotPickTitle": "Elige el producto",
   "comboPriceLabel": "Precio del combo",
   "comboSeparateTotal": "Por separado {amount} €",
   "@comboSeparateTotal": {
@@ -578,5 +569,91 @@
       }
     }
   },
-  "comboNoSavingTitle": "El combo no ahorra"
+  "comboNoSavingTitle": "El combo no ahorra",
+  "productFormMargin": "Margen por unidad: {amount} € ({percent})",
+  "@productFormMargin": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "productFormLoss": "Vendes a pérdidas: {amount} € por unidad",
+  "@productFormLoss": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "promotionTypeBundle": "Lote a precio fijo",
+  "promotionTypePercent": "% de descuento",
+  "promotionPreviewBundle": "Llevando {count} unidades, pagan {price} € en total",
+  "@promotionPreviewBundle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "promotionPreviewPercent": "Desde {count} unidades, {percent} de descuento en cada una",
+  "@promotionPreviewPercent": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "promotionAutoNameBundle": "{count} por {price} €",
+  "@promotionAutoNameBundle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "promotionAutoNamePercent": "−{percent} desde {count} uds",
+  "@promotionAutoNamePercent": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "packSeparatePrice": "Por separado {amount} €",
+  "@packSeparatePrice": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "packAddProductButton": "Añadir producto",
+  "productPickerTitle": "Elige un producto",
+  "fairSearchOrCreate": "Busca o escribe una feria nueva",
+  "fairCreate": "Crear «{name}»",
+  "@fairCreate": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "fairRemove": "Quitar feria",
+  "fairCurrent": "Actual"
 }

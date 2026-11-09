@@ -350,15 +350,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get offerName => 'Nombre de la oferta';
 
   @override
-  String get promotionType => 'Tipo de Promoción';
-
-  @override
-  String get bundleFixedPrice => 'Precio fijo por lote';
-
-  @override
-  String get percentageDiscount => 'Descuento porcentual (%)';
-
-  @override
   String get minimumQuantity => 'Cantidad mínima (Unidades a llevar)';
 
   @override
@@ -469,9 +460,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get packComponents => 'Componentes del Pack:';
-
-  @override
-  String get addProduct => 'Añadir producto...';
 
   @override
   String get packEmpty => 'No hay productos en este pack.';
@@ -703,19 +691,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get assignFairTitle => 'Agrupar en Feria';
-
-  @override
-  String get selectFairPrompt =>
-      'Selecciona una feria guardada o escribe una nueva:';
-
-  @override
-  String get availableFairs => 'Ferias disponibles';
-
-  @override
-  String get enterNewFairOrNone => '-- Escribir nueva / Ninguna --';
-
-  @override
-  String get fairName => 'Nombre de la Feria';
 
   @override
   String get fairUnassigned => 'Feria desasignada correctamente.';
@@ -1283,9 +1258,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get comboSlotNoProducts => 'Toca para elegir el producto';
 
   @override
-  String get comboSlotPickTitle => 'Elige el producto';
-
-  @override
   String get comboPriceLabel => 'Precio del combo';
 
   @override
@@ -1373,4 +1345,65 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get comboNoSavingTitle => 'El combo no ahorra';
+
+  @override
+  String productFormMargin(String amount, String percent) {
+    return 'Margen por unidad: $amount € ($percent)';
+  }
+
+  @override
+  String productFormLoss(String amount) {
+    return 'Vendes a pérdidas: $amount € por unidad';
+  }
+
+  @override
+  String get promotionTypeBundle => 'Lote a precio fijo';
+
+  @override
+  String get promotionTypePercent => '% de descuento';
+
+  @override
+  String promotionPreviewBundle(int count, String price) {
+    return 'Llevando $count unidades, pagan $price € en total';
+  }
+
+  @override
+  String promotionPreviewPercent(int count, String percent) {
+    return 'Desde $count unidades, $percent de descuento en cada una';
+  }
+
+  @override
+  String promotionAutoNameBundle(int count, String price) {
+    return '$count por $price €';
+  }
+
+  @override
+  String promotionAutoNamePercent(int count, String percent) {
+    return '−$percent desde $count uds';
+  }
+
+  @override
+  String packSeparatePrice(String amount) {
+    return 'Por separado $amount €';
+  }
+
+  @override
+  String get packAddProductButton => 'Añadir producto';
+
+  @override
+  String get productPickerTitle => 'Elige un producto';
+
+  @override
+  String get fairSearchOrCreate => 'Busca o escribe una feria nueva';
+
+  @override
+  String fairCreate(String name) {
+    return 'Crear «$name»';
+  }
+
+  @override
+  String get fairRemove => 'Quitar feria';
+
+  @override
+  String get fairCurrent => 'Actual';
 }

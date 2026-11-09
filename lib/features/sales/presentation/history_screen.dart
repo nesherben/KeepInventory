@@ -88,132 +88,126 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
   }
 
+  /// Panel para asignar feria a un día: buscador arriba, tocar una feria la
+  /// asigna al momento; si lo escrito no existe, "Crear «X»".
   void _showAssignFairDialog(String datePrefix, String currentFairName) async {
-    final List<String> existingFairs = await _saleRepository
-        .getAvailableFairs();
-
-    final TextEditingController controller = TextEditingController(
-      text: currentFairName,
-    );
-    String? selectedExisting = existingFairs.contains(currentFairName)
-        ? currentFairName
-        : null;
-
+    final existingFairs = await _saleRepository.getAvailableFairs();
+    existingFairs.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
     if (!mounted) return;
 
-    showDialog(
+    var query = '';
+    final chosen = await showModalBottomSheet<String>(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          title: Text(
-            context.l10n.assignFairTitle,
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(context.l10n.selectFairPrompt),
-              const SizedBox(height: 16),
-              if (existingFairs.isNotEmpty) ...[
-                DropdownButtonFormField<String>(
-                  isExpanded: true,
-                  initialValue: selectedExisting,
-                  decoration: InputDecoration(
-                    labelText: context.l10n.availableFairs,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (sheetContext, setSheet) {
+          final colors = Theme.of(sheetContext).colorScheme;
+          final typed = query.trim();
+          final visible = existingFairs
+              .where((f) => f.toLowerCase().contains(typed.toLowerCase()))
+              .toList();
+          final exactExists = existingFairs.any(
+            (f) => f.toLowerCase() == typed.toLowerCase(),
+          );
+          return Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
+            ),
+            child: SizedBox(
+              height: MediaQuery.sizeOf(sheetContext).height * 0.6,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                    child: Text(
+                      sheetContext.l10n.assignFairTitle,
+                      style: Theme.of(sheetContext).textTheme.titleMedium,
                     ),
-                    prefixIcon: const Icon(Icons.event_seat),
                   ),
-                  items: [
-                    DropdownMenuItem(
-                      value: null,
-                      child: Text(
-                        context.l10n.enterNewFairOrNone,
-                        overflow: TextOverflow.ellipsis,
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: TextField(
+                      autofocus: existingFairs.isEmpty,
+                      textCapitalization: TextCapitalization.sentences,
+                      textInputAction: TextInputAction.done,
+                      onChanged: (v) => setSheet(() => query = v),
+                      // Enter: crea / elige lo escrito
+                      onSubmitted: (v) {
+                        if (v.trim().isNotEmpty) {
+                          Navigator.pop(sheetContext, v.trim());
+                        }
+                      },
+                      decoration: InputDecoration(
+                        hintText: sheetContext.l10n.fairSearchOrCreate,
+                        prefixIcon: const Icon(Icons.search, size: 20),
+                        isDense: true,
                       ),
                     ),
-                    ...existingFairs.map(
-                      (fair) => DropdownMenuItem(
-                        value: fair,
-                        child: Text(fair, overflow: TextOverflow.ellipsis),
-                      ),
-                    ),
-                  ],
-                  onChanged: (val) {
-                    setDialogState(() {
-                      selectedExisting = val;
-                      if (val != null) {
-                        controller.text = val;
-                      } else {
-                        controller.clear();
-                      }
-                    });
-                  },
-                ),
-                const SizedBox(height: 16),
-              ],
-              TextField(
-                controller: controller,
-                decoration: InputDecoration(
-                  labelText: context.l10n.fairName,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
                   ),
-                  prefixIcon: const Icon(Icons.edit),
-                ),
-                autofocus: true,
-              ),
-            ],
-          ),
-          actionsPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 16,
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(
-                context.l10n.cancel,
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ),
-            FilledButton.icon(
-              style: FilledButton.styleFrom(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              onPressed: () async {
-                final l10n = context.l10n;
-                final newName = controller.text.trim();
-                Navigator.pop(context);
-                await _saleRepository.updateFairNameForDate(
-                  datePrefix,
-                  newName.isEmpty ? null : newName,
-                );
-                await _loadSales();
-                if (!context.mounted) return;
-                AppAlerts.showSuccess(
-                  context,
-                  newName.isEmpty
-                      ? l10n.fairUnassigned
-                      : l10n.salesGroupedFair(newName),
-                );
-              },
-              icon: const Icon(Icons.save, size: 18),
-              label: Text(
-                context.l10n.save,
-                style: TextStyle(fontWeight: FontWeight.bold),
+                  const SizedBox(height: 8),
+                  Expanded(
+                    child: ListView(
+                      children: [
+                        if (typed.isNotEmpty && !exactExists)
+                          ListTile(
+                            leading: Icon(Icons.add, color: colors.primary),
+                            title: Text(
+                              sheetContext.l10n.fairCreate(typed),
+                              style: TextStyle(
+                                color: colors.primary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            onTap: () => Navigator.pop(sheetContext, typed),
+                          ),
+                        for (final fair in visible)
+                          ListTile(
+                            leading: const Icon(Icons.event_outlined),
+                            title: Text(fair),
+                            selected: fair == currentFairName,
+                            trailing: fair == currentFairName
+                                ? Text(sheetContext.l10n.fairCurrent)
+                                : null,
+                            onTap: () => Navigator.pop(sheetContext, fair),
+                          ),
+                        if (currentFairName.isNotEmpty)
+                          ListTile(
+                            leading: Icon(
+                              Icons.event_busy_outlined,
+                              color: colors.error,
+                            ),
+                            title: Text(
+                              sheetContext.l10n.fairRemove,
+                              style: TextStyle(color: colors.error),
+                            ),
+                            // "" = quitar la feria
+                            onTap: () => Navigator.pop(sheetContext, ''),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
+          );
+        },
       ),
+    );
+
+    if (chosen == null || chosen == currentFairName) return;
+    await _saleRepository.updateFairNameForDate(
+      datePrefix,
+      chosen.isEmpty ? null : chosen,
+    );
+    await _loadSales();
+    if (!mounted) return;
+    AppAlerts.showSuccess(
+      context,
+      chosen.isEmpty
+          ? context.l10n.fairUnassigned
+          : context.l10n.salesGroupedFair(chosen),
     );
   }
 

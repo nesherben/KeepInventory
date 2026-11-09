@@ -5,6 +5,7 @@ import 'package:keepinventory/l10n/app_localizations_ext.dart';
 import '../../../core/shared_widgets/app_alerts.dart';
 import '../../../core/shared_widgets/app_ui.dart';
 import '../../inventory/domain/product.dart';
+import '../../inventory/presentation/widgets/product_picker_sheet.dart';
 import '../data/datasources/combo_local_datasource.dart';
 import '../data/repositories/combo_repository_impl.dart';
 import '../domain/combo.dart';
@@ -106,81 +107,22 @@ class _ComboFormScreenState extends State<ComboFormScreen> {
         if (!identical(other, slot) && other.productId != null)
           other.productId!,
     };
-    var query = '';
-
-    final result = await showModalBottomSheet<int>(
-      context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setSheet) {
-          final visible = widget.products
-              .where((p) => p.name.toLowerCase().contains(query.toLowerCase()))
-              .toList();
-          return SizedBox(
-            height: MediaQuery.sizeOf(context).height * 0.75,
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      context.l10n.comboSlotPickTitle,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: TextField(
-                    onChanged: (v) => setSheet(() => query = v),
-                    decoration: InputDecoration(
-                      hintText: context.l10n.searchProduct,
-                      prefixIcon: const Icon(Icons.search, size: 20),
-                      isDense: true,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: visible.length,
-                    itemBuilder: (context, index) {
-                      final product = visible[index];
-                      final id = product.id!;
-                      final otherCombo = _productCombo[id];
-                      final inOtherSlot = usedElsewhere.contains(id);
-                      final disabled = otherCombo != null || inOtherSlot;
-                      return ListTile(
-                        enabled: !disabled,
-                        selected: slot.productId == id,
-                        minVerticalPadding: 10,
-                        onTap: () => Navigator.pop(context, id),
-                        title: Text(product.name),
-                        subtitle: Text(
-                          otherCombo != null
-                              ? context.l10n.comboProductInOtherCombo(
-                                  otherCombo,
-                                )
-                              : inOtherSlot
-                              ? context.l10n.comboProductInOtherSlot
-                              : context.money(product.price),
-                        ),
-                        trailing: slot.productId == id
-                            ? const Icon(Icons.check)
-                            : null,
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
+    final product = await showProductPicker(
+      context,
+      products: widget.products,
+      selectedId: slot.productId,
+      disabledReason: (p) {
+        final otherCombo = _productCombo[p.id];
+        if (otherCombo != null) {
+          return context.l10n.comboProductInOtherCombo(otherCombo);
+        }
+        if (usedElsewhere.contains(p.id)) {
+          return context.l10n.comboProductInOtherSlot;
+        }
+        return null;
+      },
     );
-    if (result != null) setState(() => slot.productId = result);
+    if (product != null) setState(() => slot.productId = product.id);
   }
 
   Future<bool> _confirm(String title, String message) async {

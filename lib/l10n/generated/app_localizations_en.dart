@@ -350,15 +350,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get offerName => 'Offer name';
 
   @override
-  String get promotionType => 'Promotion type';
-
-  @override
-  String get bundleFixedPrice => 'Fixed bundle price';
-
-  @override
-  String get percentageDiscount => 'Percentage discount (%)';
-
-  @override
   String get minimumQuantity => 'Minimum quantity (units to purchase)';
 
   @override
@@ -467,9 +458,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get packComponents => 'Pack components:';
-
-  @override
-  String get addProduct => 'Add product...';
 
   @override
   String get packEmpty => 'There are no products in this pack.';
@@ -701,18 +689,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get assignFairTitle => 'Group into Fair';
-
-  @override
-  String get selectFairPrompt => 'Select a saved fair or enter a new one:';
-
-  @override
-  String get availableFairs => 'Available fairs';
-
-  @override
-  String get enterNewFairOrNone => '-- Enter new / None --';
-
-  @override
-  String get fairName => 'Fair name';
 
   @override
   String get fairUnassigned => 'Fair unassigned successfully.';
@@ -1278,9 +1254,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get comboSlotNoProducts => 'Tap to choose the product';
 
   @override
-  String get comboSlotPickTitle => 'Choose the product';
-
-  @override
   String get comboPriceLabel => 'Combo price';
 
   @override
@@ -1368,4 +1341,65 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get comboNoSavingTitle => 'This combo saves nothing';
+
+  @override
+  String productFormMargin(String amount, String percent) {
+    return 'Margin per unit: €$amount ($percent)';
+  }
+
+  @override
+  String productFormLoss(String amount) {
+    return 'Selling at a loss: €$amount per unit';
+  }
+
+  @override
+  String get promotionTypeBundle => 'Fixed-price bundle';
+
+  @override
+  String get promotionTypePercent => '% discount';
+
+  @override
+  String promotionPreviewBundle(int count, String price) {
+    return 'Buying $count units, they pay €$price in total';
+  }
+
+  @override
+  String promotionPreviewPercent(int count, String percent) {
+    return 'From $count units, $percent off each';
+  }
+
+  @override
+  String promotionAutoNameBundle(int count, String price) {
+    return '$count for €$price';
+  }
+
+  @override
+  String promotionAutoNamePercent(int count, String percent) {
+    return '−$percent from $count units';
+  }
+
+  @override
+  String packSeparatePrice(String amount) {
+    return 'Separately €$amount';
+  }
+
+  @override
+  String get packAddProductButton => 'Add product';
+
+  @override
+  String get productPickerTitle => 'Choose a product';
+
+  @override
+  String get fairSearchOrCreate => 'Search or type a new fair';
+
+  @override
+  String fairCreate(String name) {
+    return 'Create “$name”';
+  }
+
+  @override
+  String get fairRemove => 'Remove fair';
+
+  @override
+  String get fairCurrent => 'Current';
 }

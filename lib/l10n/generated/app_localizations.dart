@@ -734,24 +734,6 @@ abstract class AppLocalizations {
   /// **'Nombre de la oferta'**
   String get offerName;
 
-  /// No description provided for @promotionType.
-  ///
-  /// In es, this message translates to:
-  /// **'Tipo de Promoción'**
-  String get promotionType;
-
-  /// No description provided for @bundleFixedPrice.
-  ///
-  /// In es, this message translates to:
-  /// **'Precio fijo por lote'**
-  String get bundleFixedPrice;
-
-  /// No description provided for @percentageDiscount.
-  ///
-  /// In es, this message translates to:
-  /// **'Descuento porcentual (%)'**
-  String get percentageDiscount;
-
   /// No description provided for @minimumQuantity.
   ///
   /// In es, this message translates to:
@@ -937,12 +919,6 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Componentes del Pack:'**
   String get packComponents;
-
-  /// No description provided for @addProduct.
-  ///
-  /// In es, this message translates to:
-  /// **'Añadir producto...'**
-  String get addProduct;
 
   /// No description provided for @packEmpty.
   ///
@@ -1321,30 +1297,6 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Agrupar en Feria'**
   String get assignFairTitle;
-
-  /// No description provided for @selectFairPrompt.
-  ///
-  /// In es, this message translates to:
-  /// **'Selecciona una feria guardada o escribe una nueva:'**
-  String get selectFairPrompt;
-
-  /// No description provided for @availableFairs.
-  ///
-  /// In es, this message translates to:
-  /// **'Ferias disponibles'**
-  String get availableFairs;
-
-  /// No description provided for @enterNewFairOrNone.
-  ///
-  /// In es, this message translates to:
-  /// **'-- Escribir nueva / Ninguna --'**
-  String get enterNewFairOrNone;
-
-  /// No description provided for @fairName.
-  ///
-  /// In es, this message translates to:
-  /// **'Nombre de la Feria'**
-  String get fairName;
 
   /// No description provided for @fairUnassigned.
   ///
@@ -2324,12 +2276,6 @@ abstract class AppLocalizations {
   /// **'Toca para elegir el producto'**
   String get comboSlotNoProducts;
 
-  /// No description provided for @comboSlotPickTitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Elige el producto'**
-  String get comboSlotPickTitle;
-
   /// No description provided for @comboPriceLabel.
   ///
   /// In es, this message translates to:
@@ -2467,6 +2413,96 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'El combo no ahorra'**
   String get comboNoSavingTitle;
+
+  /// No description provided for @productFormMargin.
+  ///
+  /// In es, this message translates to:
+  /// **'Margen por unidad: {amount} € ({percent})'**
+  String productFormMargin(String amount, String percent);
+
+  /// No description provided for @productFormLoss.
+  ///
+  /// In es, this message translates to:
+  /// **'Vendes a pérdidas: {amount} € por unidad'**
+  String productFormLoss(String amount);
+
+  /// No description provided for @promotionTypeBundle.
+  ///
+  /// In es, this message translates to:
+  /// **'Lote a precio fijo'**
+  String get promotionTypeBundle;
+
+  /// No description provided for @promotionTypePercent.
+  ///
+  /// In es, this message translates to:
+  /// **'% de descuento'**
+  String get promotionTypePercent;
+
+  /// No description provided for @promotionPreviewBundle.
+  ///
+  /// In es, this message translates to:
+  /// **'Llevando {count} unidades, pagan {price} € en total'**
+  String promotionPreviewBundle(int count, String price);
+
+  /// No description provided for @promotionPreviewPercent.
+  ///
+  /// In es, this message translates to:
+  /// **'Desde {count} unidades, {percent} de descuento en cada una'**
+  String promotionPreviewPercent(int count, String percent);
+
+  /// No description provided for @promotionAutoNameBundle.
+  ///
+  /// In es, this message translates to:
+  /// **'{count} por {price} €'**
+  String promotionAutoNameBundle(int count, String price);
+
+  /// No description provided for @promotionAutoNamePercent.
+  ///
+  /// In es, this message translates to:
+  /// **'−{percent} desde {count} uds'**
+  String promotionAutoNamePercent(int count, String percent);
+
+  /// No description provided for @packSeparatePrice.
+  ///
+  /// In es, this message translates to:
+  /// **'Por separado {amount} €'**
+  String packSeparatePrice(String amount);
+
+  /// No description provided for @packAddProductButton.
+  ///
+  /// In es, this message translates to:
+  /// **'Añadir producto'**
+  String get packAddProductButton;
+
+  /// No description provided for @productPickerTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Elige un producto'**
+  String get productPickerTitle;
+
+  /// No description provided for @fairSearchOrCreate.
+  ///
+  /// In es, this message translates to:
+  /// **'Busca o escribe una feria nueva'**
+  String get fairSearchOrCreate;
+
+  /// No description provided for @fairCreate.
+  ///
+  /// In es, this message translates to:
+  /// **'Crear «{name}»'**
+  String fairCreate(String name);
+
+  /// No description provided for @fairRemove.
+  ///
+  /// In es, this message translates to:
+  /// **'Quitar feria'**
+  String get fairRemove;
+
+  /// No description provided for @fairCurrent.
+  ///
+  /// In es, this message translates to:
+  /// **'Actual'**
+  String get fairCurrent;
 }
 
 class _AppLocalizationsDelegate

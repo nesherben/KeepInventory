@@ -14,6 +14,8 @@ import '../../../promotions/domain/promotion.dart';
 class ProductFormDialog extends StatefulWidget {
   final Product? productToEdit;
   final Map<int, Promotion> promotionsMap;
+
+  /// Guarda el producto; el diálogo se cierra solo después.
   final Future<void> Function(ProductModel product, bool isEditing) onSave;
 
   const ProductFormDialog({
@@ -39,6 +41,11 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
   Uint8List? _selectedImageBytes;
   String? _oldImagePath;
 
+  /// Precio y coste mientras se escriben (para el margen en vivo).
+  double? _livePrice;
+  double? _liveCost;
+  bool _saving = false;
+
   @override
   void initState() {
     super.initState();
@@ -50,6 +57,8 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
     _selectedPromotionId = p?.promotionId;
     _selectedImageBytes = p?.imageBytes;
     _oldImagePath = p?.imagePath;
+    _livePrice = p?.price;
+    _liveCost = p?.cost;
   }
 
   Future<void> _pickAndCompressImage() async {
@@ -106,12 +115,20 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
     );
   }
 
-  Future<void> _saveProduct(bool isEditing) async {
+  Future<void> _saveProduct() async {
+    if (_saving) return;
     final form = _formKey.currentState!;
     if (!form.validate()) return;
-
     form.save();
-    await widget.onSave(_createProductModel(), isEditing);
+
+    final isEditing = widget.productToEdit != null;
+    setState(() => _saving = true);
+    try {
+      await widget.onSave(_createProductModel(), isEditing);
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+    if (mounted) Navigator.pop(context);
   }
 
   /// Vacío → "Requerido"; no numérico o negativo → "número no válido".
@@ -124,12 +141,86 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
     return null;
   }
 
+  /// "Margen por unidad: 2,50 € (42 %)" en vivo; en rojo si hay pérdidas.
+  Widget _buildMarginHint() {
+    final price = _livePrice;
+    final cost = _liveCost;
+    if (price == null || cost == null || price <= 0) {
+      return const SizedBox.shrink();
+    }
+    final colors = Theme.of(context).colorScheme;
+    final margin = price - cost;
+    final loss = margin < 0;
+    return Row(
+      children: [
+        Icon(
+          loss ? Icons.trending_down : Icons.trending_up,
+          size: 18,
+          color: loss ? colors.error : colors.primary,
+        ),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            loss
+                ? context.l10n.productFormLoss(context.amount(-margin))
+                : context.l10n.productFormMargin(
+                    context.amount(margin),
+                    context.percent(margin / price * 100),
+                  ),
+            style: TextStyle(
+              fontSize: 13,
+              color: loss ? colors.error : colors.onSurfaceVariant,
+              fontWeight: loss ? FontWeight.w600 : FontWeight.normal,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildImagePicker() {
+    final colors = Theme.of(context).colorScheme;
+    return Center(
+      child: GestureDetector(
+        onTap: _pickAndCompressImage,
+        child: Container(
+          height: 100,
+          width: 100,
+          decoration: BoxDecoration(
+            color: colors.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(12),
+            image: _selectedImageBytes != null
+                ? DecorationImage(
+                    image: MemoryImage(_selectedImageBytes!),
+                    fit: BoxFit.cover,
+                  )
+                : (_oldImagePath != null
+                      ? DecorationImage(
+                          image: FileImage(File(_oldImagePath!)),
+                          fit: BoxFit.cover,
+                        )
+                      : null),
+          ),
+          child: _selectedImageBytes == null && _oldImagePath == null
+              ? Icon(
+                  Icons.add_a_photo,
+                  size: 40,
+                  color: colors.onSurfaceVariant,
+                )
+              : null,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isEditing = widget.productToEdit != null;
     final isLandscape =
         MediaQuery.of(context).size.width > MediaQuery.of(context).size.height;
     final fieldWidth = isLandscape ? 320.0 : 520.0;
+
+    Widget field(Widget child) => SizedBox(width: fieldWidth, child: child);
 
     return AlertDialog(
       title: Text(
@@ -146,79 +237,31 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
               alignment: WrapAlignment.center,
               spacing: 12,
               runSpacing: 12,
+              // Orden de uso: nombre → precio → coste (margen) → unidades.
+              // "Siguiente" en el teclado salta de campo; el último guarda.
               children: [
-                // Selector de Imagen
-                SizedBox(
-                  width: fieldWidth,
-                  child: Center(
-                    child: GestureDetector(
-                      onTap: _pickAndCompressImage,
-                      child: Container(
-                        height: 100,
-                        width: 100,
-                        decoration: BoxDecoration(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .surfaceContainerHighest,
-                          borderRadius: BorderRadius.circular(12),
-                          image: _selectedImageBytes != null
-                              ? DecorationImage(
-                                  image: MemoryImage(_selectedImageBytes!),
-                                  fit: BoxFit.cover,
-                                )
-                              : (_oldImagePath != null
-                                    ? DecorationImage(
-                                        image: FileImage(File(_oldImagePath!)),
-                                        fit: BoxFit.cover,
-                                      )
-                                    : null),
-                        ),
-                        child:
-                            _selectedImageBytes == null && _oldImagePath == null
-                            ? Icon(
-                                Icons.add_a_photo,
-                                size: 40,
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurfaceVariant,
-                              )
-                            : null,
-                      ),
-                    ),
-                  ),
-                ),
-                // Campos de Texto
-                SizedBox(
-                  width: fieldWidth,
-                  child: TextFormField(
+                field(_buildImagePicker()),
+                field(
+                  TextFormField(
                     initialValue: _name,
+                    autofocus: !isEditing,
+                    textCapitalization: TextCapitalization.sentences,
+                    textInputAction: TextInputAction.next,
                     decoration: InputDecoration(
                       labelText: context.l10n.productName,
                     ),
-                    validator: (v) =>
-                        v == null || v.isEmpty ? context.l10n.required : null,
-                    onSaved: (v) => _name = v!,
+                    validator: (v) => v == null || v.trim().isEmpty
+                        ? context.l10n.required
+                        : null,
+                    onSaved: (v) => _name = v!.trim(),
                   ),
                 ),
-                SizedBox(
-                  width: fieldWidth,
-                  child: TextFormField(
-                    initialValue: _units.toString(),
-                    decoration: InputDecoration(
-                      labelText: context.l10n.unitsInStock,
-                    ),
-                    keyboardType: TextInputType.number,
-                    inputFormatters: AppNumbers.integerInputFormatters,
-                    validator: (v) => _validateNumber(v, integer: true),
-                    onSaved: (v) => _units = AppNumbers.parseInt(v)!,
-                  ),
-                ),
-                SizedBox(
-                  width: fieldWidth,
-                  child: TextFormField(
+                field(
+                  TextFormField(
                     initialValue: _price == 0.0
                         ? ''
                         : context.amountInput(_price),
+                    textInputAction: TextInputAction.next,
                     decoration: InputDecoration(
                       labelText: context.l10n.salePrice,
                       suffixText: '€',
@@ -226,28 +269,55 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
                     keyboardType: AppNumbers.decimalKeyboard,
                     inputFormatters: AppNumbers.decimalInputFormatters,
                     validator: _validateNumber,
+                    onChanged: (v) =>
+                        setState(() => _livePrice = AppNumbers.parseDecimal(v)),
                     onSaved: (v) => _price = AppNumbers.parseDecimal(v)!,
                   ),
                 ),
-                SizedBox(
-                  width: fieldWidth,
-                  child: TextFormField(
-                    initialValue: _cost == 0.0
-                        ? ''
-                        : context.amountInput(_cost),
-                    decoration: InputDecoration(
-                      labelText: context.l10n.acquisitionCost,
-                      suffixText: '€',
-                    ),
-                    keyboardType: AppNumbers.decimalKeyboard,
-                    inputFormatters: AppNumbers.decimalInputFormatters,
-                    validator: _validateNumber,
-                    onSaved: (v) => _cost = AppNumbers.parseDecimal(v)!,
+                field(
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextFormField(
+                        initialValue: _cost == 0.0
+                            ? ''
+                            : context.amountInput(_cost),
+                        textInputAction: TextInputAction.next,
+                        decoration: InputDecoration(
+                          labelText: context.l10n.acquisitionCost,
+                          suffixText: '€',
+                        ),
+                        keyboardType: AppNumbers.decimalKeyboard,
+                        inputFormatters: AppNumbers.decimalInputFormatters,
+                        validator: _validateNumber,
+                        onChanged: (v) => setState(
+                          () => _liveCost = AppNumbers.parseDecimal(v),
+                        ),
+                        onSaved: (v) => _cost = AppNumbers.parseDecimal(v)!,
+                      ),
+                      const SizedBox(height: 6),
+                      _buildMarginHint(),
+                    ],
                   ),
                 ),
-                SizedBox(
-                  width: fieldWidth,
-                  child: DropdownButtonFormField<int?>(
+                field(
+                  TextFormField(
+                    initialValue: isEditing || _units != 0
+                        ? _units.toString()
+                        : '',
+                    textInputAction: TextInputAction.done,
+                    decoration: InputDecoration(
+                      labelText: context.l10n.unitsInStock,
+                    ),
+                    keyboardType: TextInputType.number,
+                    inputFormatters: AppNumbers.integerInputFormatters,
+                    validator: (v) => _validateNumber(v, integer: true),
+                    onSaved: (v) => _units = AppNumbers.parseInt(v)!,
+                    onFieldSubmitted: (_) => _saveProduct(),
+                  ),
+                ),
+                field(
+                  DropdownButtonFormField<int?>(
                     initialValue: _selectedPromotionId,
                     decoration: InputDecoration(
                       labelText: context.l10n.appliedPromotion,
@@ -275,8 +345,8 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
           onPressed: () => Navigator.pop(context),
           child: Text(context.l10n.cancel),
         ),
-        ElevatedButton(
-          onPressed: () => _saveProduct(isEditing),
+        FilledButton(
+          onPressed: _saving ? null : _saveProduct,
           child: Text(isEditing ? context.l10n.update : context.l10n.save),
         ),
       ],
