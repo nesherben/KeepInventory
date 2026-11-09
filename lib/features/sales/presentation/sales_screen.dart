@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:keepinventory/core/utils/app_numbers.dart';
 import 'package:keepinventory/l10n/app_localizations_ext.dart';
@@ -50,6 +52,12 @@ class _SalesScreenState extends State<SalesScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
+  /// Carrito desplegable (móvil): se recoge al ir a un producto.
+  final _cartSheetController = DraggableScrollableController();
+  int? _focusedProductId;
+  int _focusRequest = 0;
+  Timer? _focusTimer;
+
   final _saleRepository = SaleRepositoryImpl(SaleLocalDatasource());
   final _productRepository = ProductRepositoryImpl(ProductLocalDatasource());
   final _packRepository = PackRepositoryImpl(PackLocalDatasource());
@@ -96,6 +104,8 @@ class _SalesScreenState extends State<SalesScreen>
 
   @override
   void dispose() {
+    _focusTimer?.cancel();
+    _cartSheetController.dispose();
     _tabController.dispose();
     _productSearchController.dispose();
     _packSearchController.dispose();
@@ -203,6 +213,36 @@ class _SalesScreenState extends State<SalesScreen>
   );
 
   double get _cartTotal => _pricing.total;
+
+  /// Lleva al producto en el catálogo (desde el aviso de combo a medias):
+  /// pestaña Productos, sin búsqueda que lo oculte, carrito recogido, scroll
+  /// hasta él y resaltado unos segundos.
+  void _locateProduct(Product product) {
+    final hidden = !SaleCatalogFilter.filterProducts(
+      _products,
+      _productSearchQuery,
+    ).any((p) => p.id == product.id);
+    setState(() {
+      if (hidden) {
+        _productSearchController.clear();
+        _productSearchQuery = '';
+      }
+      _focusedProductId = product.id;
+      _focusRequest++;
+    });
+    if (_tabController.index != 0) _tabController.animateTo(0);
+    if (_cartSheetController.isAttached && _cartSheetController.size > 0.13) {
+      _cartSheetController.animateTo(
+        0.12,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
+    _focusTimer?.cancel();
+    _focusTimer = Timer(const Duration(seconds: 3), () {
+      if (mounted) setState(() => _focusedProductId = null);
+    });
+  }
 
   int get _cartItemCount =>
       SaleCartPricingCalculator.countItems(products: _cart, packs: _cartPacks);
@@ -315,6 +355,8 @@ class _SalesScreenState extends State<SalesScreen>
           products: filteredProducts,
           cart: _cart,
           comboProductIds: {for (final c in _combos) ...c.productIds},
+          focusedProductId: _focusedProductId,
+          focusRequest: _focusRequest,
           missingProductIds: {
             for (final hint in _pricing.combos.hints)
               for (final slot in hint.missing) ...slot.productIds,
@@ -465,6 +507,7 @@ class _SalesScreenState extends State<SalesScreen>
                             cart: _cart,
                             catalog: _products,
                             onAddToCart: _addToCart,
+                            onLocateProduct: _locateProduct,
                             cartPacks: _cartPacks,
                             promotionsMap: _promotionsMap,
                             pricing: _pricing,
@@ -507,6 +550,7 @@ class _SalesScreenState extends State<SalesScreen>
                     ],
                   ),
                   DraggableScrollableSheet(
+                    controller: _cartSheetController,
                     initialChildSize: 0.12,
                     minChildSize: 0.12,
                     maxChildSize: 0.7,
@@ -559,6 +603,7 @@ class _SalesScreenState extends State<SalesScreen>
                                             cart: _cart,
                                             catalog: _products,
                                             onAddToCart: _addToCart,
+                                            onLocateProduct: _locateProduct,
                                             cartPacks: _cartPacks,
                                             promotionsMap: _promotionsMap,
                                             pricing: _pricing,

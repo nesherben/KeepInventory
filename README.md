@@ -94,7 +94,7 @@ El menú lateral (desliza desde el borde izquierdo o pulsa ☰) da acceso a toda
 
 ### 4. Vende
 1. Abre **Ventas**, busca o toca los productos / packs para añadirlos al carrito. Los productos que forman parte de un combo llevan la insignia **Combo**.
-2. Ajusta cantidades: el total ya incluye promociones y combos. Si tienes medio combo, el carrito te avisa (*"falta Ratón"*), resalta en el catálogo lo que lo completa y con el botón **＋ Añadir** lo mete en el carrito de un toque.
+2. Ajusta cantidades: el total ya incluye promociones y combos. Los combos aparecen agrupados en el carrito, con sus productos dentro. Si tienes medio combo, el carrito te avisa (*"falta Ratón"*): toca el aviso para ir al producto en el catálogo, o pulsa **＋ Añadir** para meterlo en el carrito de un toque.
 3. Pulsa **COBRAR**, elige el método de pago y confirma. El stock se descuenta solo.
 
 ### 5. Consulta el historial y haz devoluciones
