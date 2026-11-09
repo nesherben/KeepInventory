@@ -479,8 +479,7 @@
   "comboSlotCategories": "Categories (any product of…)",
   "comboSlotProducts": "Products",
   "tableCategory": "CATEGORY",
-  "promotionApplyToCategory": "Apply to a category (optional)",
-  "promotionApplyToCategoryHint": "All its products will get this promotion; you can still change any of them individually.",
+  "promotionApplyToCategory": "Apply to a category…",
   "promotionAppliedToCategory": "Promotion applied to {count} products in “{name}”",
   "packCanAssemble": "With current stock you can assemble {count} more",
   "packCannotAssemble": "Not enough stock to assemble another",
@@ -503,5 +502,10 @@
   "navSectionSell": "SELLING",
   "navSectionCatalog": "CATALOG",
   "navSectionData": "DATA",
-  "navSectionHelp": "HELP"
+  "navSectionHelp": "HELP",
+  "edit": "Edit",
+  "promotionProductsCount": "Applies to {count} products",
+  "promotionApplyConfirmTitle": "Apply promotion",
+  "promotionApplyConfirm": "Set “{promo}” on the {count} products in “{category}”? You can still change any of them individually.",
+  "apply": "Apply"
 }

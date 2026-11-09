@@ -86,7 +86,7 @@ El menú lateral (desliza desde el borde izquierdo o pulsa ☰) da acceso a toda
    - **Lote a precio fijo** → N unidades por X € (p. ej. *3 por 12 €*).
    - **% de descuento** → X % a partir de N unidades.
 
-   Una frase te explica la regla y el nombre se rellena solo (puedes cambiarlo). Con **Aplicar a una categoría** todos sus productos reciben la promoción de golpe (luego puedes cambiar cualquiera por separado).
+   Una frase te explica la regla y el nombre se rellena solo (puedes cambiarlo). Toca una tarjeta para editarla; en su menú ⋮ tienes **Aplicar a una categoría…**, que pone la promoción a todos los productos de esa categoría de golpe (luego puedes cambiar cualquiera por separado). Cada promoción muestra a cuántos productos se aplica.
 2. Asigna la promoción a los productos desde su ficha de inventario. Los productos que comparten promoción se combinan entre sí (Mix & Match).
 3. En **Ofertas → Combos** crea un combo cuando quieras vender **productos distintos juntos** a un precio fijo (p. ej. *1 teclado + 1 ratón = 10 €*):
    - Elige cada producto (o *cualquier producto de una categoría*) y su cantidad, y el precio del combo; verás el ahorro frente a comprarlos por separado.

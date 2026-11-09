@@ -767,8 +767,7 @@
   "comboSlotCategories": "Categorías (cualquier producto de…)",
   "comboSlotProducts": "Productos",
   "tableCategory": "CATEGORÍA",
-  "promotionApplyToCategory": "Aplicar a una categoría (opcional)",
-  "promotionApplyToCategoryHint": "Todos sus productos tendrán esta promoción; luego puedes cambiar cualquiera por separado.",
+  "promotionApplyToCategory": "Aplicar a una categoría…",
   "promotionAppliedToCategory": "Promoción aplicada a {count} productos de «{name}»",
   "@promotionAppliedToCategory": {
     "placeholders": {
@@ -836,5 +835,30 @@
   "navSectionSell": "VENTA",
   "navSectionCatalog": "CATÁLOGO",
   "navSectionData": "DATOS",
-  "navSectionHelp": "AYUDA"
+  "navSectionHelp": "AYUDA",
+  "edit": "Editar",
+  "promotionProductsCount": "Se aplica a {count} productos",
+  "@promotionProductsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "promotionApplyConfirmTitle": "Aplicar promoción",
+  "promotionApplyConfirm": "¿Poner «{promo}» a los {count} productos de «{category}»? Después puedes cambiar cualquiera por separado.",
+  "@promotionApplyConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "promo": {
+        "type": "String"
+      },
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "apply": "Aplicar"
 }

@@ -1513,11 +1513,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tableCategory => 'CATEGORY';
 
   @override
-  String get promotionApplyToCategory => 'Apply to a category (optional)';
-
-  @override
-  String get promotionApplyToCategoryHint =>
-      'All its products will get this promotion; you can still change any of them individually.';
+  String get promotionApplyToCategory => 'Apply to a category…';
 
   @override
   String promotionAppliedToCategory(int count, String name) {
@@ -1601,4 +1597,23 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get navSectionHelp => 'HELP';
+
+  @override
+  String get edit => 'Edit';
+
+  @override
+  String promotionProductsCount(int count) {
+    return 'Applies to $count products';
+  }
+
+  @override
+  String get promotionApplyConfirmTitle => 'Apply promotion';
+
+  @override
+  String promotionApplyConfirm(int count, String promo, String category) {
+    return 'Set “$promo” on the $count products in “$category”? You can still change any of them individually.';
+  }
+
+  @override
+  String get apply => 'Apply';
 }

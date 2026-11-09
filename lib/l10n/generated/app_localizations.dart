@@ -2681,14 +2681,8 @@ abstract class AppLocalizations {
   /// No description provided for @promotionApplyToCategory.
   ///
   /// In es, this message translates to:
-  /// **'Aplicar a una categoría (opcional)'**
+  /// **'Aplicar a una categoría…'**
   String get promotionApplyToCategory;
-
-  /// No description provided for @promotionApplyToCategoryHint.
-  ///
-  /// In es, this message translates to:
-  /// **'Todos sus productos tendrán esta promoción; luego puedes cambiar cualquiera por separado.'**
-  String get promotionApplyToCategoryHint;
 
   /// No description provided for @promotionAppliedToCategory.
   ///
@@ -2827,6 +2821,36 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'AYUDA'**
   String get navSectionHelp;
+
+  /// No description provided for @edit.
+  ///
+  /// In es, this message translates to:
+  /// **'Editar'**
+  String get edit;
+
+  /// No description provided for @promotionProductsCount.
+  ///
+  /// In es, this message translates to:
+  /// **'Se aplica a {count} productos'**
+  String promotionProductsCount(int count);
+
+  /// No description provided for @promotionApplyConfirmTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Aplicar promoción'**
+  String get promotionApplyConfirmTitle;
+
+  /// No description provided for @promotionApplyConfirm.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Poner «{promo}» a los {count} productos de «{category}»? Después puedes cambiar cualquiera por separado.'**
+  String promotionApplyConfirm(int count, String promo, String category);
+
+  /// No description provided for @apply.
+  ///
+  /// In es, this message translates to:
+  /// **'Aplicar'**
+  String get apply;
 }
 
 class _AppLocalizationsDelegate

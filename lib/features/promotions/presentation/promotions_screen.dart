@@ -1,3 +1,6 @@
+import 'widgets/offer_card.dart';
+import '../../inventory/presentation/widgets/category_picker.dart';
+
 import 'package:flutter/material.dart';
 import 'package:keepinventory/core/utils/app_numbers.dart';
 
@@ -129,7 +132,6 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
   }
 
   Widget _buildComboList() {
-    final colors = Theme.of(context).colorScheme;
     final byId = {for (final p in _products) p.id: p};
     final combos = _combos
         .where((c) => c.name.toLowerCase().contains(_searchQuery.toLowerCase()))
@@ -157,31 +159,70 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
               return s.quantity > 1 ? '${s.quantity} × $label' : label;
             })
             .join(' + ');
-        return Card(
-          margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-          child: ListTile(
-            contentPadding: const EdgeInsets.fromLTRB(12, 6, 4, 6),
-            onTap: () => _openComboForm(combo),
-            leading: const IconBadge(Icons.extension),
-            title: Text(
-              combo.name,
-              style: const TextStyle(fontWeight: FontWeight.w600),
+        return OfferCard(
+          icon: Icons.extension,
+          title: combo.name,
+          lines: ['$slots · ${context.money(combo.price)}'],
+          highlight: saving > 0
+              ? context.l10n.comboSaving(context.amount(saving))
+              : null,
+          onTap: () => _openComboForm(combo),
+          actions: [
+            OfferAction(
+              icon: Icons.edit_outlined,
+              label: context.l10n.edit,
+              onTap: () => _openComboForm(combo),
             ),
-            subtitle: Text(
-              saving > 0
-                  ? '$slots · ${context.money(combo.price)}\n'
-                        '${context.l10n.comboSaving(context.amount(saving))}'
-                  : '$slots · ${context.money(combo.price)}',
+            OfferAction(
+              icon: Icons.delete_outline,
+              label: context.l10n.delete,
+              destructive: true,
+              onTap: () => _confirmDeleteCombo(combo),
             ),
-            isThreeLine: saving > 0,
-            trailing: IconButton(
-              icon: Icon(Icons.delete_outline, color: colors.error),
-              onPressed: () => _confirmDeleteCombo(combo),
-            ),
-          ),
+          ],
         );
       },
     );
+  }
+
+  /// Pone la promoción a todos los productos de una categoría (una vez;
+  /// después cada producto se puede cambiar por separado).
+  Future<void> _applyToCategory(Promotion promo) async {
+    final pick = await pickCategory(context);
+    final category = pick?.category;
+    if (category == null || !mounted) return;
+    final count = _products.where((p) => p.categoryId == category.id).length;
+    final l10n = context.l10n;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.promotionApplyConfirmTitle),
+        content: Text(
+          l10n.promotionApplyConfirm(count, promo.name, category.name),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(l10n.apply),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    final changed = await _productRepository.setPromotionForCategory(
+      category.id,
+      promo.id!,
+    );
+    if (!mounted) return;
+    AppAlerts.showSuccess(
+      context,
+      l10n.promotionAppliedToCategory(changed, category.name),
+    );
+    _loadPromotions();
   }
 
   void _showPromotionFormDialog({Promotion? promotionToEdit}) {
@@ -190,24 +231,11 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
       context: context,
       builder: (dialogContext) => PromotionFormDialog(
         promotion: promotionToEdit,
-        onSave: (promotion, applyTo) async {
-          var promotionId = promotion.id;
+        onSave: (promotion) async {
           if (isEditing) {
             await _repository.updatePromotion(promotion);
           } else {
-            promotionId = await _repository.insertPromotion(promotion);
-          }
-          if (applyTo != null && promotionId != null) {
-            final count = await _productRepository.setPromotionForCategory(
-              applyTo.id,
-              promotionId,
-            );
-            if (mounted) {
-              AppAlerts.showInfo(
-                context,
-                context.l10n.promotionAppliedToCategory(count, applyTo.name),
-              );
-            }
+            await _repository.insertPromotion(promotion);
           }
           if (!mounted) return;
           _loadPromotions();
@@ -355,77 +383,63 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
                                   : context.l10n.promotionsNotFound,
                             )
                           : ListView.builder(
-                              padding: const EdgeInsets.all(12),
+                              padding: const EdgeInsets.fromLTRB(
+                                12,
+                                12,
+                                12,
+                                96,
+                              ),
                               itemCount: filteredPromotions.length,
                               itemBuilder: (context, index) {
                                 final promo = filteredPromotions[index];
                                 final isBundle =
                                     promo.type == 'bundle_fixed_price';
 
-                                return Card(
-                                  margin: const EdgeInsets.only(
-                                    bottom: AppSpacing.sm,
+                                final count = _products
+                                    .where((p) => p.promotionId == promo.id)
+                                    .length;
+                                return OfferCard(
+                                  icon: isBundle ? Icons.layers : Icons.percent,
+                                  iconColor: AppColors.warning,
+                                  title: promo.name,
+                                  lines: [
+                                    isBundle
+                                        ? context.l10n.promotionBundleSummary(
+                                            promo.threshold.toString(),
+                                            context.amount(promo.discountValue),
+                                          )
+                                        : context.l10n.promotionPercentSummary(
+                                            promo.discountValue.toStringAsFixed(
+                                              0,
+                                            ),
+                                            promo.threshold.toString(),
+                                          ),
+                                    context.l10n.promotionProductsCount(count),
+                                  ],
+                                  onTap: () => _showPromotionFormDialog(
+                                    promotionToEdit: promo,
                                   ),
-                                  child: ListTile(
-                                    contentPadding: const EdgeInsets.fromLTRB(
-                                      12,
-                                      6,
-                                      4,
-                                      6,
-                                    ),
-                                    leading: IconBadge(
-                                      isBundle ? Icons.layers : Icons.percent,
-                                      color: AppColors.warning,
-                                    ),
-                                    title: Text(
-                                      promo.name,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.w600,
+                                  actions: [
+                                    OfferAction(
+                                      icon: Icons.edit_outlined,
+                                      label: context.l10n.edit,
+                                      onTap: () => _showPromotionFormDialog(
+                                        promotionToEdit: promo,
                                       ),
                                     ),
-                                    subtitle: Text(
-                                      isBundle
-                                          ? context.l10n.promotionBundleSummary(
-                                              promo.threshold.toString(),
-                                              context.amount(
-                                                promo.discountValue,
-                                              ),
-                                            )
-                                          : context.l10n
-                                                .promotionPercentSummary(
-                                                  promo.discountValue
-                                                      .toStringAsFixed(0),
-                                                  promo.threshold.toString(),
-                                                ),
+                                    OfferAction(
+                                      icon: Icons.sell_outlined,
+                                      label:
+                                          context.l10n.promotionApplyToCategory,
+                                      onTap: () => _applyToCategory(promo),
                                     ),
-                                    trailing: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        IconButton(
-                                          icon: Icon(
-                                            Icons.edit_outlined,
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .onSurfaceVariant,
-                                          ),
-                                          onPressed: () =>
-                                              _showPromotionFormDialog(
-                                                promotionToEdit: promo,
-                                              ),
-                                        ),
-                                        IconButton(
-                                          icon: Icon(
-                                            Icons.delete_outline,
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .error,
-                                          ),
-                                          onPressed: () =>
-                                              _confirmDelete(promo),
-                                        ),
-                                      ],
+                                    OfferAction(
+                                      icon: Icons.delete_outline,
+                                      label: context.l10n.delete,
+                                      destructive: true,
+                                      onTap: () => _confirmDelete(promo),
                                     ),
-                                  ),
+                                  ],
                                 );
                               },
                             ),
