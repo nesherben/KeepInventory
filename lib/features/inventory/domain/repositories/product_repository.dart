@@ -19,6 +19,8 @@ abstract class ProductRepository {
     int? promotionId,
     bool clearPromotion = false,
     Uint8List? imageBytes,
+    int? categoryId,
+    bool clearCategory = false,
   });
 
   /// Suma (o resta) unidades de stock de forma atómica.

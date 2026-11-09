@@ -1,3 +1,7 @@
+import '../data/datasources/category_local_datasource.dart';
+import '../data/repositories/category_repository_impl.dart';
+import 'widgets/category_picker.dart';
+
 import 'dart:async';
 import 'dart:io';
 
@@ -63,6 +67,10 @@ class _InventoryScreenState extends State<InventoryScreen> {
 
   /// Nombre del combo de cada producto (informativo).
   Map<int, String> _comboNames = {};
+
+  /// Categorías (id -> nombre) y filtro por categoría (null = todas).
+  Map<int, String> _categoryNames = {};
+  int? _categoryFilter;
   bool _isLoading = true;
 
   String _searchQuery = '';
@@ -128,6 +136,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
     final seq = ++_loadSeq;
     final fresh = await _productRepository.getProducts();
     final promotions = await _promotionRepository.getPromotions();
+    final categories = await CategoryRepositoryImpl(CategoryLocalDatasource())
+        .getCategories();
     final combos = await ComboRepositoryImpl(ComboLocalDatasource())
         .getCombos();
 
@@ -144,6 +154,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
     setState(() {
       _products = products;
       _promotionsMap = promoMap;
+      _categoryNames = {for (final c in categories) c.id: c.name};
+      // Si se borró la categoría filtrada, se quita el filtro
+      if (!_categoryNames.containsKey(_categoryFilter)) _categoryFilter = null;
       _comboNames = {
         for (final combo in combos)
           for (final id in combo.productIds) id: combo.name,
@@ -377,6 +390,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
         return ProductFormDialog(
           productToEdit: productToEdit,
           promotionsMap: _promotionsMap,
+          categoryNames: _categoryNames,
           onSave: (productModel, isEditing) async {
             if (isEditing) {
               _discardPendingStock(productModel.id!);
@@ -603,7 +617,63 @@ class _InventoryScreenState extends State<InventoryScreen> {
     onEditField: _showProductFieldDialog,
     onStockChange: _updateStockQuickly,
     onEditPromotion: _showPromotionSelectDialog,
+    onEditCategory: _editCategory,
   );
+
+  /// Cambia solo la categoría del producto (tocando su etiqueta).
+  Future<void> _editCategory(Product product) async {
+    final pick = await pickCategory(context, currentId: product.categoryId);
+    if (pick == null || !mounted) {
+      // Puede haberse borrado alguna categoría desde el panel
+      if (mounted) _loadProducts();
+      return;
+    }
+    await _productRepository.updateFields(
+      product.id!,
+      categoryId: pick.category?.id,
+      clearCategory: pick.category == null,
+    );
+    if (mounted) _loadProducts();
+  }
+
+  /// Chip de categoría: abre un menú con "Todas" y cada categoría.
+  Widget _buildCategoryFilter() {
+    final selected = _categoryFilter;
+    final names = _categoryNames.entries.toList()
+      ..sort((a, b) => InventoryView.compareNames(a.value, b.value));
+    return PopupMenuButton<int>(
+      tooltip: context.l10n.productCategory,
+      onSelected: (id) =>
+          setState(() => _categoryFilter = id == -1 ? null : id),
+      itemBuilder: (context) => [
+        CheckedPopupMenuItem(
+          value: -1,
+          checked: selected == null,
+          child: Text(context.l10n.categoryAll),
+        ),
+        const PopupMenuDivider(),
+        for (final e in names)
+          CheckedPopupMenuItem(
+            value: e.key,
+            checked: selected == e.key,
+            child: Text(e.value),
+          ),
+      ],
+      child: IgnorePointer(
+        child: FilterChip(
+          avatar: const Icon(Icons.sell_outlined, size: 16),
+          label: Text(
+            selected == null
+                ? context.l10n.productCategory
+                : _categoryNames[selected]!,
+          ),
+          selected: selected != null,
+          showCheckmark: false,
+          onSelected: (_) {},
+        ),
+      ),
+    );
+  }
 
   Widget _buildFilters(InventorySummary summary) {
     final colors = Theme.of(context).colorScheme;
@@ -644,6 +714,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 InventoryFilter.withPromotion,
                 context.l10n.inventoryFilterPromo,
               ),
+              if (_categoryNames.isNotEmpty) _buildCategoryFilter(),
             ],
           ),
         ),
@@ -686,6 +757,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
               : _promotionsMap[product.promotionId],
           actions: _productActions,
           comboName: _comboNames[product.id],
+          categoryName: _categoryNames[product.categoryId],
         );
       },
     );
@@ -706,6 +778,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
             products: products,
             promotions: _promotionsMap,
             comboNames: _comboNames,
+            categoryNames: _categoryNames,
+            onEditCategory: _editCategory,
             onEditProduct: (product) =>
                 _showProductFormDialog(productToEdit: product),
             onDeleteProduct: (product) => _showDeleteConfirmation(product.id!),
@@ -733,6 +807,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
       validPromotionIds: _promotionsMap.keys.toSet(),
       sort: _sort,
       ascending: _sortAscending,
+      categoryId: _categoryFilter,
     );
 
     return Listener(

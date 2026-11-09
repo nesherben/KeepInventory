@@ -1477,4 +1477,57 @@ class AppLocalizationsEs extends AppLocalizations {
   String comboMissingShort(String slots) {
     return 'falta $slots';
   }
+
+  @override
+  String get productCategory => 'Categoría';
+
+  @override
+  String get categoryNone => 'Sin categoría';
+
+  @override
+  String get categoryPickTitle => 'Categoría del producto';
+
+  @override
+  String get categorySearchOrCreate => 'Busca o escribe una categoría nueva';
+
+  @override
+  String categoryCreate(String name) {
+    return 'Crear «$name»';
+  }
+
+  @override
+  String get categoryRemove => 'Quitar categoría';
+
+  @override
+  String get categoryDeleteTitle => 'Eliminar categoría';
+
+  @override
+  String categoryDeleteConfirmUsed(int count, String name) {
+    return '«$name» tiene $count productos. Se quedarán sin categoría (no se borran) y se quitará de los combos que la usen. ¿Eliminar la categoría?';
+  }
+
+  @override
+  String categoryDeleteConfirmEmpty(String name) {
+    return '¿Eliminar «$name» de la lista de categorías?';
+  }
+
+  @override
+  String get categoryDeleted => 'Categoría eliminada';
+
+  @override
+  String get categoryAll => 'Todas';
+
+  @override
+  String comboSlotAnyOf(String name) {
+    return 'Cualquier $name';
+  }
+
+  @override
+  String get comboSlotCategories => 'Categorías (cualquier producto de…)';
+
+  @override
+  String get comboSlotProducts => 'Productos';
+
+  @override
+  String get tableCategory => 'CATEGORÍA';
 }

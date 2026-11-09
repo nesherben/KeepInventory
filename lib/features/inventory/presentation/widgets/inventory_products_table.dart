@@ -30,7 +30,13 @@ class InventoryProductsTable extends StatelessWidget {
     this.onSort,
     this.onResetSort,
     this.comboNames = const {},
+    this.categoryNames = const {},
+    this.onEditCategory,
   });
+
+  /// Nombre de la categoría de cada producto (por id de categoría).
+  final Map<int, String> categoryNames;
+  final ValueChanged<Product>? onEditCategory;
 
   /// Combo de cada producto (por id), solo informativo.
   final Map<int, String> comboNames;
@@ -54,10 +60,10 @@ class InventoryProductsTable extends StatelessWidget {
   /// Columna de la tabla para cada criterio de orden.
   static const _sortColumns = {
     InventorySort.name: 1,
-    InventorySort.units: 2,
-    InventorySort.price: 3,
-    InventorySort.cost: 4,
-    InventorySort.margin: 5,
+    InventorySort.units: 3,
+    InventorySort.price: 4,
+    InventorySort.cost: 5,
+    InventorySort.margin: 6,
   };
 
   InventoryProductActions get _actions => InventoryProductActions(
@@ -67,6 +73,7 @@ class InventoryProductsTable extends StatelessWidget {
     onEditField: onEditField,
     onStockChange: onStockChange,
     onEditPromotion: onEditPromotion,
+    onEditCategory: onEditCategory,
   );
 
   DataColumn _column(
@@ -105,6 +112,14 @@ class InventoryProductsTable extends StatelessWidget {
             onTap: () => onEditField(product, InventoryProductField.name),
             bold: true,
             maxLength: 28,
+          ),
+        ),
+        DataCell(
+          InventoryCategoryChip(
+            name: categoryNames[product.categoryId],
+            onTap: onEditCategory == null
+                ? null
+                : () => onEditCategory!(product),
           ),
         ),
         DataCell(InventoryStockStepper(product: product, actions: actions)),
@@ -178,6 +193,7 @@ class InventoryProductsTable extends StatelessWidget {
               : (_, _) => onResetSort!(),
         ),
         _column(context.l10n.tableName, sortBy: InventorySort.name),
+        _column(context.l10n.tableCategory),
         _column(context.l10n.tableUnits, sortBy: InventorySort.units),
         _column(
           context.l10n.tablePrice,

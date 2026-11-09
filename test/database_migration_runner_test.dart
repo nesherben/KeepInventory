@@ -6,9 +6,15 @@ void main() {
   group('DatabaseMigrationRunner', () {
     const paymentMethodAlter =
         'ALTER TABLE sales ADD COLUMN payment_method TEXT';
+    const categoryStatements = [
+      DatabaseSchemaCreator.categoriesTable,
+      DatabaseMigrationRunner.productCategoryAlter,
+      DatabaseMigrationRunner.slotCategoryAlter,
+    ];
     const fairStatements = [
       DatabaseSchemaCreator.fairsTable,
       DatabaseMigrationRunner.seedFairsFromSales,
+      ...categoryStatements,
     ];
     final comboStatements = [
       ...DatabaseSchemaCreator.comboTables,
@@ -85,11 +91,23 @@ void main() {
       expect(statements, fairStatements);
     });
 
-    test('runs nothing for version 15', () async {
+    test('adds categories from version 15', () async {
       final statements = <String>[];
 
       await DatabaseMigrationRunner.upgrade(
         oldVersion: 15,
+        execute: (sql) async => statements.add(sql),
+        query: (_) async => [],
+      );
+
+      expect(statements, categoryStatements);
+    });
+
+    test('runs nothing for version 16', () async {
+      final statements = <String>[];
+
+      await DatabaseMigrationRunner.upgrade(
+        oldVersion: 16,
         execute: (sql) async => statements.add(sql),
         query: (_) async => [],
       );

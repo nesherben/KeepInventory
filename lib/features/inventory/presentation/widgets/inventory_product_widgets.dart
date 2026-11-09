@@ -22,6 +22,7 @@ class InventoryProductActions {
     required this.onEditField,
     required this.onStockChange,
     required this.onEditPromotion,
+    this.onEditCategory,
   });
 
   final ValueChanged<Product> onEditProduct;
@@ -30,6 +31,58 @@ class InventoryProductActions {
   final void Function(Product product, InventoryProductField field) onEditField;
   final void Function(Product product, int amountChange) onStockChange;
   final ValueChanged<Product> onEditPromotion;
+
+  /// Cambiar la categoría tocando su etiqueta.
+  final ValueChanged<Product>? onEditCategory;
+}
+
+/// Etiqueta de categoría; tocarla abre el selector de categoría.
+class InventoryCategoryChip extends StatelessWidget {
+  const InventoryCategoryChip({super.key, required this.name, this.onTap});
+
+  final String? name;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final has = name != null;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppRadius.sm),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(AppRadius.sm),
+          border: Border.all(color: Theme.of(context).dividerColor),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              has ? Icons.sell_outlined : Icons.add,
+              size: 14,
+              color: colors.onSurfaceVariant,
+            ),
+            const SizedBox(width: 4),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 120),
+              child: Text(
+                name ?? context.l10n.productCategory,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: has ? FontWeight.w600 : FontWeight.normal,
+                  color: has ? colors.onSurface : colors.onSurfaceVariant,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 /// Menú ⋮ con "Editar todo" y "Eliminar".
@@ -284,6 +337,7 @@ class InventoryProductCard extends StatelessWidget {
     required this.promotion,
     required this.actions,
     this.comboName,
+    this.categoryName,
   });
 
   final Product product;
@@ -292,6 +346,7 @@ class InventoryProductCard extends StatelessWidget {
 
   /// Combo al que pertenece (solo informativo).
   final String? comboName;
+  final String? categoryName;
 
   @override
   Widget build(BuildContext context) {
@@ -365,6 +420,12 @@ class InventoryProductCard extends StatelessWidget {
                     InventoryPromotionChip(
                       promotion: promotion,
                       onTap: () => actions.onEditPromotion(product),
+                    ),
+                    InventoryCategoryChip(
+                      name: categoryName,
+                      onTap: actions.onEditCategory == null
+                          ? null
+                          : () => actions.onEditCategory!(product),
                     ),
                     if (comboName != null)
                       InventoryComboTag(comboName: comboName!),

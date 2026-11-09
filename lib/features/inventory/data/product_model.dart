@@ -13,6 +13,7 @@ class ProductModel extends Product {
     super.imageBytes, // <-- NUEVO
     super.promotionId,
     super.isActive,
+    super.categoryId,
   });
 
   factory ProductModel.fromMap(Map<String, dynamic> map) {
@@ -26,6 +27,7 @@ class ProductModel extends Product {
       imageBytes: map['image_bytes'] as Uint8List?,
       promotionId: map['promotion_id'] as int?,
       isActive: (map['is_active'] as int? ?? 1) == 1, // Lee de SQLite
+      categoryId: map['category_id'] as int?,
     );
   }
 
@@ -40,6 +42,7 @@ class ProductModel extends Product {
       'image_bytes': imageBytes, // <--- ¿Estás seguro de que aquí dice exactamente 'image_bytes'?
       'promotion_id': promotionId,
       'is_active': isActive ? 1 : 0,
+      'category_id': categoryId,
     };
   }
 }

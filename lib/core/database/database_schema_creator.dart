@@ -18,6 +18,7 @@ class DatabaseSchemaCreator {
         name TEXT NOT NULL,
         quantity INTEGER NOT NULL DEFAULT 1,
         position INTEGER NOT NULL DEFAULT 0,
+        category_id INTEGER REFERENCES categories (id) ON DELETE CASCADE,
         FOREIGN KEY (combo_id) REFERENCES combos (id) ON DELETE CASCADE
       )
     ''',
@@ -61,6 +62,15 @@ class DatabaseSchemaCreator {
       )
     ''';
 
+  /// v16: categorías de producto (opcionales). Un hueco de combo puede ser
+  /// "cualquier producto de la categoría X".
+  static const categoriesTable = '''
+      CREATE TABLE IF NOT EXISTS categories (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL UNIQUE COLLATE NOCASE
+      )
+    ''';
+
   static Future<void> create({
     required Future<void> Function(String sql) execute,
   }) async {
@@ -68,6 +78,8 @@ class DatabaseSchemaCreator {
     const textType = 'TEXT NOT NULL';
     const intType = 'INTEGER NOT NULL';
     const realType = 'REAL NOT NULL';
+
+    await execute(categoriesTable);
 
     await execute('''
       CREATE TABLE promotions (
@@ -90,6 +102,7 @@ class DatabaseSchemaCreator {
         image_bytes BLOB,
         promotion_id INTEGER,
         is_active INTEGER NOT NULL DEFAULT 1,
+        category_id INTEGER REFERENCES categories (id) ON DELETE SET NULL,
         FOREIGN KEY (promotion_id) REFERENCES promotions (id) ON DELETE SET NULL
       )
     ''');

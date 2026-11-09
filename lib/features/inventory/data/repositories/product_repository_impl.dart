@@ -31,6 +31,7 @@ class ProductRepositoryImpl implements ProductRepository {
       imageBytes: product.imageBytes, // 💡 ¡FALTABA ESTO AQUÍ!
       promotionId: product.promotionId,
       isActive: product.isActive,
+      categoryId: product.categoryId,
     );
     return await datasource.insertProduct(model);
   }
@@ -47,6 +48,7 @@ class ProductRepositoryImpl implements ProductRepository {
       imageBytes: product.imageBytes, // 💡 ¡Y AQUÍ TAMBIÉN!
       promotionId: product.promotionId,
       isActive: product.isActive,
+      categoryId: product.categoryId,
     );
     return await datasource.updateProduct(model);
   }
@@ -61,6 +63,8 @@ class ProductRepositoryImpl implements ProductRepository {
     int? promotionId,
     bool clearPromotion = false,
     Uint8List? imageBytes,
+    int? categoryId,
+    bool clearCategory = false,
   }) async {
     await datasource.updateFields(id, {
       'name': ?name,
@@ -68,6 +72,7 @@ class ProductRepositoryImpl implements ProductRepository {
       'price': ?price,
       'cost': ?cost,
       if (promotionId != null || clearPromotion) 'promotion_id': promotionId,
+      if (categoryId != null || clearCategory) 'category_id': categoryId,
       // Foto nueva: se guarda en la BD y se olvida la ruta antigua
       if (imageBytes != null) ...{
         'image_bytes': imageBytes,

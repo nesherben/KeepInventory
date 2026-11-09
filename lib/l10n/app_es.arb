@@ -725,5 +725,51 @@
         "type": "String"
       }
     }
-  }
+  },
+  "productCategory": "Categoría",
+  "categoryNone": "Sin categoría",
+  "categoryPickTitle": "Categoría del producto",
+  "categorySearchOrCreate": "Busca o escribe una categoría nueva",
+  "categoryCreate": "Crear «{name}»",
+  "@categoryCreate": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "categoryRemove": "Quitar categoría",
+  "categoryDeleteTitle": "Eliminar categoría",
+  "categoryDeleteConfirmUsed": "«{name}» tiene {count} productos. Se quedarán sin categoría (no se borran) y se quitará de los combos que la usen. ¿Eliminar la categoría?",
+  "@categoryDeleteConfirmUsed": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "categoryDeleteConfirmEmpty": "¿Eliminar «{name}» de la lista de categorías?",
+  "@categoryDeleteConfirmEmpty": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "categoryDeleted": "Categoría eliminada",
+  "categoryAll": "Todas",
+  "comboSlotAnyOf": "Cualquier {name}",
+  "@comboSlotAnyOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "comboSlotCategories": "Categorías (cualquier producto de…)",
+  "comboSlotProducts": "Productos",
+  "tableCategory": "CATEGORÍA"
 }

@@ -26,6 +26,29 @@ class DatabaseMigrationRunner {
     await _upgradeCombos(oldVersion, execute);
     await _upgradeAppMeta(oldVersion, execute);
     await _upgradeFairsCatalog(oldVersion, execute);
+    await _upgradeCategories(oldVersion, execute);
+  }
+
+  static const productCategoryAlter =
+      'ALTER TABLE products ADD COLUMN category_id INTEGER '
+      'REFERENCES categories (id) ON DELETE SET NULL';
+  static const slotCategoryAlter =
+      'ALTER TABLE combo_slots ADD COLUMN category_id INTEGER '
+      'REFERENCES categories (id) ON DELETE CASCADE';
+
+  /// v16: categorías de producto y huecos de combo por categoría.
+  static Future<void> _upgradeCategories(
+    int oldVersion,
+    DatabaseSqlExecutor execute,
+  ) async {
+    if (oldVersion >= 16) return;
+    await execute(DatabaseSchemaCreator.categoriesTable);
+    try {
+      await execute(productCategoryAlter);
+    } catch (_) {}
+    try {
+      await execute(slotCategoryAlter);
+    } catch (_) {}
   }
 
   static const seedFairsFromSales = '''

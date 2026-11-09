@@ -76,10 +76,12 @@ abstract final class InventoryView {
     Set<int> validPromotionIds = const {},
     InventorySort? sort,
     bool ascending = true,
+    int? categoryId,
   }) {
     final q = query.trim().toLowerCase();
     final result = products.where((p) {
       if (q.isNotEmpty && !p.name.toLowerCase().contains(q)) return false;
+      if (categoryId != null && p.categoryId != categoryId) return false;
       return switch (filter) {
         InventoryFilter.all => true,
         InventoryFilter.lowStock => StockLevel.of(p.units) == StockLevel.low,

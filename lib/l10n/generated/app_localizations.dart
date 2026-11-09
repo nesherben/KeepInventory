@@ -2617,6 +2617,96 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'falta {slots}'**
   String comboMissingShort(String slots);
+
+  /// No description provided for @productCategory.
+  ///
+  /// In es, this message translates to:
+  /// **'Categoría'**
+  String get productCategory;
+
+  /// No description provided for @categoryNone.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin categoría'**
+  String get categoryNone;
+
+  /// No description provided for @categoryPickTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Categoría del producto'**
+  String get categoryPickTitle;
+
+  /// No description provided for @categorySearchOrCreate.
+  ///
+  /// In es, this message translates to:
+  /// **'Busca o escribe una categoría nueva'**
+  String get categorySearchOrCreate;
+
+  /// No description provided for @categoryCreate.
+  ///
+  /// In es, this message translates to:
+  /// **'Crear «{name}»'**
+  String categoryCreate(String name);
+
+  /// No description provided for @categoryRemove.
+  ///
+  /// In es, this message translates to:
+  /// **'Quitar categoría'**
+  String get categoryRemove;
+
+  /// No description provided for @categoryDeleteTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Eliminar categoría'**
+  String get categoryDeleteTitle;
+
+  /// No description provided for @categoryDeleteConfirmUsed.
+  ///
+  /// In es, this message translates to:
+  /// **'«{name}» tiene {count} productos. Se quedarán sin categoría (no se borran) y se quitará de los combos que la usen. ¿Eliminar la categoría?'**
+  String categoryDeleteConfirmUsed(int count, String name);
+
+  /// No description provided for @categoryDeleteConfirmEmpty.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Eliminar «{name}» de la lista de categorías?'**
+  String categoryDeleteConfirmEmpty(String name);
+
+  /// No description provided for @categoryDeleted.
+  ///
+  /// In es, this message translates to:
+  /// **'Categoría eliminada'**
+  String get categoryDeleted;
+
+  /// No description provided for @categoryAll.
+  ///
+  /// In es, this message translates to:
+  /// **'Todas'**
+  String get categoryAll;
+
+  /// No description provided for @comboSlotAnyOf.
+  ///
+  /// In es, this message translates to:
+  /// **'Cualquier {name}'**
+  String comboSlotAnyOf(String name);
+
+  /// No description provided for @comboSlotCategories.
+  ///
+  /// In es, this message translates to:
+  /// **'Categorías (cualquier producto de…)'**
+  String get comboSlotCategories;
+
+  /// No description provided for @comboSlotProducts.
+  ///
+  /// In es, this message translates to:
+  /// **'Productos'**
+  String get comboSlotProducts;
+
+  /// No description provided for @tableCategory.
+  ///
+  /// In es, this message translates to:
+  /// **'CATEGORÍA'**
+  String get tableCategory;
 }
 
 class _AppLocalizationsDelegate

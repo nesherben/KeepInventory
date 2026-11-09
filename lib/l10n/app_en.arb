@@ -468,5 +468,20 @@
   "fairDeleteConfirmEmpty": "Delete “{name}” from the fairs list?",
   "fairDeleted": "Fair deleted",
   "comboAddMissing": "Add",
-  "comboMissingShort": "missing {slots}"
+  "comboMissingShort": "missing {slots}",
+  "productCategory": "Category",
+  "categoryNone": "No category",
+  "categoryPickTitle": "Product category",
+  "categorySearchOrCreate": "Search or type a new category",
+  "categoryCreate": "Create “{name}”",
+  "categoryRemove": "Remove category",
+  "categoryDeleteTitle": "Delete category",
+  "categoryDeleteConfirmUsed": "“{name}” has {count} products. They will be left without a category (not deleted) and it will be removed from combos that use it. Delete the category?",
+  "categoryDeleteConfirmEmpty": "Delete “{name}” from the categories list?",
+  "categoryDeleted": "Category deleted",
+  "categoryAll": "All",
+  "comboSlotAnyOf": "Any {name}",
+  "comboSlotCategories": "Categories (any product of…)",
+  "comboSlotProducts": "Products",
+  "tableCategory": "CATEGORY"
 }

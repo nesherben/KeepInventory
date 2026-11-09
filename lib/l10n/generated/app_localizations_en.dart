@@ -1473,4 +1473,57 @@ class AppLocalizationsEn extends AppLocalizations {
   String comboMissingShort(String slots) {
     return 'missing $slots';
   }
+
+  @override
+  String get productCategory => 'Category';
+
+  @override
+  String get categoryNone => 'No category';
+
+  @override
+  String get categoryPickTitle => 'Product category';
+
+  @override
+  String get categorySearchOrCreate => 'Search or type a new category';
+
+  @override
+  String categoryCreate(String name) {
+    return 'Create “$name”';
+  }
+
+  @override
+  String get categoryRemove => 'Remove category';
+
+  @override
+  String get categoryDeleteTitle => 'Delete category';
+
+  @override
+  String categoryDeleteConfirmUsed(int count, String name) {
+    return '“$name” has $count products. They will be left without a category (not deleted) and it will be removed from combos that use it. Delete the category?';
+  }
+
+  @override
+  String categoryDeleteConfirmEmpty(String name) {
+    return 'Delete “$name” from the categories list?';
+  }
+
+  @override
+  String get categoryDeleted => 'Category deleted';
+
+  @override
+  String get categoryAll => 'All';
+
+  @override
+  String comboSlotAnyOf(String name) {
+    return 'Any $name';
+  }
+
+  @override
+  String get comboSlotCategories => 'Categories (any product of…)';
+
+  @override
+  String get comboSlotProducts => 'Products';
+
+  @override
+  String get tableCategory => 'CATEGORY';
 }

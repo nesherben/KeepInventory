@@ -1,3 +1,5 @@
+import '../../../core/shared_widgets/name_picker_sheet.dart';
+
 import 'package:flutter/material.dart';
 
 import '../../../core/shared_widgets/app_ui.dart';
@@ -98,130 +100,24 @@ class _HistoryScreenState extends State<HistoryScreen> {
     final existingFairs = await _saleRepository.getAvailableFairs();
     if (!mounted) return;
     var deletedAny = false;
+    final l10n = context.l10n;
 
-    var query = '';
-    final chosen = await showModalBottomSheet<String>(
-      context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
-      builder: (sheetContext) => StatefulBuilder(
-        builder: (sheetContext, setSheet) {
-          final colors = Theme.of(sheetContext).colorScheme;
-          final typed = query.trim();
-          final visible = existingFairs
-              .where((f) => f.toLowerCase().contains(typed.toLowerCase()))
-              .toList();
-          final exactExists = existingFairs.any(
-            (f) => f.toLowerCase() == typed.toLowerCase(),
-          );
-          return Padding(
-            padding: EdgeInsets.only(
-              bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
-            ),
-            child: SizedBox(
-              height: MediaQuery.sizeOf(sheetContext).height * 0.6,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                    child: Text(
-                      sheetContext.l10n.assignFairTitle,
-                      style: Theme.of(sheetContext).textTheme.titleMedium,
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: TextField(
-                      autofocus: existingFairs.isEmpty,
-                      textCapitalization: TextCapitalization.sentences,
-                      textInputAction: TextInputAction.done,
-                      onChanged: (v) => setSheet(() => query = v),
-                      // Enter: crea / elige lo escrito
-                      onSubmitted: (v) {
-                        if (v.trim().isNotEmpty) {
-                          Navigator.pop(sheetContext, v.trim());
-                        }
-                      },
-                      decoration: InputDecoration(
-                        hintText: sheetContext.l10n.fairSearchOrCreate,
-                        prefixIcon: const Icon(Icons.search, size: 20),
-                        isDense: true,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Expanded(
-                    child: ListView(
-                      children: [
-                        if (typed.isNotEmpty && !exactExists)
-                          ListTile(
-                            leading: Icon(Icons.add, color: colors.primary),
-                            title: Text(
-                              sheetContext.l10n.fairCreate(typed),
-                              style: TextStyle(
-                                color: colors.primary,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            onTap: () => Navigator.pop(sheetContext, typed),
-                          ),
-                        for (final fair in visible)
-                          ListTile(
-                            leading: const Icon(Icons.event_outlined),
-                            title: Text(fair),
-                            selected: fair == currentFairName,
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                if (fair == currentFairName)
-                                  Text(sheetContext.l10n.fairCurrent),
-                                IconButton(
-                                  tooltip: sheetContext.l10n.fairDeleteTitle,
-                                  icon: Icon(
-                                    Icons.delete_outline,
-                                    color: colors.onSurfaceVariant,
-                                  ),
-                                  onPressed: () async {
-                                    if (await _deleteFair(sheetContext, fair)) {
-                                      deletedAny = true;
-                                      setSheet(
-                                        () => existingFairs.remove(fair),
-                                      );
-                                      // Se borró la feria de este grupo
-                                      if (fair == currentFairName &&
-                                          sheetContext.mounted) {
-                                        Navigator.pop(sheetContext);
-                                      }
-                                    }
-                                  },
-                                ),
-                              ],
-                            ),
-                            onTap: () => Navigator.pop(sheetContext, fair),
-                          ),
-                        if (currentFairName.isNotEmpty)
-                          ListTile(
-                            leading: Icon(
-                              Icons.event_busy_outlined,
-                              color: colors.error,
-                            ),
-                            title: Text(
-                              sheetContext.l10n.fairRemove,
-                              style: TextStyle(color: colors.error),
-                            ),
-                            // "" = quitar la feria
-                            onTap: () => Navigator.pop(sheetContext, ''),
-                          ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
+    final chosen = await showNamePickerSheet(
+      context,
+      title: l10n.assignFairTitle,
+      searchHint: l10n.fairSearchOrCreate,
+      names: existingFairs,
+      createLabel: l10n.fairCreate,
+      current: currentFairName,
+      currentLabel: l10n.fairCurrent,
+      removeLabel: l10n.fairRemove,
+      deleteTooltip: l10n.fairDeleteTitle,
+      icon: Icons.event_outlined,
+      onDelete: (sheetContext, fair) async {
+        final deleted = await _deleteFair(sheetContext, fair);
+        deletedAny |= deleted;
+        return deleted;
+      },
     );
 
     if (chosen == null || chosen == currentFairName) {
@@ -250,32 +146,16 @@ class _HistoryScreenState extends State<HistoryScreen> {
     final count = await _saleRepository.countSalesForFair(fair);
     if (!sheetContext.mounted) return false;
     final l10n = sheetContext.l10n;
-    final ok = await showDialog<bool>(
-      context: sheetContext,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.fairDeleteTitle),
-        content: Text(
-          count > 0
-              ? l10n.fairDeleteConfirmUsed(count, fair)
-              : l10n.fairDeleteConfirmEmpty(fair),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
-              foregroundColor: Theme.of(context).colorScheme.onError,
-            ),
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(l10n.delete),
-          ),
-        ],
-      ),
+    final ok = await confirmDeleteDialog(
+      sheetContext,
+      title: l10n.fairDeleteTitle,
+      message: count > 0
+          ? l10n.fairDeleteConfirmUsed(count, fair)
+          : l10n.fairDeleteConfirmEmpty(fair),
+      cancelLabel: l10n.cancel,
+      deleteLabel: l10n.delete,
     );
-    if (ok != true) return false;
+    if (!ok) return false;
     await _saleRepository.deleteFair(fair);
     if (mounted) AppAlerts.showWarning(context, l10n.fairDeleted);
     return true;

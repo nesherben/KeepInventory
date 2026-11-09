@@ -11,6 +11,9 @@ class Product {
   final int? promotionId;
   final bool isActive;
 
+  /// Categoría opcional ("Polaroid", "Print A5"…).
+  final int? categoryId;
+
   Product({
     this.id,
     required this.name,
@@ -21,6 +24,7 @@ class Product {
     this.imageBytes, // <-- NUEVO
     this.promotionId,
     this.isActive = true,
+    this.categoryId,
   });
 
   Product copyWith({
@@ -33,6 +37,7 @@ class Product {
     Uint8List? imageBytes, // <-- NUEVO
     int? promotionId,
     bool? isActive,
+    int? categoryId,
   }) {
     return Product(
       id: id ?? this.id,
@@ -44,6 +49,7 @@ class Product {
       imageBytes: imageBytes ?? this.imageBytes, // <-- NUEVO
       promotionId: promotionId ?? this.promotionId,
       isActive: isActive ?? this.isActive,
+      categoryId: categoryId ?? this.categoryId,
     );
   }
 }

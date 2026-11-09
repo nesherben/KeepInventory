@@ -4,14 +4,18 @@ import '../../packs/domain/pack.dart';
 class SaleCatalogFilter {
   const SaleCatalogFilter._();
 
+  /// Por nombre y, si se indica, por categoría.
   static List<Product> filterProducts(
     Iterable<Product> products,
-    String query,
-  ) {
+    String query, {
+    int? categoryId,
+  }) {
     final normalizedQuery = query.toLowerCase();
     return products
         .where(
-          (product) => product.name.toLowerCase().contains(normalizedQuery),
+          (product) =>
+              product.name.toLowerCase().contains(normalizedQuery) &&
+              (categoryId == null || product.categoryId == categoryId),
         )
         .toList();
   }

@@ -10,10 +10,14 @@ import 'package:keepinventory/core/services/image_compression_service.dart';
 import '../../domain/product.dart';
 import '../../data/product_model.dart';
 import '../../../promotions/domain/promotion.dart';
+import 'category_picker.dart';
 
 class ProductFormDialog extends StatefulWidget {
   final Product? productToEdit;
   final Map<int, Promotion> promotionsMap;
+
+  /// Nombres de las categorías por id (para mostrar la actual).
+  final Map<int, String> categoryNames;
 
   /// Guarda el producto; el diálogo se cierra solo después.
   final Future<void> Function(ProductModel product, bool isEditing) onSave;
@@ -23,6 +27,7 @@ class ProductFormDialog extends StatefulWidget {
     this.productToEdit,
     required this.promotionsMap,
     required this.onSave,
+    this.categoryNames = const {},
   });
 
   @override
@@ -38,6 +43,8 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
   late double _price;
   late double _cost;
   int? _selectedPromotionId;
+  int? _categoryId;
+  String? _categoryName;
   Uint8List? _selectedImageBytes;
   String? _oldImagePath;
 
@@ -55,6 +62,8 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
     _price = p?.price ?? 0.0;
     _cost = p?.cost ?? 0.0;
     _selectedPromotionId = p?.promotionId;
+    _categoryId = p?.categoryId;
+    _categoryName = widget.categoryNames[p?.categoryId];
     _selectedImageBytes = p?.imageBytes;
     _oldImagePath = p?.imagePath;
     _livePrice = p?.price;
@@ -112,7 +121,17 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
       imagePath: _oldImagePath,
       imageBytes: _selectedImageBytes,
       promotionId: _selectedPromotionId,
+      categoryId: _categoryId,
     );
+  }
+
+  Future<void> _pickCategory() async {
+    final pick = await pickCategory(context, currentId: _categoryId);
+    if (pick == null || !mounted) return;
+    setState(() {
+      _categoryId = pick.category?.id;
+      _categoryName = pick.category?.name;
+    });
   }
 
   Future<void> _saveProduct() async {
@@ -254,6 +273,12 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
                         ? context.l10n.required
                         : null,
                     onSaved: (v) => _name = v!.trim(),
+                  ),
+                ),
+                field(
+                  CategoryField(
+                    categoryName: _categoryName,
+                    onTap: _pickCategory,
                   ),
                 ),
                 field(

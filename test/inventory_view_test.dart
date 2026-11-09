@@ -201,4 +201,17 @@ void main() {
       ]);
     });
   });
+
+  test('filters by category', () {
+    final items = [
+      Product(name: 'Polaroid 1', units: 1, price: 3, cost: 1, categoryId: 1),
+      Product(name: 'Print A5', units: 1, price: 2, cost: 1, categoryId: 2),
+      Product(name: 'Sin categoría', units: 1, price: 2, cost: 1),
+    ];
+    expect(
+      InventoryView.apply(items, categoryId: 1).map((p) => p.name),
+      ['Polaroid 1'],
+    );
+    expect(InventoryView.apply(items).length, 3);
+  });
 }
