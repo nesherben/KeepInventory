@@ -153,6 +153,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
             ? p.copyWith(units: p.units + _pendingStock[p.id]!)
             : p,
     ];
+    AppDrawer.catalogEmpty.value = products.isEmpty;
     setState(() {
       _products = products;
       _promotionsMap = promoMap;
@@ -892,6 +893,13 @@ class _InventoryScreenState extends State<InventoryScreen> {
                             title: _products.isEmpty
                                 ? context.l10n.inventoryEmpty
                                 : context.l10n.productsNotFound,
+                            action: _products.isEmpty
+                                ? FilledButton.icon(
+                                    onPressed: () => _showProductFormDialog(),
+                                    icon: const Icon(Icons.add),
+                                    label: Text(context.l10n.inventoryAddFirst),
+                                  )
+                                : null,
                           )
                         : LayoutBuilder(
                             builder: (context, constraints) =>

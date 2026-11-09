@@ -1,3 +1,6 @@
+import '../../inventory/data/repositories/product_repository_impl.dart';
+import '../../inventory/data/datasources/product_local_datasource.dart';
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -169,10 +172,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _revenueByMethodPerGroup = revenueByMethodPerGroup;
         _isLoading = false;
       });
+      _checkFirstSteps();
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
     }
+  }
+
+  /// Sin productos: la entrada Inventario del menú parpadea y, la primera
+  /// vez, el menú se abre solo para enseñar por dónde empezar.
+  Future<void> _checkFirstSteps() async {
+    final products = await ProductRepositoryImpl(ProductLocalDatasource())
+        .getProducts();
+    final empty = products.isEmpty;
+    AppDrawer.catalogEmpty.value = empty;
+    if (!empty || AppPreferences.menuHintShown) return;
+    // Esperar a que Inicio esté a la vista (p. ej. tras cerrar el tutorial)
+    for (var i = 0; i < 240; i++) {
+      await Future.delayed(const Duration(milliseconds: 500));
+      if (!mounted) return;
+      if (ModalRoute.of(context)?.isCurrent ?? false) break;
+    }
+    if (!mounted || !(ModalRoute.of(context)?.isCurrent ?? false)) return;
+    await Future.delayed(const Duration(milliseconds: 600));
+    if (!mounted) return;
+    await AppPreferences.markMenuHintShown();
+    _scaffoldKey.currentState?.openDrawer();
   }
 
   void _openFullScreenChart() {

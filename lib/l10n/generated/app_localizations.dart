@@ -551,7 +551,7 @@ abstract class AppLocalizations {
   /// No description provided for @inventoryEmpty.
   ///
   /// In es, this message translates to:
-  /// **'No hay productos en el inventario.'**
+  /// **'¡Empieza añadiendo tus productos!'**
   String get inventoryEmpty;
 
   /// No description provided for @productsNotFound.
@@ -2917,6 +2917,18 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Elige productos'**
   String get productsPickTitle;
+
+  /// No description provided for @drawerStartHint.
+  ///
+  /// In es, this message translates to:
+  /// **'¡Empieza añadiendo productos!'**
+  String get drawerStartHint;
+
+  /// No description provided for @inventoryAddFirst.
+  ///
+  /// In es, this message translates to:
+  /// **'Añadir producto'**
+  String get inventoryAddFirst;
 }
 
 class _AppLocalizationsDelegate

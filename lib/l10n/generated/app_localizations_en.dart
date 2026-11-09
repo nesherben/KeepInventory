@@ -257,7 +257,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchProduct => 'Search product by name...';
 
   @override
-  String get inventoryEmpty => 'There are no products in inventory.';
+  String get inventoryEmpty => 'Start by adding your products!';
 
   @override
   String get productsNotFound => 'No products with that name were found.';
@@ -1674,4 +1674,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get productsPickTitle => 'Choose products';
+
+  @override
+  String get drawerStartHint => 'Start by adding products!';
+
+  @override
+  String get inventoryAddFirst => 'Add product';
 }

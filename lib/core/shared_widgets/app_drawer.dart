@@ -21,6 +21,10 @@ class AppDrawer extends StatelessWidget {
     {'color': Colors.orangeAccent, 'key': 'orange'},
   ];
 
+  /// true mientras el inventario está vacío: la entrada Inventario parpadea
+  /// con "¡Empieza añadiendo productos!". Lo actualizan Inicio e Inventario.
+  static final ValueNotifier<bool> catalogEmpty = ValueNotifier(false);
+
   static final ValueNotifier<Color?> customThemeNotifier =
       ValueNotifier<Color?>(null);
   static int _currentColorIndex = 0;
@@ -133,12 +137,39 @@ class AppDrawer extends StatelessWidget {
                   subtitle: context.l10n.navHistorySubtitle,
                 ),
                 section(context.l10n.navSectionCatalog),
-                item(
-                  '/inventory',
-                  Icons.inventory_2_outlined,
-                  Icons.inventory_2,
-                  context.l10n.navInventory,
-                  subtitle: context.l10n.navInventorySubtitle,
+                ValueListenableBuilder<bool>(
+                  valueListenable: catalogEmpty,
+                  builder: (context, empty, _) {
+                    if (!empty) {
+                      return item(
+                        '/inventory',
+                        Icons.inventory_2_outlined,
+                        Icons.inventory_2,
+                        context.l10n.navInventory,
+                        subtitle: context.l10n.navInventorySubtitle,
+                      );
+                    }
+                    return _PulsingHint(
+                      child: _NavItem(
+                        icon: Icons.inventory_2_outlined,
+                        selectedIcon: Icons.inventory_2,
+                        label: context.l10n.navInventory,
+                        subtitle: context.l10n.drawerStartHint,
+                        selected: currentRoute == '/inventory',
+                        padded: false,
+                        onTap: () {
+                          if (currentRoute == '/inventory') {
+                            Navigator.pop(context);
+                          } else {
+                            Navigator.pushReplacementNamed(
+                              context,
+                              '/inventory',
+                            );
+                          }
+                        },
+                      ),
+                    );
+                  },
                 ),
                 item(
                   '/promotions',
@@ -353,8 +384,11 @@ class _NavItem extends StatelessWidget {
     required this.selected,
     required this.onTap,
     this.subtitle,
+    this.padded = true,
   });
 
+  /// Margen lateral propio (false si ya lo pone un envoltorio).
+  final bool padded;
   final IconData icon;
   final IconData selectedIcon;
   final String label;
@@ -366,7 +400,7 @@ class _NavItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+      padding: EdgeInsets.symmetric(horizontal: padded ? 12 : 0, vertical: 2),
       child: Material(
         color: selected
             ? colors.primary.withValues(alpha: 0.12)
@@ -413,6 +447,55 @@ class _NavItem extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Resalta una entrada con un parpadeo suave (fondo que late) para llamar
+/// la atención sin molestar.
+class _PulsingHint extends StatefulWidget {
+  const _PulsingHint({required this.child});
+
+  final Widget child;
+
+  @override
+  State<_PulsingHint> createState() => _PulsingHintState();
+}
+
+class _PulsingHintState extends State<_PulsingHint>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 900),
+  )..repeat(reverse: true);
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) => Container(
+        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+        decoration: BoxDecoration(
+          color: colors.primary.withValues(
+            alpha: 0.06 + 0.16 * _controller.value,
+          ),
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          border: Border.all(
+            color: colors.primary.withValues(
+              alpha: 0.3 + 0.5 * _controller.value,
+            ),
+          ),
+        ),
+        child: child,
+      ),
+      child: widget.child,
     );
   }
 }

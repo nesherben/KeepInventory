@@ -88,7 +88,7 @@
   "productUpdated": "✨ ¡Producto actualizado con éxito!",
   "productCreated": "🎉 ¡Producto creado con éxito!",
   "searchProduct": "Buscar producto por nombre...",
-  "inventoryEmpty": "No hay productos en el inventario.",
+  "inventoryEmpty": "¡Empieza añadiendo tus productos!",
   "productsNotFound": "No se encontraron productos con ese nombre.",
   "tableActions": "ACCIONES",
   "tablePhoto": "FOTO",
@@ -919,5 +919,7 @@
       }
     }
   },
-  "productsPickTitle": "Elige productos"
+  "productsPickTitle": "Elige productos",
+  "drawerStartHint": "¡Empieza añadiendo productos!",
+  "inventoryAddFirst": "Añadir producto"
 }
