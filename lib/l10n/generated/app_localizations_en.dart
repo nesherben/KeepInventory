@@ -1402,4 +1402,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get fairCurrent => 'Current';
+
+  @override
+  String drawerMadeBy(String name) {
+    return 'Made with ❤️ by $name';
+  }
+
+  @override
+  String get drawerFreeApp =>
+      'KeepInventory is free. If it helps at your fairs, you can support the project.';
+
+  @override
+  String get drawerDonate => 'Buy me a coffee';
+
+  @override
+  String get drawerSourceCode => 'Source on GitHub';
+
+  @override
+  String get linkOpenError => 'Couldn\'t open the link';
 }

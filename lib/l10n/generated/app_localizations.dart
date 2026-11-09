@@ -2503,6 +2503,36 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Actual'**
   String get fairCurrent;
+
+  /// No description provided for @drawerMadeBy.
+  ///
+  /// In es, this message translates to:
+  /// **'Hecho con ❤️ por {name}'**
+  String drawerMadeBy(String name);
+
+  /// No description provided for @drawerFreeApp.
+  ///
+  /// In es, this message translates to:
+  /// **'KeepInventory es gratis. Si te ayuda en tus ferias, puedes apoyar el proyecto.'**
+  String get drawerFreeApp;
+
+  /// No description provided for @drawerDonate.
+  ///
+  /// In es, this message translates to:
+  /// **'Invítame a un café'**
+  String get drawerDonate;
+
+  /// No description provided for @drawerSourceCode.
+  ///
+  /// In es, this message translates to:
+  /// **'Código en GitHub'**
+  String get drawerSourceCode;
+
+  /// No description provided for @linkOpenError.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo abrir el enlace'**
+  String get linkOpenError;
 }
 
 class _AppLocalizationsDelegate

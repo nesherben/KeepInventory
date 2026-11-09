@@ -655,5 +655,17 @@
     }
   },
   "fairRemove": "Quitar feria",
-  "fairCurrent": "Actual"
+  "fairCurrent": "Actual",
+  "drawerMadeBy": "Hecho con ❤️ por {name}",
+  "@drawerMadeBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "drawerFreeApp": "KeepInventory es gratis. Si te ayuda en tus ferias, puedes apoyar el proyecto.",
+  "drawerDonate": "Invítame a un café",
+  "drawerSourceCode": "Código en GitHub",
+  "linkOpenError": "No se pudo abrir el enlace"
 }

@@ -449,5 +449,10 @@
   "fairSearchOrCreate": "Search or type a new fair",
   "fairCreate": "Create “{name}”",
   "fairRemove": "Remove fair",
-  "fairCurrent": "Current"
+  "fairCurrent": "Current",
+  "drawerMadeBy": "Made with ❤️ by {name}",
+  "drawerFreeApp": "KeepInventory is free. If it helps at your fairs, you can support the project.",
+  "drawerDonate": "Buy me a coffee",
+  "drawerSourceCode": "Source on GitHub",
+  "linkOpenError": "Couldn't open the link"
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // 💡 NUEVO
+import 'package:url_launcher/url_launcher.dart';
 
 import 'package:keepinventory/l10n/app_localizations_ext.dart';
 
@@ -98,76 +99,145 @@ class AppDrawer extends StatelessWidget {
 
     return Drawer(
       child: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+        // El pie (autor y donación) queda abajo del todo si hay sitio; si no,
+        // aparece al final al hacer scroll
+        child: CustomScrollView(
+          slivers: [
+            SliverList.list(
+              children: [
+                _DrawerHeader(onTap: () => _cycleTheme(context)),
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  child: Divider(),
+                ),
+                section(context.l10n.navSectionMain),
+                item(
+                  '/',
+                  Icons.dashboard_outlined,
+                  Icons.dashboard,
+                  context.l10n.navDashboard,
+                ),
+                item(
+                  '/sales',
+                  Icons.point_of_sale_outlined,
+                  Icons.point_of_sale,
+                  context.l10n.navSales,
+                ),
+                section(context.l10n.navSectionStockOffers),
+                item(
+                  '/inventory',
+                  Icons.inventory_2_outlined,
+                  Icons.inventory_2,
+                  context.l10n.navInventory,
+                ),
+                item(
+                  '/promotions',
+                  Icons.local_offer_outlined,
+                  Icons.local_offer,
+                  context.l10n.navPromotions,
+                ),
+                item(
+                  '/packs',
+                  Icons.card_giftcard_outlined,
+                  Icons.card_giftcard,
+                  context.l10n.navPacks,
+                ),
+                section(context.l10n.navSectionRecords),
+                item(
+                  '/history',
+                  Icons.history_outlined,
+                  Icons.history,
+                  context.l10n.navHistory,
+                ),
+                item(
+                  '/data-management',
+                  Icons.storage_outlined,
+                  Icons.storage,
+                  context.l10n.navDataManagement,
+                  subtitle: context.l10n.navDataManagementSubtitle,
+                ),
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  child: Divider(),
+                ),
+                // El tutorial se abre encima de la pantalla actual (push, no replace)
+                _NavItem(
+                  icon: Icons.school_outlined,
+                  selectedIcon: Icons.school,
+                  label: context.l10n.navTutorial,
+                  subtitle: context.l10n.navTutorialSubtitle,
+                  selected: false,
+                  onTap: () {
+                    final navigator = Navigator.of(context);
+                    navigator.pop();
+                    navigator.pushNamed('/tutorial');
+                  },
+                ),
+              ],
+            ),
+            const SliverFillRemaining(
+              hasScrollBody: false,
+              child: Align(
+                alignment: Alignment.bottomCenter,
+                child: _DrawerFooter(),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Pie del menú: autor, enlace al código y donación por PayPal.
+class _DrawerFooter extends StatelessWidget {
+  const _DrawerFooter();
+
+  static const _authorName = 'Néstor Hernández';
+  static final _donateUrl = Uri.parse('https://www.paypal.me/nestor8299');
+  static final _repoUrl = Uri.parse(
+    'https://github.com/nesherben/KeepInventory',
+  );
+
+  Future<void> _open(BuildContext context, Uri url) async {
+    var opened = false;
+    try {
+      opened = await launchUrl(url, mode: LaunchMode.externalApplication);
+    } catch (_) {}
+    if (!opened && context.mounted) {
+      AppAlerts.showError(context, context.l10n.linkOpenError);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, AppSpacing.lg, 16, AppSpacing.sm),
+      child: AppCard(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _DrawerHeader(onTap: () => _cycleTheme(context)),
-            const Padding(
-              padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
-              child: Divider(),
+            Text(
+              context.l10n.drawerMadeBy(_authorName),
+              style: const TextStyle(fontWeight: FontWeight.w600),
             ),
-            section(context.l10n.navSectionMain),
-            item(
-              '/',
-              Icons.dashboard_outlined,
-              Icons.dashboard,
-              context.l10n.navDashboard,
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              context.l10n.drawerFreeApp,
+              style: TextStyle(fontSize: 12, color: colors.onSurfaceVariant),
             ),
-            item(
-              '/sales',
-              Icons.point_of_sale_outlined,
-              Icons.point_of_sale,
-              context.l10n.navSales,
+            const SizedBox(height: AppSpacing.md),
+            FilledButton.tonalIcon(
+              onPressed: () => _open(context, _donateUrl),
+              icon: const Icon(Icons.coffee_outlined, size: 18),
+              label: Text(context.l10n.drawerDonate),
             ),
-            section(context.l10n.navSectionStockOffers),
-            item(
-              '/inventory',
-              Icons.inventory_2_outlined,
-              Icons.inventory_2,
-              context.l10n.navInventory,
-            ),
-            item(
-              '/promotions',
-              Icons.local_offer_outlined,
-              Icons.local_offer,
-              context.l10n.navPromotions,
-            ),
-            item(
-              '/packs',
-              Icons.card_giftcard_outlined,
-              Icons.card_giftcard,
-              context.l10n.navPacks,
-            ),
-            section(context.l10n.navSectionRecords),
-            item(
-              '/history',
-              Icons.history_outlined,
-              Icons.history,
-              context.l10n.navHistory,
-            ),
-            item(
-              '/data-management',
-              Icons.storage_outlined,
-              Icons.storage,
-              context.l10n.navDataManagement,
-              subtitle: context.l10n.navDataManagementSubtitle,
-            ),
-            const Padding(
-              padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
-              child: Divider(),
-            ),
-            // El tutorial se abre encima de la pantalla actual (push, no replace)
-            _NavItem(
-              icon: Icons.school_outlined,
-              selectedIcon: Icons.school,
-              label: context.l10n.navTutorial,
-              subtitle: context.l10n.navTutorialSubtitle,
-              selected: false,
-              onTap: () {
-                final navigator = Navigator.of(context);
-                navigator.pop();
-                navigator.pushNamed('/tutorial');
-              },
+            TextButton.icon(
+              onPressed: () => _open(context, _repoUrl),
+              icon: const Icon(Icons.code, size: 18),
+              label: Text(context.l10n.drawerSourceCode),
             ),
           ],
         ),

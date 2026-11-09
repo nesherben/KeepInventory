@@ -1406,4 +1406,22 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get fairCurrent => 'Actual';
+
+  @override
+  String drawerMadeBy(String name) {
+    return 'Hecho con ❤️ por $name';
+  }
+
+  @override
+  String get drawerFreeApp =>
+      'KeepInventory es gratis. Si te ayuda en tus ferias, puedes apoyar el proyecto.';
+
+  @override
+  String get drawerDonate => 'Invítame a un café';
+
+  @override
+  String get drawerSourceCode => 'Código en GitHub';
+
+  @override
+  String get linkOpenError => 'No se pudo abrir el enlace';
 }
