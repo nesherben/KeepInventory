@@ -11,6 +11,7 @@ import 'package:keepinventory/l10n/generated/app_localizations.dart';
 
 import '../database/database_helper.dart';
 import 'database_file_installer.dart';
+import 'app_version.dart';
 import 'sync_approval.dart';
 import 'sync_invite.dart';
 
@@ -46,14 +47,17 @@ class SyncService {
   /// Rutas del servidor. Exige el [token] del QR y, además, que el emisor
   /// apruebe cada solicitud en pantalla ([gate]):
   ///
-  /// 1. `/request?id=&device=` → registra la solicitud (el emisor la ve).
+  /// 1. `/request?id=&device=&app=` → registra la solicitud (el emisor la
+  ///    ve). Si [appVersion] no es null, el receptor debe tener la misma
+  ///    versión de la app (si no, 409).
   /// 2. `/status?id=` → pending | approved | denied | unknown.
   /// 3. `/download-db?id=` → solo si está aprobada.
   static shelf.Handler buildSyncHandler(
     File file,
     String token,
-    SyncApprovalGate gate,
-  ) {
+    SyncApprovalGate gate, {
+    String? appVersion,
+  }) {
     final router = shelf_router.Router();
     bool authorized(shelf.Request request) =>
         request.url.queryParameters['token'] == token;
@@ -70,6 +74,10 @@ class SyncService {
       final q = request.url.queryParameters;
       final id = q['id'];
       if (id == null || id.length < 8) return shelf.Response.badRequest();
+      // Misma versión obligatoria (los receptores antiguos no la envían)
+      if (appVersion != null && q['app'] != appVersion) {
+        return shelf.Response(409, body: 'version:$appVersion');
+      }
       final info =
           request.context['shelf.io.connection_info'] as HttpConnectionInfo?;
       final accepted = gate.register(
@@ -114,6 +122,7 @@ class SyncService {
     Function(String) onError, {
     required String token,
     required SyncApprovalGate gate,
+    String? appVersion,
   }) async {
     try {
       final hosts = await localIPv4Addresses();
@@ -133,7 +142,7 @@ class SyncService {
 
       await stopServer();
       _server = await io.serve(
-        buildSyncHandler(file, token, gate),
+        buildSyncHandler(file, token, gate, appVersion: appVersion),
         InternetAddress.anyIPv4,
         port,
       );
@@ -189,12 +198,21 @@ class SyncService {
     String requestId,
     String deviceName, {
     Duration timeout = const Duration(minutes: 2),
+    String? appVersion,
   }) async {
     final client = http.Client();
     try {
       final response = await client
-          .get(invite.requestUri(host, requestId, deviceName))
+          .get(
+            invite.requestUri(
+              host,
+              requestId,
+              deviceName,
+              appVersion: appVersion,
+            ),
+          )
           .timeout(const Duration(seconds: 5));
+      if (response.statusCode == 409) return SyncRequestStatus.versionMismatch;
       if (response.statusCode != 200) return SyncRequestStatus.denied;
 
       final deadline = DateTime.now().add(timeout);
@@ -228,7 +246,23 @@ class SyncService {
     Function(String status, double progress) onProgress, {
     List<String> preferredHosts = const [],
     String deviceName = 'Android',
+    required String appVersion,
   }) async {
+    // 💡 0. MISMA VERSIÓN OBLIGATORIA (el QR lleva la del emisor)
+    switch (AppVersion.compare(invite.appVersion, appVersion)) {
+      case VersionMatch.same:
+        break;
+      case VersionMatch.different:
+        onProgress(
+          l10n.syncVersionMismatch(invite.appVersion!, appVersion),
+          -1.0,
+        );
+        return false;
+      case VersionMatch.unknown:
+        onProgress(l10n.syncVersionUnknown, -1.0);
+        return false;
+    }
+
     // 💡 1. LOCALIZAR AL EMISOR (prueba cada dirección del QR)
     onProgress(l10n.syncVerifyNetwork, 0.0);
     final host = await findReachableHost(
@@ -250,7 +284,15 @@ class SyncService {
         host,
         requestId,
         deviceName,
+        appVersion: appVersion,
       );
+      if (decision == SyncRequestStatus.versionMismatch) {
+        onProgress(
+          l10n.syncVersionMismatch(invite.appVersion ?? '?', appVersion),
+          -1.0,
+        );
+        return false;
+      }
       if (decision != SyncRequestStatus.approved) {
         onProgress(
           decision == SyncRequestStatus.denied

@@ -2533,6 +2533,60 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'No se pudo abrir el enlace'**
   String get linkOpenError;
+
+  /// No description provided for @versionMismatchTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Versiones distintas'**
+  String get versionMismatchTitle;
+
+  /// No description provided for @backupVersionMismatch.
+  ///
+  /// In es, this message translates to:
+  /// **'Este backup es de la versión {backup} y la app está en la {app}. Para restaurarlo, usa la misma versión de la app. No se ha cambiado nada.'**
+  String backupVersionMismatch(String backup, String app);
+
+  /// No description provided for @backupVersionUnknownTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Backup de una versión anterior'**
+  String get backupVersionUnknownTitle;
+
+  /// No description provided for @backupVersionUnknown.
+  ///
+  /// In es, this message translates to:
+  /// **'Este backup se hizo con una versión anterior a la 1.14.1 y no se puede comprobar si coincide con la tuya ({app}). Si lo restauras, la app intentará adaptarlo. ¿Restaurar igualmente?'**
+  String backupVersionUnknown(String app);
+
+  /// No description provided for @backupRestoreAnyway.
+  ///
+  /// In es, this message translates to:
+  /// **'Restaurar igualmente'**
+  String get backupRestoreAnyway;
+
+  /// No description provided for @backupNotRestored.
+  ///
+  /// In es, this message translates to:
+  /// **'No se ha restaurado el backup'**
+  String get backupNotRestored;
+
+  /// No description provided for @syncVersionMismatch.
+  ///
+  /// In es, this message translates to:
+  /// **'El otro móvil tiene la versión {other} y este la {mine}. Actualiza los dos a la misma versión para sincronizar.'**
+  String syncVersionMismatch(String other, String mine);
+
+  /// No description provided for @syncVersionUnknown.
+  ///
+  /// In es, this message translates to:
+  /// **'El otro móvil tiene una versión anterior a la 1.14.1. Actualiza los dos a la misma versión para sincronizar.'**
+  String get syncVersionUnknown;
+
+  /// No description provided for @understood.
+  ///
+  /// In es, this message translates to:
+  /// **'Entendido'**
+  String get understood;
 }
 
 class _AppLocalizationsDelegate

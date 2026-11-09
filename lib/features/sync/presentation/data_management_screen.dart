@@ -54,16 +54,78 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
 
     AppAlerts.showWarning(context, context.l10n.restorePrompt);
 
-    final success = await DatabaseBackupService.importDatabase();
-
-    if (mounted) {
-      setState(() => _isImporting = false);
-      if (success) {
-        _showRestartDialog();
-      } else {
-        AppAlerts.showWarning(context, context.l10n.restoreFailed);
+    final result = await DatabaseBackupService.importDatabase();
+    if (!mounted) {
+      // Pantalla cerrada a mitad: no se deja un backup sin versión a medias
+      if (result.status == BackupImportStatus.unknownVersion) {
+        await DatabaseBackupService.rollbackPendingImport();
       }
+      return;
     }
+    setState(() => _isImporting = false);
+    final l10n = context.l10n;
+
+    switch (result.status) {
+      case BackupImportStatus.restored:
+        _showRestartDialog();
+      case BackupImportStatus.failed:
+        AppAlerts.showWarning(context, l10n.restoreFailed);
+      case BackupImportStatus.versionMismatch:
+        await _showVersionDialog(
+          l10n.versionMismatchTitle,
+          l10n.backupVersionMismatch(
+            result.backupVersion ?? '?',
+            result.appVersion ?? '?',
+          ),
+        );
+      case BackupImportStatus.unknownVersion:
+        // Backup sin versión (anterior a 1.14.1): se deja elegir
+        final restore = await _showVersionDialog(
+          l10n.backupVersionUnknownTitle,
+          l10n.backupVersionUnknown(result.appVersion ?? '?'),
+          confirmLabel: l10n.backupRestoreAnyway,
+        );
+        if (restore) {
+          await DatabaseBackupService.confirmPendingImport();
+          if (mounted) _showRestartDialog();
+        } else {
+          await DatabaseBackupService.rollbackPendingImport();
+          if (mounted) AppAlerts.showInfo(context, l10n.backupNotRestored);
+        }
+    }
+  }
+
+  /// Aviso de versión. Con [confirmLabel] pregunta (true = confirmar);
+  /// sin él es solo informativo.
+  Future<bool> _showVersionDialog(
+    String title,
+    String message, {
+    String? confirmLabel,
+  }) async {
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        icon: Icon(
+          Icons.system_update_outlined,
+          color: Theme.of(context).colorScheme.error,
+        ),
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          if (confirmLabel != null)
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(context.l10n.cancel),
+            ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, confirmLabel != null),
+            child: Text(confirmLabel ?? context.l10n.understood),
+          ),
+        ],
+      ),
+    );
+    return result == true;
   }
 
   Future<void> _confirmDatabaseDeletion() async {

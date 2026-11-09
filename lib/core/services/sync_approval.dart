@@ -1,7 +1,7 @@
 import 'dart:async';
 
 /// Estado de una solicitud de copia de datos.
-enum SyncRequestStatus { pending, approved, denied, unknown }
+enum SyncRequestStatus { pending, approved, denied, unknown, versionMismatch }
 
 /// Solicitud de un receptor que quiere copiar los datos.
 class SyncRequest {

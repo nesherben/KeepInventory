@@ -24,6 +24,24 @@ void main() {
       expect(parsed.legacyUrl, isNull);
     });
 
+    test('carries the sender app version (null in old QRs)', () {
+      const invite = SyncInvite(
+        port: 8080,
+        hosts: ['10.0.0.1'],
+        token: 't',
+        appVersion: '1.14.1',
+      );
+      expect(SyncInvite.parse(invite.toQrData())!.appVersion, '1.14.1');
+      const old = SyncInvite(port: 8080, hosts: ['10.0.0.1'], token: 't');
+      expect(SyncInvite.parse(old.toQrData())!.appVersion, isNull);
+      expect(
+        invite
+            .requestUri('h', 'id', 'dev', appVersion: '1.14.1')
+            .queryParameters['app'],
+        '1.14.1',
+      );
+    });
+
     test('same-wifi invite has no hotspot data', () {
       const invite = SyncInvite(
         port: 8080,

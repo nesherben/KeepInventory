@@ -17,6 +17,7 @@ class SyncInvite {
     this.password,
     this.security = 'wpa2',
     this.legacyUrl,
+    this.appVersion,
   });
 
   static const scheme = 'keepinventory';
@@ -38,6 +39,9 @@ class SyncInvite {
   /// URL completa del formato antiguo, si el QR era de una versión previa.
   final String? legacyUrl;
 
+  /// Versión de la app del emisor (null en QR de antes de la 1.14.1).
+  final String? appVersion;
+
   bool get usesHotspot => ssid != null && ssid!.isNotEmpty;
 
   /// Genera un token aleatorio seguro (sin caracteres ambiguos).
@@ -56,8 +60,17 @@ class SyncInvite {
       : _uri(host, '/download-db', {'id': ?requestId});
 
   /// Pide al emisor permiso para copiar los datos.
-  Uri requestUri(String host, String requestId, String deviceName) =>
-      _uri(host, '/request', {'id': requestId, 'device': deviceName});
+  /// [appVersion] es la del receptor: el emisor rechaza otra versión.
+  Uri requestUri(
+    String host,
+    String requestId,
+    String deviceName, {
+    String? appVersion,
+  }) => _uri(host, '/request', {
+    'id': requestId,
+    'device': deviceName,
+    'app': ?appVersion,
+  });
 
   /// Consulta si el emisor ya aprobó/rechazó la solicitud.
   Uri statusUri(String host, String requestId) =>
@@ -88,6 +101,7 @@ class SyncInvite {
       'port': '$port',
       'token': ?token,
       'hosts': hosts.join(','),
+      'app': ?appVersion,
       if (usesHotspot) ...{'ssid': ssid!, 'pw': ?password, 'sec': security},
     },
   ).toString();
@@ -128,6 +142,7 @@ class SyncInvite {
       ssid: (ssid == null || ssid.isEmpty) ? null : ssid,
       password: q['pw'],
       security: q['sec'] ?? 'wpa2',
+      appVersion: q['app'],
     );
   }
 }

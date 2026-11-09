@@ -9,6 +9,7 @@ void main() {
     final comboStatements = [
       ...DatabaseSchemaCreator.comboTables,
       DatabaseMigrationRunner.saleComboColumnAlter,
+      DatabaseSchemaCreator.metaTable,
     ];
 
     test(
@@ -55,11 +56,23 @@ void main() {
       expect(statements, comboStatements);
     });
 
-    test('runs nothing for version 13', () async {
+    test('runs only the app meta migration for version 13', () async {
       final statements = <String>[];
 
       await DatabaseMigrationRunner.upgrade(
         oldVersion: 13,
+        execute: (sql) async => statements.add(sql),
+        query: (_) async => [],
+      );
+
+      expect(statements, [DatabaseSchemaCreator.metaTable]);
+    });
+
+    test('runs nothing for version 14', () async {
+      final statements = <String>[];
+
+      await DatabaseMigrationRunner.upgrade(
+        oldVersion: 14,
         execute: (sql) async => statements.add(sql),
         query: (_) async => [],
       );

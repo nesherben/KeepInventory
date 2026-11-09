@@ -1,3 +1,5 @@
+import '../../../core/services/app_version.dart';
+
 import 'package:flutter/material.dart';
 import 'package:keepinventory/core/utils/app_numbers.dart';
 import 'package:keepinventory/l10n/app_localizations_ext.dart';
@@ -80,6 +82,7 @@ class _SyncScreenState extends State<SyncScreen> {
     final token = SyncInvite.newToken();
     _gate?.dispose();
     final gate = _gate = SyncApprovalGate(onRequest: _onSyncRequest);
+    final appVersion = await AppVersion.current();
     final hosts = await SyncService.startServer(
       l10n,
       (error) {
@@ -87,6 +90,7 @@ class _SyncScreenState extends State<SyncScreen> {
       },
       token: token,
       gate: gate,
+      appVersion: appVersion,
     );
 
     if (!mounted) return;
@@ -105,6 +109,7 @@ class _SyncScreenState extends State<SyncScreen> {
         ssid: hotspot?.ssid,
         password: hotspot?.password,
         security: hotspot?.security ?? 'wpa2',
+        appVersion: appVersion,
       );
     });
     AppAlerts.showSuccess(context, l10n.syncServerReady);
@@ -250,6 +255,7 @@ class _SyncScreenState extends State<SyncScreen> {
         _updateProgress,
         preferredHosts: preferredHosts,
         deviceName: await HotspotService.deviceName(),
+        appVersion: await AppVersion.current(),
       );
     } finally {
       // Siempre volvemos a la red normal del móvil

@@ -454,5 +454,14 @@
   "drawerFreeApp": "KeepInventory is free. If it helps at your fairs, you can support the project.",
   "drawerDonate": "Buy me a coffee",
   "drawerSourceCode": "Source on GitHub",
-  "linkOpenError": "Couldn't open the link"
+  "linkOpenError": "Couldn't open the link",
+  "versionMismatchTitle": "Different versions",
+  "backupVersionMismatch": "This backup is from version {backup} and the app is on {app}. To restore it, use the same app version. Nothing has been changed.",
+  "backupVersionUnknownTitle": "Backup from an older version",
+  "backupVersionUnknown": "This backup was made with a version older than 1.14.1, so it can't be checked against yours ({app}). If you restore it, the app will try to adapt it. Restore anyway?",
+  "backupRestoreAnyway": "Restore anyway",
+  "backupNotRestored": "The backup was not restored",
+  "syncVersionMismatch": "The other phone is on version {other} and this one on {mine}. Update both to the same version to sync.",
+  "syncVersionUnknown": "The other phone has a version older than 1.14.1. Update both to the same version to sync.",
+  "understood": "Got it"
 }

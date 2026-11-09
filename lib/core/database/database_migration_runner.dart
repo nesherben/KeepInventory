@@ -24,6 +24,16 @@ class DatabaseMigrationRunner {
     await _upgradeImageBlobs(oldVersion, execute);
     await _upgradePaymentMethod(oldVersion, execute);
     await _upgradeCombos(oldVersion, execute);
+    await _upgradeAppMeta(oldVersion, execute);
+  }
+
+  /// v14: tabla de metadatos (versión de la app que escribió el archivo).
+  static Future<void> _upgradeAppMeta(
+    int oldVersion,
+    DatabaseSqlExecutor execute,
+  ) async {
+    if (oldVersion >= 14) return;
+    await execute(DatabaseSchemaCreator.metaTable);
   }
 
   static const saleComboColumnAlter =

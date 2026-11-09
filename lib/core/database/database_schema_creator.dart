@@ -44,6 +44,15 @@ class DatabaseSchemaCreator {
     ''',
   ];
 
+  /// v14: metadatos del archivo. `app_version` = versión de la app que lo
+  /// abrió por última vez (para exigir la misma versión en backups/sync).
+  static const metaTable = '''
+      CREATE TABLE IF NOT EXISTS app_meta (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL
+      )
+    ''';
+
   static Future<void> create({
     required Future<void> Function(String sql) execute,
   }) async {
@@ -142,5 +151,7 @@ class DatabaseSchemaCreator {
     for (final sql in comboTables) {
       await execute(sql);
     }
+
+    await execute(metaTable);
   }
 }

@@ -1420,4 +1420,38 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get linkOpenError => 'Couldn\'t open the link';
+
+  @override
+  String get versionMismatchTitle => 'Different versions';
+
+  @override
+  String backupVersionMismatch(String backup, String app) {
+    return 'This backup is from version $backup and the app is on $app. To restore it, use the same app version. Nothing has been changed.';
+  }
+
+  @override
+  String get backupVersionUnknownTitle => 'Backup from an older version';
+
+  @override
+  String backupVersionUnknown(String app) {
+    return 'This backup was made with a version older than 1.14.1, so it can\'t be checked against yours ($app). If you restore it, the app will try to adapt it. Restore anyway?';
+  }
+
+  @override
+  String get backupRestoreAnyway => 'Restore anyway';
+
+  @override
+  String get backupNotRestored => 'The backup was not restored';
+
+  @override
+  String syncVersionMismatch(String other, String mine) {
+    return 'The other phone is on version $other and this one on $mine. Update both to the same version to sync.';
+  }
+
+  @override
+  String get syncVersionUnknown =>
+      'The other phone has a version older than 1.14.1. Update both to the same version to sync.';
+
+  @override
+  String get understood => 'Got it';
 }

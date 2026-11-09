@@ -667,5 +667,41 @@
   "drawerFreeApp": "KeepInventory es gratis. Si te ayuda en tus ferias, puedes apoyar el proyecto.",
   "drawerDonate": "Invítame a un café",
   "drawerSourceCode": "Código en GitHub",
-  "linkOpenError": "No se pudo abrir el enlace"
+  "linkOpenError": "No se pudo abrir el enlace",
+  "versionMismatchTitle": "Versiones distintas",
+  "backupVersionMismatch": "Este backup es de la versión {backup} y la app está en la {app}. Para restaurarlo, usa la misma versión de la app. No se ha cambiado nada.",
+  "@backupVersionMismatch": {
+    "placeholders": {
+      "backup": {
+        "type": "String"
+      },
+      "app": {
+        "type": "String"
+      }
+    }
+  },
+  "backupVersionUnknownTitle": "Backup de una versión anterior",
+  "backupVersionUnknown": "Este backup se hizo con una versión anterior a la 1.14.1 y no se puede comprobar si coincide con la tuya ({app}). Si lo restauras, la app intentará adaptarlo. ¿Restaurar igualmente?",
+  "@backupVersionUnknown": {
+    "placeholders": {
+      "app": {
+        "type": "String"
+      }
+    }
+  },
+  "backupRestoreAnyway": "Restaurar igualmente",
+  "backupNotRestored": "No se ha restaurado el backup",
+  "syncVersionMismatch": "El otro móvil tiene la versión {other} y este la {mine}. Actualiza los dos a la misma versión para sincronizar.",
+  "@syncVersionMismatch": {
+    "placeholders": {
+      "other": {
+        "type": "String"
+      },
+      "mine": {
+        "type": "String"
+      }
+    }
+  },
+  "syncVersionUnknown": "El otro móvil tiene una versión anterior a la 1.14.1. Actualiza los dos a la misma versión para sincronizar.",
+  "understood": "Entendido"
 }

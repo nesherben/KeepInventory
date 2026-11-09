@@ -1,3 +1,5 @@
+import '../services/app_version.dart';
+
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -22,11 +24,43 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 13, // Versión 13: combos
+      version: 14, // Versión 14: metadatos (versión de la app en el archivo)
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
       onConfigure: _onConfigure,
+      onOpen: _stampAppVersion,
     );
+  }
+
+  /// Marca el archivo con la versión de la app que lo abre: así un backup o
+  /// una copia sincronizada saben de qué versión vienen.
+  Future<void> _stampAppVersion(Database db) async {
+    await db.insert('app_meta', {
+      'key': appVersionKey,
+      'value': await AppVersion.current(),
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  static const appVersionKey = 'app_version';
+
+  /// Lee la versión de la app guardada en un archivo de base de datos
+  /// (null si no la tiene: archivo de una versión anterior a la 1.14.1).
+  static Future<String?> readAppVersionOf(String path) async {
+    Database? db;
+    try {
+      db = await openDatabase(path, readOnly: true, singleInstance: false);
+      final rows = await db.query(
+        'app_meta',
+        columns: ['value'],
+        where: 'key = ?',
+        whereArgs: [appVersionKey],
+      );
+      return rows.isEmpty ? null : rows.first['value'] as String?;
+    } catch (_) {
+      return null;
+    } finally {
+      await db?.close();
+    }
   }
 
   Future<void> _onConfigure(Database db) async {

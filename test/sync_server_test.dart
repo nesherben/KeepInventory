@@ -206,4 +206,71 @@ void main() {
       await server.close(force: true);
     });
   });
+
+  group('same app version is required', () {
+    Future<(HttpServer, SyncInvite)> serveVersion(
+      SyncApprovalGate g,
+      String version,
+    ) async {
+      final server = await io.serve(
+        SyncService.buildSyncHandler(db, 'secret', g, appVersion: version),
+        InternetAddress.loopbackIPv4,
+        0,
+      );
+      final invite = SyncInvite(
+        port: server.port,
+        hosts: const ['127.0.0.1'],
+        token: 'secret',
+        appVersion: version,
+      );
+      return (server, invite);
+    }
+
+    test('sender rejects a receiver on another version', () async {
+      final requested = <SyncRequest>[];
+      final g = SyncApprovalGate(onRequest: requested.add);
+      final (server, invite) = await serveVersion(g, '1.14.1');
+      final status = await SyncService.requestApproval(
+        invite,
+        '127.0.0.1',
+        'request-ver-1',
+        'Pixel',
+        appVersion: '1.14.0',
+      );
+      expect(status, SyncRequestStatus.versionMismatch);
+      expect(requested, isEmpty); // el emisor ni siquiera ve la solicitud
+      g.dispose();
+      await server.close(force: true);
+    });
+
+    test('old receivers that send no version are rejected too', () async {
+      final g = SyncApprovalGate(onRequest: (_) {});
+      final (server, invite) = await serveVersion(g, '1.14.1');
+      final status = await SyncService.requestApproval(
+        invite,
+        '127.0.0.1',
+        'request-ver-2',
+        'Pixel',
+      );
+      expect(status, SyncRequestStatus.versionMismatch);
+      g.dispose();
+      await server.close(force: true);
+    });
+
+    test('same version goes through to approval', () async {
+      late SyncApprovalGate g;
+      g = SyncApprovalGate(onRequest: (r) => g.approve(r.id));
+      final (server, invite) = await serveVersion(g, '1.14.1');
+      final status = await SyncService.requestApproval(
+        invite,
+        '127.0.0.1',
+        'request-ver-3',
+        'Pixel',
+        appVersion: '1.14.1',
+      );
+      expect(status, SyncRequestStatus.approved);
+      g.dispose();
+      await server.close(force: true);
+    });
+  });
 }
