@@ -1160,7 +1160,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tutorialOffersBody =>
-      'In Offers create promotions (10% off, 3 for €12…) and combos (keyboard + mouse = €10, or any product of a category). They apply automatically when selling. From a promotion\'s ⋮ menu you can set it on a whole category. In Packs group products with their own price.';
+      'In Offers create promotions (10% off, 3 for €12…) and combos (T-shirt + cap = €20, or any product of a category). They apply automatically when selling. From a promotion\'s ⋮ menu you can set it on a whole category. In Packs group products with their own price.';
 
   @override
   String get tutorialSalesTitle => '3. Sell in seconds';
@@ -1562,7 +1562,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get categoriesEmpty =>
-      'No categories. Create one to group products (e.g. Polaroid, Print A5). They are optional.';
+      'No categories. Create one to group products (e.g. T-shirts, Mugs). They are optional.';
 
   @override
   String categoryProductsTitle(String name) {

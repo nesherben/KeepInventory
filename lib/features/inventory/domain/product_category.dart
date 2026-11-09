@@ -1,4 +1,4 @@
-/// Categoría de producto ("Polaroid", "Print A5"…). Independiente de las
+/// Categoría de producto ("Camisetas", "Tazas"…). Independiente de las
 /// promociones: sirve para filtrar y para huecos de combo por categoría.
 class ProductCategory {
   final int id;

@@ -11,7 +11,7 @@ class Product {
   final int? promotionId;
   final bool isActive;
 
-  /// Categoría opcional ("Polaroid", "Print A5"…).
+  /// Categoría opcional ("Camisetas", "Tazas"…).
   final int? categoryId;
 
   Product({

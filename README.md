@@ -38,10 +38,10 @@ Funciona 100 % sin conexión: tus datos viven en tu móvil.
 | | |
 |---|---|
 | 📦 **Inventario** | Productos con foto, unidades, precio de venta y coste. Margen calculado (también en vivo al crear el producto), alertas de stock bajo / agotado, filtros y ordenación (nombre, unidades, precio, coste, margen). Vista en tarjetas en el móvil (con botón **Ordenar**) y tabla en pantallas grandes. Edición rápida de stock con − / + y de cada campo tocándolo. |
-| 🗂️ **Categorías** | Opcionales (p. ej. *Polaroid*, *Print A5*): se eligen o se crean desde el producto, sirven para filtrar en Inventario y Ventas, para aplicar una promoción a todos sus productos de golpe y para combos del tipo *"cualquier Polaroid + cualquier Print A5"*. Los productos que ya son un grupo en sí (p. ej. *Pegatinas*) no necesitan categoría. |
+| 🗂️ **Categorías** | Opcionales (p. ej. *Camisetas*, *Tazas*): se eligen o se crean desde el producto, sirven para filtrar en Inventario y Ventas, para aplicar una promoción a todos sus productos de golpe y para combos del tipo *"cualquier camiseta + cualquier taza"*. Los productos que ya son un grupo en sí (p. ej. *Llaveros variados*, todos al mismo precio) no necesitan categoría. |
 | 🎁 **Packs** | Agrupa varios productos en un pack con su propio precio y stock de unidades montadas. Muestra cuánto ahorra el cliente frente a comprarlos por separado y cuántos más se pueden montar con el stock actual. |
 | 🏷️ **Promociones** | Descuento por porcentaje (p. ej. 10 % a partir de 2 uds.) o precio fijo por lote (p. ej. *3 por 12 €*), con soporte Mix & Match entre productos de la misma promoción. Al crearla, una frase explica la regla y se sugiere el nombre. |
-| 🧩 **Combos** | Precio fijo por un conjunto de productos distintos (p. ej. *teclado + ratón = 10 €*) o de categorías (*cualquier Polaroid + cualquier Print A5 = 10 €*). Se detectan solos en el carrito, sin stock propio: cada producto descuenta el suyo. |
+| 🧩 **Combos** | Precio fijo por un conjunto de productos distintos (p. ej. *camiseta + gorra = 20 €*) o de categorías (*cualquier camiseta + cualquier taza = 20 €*). Se detectan solos en el carrito, sin stock propio: cada producto descuenta el suyo. |
 | 🧾 **Caja (TPV)** | Catálogo con buscador, carrito con las promociones y combos aplicados automáticamente (con aviso *"Te falta: …"* para completar un combo) y cobro indicando el método de pago (efectivo, PayPal, Bizum). |
 | 🕘 **Tickets y ferias** | Historial de ventas agrupado por día o por feria, ticket de cada venta y devoluciones parciales o totales (los packs pueden devolverse enteros o por componentes) calculadas correctamente aunque hubiera promociones o combos. |
 | 🏠 **Inicio** | Ingresos, beneficio y desglose por método de pago, con gráfica de ventas a pantalla completa. |
@@ -90,15 +90,15 @@ El menú lateral (desliza desde el borde izquierdo o pulsa ☰) da acceso a toda
 
    Una frase te explica la regla y el nombre se rellena solo (puedes cambiarlo). Toca una tarjeta para editarla; en su menú ⋮ tienes **Aplicar a una categoría…**, que pone la promoción a todos los productos de esa categoría de golpe (luego puedes cambiar cualquiera por separado). Cada promoción muestra a cuántos productos se aplica.
 2. Asigna la promoción a los productos desde su ficha de inventario. Los productos que comparten promoción se combinan entre sí (Mix & Match).
-3. En **Ofertas → Combos** crea un combo cuando quieras vender **productos distintos juntos** a un precio fijo (p. ej. *1 teclado + 1 ratón = 10 €*):
+3. En **Ofertas → Combos** crea un combo cuando quieras vender **productos distintos juntos** a un precio fijo (p. ej. *1 camiseta + 1 gorra = 20 €*):
    - Elige cada producto (o *cualquier producto de una categoría*) y su cantidad, y el precio del combo; verás el ahorro frente a comprarlos por separado.
-   - Solo se aplica si el carrito tiene **todos** los productos del combo (2 teclados no cuentan), se repite por cada combo completo y lo que sobra va a precio normal.
+   - Solo se aplica si el carrito tiene **todos** los productos del combo (2 camisetas no cuentan), se repite por cada combo completo y lo que sobra va a precio normal.
    - Si un producto tiene además su propia promoción, dentro del combo gana el combo y las unidades sueltas mantienen su promoción.
    - En el inventario verás qué productos forman parte de un combo.
 
 ### 4. Vende
 1. Abre **Caja (TPV)**, busca o toca los productos / packs para añadirlos al carrito (si usas categorías, los chips bajo el buscador filtran el catálogo). Los productos que forman parte de un combo llevan la insignia **Combo**.
-2. Ajusta cantidades: el total ya incluye promociones y combos. Los combos aparecen agrupados en el carrito, con sus productos dentro. Si tienes medio combo, el carrito te avisa (*"falta Ratón"*): toca el aviso para ir al producto en el catálogo, o pulsa **＋ Añadir** para meterlo en el carrito de un toque.
+2. Ajusta cantidades: el total ya incluye promociones y combos. Los combos aparecen agrupados en el carrito, con sus productos dentro. Si tienes medio combo, el carrito te avisa (*"falta Gorra"*): toca el aviso para ir al producto en el catálogo, o pulsa **＋ Añadir** para meterlo en el carrito de un toque.
 3. Pulsa **COBRAR**, elige el método de pago y confirma. El stock se descuenta solo.
 
 ### 5. Consulta el historial y haz devoluciones

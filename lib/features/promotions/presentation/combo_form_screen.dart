@@ -14,7 +14,7 @@ import '../data/repositories/combo_repository_impl.dart';
 import '../domain/combo.dart';
 
 /// Borrador editable de un hueco: un producto concreto o una categoría
-/// ("cualquier Polaroid"), y cuántas unidades lleva.
+/// ("cualquier camiseta"), y cuántas unidades lleva.
 class _SlotDraft {
   _SlotDraft({this.productId, this.categoryId, this.quantity = 1});
 

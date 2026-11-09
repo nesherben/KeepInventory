@@ -567,7 +567,7 @@ class _ComboItemLine extends StatelessWidget {
   }
 }
 
-/// Combo a medias, en una línea: "Teclado + Ratón · falta Ratón [＋ Añadir]".
+/// Combo a medias, en una línea: "Camiseta + gorra · falta Gorra [＋ Añadir]".
 class _ComboHintCard extends StatelessWidget {
   const _ComboHintCard({required this.hint, this.onAdd, this.onTap});
 

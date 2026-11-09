@@ -26,7 +26,7 @@ class ComboApplication {
   double get saving => fullPrice - total;
 }
 
-/// Combo a medio completar: sirve para la pista "Te falta: Ratón".
+/// Combo a medio completar: sirve para la pista "falta Gorra".
 class ComboHint {
   final Combo combo;
   final List<ComboSlot> missing;

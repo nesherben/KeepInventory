@@ -1,8 +1,8 @@
 import 'dart:convert';
 
-/// Hueco de un combo: un producto concreto ("1 × Teclado A") o, con
+/// Hueco de un combo: un producto concreto ("1 × Camiseta roja") o, con
 /// [categoryId], cualquier producto de una categoría ("1 × cualquier
-/// Polaroid"; [productIds] son entonces los productos activos de esa
+/// camiseta"; [productIds] son entonces los productos activos de esa
 /// categoría, resueltos al cargar).
 class ComboSlot {
   final int? id;
@@ -39,7 +39,7 @@ class ComboSlot {
   );
 }
 
-/// Combo: precio fijo por completar todos sus huecos (ej. teclado + ratón = 10 €).
+/// Combo: precio fijo por completar todos sus huecos (ej. camiseta + gorra = 20 €).
 /// No tiene stock propio; se detecta en el carrito con los productos sueltos.
 class Combo {
   final int? id;

@@ -2099,7 +2099,7 @@ abstract class AppLocalizations {
   /// No description provided for @tutorialOffersBody.
   ///
   /// In es, this message translates to:
-  /// **'En Ofertas crea promociones (10 % de descuento, 3 por 12 €…) y combos (teclado + ratón = 10 €, o cualquier producto de una categoría). Se aplican solas al vender. Desde el menú ⋮ de una promoción puedes ponérsela a toda una categoría. En Packs agrupa productos con su propio precio.'**
+  /// **'En Ofertas crea promociones (10 % de descuento, 3 por 12 €…) y combos (camiseta + gorra = 20 €, o cualquier producto de una categoría). Se aplican solas al vender. Desde el menú ⋮ de una promoción puedes ponérsela a toda una categoría. En Packs agrupa productos con su propio precio.'**
   String get tutorialOffersBody;
 
   /// No description provided for @tutorialSalesTitle.
@@ -2759,7 +2759,7 @@ abstract class AppLocalizations {
   /// No description provided for @categoriesEmpty.
   ///
   /// In es, this message translates to:
-  /// **'Sin categorías. Crea una para agrupar productos (p. ej. Polaroid, Print A5). Son opcionales.'**
+  /// **'Sin categorías. Crea una para agrupar productos (p. ej. Camisetas, Tazas). Son opcionales.'**
   String get categoriesEmpty;
 
   /// No description provided for @categoryProductsTitle.

@@ -454,7 +454,7 @@
   "tutorialInventoryTitle": "1. Da de alta tus productos",
   "tutorialInventoryBody": "En Inventario pulsa + y pon nombre, precio, coste y unidades; verás tu margen al momento. Si quieres, agrúpalos por categorías (opcional, botón 🏷️ arriba). Para retocar, toca − / + o directamente el dato.",
   "tutorialOffersTitle": "2. Ofertas y packs",
-  "tutorialOffersBody": "En Ofertas crea promociones (10 % de descuento, 3 por 12 €…) y combos (teclado + ratón = 10 €, o cualquier producto de una categoría). Se aplican solas al vender. Desde el menú ⋮ de una promoción puedes ponérsela a toda una categoría. En Packs agrupa productos con su propio precio.",
+  "tutorialOffersBody": "En Ofertas crea promociones (10 % de descuento, 3 por 12 €…) y combos (camiseta + gorra = 20 €, o cualquier producto de una categoría). Se aplican solas al vender. Desde el menú ⋮ de una promoción puedes ponérsela a toda una categoría. En Packs agrupa productos con su propio precio.",
   "tutorialSalesTitle": "3. Vende en segundos",
   "tutorialSalesBody": "En Caja toca los productos para añadirlos al carrito, pulsa COBRAR y elige cómo paga el cliente. Si falta algo para completar un combo, el carrito te avisa: toca el aviso para ir al producto o ＋ Añadir para meterlo.",
   "tutorialHistoryTitle": "4. Tickets y ferias",
@@ -811,7 +811,7 @@
       }
     }
   },
-  "categoriesEmpty": "Sin categorías. Crea una para agrupar productos (p. ej. Polaroid, Print A5). Son opcionales.",
+  "categoriesEmpty": "Sin categorías. Crea una para agrupar productos (p. ej. Camisetas, Tazas). Son opcionales.",
   "categoryProductsTitle": "Productos de «{name}»",
   "@categoryProductsTitle": {
     "placeholders": {
