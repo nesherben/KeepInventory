@@ -69,7 +69,7 @@ El menú lateral (desliza desde el borde izquierdo o pulsa ☰) da acceso a toda
 
 > 📱 Los formularios se adaptan a la pantalla: en el móvil se abren a pantalla completa desde abajo (desliza la pestaña para cerrar), en una tablet en horizontal como panel lateral sin perder de vista la lista, y en vertical como ventana con letra grande.
 >
-> 🎓 La primera vez que abres la app aparece un **tutorial** rápido. Puedes volver a verlo cuando quieras desde **menú → Tutorial**.
+> 🎓 La primera vez que abres la app aparece un **tutorial** rápido y, si aún no tienes productos, el menú se abre solo con **Inventario** resaltado para que sepas por dónde empezar. Puedes volver a verlo cuando quieras desde **menú → Tutorial**.
 
 ### 1. Da de alta tu inventario
 1. Abre **Inventario** y pulsa **＋**.
@@ -88,7 +88,7 @@ El menú lateral (desliza desde el borde izquierdo o pulsa ☰) da acceso a toda
    - **Lote a precio fijo** → N unidades por X € (p. ej. *3 por 12 €*).
    - **% de descuento** → X % a partir de N unidades.
 
-   Una frase te explica la regla y el nombre se rellena solo (puedes cambiarlo). Toca una tarjeta para editarla; en su menú ⋮ tienes **Aplicar a una categoría…**, que pone la promoción a todos los productos de esa categoría de golpe (luego puedes cambiar cualquiera por separado). Cada promoción muestra a cuántos productos se aplica.
+   Una frase te explica la regla y el nombre se rellena solo (puedes cambiarlo). Al crearla, la app te pregunta a qué productos aplicarla (una categoría, elegir productos o más tarde). Toca una tarjeta para editarla; en su menú ⋮ tienes **Elegir productos…** y **Aplicar a una categoría…**, que pone la promoción a todos los productos de esa categoría de golpe (luego puedes cambiar cualquiera por separado). Cada promoción muestra a cuántos productos se aplica.
 2. Asigna la promoción a los productos desde su ficha de inventario. Los productos que comparten promoción se combinan entre sí (Mix & Match).
 3. En **Ofertas → Combos** crea un combo cuando quieras vender **productos distintos juntos** a un precio fijo (p. ej. *1 camiseta + 1 gorra = 20 €*):
    - Elige cada producto (o *cualquier producto de una categoría*) y su cantidad, y el precio del combo; verás el ahorro frente a comprarlos por separado.
@@ -99,11 +99,12 @@ El menú lateral (desliza desde el borde izquierdo o pulsa ☰) da acceso a toda
 ### 4. Vende
 1. Abre **Caja (TPV)**, busca o toca los productos / packs para añadirlos al carrito (si usas categorías, los chips bajo el buscador filtran el catálogo). Los productos que forman parte de un combo llevan la insignia **Combo**.
 2. Ajusta cantidades: el total ya incluye promociones y combos. Los combos aparecen agrupados en el carrito, con sus productos dentro. Si tienes medio combo, el carrito te avisa (*"falta Gorra"*): toca el aviso para ir al producto en el catálogo, o pulsa **＋ Añadir** para meterlo en el carrito de un toque.
-3. Pulsa **COBRAR**, elige el método de pago y confirma. El stock se descuenta solo.
+3. Pulsa **COBRAR**, elige el método de pago y confirma. El stock se descuenta solo y un aviso confirma la venta (*"Venta #12 registrada · 22,00 € · Efectivo"*).
+4. Si vendes las últimas unidades de un producto, la app te avisa (*"Última unidad de…"*, *"Quedan 2 en stock"*).
 
 ### 5. Consulta el historial y haz devoluciones
 1. En **Tickets y ferias** verás las ventas agrupadas por día con su ticket. Para agrupar un día bajo una **feria**, pulsa el botón de feria: busca una de tu lista o escribe una nueva y toca *Crear*. En un grupo de feria, cambiarla o quitarla afecta a **todos** sus tickets (de todos los días); al quitarla, cada ticket vuelve a su día. Las ferias se quedan en la lista aunque no tengan tickets, y puedes borrarlas con la papelera (sus tickets no se borran, solo se quedan sin feria).
-2. Para devolver, abre la venta y elige qué y cuántas unidades devolver (o **Devolver combo** de golpe). El importe se recalcula teniendo en cuenta promociones y combos (si la devolución rompe un combo, lo que queda se cobra a precio normal) y el stock vuelve al inventario.
+2. Para devolver, abre la venta y elige qué y cuántas unidades devolver (o **Devolver combo** de golpe). El importe se recalcula teniendo en cuenta promociones y combos (si la devolución deshace una oferta o rompe un combo, se avisa y lo que queda se cobra a precio normal) y el stock vuelve al inventario. Cada devolución queda anotada en el ticket (*"Devuelto 1,50 € · 18:30 · 1× …"*).
 
 ### 6. Revisa el Inicio
 **Inicio** resume ingresos, beneficio y cuánto se ha cobrado por cada método de pago: perfecto para cuadrar la caja al final del día. Toca la gráfica para verla a pantalla completa.
