@@ -190,11 +190,24 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
       context: context,
       builder: (dialogContext) => PromotionFormDialog(
         promotion: promotionToEdit,
-        onSave: (promotion) async {
+        onSave: (promotion, applyTo) async {
+          var promotionId = promotion.id;
           if (isEditing) {
             await _repository.updatePromotion(promotion);
           } else {
-            await _repository.insertPromotion(promotion);
+            promotionId = await _repository.insertPromotion(promotion);
+          }
+          if (applyTo != null && promotionId != null) {
+            final count = await _productRepository.setPromotionForCategory(
+              applyTo.id,
+              promotionId,
+            );
+            if (mounted) {
+              AppAlerts.showInfo(
+                context,
+                context.l10n.promotionAppliedToCategory(count, applyTo.name),
+              );
+            }
           }
           if (!mounted) return;
           _loadPromotions();

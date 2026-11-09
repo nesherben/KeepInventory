@@ -23,6 +23,10 @@ abstract class ProductRepository {
     bool clearCategory = false,
   });
 
+  /// Pone la promoción a todos los productos de una categoría (cada uno se
+  /// puede cambiar después por separado). Devuelve cuántos se cambiaron.
+  Future<int> setPromotionForCategory(int categoryId, int promotionId);
+
   /// Suma (o resta) unidades de stock de forma atómica.
   Future<void> addUnits(int id, int delta);
 }

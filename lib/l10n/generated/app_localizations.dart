@@ -2707,6 +2707,24 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'CATEGORÍA'**
   String get tableCategory;
+
+  /// No description provided for @promotionApplyToCategory.
+  ///
+  /// In es, this message translates to:
+  /// **'Aplicar a una categoría (opcional)'**
+  String get promotionApplyToCategory;
+
+  /// No description provided for @promotionApplyToCategoryHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Todos sus productos tendrán esta promoción; luego puedes cambiar cualquiera por separado.'**
+  String get promotionApplyToCategoryHint;
+
+  /// No description provided for @promotionAppliedToCategory.
+  ///
+  /// In es, this message translates to:
+  /// **'Promoción aplicada a {count} productos de «{name}»'**
+  String promotionAppliedToCategory(int count, String name);
 }
 
 class _AppLocalizationsDelegate

@@ -4,6 +4,8 @@ import 'package:keepinventory/l10n/app_localizations_ext.dart';
 
 import '../../../core/shared_widgets/app_ui.dart';
 import '../domain/promotion.dart';
+import '../../inventory/domain/product_category.dart';
+import '../../inventory/presentation/widgets/category_picker.dart';
 
 /// Crear / editar una promoción. El tipo se elige con dos botones y una
 /// frase en vivo explica la regla; el nombre se sugiere solo ("3 por 12 €")
@@ -12,7 +14,10 @@ class PromotionFormDialog extends StatefulWidget {
   const PromotionFormDialog({super.key, this.promotion, required this.onSave});
 
   final Promotion? promotion;
-  final Future<void> Function(Promotion promotion) onSave;
+
+  /// Guarda la promoción; [applyTo] = categoría a la que aplicarla (opcional).
+  final Future<void> Function(Promotion promotion, ProductCategory? applyTo)
+  onSave;
 
   @override
   State<PromotionFormDialog> createState() => _PromotionFormDialogState();
@@ -30,6 +35,7 @@ class _PromotionFormDialogState extends State<PromotionFormDialog> {
   String _lastAutoName = '';
   bool _initialized = false;
   bool _saving = false;
+  ProductCategory? _applyTo;
 
   @override
   void initState() {
@@ -120,6 +126,7 @@ class _PromotionFormDialogState extends State<PromotionFormDialog> {
           threshold: _count!,
           discountValue: _amount!,
         ),
+        _applyTo,
       );
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -236,6 +243,31 @@ class _PromotionFormDialogState extends State<PromotionFormDialog> {
                     ),
                   ),
                 ],
+                const SizedBox(height: AppSpacing.lg),
+                CategoryField(
+                  label: context.l10n.promotionApplyToCategory,
+                  categoryName: _applyTo?.name,
+                  onTap: () async {
+                    final pick = await pickCategory(
+                      context,
+                      currentId: _applyTo?.id,
+                    );
+                    if (pick != null && mounted) {
+                      setState(() => _applyTo = pick.category);
+                    }
+                  },
+                ),
+                if (_applyTo != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Text(
+                      context.l10n.promotionApplyToCategoryHint,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: colors.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
                 const SizedBox(height: AppSpacing.lg),
                 TextFormField(
                   controller: _name,

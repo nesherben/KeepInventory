@@ -1526,4 +1526,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tableCategory => 'CATEGORY';
+
+  @override
+  String get promotionApplyToCategory => 'Apply to a category (optional)';
+
+  @override
+  String get promotionApplyToCategoryHint =>
+      'All its products will get this promotion; you can still change any of them individually.';
+
+  @override
+  String promotionAppliedToCategory(int count, String name) {
+    return 'Promotion applied to $count products in “$name”';
+  }
 }

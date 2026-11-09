@@ -68,9 +68,11 @@ class CategoryField extends StatelessWidget {
     super.key,
     required this.categoryName,
     required this.onTap,
+    this.label,
   });
 
   final String? categoryName;
+  final String? label;
   final VoidCallback onTap;
 
   @override
@@ -81,7 +83,7 @@ class CategoryField extends StatelessWidget {
       borderRadius: BorderRadius.circular(12),
       child: InputDecorator(
         decoration: InputDecoration(
-          labelText: context.l10n.productCategory,
+          labelText: label ?? context.l10n.productCategory,
           prefixIcon: const Icon(Icons.sell_outlined, size: 20),
           suffixIcon: const Icon(Icons.arrow_drop_down),
         ),

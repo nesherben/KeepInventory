@@ -771,5 +771,18 @@
   },
   "comboSlotCategories": "Categorías (cualquier producto de…)",
   "comboSlotProducts": "Productos",
-  "tableCategory": "CATEGORÍA"
+  "tableCategory": "CATEGORÍA",
+  "promotionApplyToCategory": "Aplicar a una categoría (opcional)",
+  "promotionApplyToCategoryHint": "Todos sus productos tendrán esta promoción; luego puedes cambiar cualquiera por separado.",
+  "promotionAppliedToCategory": "Promoción aplicada a {count} productos de «{name}»",
+  "@promotionAppliedToCategory": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }

@@ -483,5 +483,8 @@
   "comboSlotAnyOf": "Any {name}",
   "comboSlotCategories": "Categories (any product of…)",
   "comboSlotProducts": "Products",
-  "tableCategory": "CATEGORY"
+  "tableCategory": "CATEGORY",
+  "promotionApplyToCategory": "Apply to a category (optional)",
+  "promotionApplyToCategoryHint": "All its products will get this promotion; you can still change any of them individually.",
+  "promotionAppliedToCategory": "Promotion applied to {count} products in “{name}”"
 }

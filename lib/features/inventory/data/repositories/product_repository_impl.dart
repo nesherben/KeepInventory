@@ -85,6 +85,10 @@ class ProductRepositoryImpl implements ProductRepository {
   Future<void> addUnits(int id, int delta) => datasource.addUnits(id, delta);
 
   @override
+  Future<int> setPromotionForCategory(int categoryId, int promotionId) =>
+      datasource.setPromotionForCategory(categoryId, promotionId);
+
+  @override
   Future<int> deleteProduct(int id) async {
     return await datasource.deleteProduct(id);
   }

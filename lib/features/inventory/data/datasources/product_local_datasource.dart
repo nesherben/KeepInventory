@@ -58,6 +58,18 @@ class ProductLocalDatasource {
     );
   }
 
+  /// Asigna [promotionId] a todos los productos activos de la categoría.
+  /// Devuelve cuántos se han cambiado.
+  Future<int> setPromotionForCategory(int categoryId, int promotionId) async {
+    final database = await db;
+    return database.update(
+      'products',
+      {'promotion_id': promotionId},
+      where: 'category_id = ? AND is_active = 1',
+      whereArgs: [categoryId],
+    );
+  }
+
   /// Suma (o resta) unidades en una sola operación, sin bajar de 0.
   Future<void> addUnits(int id, int delta) async {
     if (delta == 0) return;
