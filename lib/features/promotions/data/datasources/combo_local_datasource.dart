@@ -23,6 +23,18 @@ class ComboLocalDatasource {
       WHERE p.is_active = 1
     ''');
 
+    // Productos activos por categoría (para los huecos por categoría)
+    final categoryRows = await database.rawQuery(
+      'SELECT id, category_id FROM products '
+      'WHERE is_active = 1 AND category_id IS NOT NULL',
+    );
+    final productsByCategory = <int, List<int>>{};
+    for (final row in categoryRows) {
+      productsByCategory
+          .putIfAbsent(row['category_id'] as int, () => [])
+          .add(row['id'] as int);
+    }
+
     final productsBySlot = <int, List<int>>{};
     for (final row in productRows) {
       productsBySlot
@@ -32,6 +44,7 @@ class ComboLocalDatasource {
     final slotsByCombo = <int, List<ComboSlot>>{};
     for (final row in slotRows) {
       final slotId = row['id'] as int;
+      final categoryId = row['category_id'] as int?;
       slotsByCombo
           .putIfAbsent(row['combo_id'] as int, () => [])
           .add(
@@ -39,7 +52,10 @@ class ComboLocalDatasource {
               id: slotId,
               name: row['name'] as String,
               quantity: row['quantity'] as int,
-              productIds: productsBySlot[slotId] ?? const [],
+              productIds: categoryId != null
+                  ? productsByCategory[categoryId] ?? const []
+                  : productsBySlot[slotId] ?? const [],
+              categoryId: categoryId,
             ),
           );
     }
@@ -85,7 +101,10 @@ class ComboLocalDatasource {
           'name': slot.name,
           'quantity': slot.quantity,
           'position': i,
+          'category_id': slot.categoryId,
         });
+        // Hueco por categoría: sus productos se resuelven al cargar
+        if (slot.isCategory) continue;
         for (final productId in slot.productIds.toSet()) {
           await txn.insert('combo_slot_products', {
             'slot_id': slotId,

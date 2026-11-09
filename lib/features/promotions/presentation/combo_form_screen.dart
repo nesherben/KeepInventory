@@ -5,17 +5,22 @@ import 'package:keepinventory/l10n/app_localizations_ext.dart';
 import '../../../core/shared_widgets/app_alerts.dart';
 import '../../../core/shared_widgets/app_ui.dart';
 import '../../inventory/domain/product.dart';
+import '../../inventory/domain/product_category.dart';
 import '../../inventory/presentation/widgets/product_picker_sheet.dart';
 import '../data/datasources/combo_local_datasource.dart';
 import '../data/repositories/combo_repository_impl.dart';
 import '../domain/combo.dart';
 
-/// Borrador editable de un hueco: un producto y cuántas unidades lleva.
+/// Borrador editable de un hueco: un producto concreto o una categoría
+/// ("cualquier Polaroid"), y cuántas unidades lleva.
 class _SlotDraft {
-  _SlotDraft({this.productId, this.quantity = 1});
+  _SlotDraft({this.productId, this.categoryId, this.quantity = 1});
 
   int? productId;
+  int? categoryId;
   int quantity;
+
+  bool get isEmpty => productId == null && categoryId == null;
 }
 
 /// Crear / editar un combo: nombre, productos (cada uno con su cantidad)
@@ -27,7 +32,11 @@ class ComboFormScreen extends StatefulWidget {
     this.combo,
     required this.products,
     required this.otherCombos,
+    this.categories = const [],
   });
+
+  /// Categorías, para huecos "cualquier producto de…".
+  final List<ProductCategory> categories;
 
   final Combo? combo;
 
@@ -61,7 +70,10 @@ class _ComboFormScreenState extends State<ComboFormScreen> {
         : [
             for (final s in combo.slots)
               _SlotDraft(
-                productId: s.productIds.isEmpty ? null : s.productIds.first,
+                productId: s.isCategory || s.productIds.isEmpty
+                    ? null
+                    : s.productIds.first,
+                categoryId: s.categoryId,
                 quantity: s.quantity,
               ),
           ];
@@ -71,7 +83,9 @@ class _ComboFormScreenState extends State<ComboFormScreen> {
     };
     _productCombo = {
       for (final c in widget.otherCombos)
-        for (final id in c.productIds) id: c.name,
+        for (final slot in c.slots)
+          if (!slot.isCategory)
+            for (final id in slot.productIds) id: c.name,
     };
   }
 
@@ -92,12 +106,23 @@ class _ComboFormScreenState extends State<ComboFormScreen> {
     super.dispose();
   }
 
-  /// Precio por separado: precio de cada producto × cantidad.
-  double get _separateTotal => _slots.fold(
-    0.0,
-    (t, slot) =>
-        t + (_productsById[slot.productId]?.price ?? 0.0) * slot.quantity,
-  );
+  String? _categoryName(int? id) =>
+      widget.categories.where((c) => c.id == id).firstOrNull?.name;
+
+  /// Precio de referencia de un hueco: el del producto, o en una categoría
+  /// el más caro (es lo que el combo usa primero en el carrito).
+  double _slotPrice(_SlotDraft slot) {
+    if (slot.categoryId != null) {
+      return widget.products
+          .where((p) => p.categoryId == slot.categoryId)
+          .fold(0.0, (m, p) => p.price > m ? p.price : m);
+    }
+    return _productsById[slot.productId]?.price ?? 0.0;
+  }
+
+  /// Precio por separado: precio de cada hueco × cantidad.
+  double get _separateTotal =>
+      _slots.fold(0.0, (t, slot) => t + _slotPrice(slot) * slot.quantity);
 
   double? get _priceValue => AppNumbers.parseDecimal(_price.text);
 
@@ -107,10 +132,12 @@ class _ComboFormScreenState extends State<ComboFormScreen> {
         if (!identical(other, slot) && other.productId != null)
           other.productId!,
     };
-    final product = await showProductPicker(
+    final pick = await showProductOrCategoryPicker(
       context,
       products: widget.products,
+      categories: widget.categories,
       selectedId: slot.productId,
+      selectedCategoryId: slot.categoryId,
       disabledReason: (p) {
         final otherCombo = _productCombo[p.id];
         if (otherCombo != null) {
@@ -122,7 +149,11 @@ class _ComboFormScreenState extends State<ComboFormScreen> {
         return null;
       },
     );
-    if (product != null) setState(() => slot.productId = product.id);
+    if (pick == null) return;
+    setState(() {
+      slot.productId = pick.product?.id;
+      slot.categoryId = pick.category?.id;
+    });
   }
 
   Future<bool> _confirm(String title, String message) async {
@@ -154,7 +185,7 @@ class _ComboFormScreenState extends State<ComboFormScreen> {
       error = context.l10n.comboErrorName;
     } else if (_slots.length < 2) {
       error = context.l10n.comboErrorMinSlots;
-    } else if (_slots.any((s) => s.productId == null)) {
+    } else if (_slots.any((s) => s.isEmpty)) {
       error = context.l10n.comboErrorEmptySlot;
     } else if (price == null || price < 0) {
       error = context.l10n.invalidNumber;
@@ -176,8 +207,11 @@ class _ComboFormScreenState extends State<ComboFormScreen> {
     // Gana el combo: se avisa de los productos con promoción propia
     final withPromo = {
       for (final s in _slots)
-        if (_productsById[s.productId]?.promotionId != null)
-          _productsById[s.productId]!.name,
+        for (final p in widget.products)
+          if (p.promotionId != null &&
+              (p.id == s.productId ||
+                  (s.categoryId != null && p.categoryId == s.categoryId)))
+            p.name,
     };
     if (withPromo.isNotEmpty &&
         !await _confirm(
@@ -196,11 +230,21 @@ class _ComboFormScreenState extends State<ComboFormScreen> {
           price: price,
           slots: [
             for (final s in _slots)
-              ComboSlot(
-                name: _productsById[s.productId]?.name ?? '',
-                quantity: s.quantity,
-                productIds: [s.productId!],
-              ),
+              s.categoryId != null
+                  ? ComboSlot(
+                      name: _categoryName(s.categoryId) ?? '',
+                      quantity: s.quantity,
+                      productIds: [
+                        for (final p in widget.products)
+                          if (p.categoryId == s.categoryId) p.id!,
+                      ],
+                      categoryId: s.categoryId,
+                    )
+                  : ComboSlot(
+                      name: _productsById[s.productId]?.name ?? '',
+                      quantity: s.quantity,
+                      productIds: [s.productId!],
+                    ),
           ],
         ),
       );
@@ -216,6 +260,10 @@ class _ComboFormScreenState extends State<ComboFormScreen> {
     final slot = _slots[index];
     final colors = Theme.of(context).colorScheme;
     final product = _productsById[slot.productId];
+    final categoryName = _categoryName(slot.categoryId);
+    final title = categoryName != null
+        ? context.l10n.comboSlotAnyOf(categoryName)
+        : product?.name;
     return AppCard(
       margin: const EdgeInsets.only(bottom: AppSpacing.sm),
       padding: const EdgeInsets.fromLTRB(4, 4, 4, 4),
@@ -233,7 +281,9 @@ class _ComboFormScreenState extends State<ComboFormScreen> {
                 child: Row(
                   children: [
                     Icon(
-                      Icons.inventory_2_outlined,
+                      categoryName != null
+                          ? Icons.sell_outlined
+                          : Icons.inventory_2_outlined,
                       size: 18,
                       color: colors.onSurfaceVariant,
                     ),
@@ -243,17 +293,17 @@ class _ComboFormScreenState extends State<ComboFormScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            product?.name ?? context.l10n.comboSlotNoProducts,
+                            title ?? context.l10n.comboSlotNoProducts,
                             style: TextStyle(
-                              color: product == null
+                              color: title == null
                                   ? colors.primary
                                   : colors.onSurface,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
-                          if (product != null)
+                          if (title != null)
                             Text(
-                              context.money(product.price),
+                              context.money(_slotPrice(slot)),
                               style: TextStyle(
                                 fontSize: 12,
                                 color: colors.onSurfaceVariant,

@@ -1,23 +1,31 @@
 import 'dart:convert';
 
-/// Hueco de un combo: "1 de [Teclado A, Teclado B]".
+/// Hueco de un combo: un producto concreto ("1 × Teclado A") o, con
+/// [categoryId], cualquier producto de una categoría ("1 × cualquier
+/// Polaroid"; [productIds] son entonces los productos activos de esa
+/// categoría, resueltos al cargar).
 class ComboSlot {
   final int? id;
   final String name;
   final int quantity;
   final List<int> productIds;
+  final int? categoryId;
 
   const ComboSlot({
     this.id,
     required this.name,
     this.quantity = 1,
     required this.productIds,
+    this.categoryId,
   });
+
+  bool get isCategory => categoryId != null;
 
   Map<String, Object?> toJson() => {
     'name': name,
     'quantity': quantity,
     'productIds': productIds,
+    'categoryId': ?categoryId,
   };
 
   factory ComboSlot.fromJson(Map<String, Object?> json) => ComboSlot(
@@ -27,6 +35,7 @@ class ComboSlot {
       for (final id in (json['productIds'] as List? ?? const []))
         (id as num).toInt(),
     ],
+    categoryId: (json['categoryId'] as num?)?.toInt(),
   );
 }
 

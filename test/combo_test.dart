@@ -384,4 +384,46 @@ void main() {
       expect(r.applications.single.total, 0);
     });
   });
+
+  group('Category slots', () {
+    // Polaroids (10, 11) a 6 y 7 €; prints A5 (20, 21) a 5 €
+    final catPrices = {10: 6.0, 11: 7.0, 20: 5.0, 21: 5.0};
+    const anyPolaroidAnyPrint = Combo(
+      id: 9,
+      name: 'Polaroid + Print',
+      price: 10,
+      slots: [
+        ComboSlot(name: 'Polaroid', productIds: [10, 11], categoryId: 1),
+        ComboSlot(name: 'Print A5', productIds: [20, 21], categoryId: 2),
+      ],
+    );
+
+    test('any polaroid + any print makes a combo; two polaroids do not', () {
+      final r = ComboMatcher.match(
+        combos: const [anyPolaroidAnyPrint],
+        quantities: {10: 1, 11: 1, 21: 1},
+        priceOf: (id) => catPrices[id]!,
+      );
+      expect(r.applications.single.count, 1);
+      // Usa la polaroid más cara (11) y deja la otra suelta
+      expect(r.applications.single.usedUnits, {11: 1, 21: 1});
+      expect(r.remaining, {10: 1});
+
+      final none = ComboMatcher.match(
+        combos: const [anyPolaroidAnyPrint],
+        quantities: {10: 1, 11: 1},
+        priceOf: (id) => catPrices[id]!,
+      );
+      expect(none.applications, isEmpty);
+    });
+
+    test('category slot survives the JSON snapshot', () {
+      final slots = Combo.decodeDefinition(
+        anyPolaroidAnyPrint.encodeDefinition(),
+      );
+      expect(slots.first.categoryId, 1);
+      expect(slots.first.isCategory, isTrue);
+      expect(slots.first.productIds, [10, 11]);
+    });
+  });
 }

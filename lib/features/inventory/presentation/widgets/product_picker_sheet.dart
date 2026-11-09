@@ -5,6 +5,7 @@ import 'package:keepinventory/l10n/app_localizations_ext.dart';
 import '../../../../core/shared_widgets/app_ui.dart';
 import '../../domain/inventory_view.dart';
 import '../../domain/product.dart';
+import '../../domain/product_category.dart';
 
 /// Hoja inferior con buscador para elegir un producto (sustituye a los
 /// desplegables, incómodos con muchos productos). Ordena por nombre y
@@ -16,12 +17,53 @@ Future<Product?> showProductPicker(
   required List<Product> products,
   int? selectedId,
   String? Function(Product product)? disabledReason,
+}) async {
+  final pick = await showProductOrCategoryPicker(
+    context,
+    products: products,
+    selectedId: selectedId,
+    disabledReason: disabledReason,
+  );
+  return pick?.product;
+}
+
+/// Lo elegido en [showProductOrCategoryPicker]: un producto o una categoría.
+class ProductOrCategory {
+  const ProductOrCategory.product(Product this.product) : category = null;
+  const ProductOrCategory.category(ProductCategory this.category)
+    : product = null;
+
+  final Product? product;
+  final ProductCategory? category;
+}
+
+/// Como [showProductPicker] pero, si hay [categories], arriba aparecen las
+/// categorías ("cualquier producto de…"), p. ej. para huecos de combo.
+Future<ProductOrCategory?> showProductOrCategoryPicker(
+  BuildContext context, {
+  required List<Product> products,
+  List<ProductCategory> categories = const [],
+  int? selectedId,
+  int? selectedCategoryId,
+  String? Function(Product product)? disabledReason,
 }) {
   final sorted = [...products]
     ..sort((a, b) => InventoryView.compareNames(a.name, b.name));
   var query = '';
 
-  return showModalBottomSheet<Product>(
+  // Nº de productos de cada categoría (las vacías no se ofrecen)
+  final counts = <int, int>{};
+  for (final p in products) {
+    if (p.categoryId != null) {
+      counts[p.categoryId!] = (counts[p.categoryId!] ?? 0) + 1;
+    }
+  }
+  final usableCategories = [
+    for (final c in categories)
+      if ((counts[c.id] ?? 0) > 0) c,
+  ];
+
+  return showModalBottomSheet<ProductOrCategory>(
     context: context,
     isScrollControlled: true,
     showDragHandle: true,
@@ -30,6 +72,9 @@ Future<Product?> showProductPicker(
         final q = query.trim().toLowerCase();
         final visible = sorted
             .where((p) => p.name.toLowerCase().contains(q))
+            .toList();
+        final visibleCategories = usableCategories
+            .where((c) => c.name.toLowerCase().contains(q))
             .toList();
         return Padding(
           // Que el teclado no tape la lista
@@ -64,14 +109,67 @@ Future<Product?> showProductPicker(
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Expanded(
-                  child: visible.isEmpty
+                  child: visible.isEmpty && visibleCategories.isEmpty
                       ? EmptyState(
                           icon: Icons.search_off,
                           title: context.l10n.productsNotFound,
                         )
                       : ListView.builder(
-                          itemCount: visible.length,
+                          itemCount:
+                              visible.length +
+                              (visibleCategories.isEmpty
+                                  ? 0
+                                  : visibleCategories.length + 2),
                           itemBuilder: (context, index) {
+                            // Primero las categorías (con cabeceras)
+                            if (visibleCategories.isNotEmpty) {
+                              if (index == 0) {
+                                return SectionLabel(
+                                  context.l10n.comboSlotCategories,
+                                  padding: const EdgeInsets.fromLTRB(
+                                    16,
+                                    8,
+                                    16,
+                                    4,
+                                  ),
+                                );
+                              }
+                              if (index <= visibleCategories.length) {
+                                final c = visibleCategories[index - 1];
+                                final selected = c.id == selectedCategoryId;
+                                return ListTile(
+                                  leading: const Icon(Icons.sell_outlined),
+                                  selected: selected,
+                                  title: Text(
+                                    context.l10n.comboSlotAnyOf(c.name),
+                                  ),
+                                  subtitle: Text(
+                                    context.l10n.unitCount(
+                                      '${counts[c.id] ?? 0}',
+                                    ),
+                                  ),
+                                  trailing: selected
+                                      ? const Icon(Icons.check)
+                                      : null,
+                                  onTap: () => Navigator.pop(
+                                    context,
+                                    ProductOrCategory.category(c),
+                                  ),
+                                );
+                              }
+                              if (index == visibleCategories.length + 1) {
+                                return SectionLabel(
+                                  context.l10n.comboSlotProducts,
+                                  padding: const EdgeInsets.fromLTRB(
+                                    16,
+                                    12,
+                                    16,
+                                    4,
+                                  ),
+                                );
+                              }
+                              index -= visibleCategories.length + 2;
+                            }
                             final product = visible[index];
                             final reason = disabledReason?.call(product);
                             final selected = product.id == selectedId;
@@ -79,7 +177,10 @@ Future<Product?> showProductPicker(
                               enabled: reason == null,
                               selected: selected,
                               minVerticalPadding: 10,
-                              onTap: () => Navigator.pop(context, product),
+                              onTap: () => Navigator.pop(
+                                context,
+                                ProductOrCategory.product(product),
+                              ),
                               title: Text(product.name),
                               subtitle: Text(
                                 reason ??

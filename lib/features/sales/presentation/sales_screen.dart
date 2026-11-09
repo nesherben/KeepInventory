@@ -20,6 +20,9 @@ import '../domain/sale_from_cart_factory.dart';
 import '../data/datasources/sale_local_datasource.dart';
 
 // Inventory (Products)
+import '../../inventory/data/datasources/category_local_datasource.dart';
+import '../../inventory/data/repositories/category_repository_impl.dart';
+import '../../inventory/domain/product_category.dart';
 import '../../inventory/domain/product.dart';
 import '../../inventory/data/datasources/product_local_datasource.dart';
 
@@ -79,6 +82,10 @@ class _SalesScreenState extends State<SalesScreen>
   List<Pack> _packs = [];
   Map<int, Promotion> _promotionsMap = {};
   List<Combo> _combos = [];
+
+  /// Categorías del catálogo y filtro elegido (null = todas).
+  List<ProductCategory> _categories = [];
+  int? _categoryFilter;
   bool _isLoading = true;
 
   String _productSearchQuery = '';
@@ -119,6 +126,8 @@ class _SalesScreenState extends State<SalesScreen>
     final packs = await _packRepository.getPacks();
     final promotions = await _promotionRepository.getPromotions();
     final combos = await _comboRepository.getCombos();
+    final categories = await CategoryRepositoryImpl(CategoryLocalDatasource())
+        .getCategories();
 
     final Map<int, Promotion> promoMap = {for (var p in promotions) p.id!: p};
 
@@ -128,6 +137,12 @@ class _SalesScreenState extends State<SalesScreen>
       _packs = packs;
       _promotionsMap = promoMap;
       _combos = combos.where((c) => c.isComplete).toList();
+      // Solo categorías con algún producto a la venta
+      final used = {for (final p in products) p.categoryId};
+      _categories = categories.where((c) => used.contains(c.id)).toList();
+      if (!_categories.any((c) => c.id == _categoryFilter)) {
+        _categoryFilter = null;
+      }
       _isLoading = false;
     });
   }
@@ -221,11 +236,13 @@ class _SalesScreenState extends State<SalesScreen>
     final hidden = !SaleCatalogFilter.filterProducts(
       _products,
       _productSearchQuery,
+      categoryId: _categoryFilter,
     ).any((p) => p.id == product.id);
     setState(() {
       if (hidden) {
         _productSearchController.clear();
         _productSearchQuery = '';
+        _categoryFilter = null;
       }
       _focusedProductId = product.id;
       _focusRequest++;
@@ -276,6 +293,37 @@ class _SalesScreenState extends State<SalesScreen>
     if (mounted) {
       AppAlerts.showSuccess(context, context.l10n.saleCompleted);
     }
+  }
+
+  /// Buscador y, en Productos, chips de categoría.
+  Widget _buildCatalogHeader() {
+    final showCategories = _categories.isNotEmpty && _tabController.index == 0;
+    if (!showCategories) return _buildSearchField();
+    Widget chip(int? id, String label) => Padding(
+      padding: const EdgeInsets.only(right: AppSpacing.sm),
+      child: ChoiceChip(
+        label: Text(label),
+        selected: _categoryFilter == id,
+        showCheckmark: false,
+        onSelected: (_) => setState(() => _categoryFilter = id),
+      ),
+    );
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _buildSearchField(),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.fromLTRB(12, 0, 4, 4),
+          child: Row(
+            children: [
+              chip(null, context.l10n.categoryAll),
+              for (final c in _categories) chip(c.id, c.name),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 
   Widget _buildSearchField() {
@@ -398,6 +446,7 @@ class _SalesScreenState extends State<SalesScreen>
     final filteredProducts = SaleCatalogFilter.filterProducts(
       _products,
       _productSearchQuery,
+      categoryId: _categoryFilter,
     );
     final filteredPacks = SaleCatalogFilter.filterPacks(
       _packs,
@@ -457,7 +506,7 @@ class _SalesScreenState extends State<SalesScreen>
                     flex: 3,
                     child: Column(
                       children: [
-                        _buildSearchField(),
+                        _buildCatalogHeader(),
                         Expanded(
                           child: _buildCatalogTabs(
                             filteredProducts: filteredProducts,
@@ -538,7 +587,7 @@ class _SalesScreenState extends State<SalesScreen>
                 children: [
                   Column(
                     children: [
-                      _buildSearchField(),
+                      _buildCatalogHeader(),
                       Expanded(
                         child: _buildCatalogTabs(
                           filteredProducts: filteredProducts,

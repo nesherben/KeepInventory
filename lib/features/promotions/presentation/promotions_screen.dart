@@ -14,6 +14,9 @@ import '../domain/promotion.dart';
 import '../data/datasources/promotion_local_datasource.dart';
 import '../../inventory/data/datasources/product_local_datasource.dart';
 import '../../inventory/data/repositories/product_repository_impl.dart';
+import '../../inventory/data/datasources/category_local_datasource.dart';
+import '../../inventory/data/repositories/category_repository_impl.dart';
+import '../../inventory/domain/product_category.dart';
 import '../../inventory/domain/product.dart';
 import '../data/datasources/combo_local_datasource.dart';
 import '../data/repositories/combo_repository_impl.dart';
@@ -48,6 +51,7 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
   int _tab = 0;
   List<Combo> _combos = [];
   List<Product> _products = [];
+  List<ProductCategory> _categories = [];
 
   @override
   void initState() {
@@ -66,11 +70,14 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
     final promotions = await _repository.getPromotions();
     final combos = await _comboRepository.getCombos();
     final products = await _productRepository.getProducts();
+    final categories = await CategoryRepositoryImpl(CategoryLocalDatasource())
+        .getCategories();
     if (!mounted) return;
     setState(() {
       _promotions = promotions;
       _combos = combos;
       _products = products;
+      _categories = categories;
       _isLoading = false;
     });
   }
@@ -84,6 +91,7 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
         combo: combo,
         products: _products,
         otherCombos: _combos.where((c) => c.id != combo?.id).toList(),
+        categories: _categories,
       ),
     );
     if (saved == true) _loadPromotions();
@@ -142,7 +150,12 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
         final separate = combo.separatePrice((id) => byId[id]?.price ?? 0);
         final saving = separate - combo.price;
         final slots = combo.slots
-            .map((s) => s.quantity > 1 ? '${s.quantity} × ${s.name}' : s.name)
+            .map((s) {
+              final label = s.isCategory
+                  ? context.l10n.comboSlotAnyOf(s.name)
+                  : s.name;
+              return s.quantity > 1 ? '${s.quantity} × $label' : label;
+            })
             .join(' + ');
         return Card(
           margin: const EdgeInsets.only(bottom: AppSpacing.sm),
