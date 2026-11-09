@@ -25,9 +25,16 @@ class FixedPriceBundleCalculator {
 
     for (var index = 0; index < units.length; index++) {
       final item = units[index];
-      final unitPrice = index < discountedUnitCount
-          ? bundleUnitPrice
-          : priceOf(item);
+      var unitPrice = priceOf(item);
+      if (index < discountedUnitCount) {
+        // Un lote solo se aplica si sale más barato que sus unidades sueltas:
+        // una oferta nunca encarece la compra
+        final start = index - index % bundleSize;
+        final chunkPrice = units
+            .sublist(start, start + bundleSize)
+            .fold<double>(0, (t, u) => t + priceOf(u));
+        if (bundlePrice < chunkPrice) unitPrice = bundleUnitPrice;
+      }
       totals[item] = totals[item]! + unitPrice;
     }
 

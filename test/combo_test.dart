@@ -426,4 +426,42 @@ void main() {
       expect(slots.first.productIds, [10, 11]);
     });
   });
+
+  test('a fixed bundle never charges more than the loose units', () {
+    final cheap = Product(
+      id: 30,
+      name: 'Taza',
+      units: 9,
+      price: 4.5,
+      cost: 1,
+      promotionId: 5,
+    );
+    final dear = Product(
+      id: 31,
+      name: 'Gorra',
+      units: 9,
+      price: 12,
+      cost: 1,
+      promotionId: 5,
+    );
+    final promos = {
+      5: Promotion(
+        id: 5,
+        name: '2 por 10',
+        type: 'bundle_fixed_price',
+        threshold: 2,
+        discountValue: 10,
+      ),
+    };
+    double total(Map<Product, int> cart) =>
+        SaleCartPricingCalculator.calculateCartTotal(
+          products: cart,
+          packs: const {},
+          promotions: promos,
+        );
+    // 2 tazas (9 €): el lote de 10 € no se aplica
+    expect(total({cheap: 2}), closeTo(9, 1e-9));
+    // gorra + taza (16,50 €) sí: 10 €; la otra taza suelta 4,50 €
+    expect(total({dear: 1, cheap: 2}), closeTo(14.5, 1e-9));
+  });
 }
