@@ -57,8 +57,12 @@ class CategoryField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    // Fuera del recorrido del teclado: "Siguiente" salta del nombre al
+    // precio (si no, Intro abriría el selector y lo tecleado crearía
+    // categorías). Se elige tocándolo.
     return InkWell(
       onTap: onTap,
+      canRequestFocus: false,
       borderRadius: BorderRadius.circular(12),
       child: InputDecorator(
         decoration: InputDecoration(
