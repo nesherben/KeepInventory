@@ -361,26 +361,28 @@ class _InventoryScreenState extends State<InventoryScreen> {
   void _editSingleImage(Product product) {
     showModalBottomSheet(
       context: context,
-      builder: (context) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ListTile(
-            leading: const Icon(Icons.camera_alt),
-            title: Text(context.l10n.takeNewPhoto),
-            onTap: () async {
-              Navigator.pop(context);
-              await _processAndSaveNewImage(product, ImageSource.camera);
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.photo_library),
-            title: Text(context.l10n.chooseGalleryPhoto),
-            onTap: () async {
-              Navigator.pop(context);
-              await _processAndSaveNewImage(product, ImageSource.gallery);
-            },
-          ),
-        ],
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: Text(context.l10n.takeNewPhoto),
+              onTap: () async {
+                Navigator.pop(context);
+                await _processAndSaveNewImage(product, ImageSource.camera);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: Text(context.l10n.chooseGalleryPhoto),
+              onTap: () async {
+                Navigator.pop(context);
+                await _processAndSaveNewImage(product, ImageSource.gallery);
+              },
+            ),
+          ],
+        ),
       ),
     );
   }

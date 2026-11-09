@@ -162,20 +162,22 @@ class _PackFormDialogState extends State<PackFormDialog> {
       onTap: () async {
         showModalBottomSheet(
           context: context,
-          builder: (context) => Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.camera_alt),
-                title: Text(context.l10n.camera),
-                onTap: () => _pickAndSetImage(ImageSource.camera, context),
-              ),
-              ListTile(
-                leading: const Icon(Icons.photo_library),
-                title: Text(context.l10n.gallery),
-                onTap: () => _pickAndSetImage(ImageSource.gallery, context),
-              ),
-            ],
+          builder: (context) => SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.camera_alt),
+                  title: Text(context.l10n.camera),
+                  onTap: () => _pickAndSetImage(ImageSource.camera, context),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.photo_library),
+                  title: Text(context.l10n.gallery),
+                  onTap: () => _pickAndSetImage(ImageSource.gallery, context),
+                ),
+              ],
+            ),
           ),
         );
       },

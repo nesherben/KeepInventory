@@ -1,3 +1,5 @@
+import '../../../../core/shared_widgets/adaptive_form.dart';
+
 import 'package:flutter/material.dart';
 import 'package:keepinventory/core/utils/app_numbers.dart';
 import 'package:keepinventory/l10n/app_localizations_ext.dart';
@@ -80,9 +82,7 @@ Future<ProductOrCategory?> showProductOrCategoryPicker(
             .toList();
         return Padding(
           // Que el teclado no tape la lista
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.viewInsetsOf(context).bottom,
-          ),
+          padding: EdgeInsets.only(bottom: bottomSafeInset(context)),
           child: SizedBox(
             height: MediaQuery.sizeOf(context).height * 0.75,
             child: Column(

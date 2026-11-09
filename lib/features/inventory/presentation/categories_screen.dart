@@ -1,3 +1,5 @@
+import '../../../core/shared_widgets/adaptive_form.dart';
+
 import 'package:flutter/material.dart';
 import 'package:keepinventory/l10n/app_localizations_ext.dart';
 
@@ -144,9 +146,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
               .where((p) => p.name.toLowerCase().contains(q))
               .toList();
           return Padding(
-            padding: EdgeInsets.only(
-              bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
-            ),
+            padding: EdgeInsets.only(bottom: bottomSafeInset(sheetContext)),
             child: SizedBox(
               height: MediaQuery.sizeOf(sheetContext).height * 0.8,
               child: Column(

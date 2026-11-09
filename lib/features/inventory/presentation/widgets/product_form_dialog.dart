@@ -79,20 +79,22 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
   Future<ImageSource?> _showImageSourcePicker() {
     return showModalBottomSheet<ImageSource>(
       context: context,
-      builder: (sheetContext) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ListTile(
-            leading: const Icon(Icons.camera_alt),
-            title: Text(sheetContext.l10n.camera),
-            onTap: () => Navigator.pop(sheetContext, ImageSource.camera),
-          ),
-          ListTile(
-            leading: const Icon(Icons.photo_library),
-            title: Text(sheetContext.l10n.gallery),
-            onTap: () => Navigator.pop(sheetContext, ImageSource.gallery),
-          ),
-        ],
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: Text(sheetContext.l10n.camera),
+              onTap: () => Navigator.pop(sheetContext, ImageSource.camera),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: Text(sheetContext.l10n.gallery),
+              onTap: () => Navigator.pop(sheetContext, ImageSource.gallery),
+            ),
+          ],
+        ),
       ),
     );
   }

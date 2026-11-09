@@ -3,6 +3,15 @@ import 'package:keepinventory/l10n/app_localizations_ext.dart';
 
 import 'app_ui.dart';
 
+/// Margen inferior para lo que se pinta pegado al borde de abajo: lo que
+/// ocupe más, el teclado o la barra de navegación de Android (con la app
+/// dibujada de borde a borde, la barra puede tapar los botones).
+double bottomSafeInset(BuildContext context) {
+  final keyboard = MediaQuery.viewInsetsOf(context).bottom;
+  final navBar = MediaQuery.viewPaddingOf(context).bottom;
+  return keyboard > navBar ? keyboard : navBar;
+}
+
 /// Cómo se presenta un formulario según la pantalla.
 enum AdaptiveFormMode {
   /// Móvil: panel desde abajo a pantalla completa, con píldora para cerrar.
@@ -126,51 +135,66 @@ class AdaptiveFormScaffold extends StatelessWidget {
   /// botones fijos abajo, por encima del teclado.
   Widget _buildPanel(BuildContext context, {required bool side}) {
     final theme = Theme.of(context);
-    final keyboard = MediaQuery.viewInsetsOf(context).bottom;
-    return Padding(
-      padding: EdgeInsets.only(bottom: keyboard),
-      child: SizedBox(
-        height: MediaQuery.sizeOf(context).height,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding: EdgeInsets.fromLTRB(20, side ? 12 : 0, 8, AppSpacing.md),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(title, style: theme.textTheme.titleLarge),
-                  ),
-                  // El lateral no tiene píldora: botón de cerrar
-                  if (side)
-                    IconButton(
-                      tooltip: context.l10n.cancel,
-                      icon: const Icon(Icons.close),
-                      onPressed: () => Navigator.pop(context),
+    // El lateral ya va dentro de un SafeArea; el inferior no protege abajo
+    final bottom = side
+        ? MediaQuery.viewInsetsOf(context).bottom
+        : bottomSafeInset(context);
+    return LayoutBuilder(
+      builder: (context, constraints) => Padding(
+        padding: EdgeInsets.only(bottom: bottom),
+        child: SizedBox(
+          // Toda la altura disponible (sin pasarse de la pantalla)
+          height:
+              (constraints.maxHeight.isFinite
+                  ? constraints.maxHeight
+                  : MediaQuery.sizeOf(context).height) -
+              bottom,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: EdgeInsets.fromLTRB(
+                  20,
+                  side ? 12 : 0,
+                  8,
+                  AppSpacing.md,
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(title, style: theme.textTheme.titleLarge),
                     ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(20, 4, 20, AppSpacing.lg),
-                child: child,
-              ),
-            ),
-            const Divider(height: 1),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  for (var i = 0; i < actions.length; i++) ...[
-                    if (i > 0) const SizedBox(width: AppSpacing.sm),
-                    actions[i],
+                    // El lateral no tiene píldora: botón de cerrar
+                    if (side)
+                      IconButton(
+                        tooltip: context.l10n.cancel,
+                        icon: const Icon(Icons.close),
+                        onPressed: () => Navigator.pop(context),
+                      ),
                   ],
-                ],
+                ),
               ),
-            ),
-          ],
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(20, 4, 20, AppSpacing.lg),
+                  child: child,
+                ),
+              ),
+              const Divider(height: 1),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    for (var i = 0; i < actions.length; i++) ...[
+                      if (i > 0) const SizedBox(width: AppSpacing.sm),
+                      actions[i],
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

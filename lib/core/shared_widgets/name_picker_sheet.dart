@@ -1,3 +1,5 @@
+import 'adaptive_form.dart';
+
 import 'package:flutter/material.dart';
 
 /// Panel inferior para elegir un nombre de una lista (ferias, categorías…):
@@ -39,9 +41,7 @@ Future<String?> showNamePickerSheet(
           (n) => n.toLowerCase() == typed.toLowerCase(),
         );
         return Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
-          ),
+          padding: EdgeInsets.only(bottom: bottomSafeInset(sheetContext)),
           child: SizedBox(
             height: MediaQuery.sizeOf(sheetContext).height * 0.6,
             child: Column(

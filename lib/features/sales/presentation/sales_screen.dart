@@ -572,7 +572,13 @@ class _SalesScreenState extends State<SalesScreen>
                           child: _buildPaymentMethodSelector(),
                         ),
                         Padding(
-                          padding: const EdgeInsets.all(16.0),
+                          // Por encima de la barra de navegación de Android
+                          padding: EdgeInsets.fromLTRB(
+                            16,
+                            16,
+                            16,
+                            16 + MediaQuery.viewPaddingOf(context).bottom,
+                          ),
                           child: SizedBox(
                             width: double.infinity,
                             child: _buildCheckoutButton(large: false),
@@ -644,7 +650,11 @@ class _SalesScreenState extends State<SalesScreen>
                                               (isExpanded &&
                                                   (_cart.isNotEmpty ||
                                                       _cartPacks.isNotEmpty))
-                                              ? 170 // botón + selector de pago
+                                              ? 170 +
+                                                    MediaQuery.viewPaddingOf(
+                                                          context,
+                                                        )
+                                                        .bottom // botón + pago
                                               : 20,
                                         ),
                                         children: [
@@ -746,7 +756,17 @@ class _SalesScreenState extends State<SalesScreen>
                                           left: 0,
                                           right: 0,
                                           child: Container(
-                                            padding: const EdgeInsets.all(16.0),
+                                            // Por encima de la barra de
+                                            // navegación de Android
+                                            padding: EdgeInsets.fromLTRB(
+                                              16,
+                                              16,
+                                              16,
+                                              16 +
+                                                  MediaQuery.viewPaddingOf(
+                                                    context,
+                                                  ).bottom,
+                                            ),
                                             decoration: BoxDecoration(
                                               color: Theme.of(context)
                                                   .cardColor,
