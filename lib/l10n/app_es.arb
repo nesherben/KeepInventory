@@ -179,7 +179,7 @@
   "searchProducts": "Buscar producto...",
   "searchPacksOrComponents": "Buscar pack o componente...",
   "noPacksFound": "No se encontraron packs.",
-  "cartItemsCount": "Items: {count}",
+  "cartItemsCount": "Artículos: {count}",
   "@cartItemsCount": { "placeholders": { "count": {} } },
   "cartTotal": "Total: {amount} €",
   "@cartTotal": { "placeholders": { "amount": {} } },

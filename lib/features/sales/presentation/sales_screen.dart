@@ -57,6 +57,11 @@ class _SalesScreenState extends State<SalesScreen>
 
   /// Carrito desplegable (móvil): se recoge al ir a un producto.
   final _cartSheetController = DraggableScrollableController();
+
+  /// Altura del carrito plegado (fracción): la cabecera (asa + artículos y
+  /// total) más la barra de navegación de Android, para que no la tape.
+  double _cartMinSize = 0.12;
+  static const double _cartHeaderHeight = 96;
   int? _focusedProductId;
   int _focusRequest = 0;
   Timer? _focusTimer;
@@ -248,9 +253,10 @@ class _SalesScreenState extends State<SalesScreen>
       _focusRequest++;
     });
     if (_tabController.index != 0) _tabController.animateTo(0);
-    if (_cartSheetController.isAttached && _cartSheetController.size > 0.13) {
+    if (_cartSheetController.isAttached &&
+        _cartSheetController.size > _cartMinSize + 0.01) {
       _cartSheetController.animateTo(
-        0.12,
+        _cartMinSize,
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeOut,
       );
@@ -589,31 +595,35 @@ class _SalesScreenState extends State<SalesScreen>
                   ),
                 ],
               )
-            : Stack(
-                children: [
-                  Column(
+            : LayoutBuilder(
+                builder: (context, bodyConstraints) {
+                  final navBar = MediaQuery.viewPaddingOf(context).bottom;
+                  _cartMinSize =
+                      ((_cartHeaderHeight + navBar) / bodyConstraints.maxHeight)
+                          .clamp(0.08, 0.3);
+                  return Stack(
                     children: [
-                      _buildCatalogHeader(),
-                      Expanded(
-                        child: _buildCatalogTabs(
-                          filteredProducts: filteredProducts,
-                          filteredPacks: filteredPacks,
-                          crossAxisCount: 3,
-                          bottomPadding: 120,
-                        ),
+                      Column(
+                        children: [
+                          _buildCatalogHeader(),
+                          Expanded(
+                            child: _buildCatalogTabs(
+                              filteredProducts: filteredProducts,
+                              filteredPacks: filteredPacks,
+                              crossAxisCount: 3,
+                              // Que el carrito plegado no tape la última fila
+                              bottomPadding:
+                                  _cartMinSize * bodyConstraints.maxHeight + 24,
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  DraggableScrollableSheet(
-                    controller: _cartSheetController,
-                    initialChildSize: 0.12,
-                    minChildSize: 0.12,
-                    maxChildSize: 0.7,
-                    builder:
-                        (
-                          BuildContext context,
-                          ScrollController scrollController,
-                        ) {
+                      DraggableScrollableSheet(
+                        controller: _cartSheetController,
+                        initialChildSize: _cartMinSize,
+                        minChildSize: _cartMinSize,
+                        maxChildSize: 0.7,
+                        builder: (BuildContext context, ScrollController scrollController) {
                           return LayoutBuilder(
                             builder: (context, constraints) {
                               final bool isExpanded =
@@ -725,10 +735,9 @@ class _SalesScreenState extends State<SalesScreen>
                                                       ),
                                                       Text(
                                                         context.l10n.cartTotal(
-                                                          _cartTotal
-                                                              .toStringAsFixed(
-                                                                2,
-                                                              ),
+                                                          context.amount(
+                                                            _cartTotal,
+                                                          ),
                                                         ),
                                                         style: TextStyle(
                                                           fontSize: 22,
@@ -799,8 +808,10 @@ class _SalesScreenState extends State<SalesScreen>
                             },
                           );
                         },
-                  ),
-                ],
+                      ),
+                    ],
+                  );
+                },
               ),
       ),
     );

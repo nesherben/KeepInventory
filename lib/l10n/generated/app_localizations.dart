@@ -1025,7 +1025,7 @@ abstract class AppLocalizations {
   /// No description provided for @cartItemsCount.
   ///
   /// In es, this message translates to:
-  /// **'Items: {count}'**
+  /// **'Artículos: {count}'**
   String cartItemsCount(Object count);
 
   /// No description provided for @cartTotal.

@@ -525,7 +525,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String cartItemsCount(Object count) {
-    return 'Items: $count';
+    return 'Artículos: $count';
   }
 
   @override
