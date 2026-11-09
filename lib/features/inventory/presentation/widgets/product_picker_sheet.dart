@@ -229,3 +229,87 @@ Future<ProductOrCategory?> showProductOrCategoryPicker(
     ),
   );
 }
+
+/// Hoja con casillas para elegir varios productos (con buscador).
+/// Devuelve los ids marcados, o null si se cerró sin guardar.
+Future<Set<int>?> showProductMultiPicker(
+  BuildContext context, {
+  required List<Product> products,
+  required Set<int> initiallySelected,
+  String? title,
+}) {
+  final sorted = [...products]
+    ..sort((a, b) => InventoryView.compareNames(a.name, b.name));
+  final selected = {...initiallySelected};
+  var query = '';
+  return showModalBottomSheet<Set<int>>(
+    context: context,
+    isScrollControlled: true,
+    showDragHandle: true,
+    builder: (context) => StatefulBuilder(
+      builder: (context, setSheet) {
+        final q = query.trim().toLowerCase();
+        final visible = sorted
+            .where((p) => p.name.toLowerCase().contains(q))
+            .toList();
+        return Padding(
+          padding: EdgeInsets.only(bottom: bottomSafeInset(context)),
+          child: SizedBox(
+            height: MediaQuery.sizeOf(context).height * 0.8,
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          title ?? context.l10n.productsPickTitle,
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                      ),
+                      FilledButton(
+                        onPressed: () => Navigator.pop(context, selected),
+                        child: Text(context.l10n.save),
+                      ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: TextField(
+                    onChanged: (v) => setSheet(() => query = v),
+                    decoration: InputDecoration(
+                      hintText: context.l10n.searchProduct,
+                      prefixIcon: const Icon(Icons.search, size: 20),
+                      isDense: true,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: visible.length,
+                    itemBuilder: (context, index) {
+                      final p = visible[index];
+                      return CheckboxListTile(
+                        value: selected.contains(p.id),
+                        onChanged: (v) => setSheet(
+                          () => v == true
+                              ? selected.add(p.id!)
+                              : selected.remove(p.id!),
+                        ),
+                        title: Text(p.name),
+                        subtitle: Text(context.money(p.price)),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    ),
+  );
+}

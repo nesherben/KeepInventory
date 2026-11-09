@@ -1645,4 +1645,33 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cartStockOut => 'Sells out with this sale';
+
+  @override
+  String promotionAssignTitle(String promo) {
+    return 'Which products get “$promo”?';
+  }
+
+  @override
+  String get promotionAssignCategory => 'All products in a category';
+
+  @override
+  String get promotionAssignProducts => 'Choose products…';
+
+  @override
+  String get promotionAssignLater => 'Later';
+
+  @override
+  String promotionAppliedToProducts(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Promotion applied to $count products',
+      one: 'Promotion applied to 1 product',
+      zero: 'The promotion no longer applies to any product',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get productsPickTitle => 'Choose products';
 }

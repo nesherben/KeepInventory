@@ -899,5 +899,25 @@
       }
     }
   },
-  "cartStockOut": "Se agota con esta venta"
+  "cartStockOut": "Se agota con esta venta",
+  "promotionAssignTitle": "¿A qué productos aplicas «{promo}»?",
+  "@promotionAssignTitle": {
+    "placeholders": {
+      "promo": {
+        "type": "String"
+      }
+    }
+  },
+  "promotionAssignCategory": "A todos los de una categoría",
+  "promotionAssignProducts": "Elegir productos…",
+  "promotionAssignLater": "Más tarde",
+  "promotionAppliedToProducts": "{count, plural, =0{La promoción ya no se aplica a ningún producto} =1{Promoción aplicada a 1 producto} other{Promoción aplicada a {count} productos}}",
+  "@promotionAppliedToProducts": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "productsPickTitle": "Elige productos"
 }

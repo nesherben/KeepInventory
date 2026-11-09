@@ -2881,6 +2881,42 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Se agota con esta venta'**
   String get cartStockOut;
+
+  /// No description provided for @promotionAssignTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'¿A qué productos aplicas «{promo}»?'**
+  String promotionAssignTitle(String promo);
+
+  /// No description provided for @promotionAssignCategory.
+  ///
+  /// In es, this message translates to:
+  /// **'A todos los de una categoría'**
+  String get promotionAssignCategory;
+
+  /// No description provided for @promotionAssignProducts.
+  ///
+  /// In es, this message translates to:
+  /// **'Elegir productos…'**
+  String get promotionAssignProducts;
+
+  /// No description provided for @promotionAssignLater.
+  ///
+  /// In es, this message translates to:
+  /// **'Más tarde'**
+  String get promotionAssignLater;
+
+  /// No description provided for @promotionAppliedToProducts.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =0{La promoción ya no se aplica a ningún producto} =1{Promoción aplicada a 1 producto} other{Promoción aplicada a {count} productos}}'**
+  String promotionAppliedToProducts(int count);
+
+  /// No description provided for @productsPickTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Elige productos'**
+  String get productsPickTitle;
 }
 
 class _AppLocalizationsDelegate

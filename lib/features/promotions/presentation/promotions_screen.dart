@@ -1,3 +1,4 @@
+import '../../inventory/presentation/widgets/product_picker_sheet.dart';
 import '../../../core/shared_widgets/adaptive_form.dart';
 import 'widgets/offer_card.dart';
 import '../../inventory/presentation/widgets/category_picker.dart';
@@ -186,6 +187,76 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
     );
   }
 
+  /// Tras crear una promoción: ¿a qué productos se aplica?
+  Future<void> _askWhereToApply(Promotion promo) async {
+    final l10n = context.l10n;
+    final choice = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+              child: Text(
+                l10n.promotionAssignTitle(promo.name),
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.sell_outlined),
+              title: Text(l10n.promotionAssignCategory),
+              onTap: () => Navigator.pop(context, 'category'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.checklist),
+              title: Text(l10n.promotionAssignProducts),
+              onTap: () => Navigator.pop(context, 'products'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.schedule),
+              title: Text(l10n.promotionAssignLater),
+              onTap: () => Navigator.pop(context),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (!mounted) return;
+    if (choice == 'category') await _applyToCategory(promo);
+    if (choice == 'products') await _chooseProducts(promo);
+  }
+
+  /// Marca con casillas los productos que llevan la promoción (los que se
+  /// desmarcan se quedan sin promoción).
+  Future<void> _chooseProducts(Promotion promo) async {
+    final initial = {
+      for (final p in _products)
+        if (p.promotionId == promo.id) p.id!,
+    };
+    final selected = await showProductMultiPicker(
+      context,
+      products: _products,
+      initiallySelected: initial,
+      title: context.l10n.promotionAssignTitle(promo.name),
+    );
+    if (selected == null || !mounted) return;
+    for (final id in selected.difference(initial)) {
+      await _productRepository.updateFields(id, promotionId: promo.id);
+    }
+    for (final id in initial.difference(selected)) {
+      await _productRepository.updateFields(id, clearPromotion: true);
+    }
+    if (!mounted) return;
+    AppAlerts.showSuccess(
+      context,
+      context.l10n.promotionAppliedToProducts(selected.length),
+    );
+    _loadPromotions();
+  }
+
   /// Pone la promoción a todos los productos de una categoría (una vez;
   /// después cada producto se puede cambiar por separado).
   Future<void> _applyToCategory(Promotion promo) async {
@@ -233,13 +304,27 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
       builder: (dialogContext) => PromotionFormDialog(
         promotion: promotionToEdit,
         onSave: (promotion) async {
+          Promotion saved = promotion;
           if (isEditing) {
             await _repository.updatePromotion(promotion);
           } else {
-            await _repository.insertPromotion(promotion);
+            final id = await _repository.insertPromotion(promotion);
+            saved = Promotion(
+              id: id,
+              name: promotion.name,
+              type: promotion.type,
+              threshold: promotion.threshold,
+              discountValue: promotion.discountValue,
+            );
           }
           if (!mounted) return;
           _loadPromotions();
+          // Recién creada: no se aplica a nada hasta asignarla
+          if (!isEditing) {
+            WidgetsBinding.instance.addPostFrameCallback(
+              (_) => _askWhereToApply(saved),
+            );
+          }
           AppAlerts.showSuccess(
             context,
             isEditing
@@ -427,6 +512,12 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
                                       onTap: () => _showPromotionFormDialog(
                                         promotionToEdit: promo,
                                       ),
+                                    ),
+                                    OfferAction(
+                                      icon: Icons.checklist,
+                                      label:
+                                          context.l10n.promotionAssignProducts,
+                                      onTap: () => _chooseProducts(promo),
                                     ),
                                     OfferAction(
                                       icon: Icons.sell_outlined,

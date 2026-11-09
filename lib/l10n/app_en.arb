@@ -512,5 +512,11 @@
   "saleRegistered": "Sale #{id} saved · €{amount} · {method}",
   "stockLastUnit": "Last unit of {name}",
   "cartStockLeft": "{count, plural, =1{1 left in stock} other{{count} left in stock}}",
-  "cartStockOut": "Sells out with this sale"
+  "cartStockOut": "Sells out with this sale",
+  "promotionAssignTitle": "Which products get “{promo}”?",
+  "promotionAssignCategory": "All products in a category",
+  "promotionAssignProducts": "Choose products…",
+  "promotionAssignLater": "Later",
+  "promotionAppliedToProducts": "{count, plural, =0{The promotion no longer applies to any product} =1{Promotion applied to 1 product} other{Promotion applied to {count} products}}",
+  "productsPickTitle": "Choose products"
 }
