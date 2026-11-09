@@ -88,12 +88,16 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
   }
 
-  /// Panel para asignar feria a un día: buscador arriba, tocar una feria la
-  /// asigna al momento; si lo escrito no existe, "Crear «X»".
+  /// Panel de ferias: buscador arriba, tocar una feria la asigna al momento;
+  /// si lo escrito no existe, "Crear «X»". Cada feria se puede borrar de la
+  /// lista con su papelera.
+  ///
+  /// Grupo de un día ([currentFairName] vacío): se asigna a ese día.
+  /// Grupo de feria: el cambio afecta a TODOS sus tickets, de cualquier día.
   void _showAssignFairDialog(String datePrefix, String currentFairName) async {
     final existingFairs = await _saleRepository.getAvailableFairs();
-    existingFairs.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
     if (!mounted) return;
+    var deletedAny = false;
 
     var query = '';
     final chosen = await showModalBottomSheet<String>(
@@ -167,9 +171,33 @@ class _HistoryScreenState extends State<HistoryScreen> {
                             leading: const Icon(Icons.event_outlined),
                             title: Text(fair),
                             selected: fair == currentFairName,
-                            trailing: fair == currentFairName
-                                ? Text(sheetContext.l10n.fairCurrent)
-                                : null,
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (fair == currentFairName)
+                                  Text(sheetContext.l10n.fairCurrent),
+                                IconButton(
+                                  tooltip: sheetContext.l10n.fairDeleteTitle,
+                                  icon: Icon(
+                                    Icons.delete_outline,
+                                    color: colors.onSurfaceVariant,
+                                  ),
+                                  onPressed: () async {
+                                    if (await _deleteFair(sheetContext, fair)) {
+                                      deletedAny = true;
+                                      setSheet(
+                                        () => existingFairs.remove(fair),
+                                      );
+                                      // Se borró la feria de este grupo
+                                      if (fair == currentFairName &&
+                                          sheetContext.mounted) {
+                                        Navigator.pop(sheetContext);
+                                      }
+                                    }
+                                  },
+                                ),
+                              ],
+                            ),
                             onTap: () => Navigator.pop(sheetContext, fair),
                           ),
                         if (currentFairName.isNotEmpty)
@@ -196,11 +224,17 @@ class _HistoryScreenState extends State<HistoryScreen> {
       ),
     );
 
-    if (chosen == null || chosen == currentFairName) return;
-    await _saleRepository.updateFairNameForDate(
-      datePrefix,
-      chosen.isEmpty ? null : chosen,
-    );
+    if (chosen == null || chosen == currentFairName) {
+      if (deletedAny) await _loadSales();
+      return;
+    }
+    final newFair = chosen.isEmpty ? null : chosen;
+    if (currentFairName.isNotEmpty) {
+      // Grupo de feria: todos sus tickets, sean del día que sean
+      await _saleRepository.reassignFair(currentFairName, newFair);
+    } else {
+      await _saleRepository.updateFairNameForDate(datePrefix, newFair);
+    }
     await _loadSales();
     if (!mounted) return;
     AppAlerts.showSuccess(
@@ -209,6 +243,42 @@ class _HistoryScreenState extends State<HistoryScreen> {
           ? context.l10n.fairUnassigned
           : context.l10n.salesGroupedFair(chosen),
     );
+  }
+
+  /// Pregunta y borra una feria del catálogo (sus tickets quedan sin feria).
+  Future<bool> _deleteFair(BuildContext sheetContext, String fair) async {
+    final count = await _saleRepository.countSalesForFair(fair);
+    if (!sheetContext.mounted) return false;
+    final l10n = sheetContext.l10n;
+    final ok = await showDialog<bool>(
+      context: sheetContext,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.fairDeleteTitle),
+        content: Text(
+          count > 0
+              ? l10n.fairDeleteConfirmUsed(count, fair)
+              : l10n.fairDeleteConfirmEmpty(fair),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+              foregroundColor: Theme.of(context).colorScheme.onError,
+            ),
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(l10n.delete),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return false;
+    await _saleRepository.deleteFair(fair);
+    if (mounted) AppAlerts.showWarning(context, l10n.fairDeleted);
+    return true;
   }
 
   @override

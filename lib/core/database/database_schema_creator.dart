@@ -53,6 +53,14 @@ class DatabaseSchemaCreator {
       )
     ''';
 
+  /// v15: catálogo de ferias. Las ventas guardan el nombre en
+  /// `sales.fair_name`; el catálogo permite tener ferias sin tickets.
+  static const fairsTable = '''
+      CREATE TABLE IF NOT EXISTS fairs (
+        name TEXT PRIMARY KEY COLLATE NOCASE
+      )
+    ''';
+
   static Future<void> create({
     required Future<void> Function(String sql) execute,
   }) async {
@@ -153,5 +161,6 @@ class DatabaseSchemaCreator {
     }
 
     await execute(metaTable);
+    await execute(fairsTable);
   }
 }

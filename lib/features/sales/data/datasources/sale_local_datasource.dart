@@ -355,22 +355,68 @@ class SaleLocalDatasource {
     });
   }
 
+  /// Asigna (o quita, con null) la feria a todos los tickets de un día.
   Future<void> updateFairNameForDate(
     String datePrefix,
     String? fairName,
   ) async {
     final database = await db;
-    await database.rawUpdate(
-      'UPDATE sales SET fair_name = ? WHERE date LIKE ?',
-      [fairName, '$datePrefix%'],
-    );
+    await database.transaction((txn) async {
+      if (fairName != null) await _ensureFair(txn, fairName);
+      await txn.rawUpdate('UPDATE sales SET fair_name = ? WHERE date LIKE ?', [
+        fairName,
+        '$datePrefix%',
+      ]);
+    });
   }
 
+  /// Cambia (o quita, con null) la feria de TODOS los tickets que la tienen,
+  /// sean del día que sean. La feria sigue en el catálogo.
+  Future<void> reassignFair(String fairName, String? newFairName) async {
+    final database = await db;
+    await database.transaction((txn) async {
+      if (newFairName != null) await _ensureFair(txn, newFairName);
+      await txn.rawUpdate(
+        'UPDATE sales SET fair_name = ? WHERE fair_name = ?',
+        [newFairName, fairName],
+      );
+    });
+  }
+
+  /// Catálogo de ferias (también las que aún no tienen tickets).
   Future<List<String>> getAvailableFairs() async {
     final database = await db;
-    final List<Map<String, dynamic>> maps = await database.rawQuery(
-      'SELECT DISTINCT fair_name FROM sales WHERE fair_name IS NOT NULL AND fair_name != ""',
+    final rows = await database.rawQuery(
+      'SELECT name FROM fairs ORDER BY name COLLATE NOCASE',
     );
-    return maps.map((m) => m['fair_name'] as String).toList();
+    return rows.map((r) => r['name'] as String).toList();
   }
+
+  Future<int> countSalesForFair(String fairName) async {
+    final database = await db;
+    final rows = await database.rawQuery(
+      'SELECT COUNT(*) AS n FROM sales WHERE fair_name = ?',
+      [fairName],
+    );
+    return (rows.first['n'] as int?) ?? 0;
+  }
+
+  /// Quita la feria del catálogo; sus tickets se quedan sin feria (no se
+  /// borran).
+  Future<void> deleteFair(String fairName) async {
+    final database = await db;
+    await database.transaction((txn) async {
+      await txn.rawUpdate(
+        'UPDATE sales SET fair_name = NULL WHERE fair_name = ?',
+        [fairName],
+      );
+      await txn.delete('fairs', where: 'name = ?', whereArgs: [fairName]);
+    });
+  }
+
+  Future<void> _ensureFair(Transaction txn, String name) => txn.insert(
+    'fairs',
+    {'name': name.trim()},
+    conflictAlgorithm: ConflictAlgorithm.ignore,
+  );
 }

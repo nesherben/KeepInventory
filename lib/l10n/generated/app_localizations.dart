@@ -2587,6 +2587,30 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Entendido'**
   String get understood;
+
+  /// No description provided for @fairDeleteTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Eliminar feria'**
+  String get fairDeleteTitle;
+
+  /// No description provided for @fairDeleteConfirmUsed.
+  ///
+  /// In es, this message translates to:
+  /// **'«{name}» tiene {count} tickets. Se quitarán de la feria (los tickets no se borran). ¿Eliminar la feria de la lista?'**
+  String fairDeleteConfirmUsed(int count, String name);
+
+  /// No description provided for @fairDeleteConfirmEmpty.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Eliminar «{name}» de la lista de ferias?'**
+  String fairDeleteConfirmEmpty(String name);
+
+  /// No description provided for @fairDeleted.
+  ///
+  /// In es, this message translates to:
+  /// **'Feria eliminada'**
+  String get fairDeleted;
 }
 
 class _AppLocalizationsDelegate

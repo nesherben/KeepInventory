@@ -703,5 +703,26 @@
     }
   },
   "syncVersionUnknown": "El otro móvil tiene una versión anterior a la 1.14.1. Actualiza los dos a la misma versión para sincronizar.",
-  "understood": "Entendido"
+  "understood": "Entendido",
+  "fairDeleteTitle": "Eliminar feria",
+  "fairDeleteConfirmUsed": "«{name}» tiene {count} tickets. Se quitarán de la feria (los tickets no se borran). ¿Eliminar la feria de la lista?",
+  "@fairDeleteConfirmUsed": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "fairDeleteConfirmEmpty": "¿Eliminar «{name}» de la lista de ferias?",
+  "@fairDeleteConfirmEmpty": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "fairDeleted": "Feria eliminada"
 }

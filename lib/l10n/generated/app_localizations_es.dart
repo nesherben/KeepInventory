@@ -1458,4 +1458,20 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get understood => 'Entendido';
+
+  @override
+  String get fairDeleteTitle => 'Eliminar feria';
+
+  @override
+  String fairDeleteConfirmUsed(int count, String name) {
+    return '«$name» tiene $count tickets. Se quitarán de la feria (los tickets no se borran). ¿Eliminar la feria de la lista?';
+  }
+
+  @override
+  String fairDeleteConfirmEmpty(String name) {
+    return '¿Eliminar «$name» de la lista de ferias?';
+  }
+
+  @override
+  String get fairDeleted => 'Feria eliminada';
 }

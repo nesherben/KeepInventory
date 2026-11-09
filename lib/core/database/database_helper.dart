@@ -24,7 +24,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 14, // Versión 14: metadatos (versión de la app en el archivo)
+      version: 15, // Versión 15: catálogo de ferias
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
       onConfigure: _onConfigure,

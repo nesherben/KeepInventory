@@ -463,5 +463,9 @@
   "backupNotRestored": "The backup was not restored",
   "syncVersionMismatch": "The other phone is on version {other} and this one on {mine}. Update both to the same version to sync.",
   "syncVersionUnknown": "The other phone has a version older than 1.14.1. Update both to the same version to sync.",
-  "understood": "Got it"
+  "understood": "Got it",
+  "fairDeleteTitle": "Delete fair",
+  "fairDeleteConfirmUsed": "“{name}” has {count} tickets. They will be removed from the fair (tickets are not deleted). Delete the fair from the list?",
+  "fairDeleteConfirmEmpty": "Delete “{name}” from the fairs list?",
+  "fairDeleted": "Fair deleted"
 }

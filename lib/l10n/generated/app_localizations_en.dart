@@ -1454,4 +1454,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get understood => 'Got it';
+
+  @override
+  String get fairDeleteTitle => 'Delete fair';
+
+  @override
+  String fairDeleteConfirmUsed(int count, String name) {
+    return '“$name” has $count tickets. They will be removed from the fair (tickets are not deleted). Delete the fair from the list?';
+  }
+
+  @override
+  String fairDeleteConfirmEmpty(String name) {
+    return 'Delete “$name” from the fairs list?';
+  }
+
+  @override
+  String get fairDeleted => 'Fair deleted';
 }

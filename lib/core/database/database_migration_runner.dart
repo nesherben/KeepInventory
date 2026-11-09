@@ -25,6 +25,23 @@ class DatabaseMigrationRunner {
     await _upgradePaymentMethod(oldVersion, execute);
     await _upgradeCombos(oldVersion, execute);
     await _upgradeAppMeta(oldVersion, execute);
+    await _upgradeFairsCatalog(oldVersion, execute);
+  }
+
+  static const seedFairsFromSales = '''
+      INSERT OR IGNORE INTO fairs (name)
+      SELECT DISTINCT TRIM(fair_name) FROM sales
+      WHERE fair_name IS NOT NULL AND TRIM(fair_name) != ''
+    ''';
+
+  /// v15: catálogo de ferias, relleno con las que ya usan las ventas.
+  static Future<void> _upgradeFairsCatalog(
+    int oldVersion,
+    DatabaseSqlExecutor execute,
+  ) async {
+    if (oldVersion >= 15) return;
+    await execute(DatabaseSchemaCreator.fairsTable);
+    await execute(seedFairsFromSales);
   }
 
   /// v14: tabla de metadatos (versión de la app que escribió el archivo).

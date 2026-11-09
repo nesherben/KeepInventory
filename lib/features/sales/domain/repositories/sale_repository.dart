@@ -13,4 +13,7 @@ abstract class SaleRepository {
   });
   Future<void> updateFairNameForDate(String datePrefix, String? fairName);
   Future<List<String>> getAvailableFairs();
+  Future<void> reassignFair(String fairName, String? newFairName);
+  Future<int> countSalesForFair(String fairName);
+  Future<void> deleteFair(String fairName);
 }

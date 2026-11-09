@@ -45,4 +45,15 @@ class SaleRepositoryImpl implements SaleRepository {
   @override
   Future<List<String>> getAvailableFairs() async =>
       await datasource.getAvailableFairs();
+
+  @override
+  Future<void> reassignFair(String fairName, String? newFairName) =>
+      datasource.reassignFair(fairName, newFairName);
+
+  @override
+  Future<int> countSalesForFair(String fairName) =>
+      datasource.countSalesForFair(fairName);
+
+  @override
+  Future<void> deleteFair(String fairName) => datasource.deleteFair(fairName);
 }
