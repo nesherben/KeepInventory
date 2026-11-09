@@ -1,3 +1,4 @@
+import '../../../core/shared_widgets/adaptive_form.dart';
 import 'categories_screen.dart';
 import '../data/datasources/category_local_datasource.dart';
 import '../data/repositories/category_repository_impl.dart';
@@ -385,8 +386,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
   }
 
   void _showProductFormDialog({Product? productToEdit}) {
-    showDialog(
-      context: context,
+    AdaptiveForm.show(
+      context,
       builder: (context) {
         return ProductFormDialog(
           productToEdit: productToEdit,

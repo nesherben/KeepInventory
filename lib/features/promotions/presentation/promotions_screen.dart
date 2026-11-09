@@ -1,3 +1,4 @@
+import '../../../core/shared_widgets/adaptive_form.dart';
 import 'widgets/offer_card.dart';
 import '../../inventory/presentation/widgets/category_picker.dart';
 
@@ -88,8 +89,8 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
   // --- Combos ---
 
   Future<void> _openComboForm([Combo? combo]) async {
-    final saved = await showDialog<bool>(
-      context: context,
+    final saved = await AdaptiveForm.show<bool>(
+      context,
       builder: (_) => ComboFormScreen(
         combo: combo,
         products: _products,
@@ -227,8 +228,8 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
 
   void _showPromotionFormDialog({Promotion? promotionToEdit}) {
     final isEditing = promotionToEdit != null;
-    showDialog(
-      context: context,
+    AdaptiveForm.show(
+      context,
       builder: (dialogContext) => PromotionFormDialog(
         promotion: promotionToEdit,
         onSave: (promotion) async {

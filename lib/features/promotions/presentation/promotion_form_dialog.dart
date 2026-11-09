@@ -1,3 +1,5 @@
+import '../../../core/shared_widgets/adaptive_form.dart';
+
 import 'package:flutter/material.dart';
 import 'package:keepinventory/core/utils/app_numbers.dart';
 import 'package:keepinventory/l10n/app_localizations_ext.dart';
@@ -134,128 +136,11 @@ class _PromotionFormDialogState extends State<PromotionFormDialog> {
     final isBundle = _type == _bundle;
     final preview = _preview();
 
-    return AlertDialog(
-      title: Text(
-        widget.promotion == null
-            ? context.l10n.promotionFormNewTitle
-            : context.l10n.promotionFormEditTitle,
-      ),
-      content: SizedBox(
-        width: 480,
-        child: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                SegmentedButton<String>(
-                  showSelectedIcon: false,
-                  segments: [
-                    ButtonSegment(
-                      value: _bundle,
-                      icon: const Icon(Icons.layers),
-                      label: Text(context.l10n.promotionTypeBundle),
-                    ),
-                    ButtonSegment(
-                      value: _percent,
-                      icon: const Icon(Icons.percent),
-                      label: Text(context.l10n.promotionTypePercent),
-                    ),
-                  ],
-                  selected: {_type},
-                  onSelectionChanged: (v) {
-                    _type = v.first;
-                    _onValuesChanged();
-                  },
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: TextFormField(
-                        controller: _threshold,
-                        textInputAction: TextInputAction.next,
-                        decoration: InputDecoration(
-                          labelText: context.l10n.minimumQuantity,
-                          suffixText: context.l10n.unitCount('').trim(),
-                        ),
-                        keyboardType: TextInputType.number,
-                        inputFormatters: AppNumbers.integerInputFormatters,
-                        onChanged: (_) => _onValuesChanged(),
-                        validator: (value) {
-                          final n = AppNumbers.parseInt(value);
-                          return n == null || n < 1
-                              ? context.l10n.validNumberRequired
-                              : null;
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.md),
-                    Expanded(
-                      child: TextFormField(
-                        controller: _value,
-                        autofocus: widget.promotion == null,
-                        textInputAction: TextInputAction.next,
-                        decoration: InputDecoration(
-                          labelText: isBundle
-                              ? context.l10n.bundleTotalPrice
-                              : context.l10n.discountPercentage,
-                          suffixText: isBundle ? '€' : '%',
-                        ),
-                        keyboardType: AppNumbers.decimalKeyboard,
-                        inputFormatters: AppNumbers.decimalInputFormatters,
-                        onChanged: (_) => _onValuesChanged(),
-                        validator: (value) {
-                          final v = AppNumbers.parseDecimal(value);
-                          // % entre 0 y 100; precio del lote > 0
-                          final invalid =
-                              v == null || v <= 0 || (!isBundle && v > 100);
-                          return invalid
-                              ? context.l10n.validValueRequired
-                              : null;
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                if (preview != null) ...[
-                  const SizedBox(height: AppSpacing.md),
-                  AppCard(
-                    padding: const EdgeInsets.all(AppSpacing.md),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.lightbulb_outline,
-                          size: 18,
-                          color: colors.primary,
-                        ),
-                        const SizedBox(width: AppSpacing.sm),
-                        Expanded(child: Text(preview)),
-                      ],
-                    ),
-                  ),
-                ],
-                const SizedBox(height: AppSpacing.lg),
-                const SizedBox(height: AppSpacing.lg),
-                TextFormField(
-                  controller: _name,
-                  textCapitalization: TextCapitalization.sentences,
-                  textInputAction: TextInputAction.done,
-                  onFieldSubmitted: (_) => _save(),
-                  decoration: InputDecoration(
-                    labelText: context.l10n.offerName,
-                  ),
-                  validator: (value) => value == null || value.trim().isEmpty
-                      ? context.l10n.required
-                      : null,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+    return AdaptiveFormScaffold(
+      title: widget.promotion == null
+          ? context.l10n.promotionFormNewTitle
+          : context.l10n.promotionFormEditTitle,
+      dialogWidth: 480,
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
@@ -268,6 +153,115 @@ class _PromotionFormDialogState extends State<PromotionFormDialog> {
           ),
         ),
       ],
+      child: Form(
+        key: _formKey,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SegmentedButton<String>(
+                showSelectedIcon: false,
+                segments: [
+                  ButtonSegment(
+                    value: _bundle,
+                    icon: const Icon(Icons.layers),
+                    label: Text(context.l10n.promotionTypeBundle),
+                  ),
+                  ButtonSegment(
+                    value: _percent,
+                    icon: const Icon(Icons.percent),
+                    label: Text(context.l10n.promotionTypePercent),
+                  ),
+                ],
+                selected: {_type},
+                onSelectionChanged: (v) {
+                  _type = v.first;
+                  _onValuesChanged();
+                },
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _threshold,
+                      textInputAction: TextInputAction.next,
+                      decoration: InputDecoration(
+                        labelText: context.l10n.minimumQuantity,
+                        suffixText: context.l10n.unitCount('').trim(),
+                      ),
+                      keyboardType: TextInputType.number,
+                      inputFormatters: AppNumbers.integerInputFormatters,
+                      onChanged: (_) => _onValuesChanged(),
+                      validator: (value) {
+                        final n = AppNumbers.parseInt(value);
+                        return n == null || n < 1
+                            ? context.l10n.validNumberRequired
+                            : null;
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _value,
+                      autofocus: widget.promotion == null,
+                      textInputAction: TextInputAction.next,
+                      decoration: InputDecoration(
+                        labelText: isBundle
+                            ? context.l10n.bundleTotalPrice
+                            : context.l10n.discountPercentage,
+                        suffixText: isBundle ? '€' : '%',
+                      ),
+                      keyboardType: AppNumbers.decimalKeyboard,
+                      inputFormatters: AppNumbers.decimalInputFormatters,
+                      onChanged: (_) => _onValuesChanged(),
+                      validator: (value) {
+                        final v = AppNumbers.parseDecimal(value);
+                        // % entre 0 y 100; precio del lote > 0
+                        final invalid =
+                            v == null || v <= 0 || (!isBundle && v > 100);
+                        return invalid ? context.l10n.validValueRequired : null;
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              if (preview != null) ...[
+                const SizedBox(height: AppSpacing.md),
+                AppCard(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.lightbulb_outline,
+                        size: 18,
+                        color: colors.primary,
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(child: Text(preview)),
+                    ],
+                  ),
+                ),
+              ],
+              const SizedBox(height: AppSpacing.lg),
+              const SizedBox(height: AppSpacing.lg),
+              TextFormField(
+                controller: _name,
+                textCapitalization: TextCapitalization.sentences,
+                textInputAction: TextInputAction.done,
+                onFieldSubmitted: (_) => _save(),
+                decoration: InputDecoration(labelText: context.l10n.offerName),
+                validator: (value) => value == null || value.trim().isEmpty
+                    ? context.l10n.required
+                    : null,
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

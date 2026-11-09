@@ -67,6 +67,8 @@ Funciona 100 % sin conexión: tus datos viven en tu móvil.
 
 El menú lateral (desliza desde el borde izquierdo o pulsa ☰) da acceso a todas las secciones: **Inicio**; **Venta** (Caja y Tickets y ferias); **Catálogo** (Inventario, Ofertas y Packs); **Datos** (Copias y sincronización) y **Ayuda** (Tutorial).
 
+> 📱 Los formularios se adaptan a la pantalla: en el móvil se abren a pantalla completa desde abajo (desliza la pestaña para cerrar), en una tablet en horizontal como panel lateral sin perder de vista la lista, y en vertical como ventana con letra grande.
+>
 > 🎓 La primera vez que abres la app aparece un **tutorial** rápido. Puedes volver a verlo cuando quieras desde **menú → Tutorial**.
 
 ### 1. Da de alta tu inventario

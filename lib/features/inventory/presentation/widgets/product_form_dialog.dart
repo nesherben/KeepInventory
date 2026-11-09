@@ -11,6 +11,7 @@ import '../../domain/product.dart';
 import '../../data/product_model.dart';
 import '../../../promotions/domain/promotion.dart';
 import 'category_picker.dart';
+import '../../../../core/shared_widgets/adaptive_form.dart';
 
 class ProductFormDialog extends StatefulWidget {
   final Product? productToEdit;
@@ -235,136 +236,24 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
   @override
   Widget build(BuildContext context) {
     final isEditing = widget.productToEdit != null;
+    final isSheet = AdaptiveForm.isSingleColumn(context);
     final isLandscape =
         MediaQuery.of(context).size.width > MediaQuery.of(context).size.height;
-    final fieldWidth = isLandscape ? 320.0 : 520.0;
+    // Móvil: campos a todo el ancho. Tablet apaisada: dos columnas.
+    const dialogWidth = 760.0;
+    final fieldWidth = isSheet
+        ? double.infinity
+        : isLandscape
+        ? (dialogWidth - 12) / 2
+        : dialogWidth;
 
     Widget field(Widget child) => SizedBox(width: fieldWidth, child: child);
 
-    return AlertDialog(
-      title: Text(
-        isEditing
-            ? context.l10n.productFormEditTitle
-            : context.l10n.productFormNewTitle,
-      ),
-      content: SizedBox(
-        width: isLandscape ? 760 : 520,
-        child: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
-            child: Wrap(
-              alignment: WrapAlignment.center,
-              spacing: 12,
-              runSpacing: 12,
-              // Orden de uso: nombre → precio → coste (margen) → unidades.
-              // "Siguiente" en el teclado salta de campo; el último guarda.
-              children: [
-                field(_buildImagePicker()),
-                field(
-                  TextFormField(
-                    initialValue: _name,
-                    autofocus: !isEditing,
-                    textCapitalization: TextCapitalization.sentences,
-                    textInputAction: TextInputAction.next,
-                    decoration: InputDecoration(
-                      labelText: context.l10n.productName,
-                    ),
-                    validator: (v) => v == null || v.trim().isEmpty
-                        ? context.l10n.required
-                        : null,
-                    onSaved: (v) => _name = v!.trim(),
-                  ),
-                ),
-                field(
-                  CategoryField(
-                    categoryName: _categoryName,
-                    onTap: _pickCategory,
-                  ),
-                ),
-                field(
-                  TextFormField(
-                    initialValue: _price == 0.0
-                        ? ''
-                        : context.amountInput(_price),
-                    textInputAction: TextInputAction.next,
-                    decoration: InputDecoration(
-                      labelText: context.l10n.salePrice,
-                      suffixText: '€',
-                    ),
-                    keyboardType: AppNumbers.decimalKeyboard,
-                    inputFormatters: AppNumbers.decimalInputFormatters,
-                    validator: _validateNumber,
-                    onChanged: (v) =>
-                        setState(() => _livePrice = AppNumbers.parseDecimal(v)),
-                    onSaved: (v) => _price = AppNumbers.parseDecimal(v)!,
-                  ),
-                ),
-                field(
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      TextFormField(
-                        initialValue: _cost == 0.0
-                            ? ''
-                            : context.amountInput(_cost),
-                        textInputAction: TextInputAction.next,
-                        decoration: InputDecoration(
-                          labelText: context.l10n.acquisitionCost,
-                          suffixText: '€',
-                        ),
-                        keyboardType: AppNumbers.decimalKeyboard,
-                        inputFormatters: AppNumbers.decimalInputFormatters,
-                        validator: _validateNumber,
-                        onChanged: (v) => setState(
-                          () => _liveCost = AppNumbers.parseDecimal(v),
-                        ),
-                        onSaved: (v) => _cost = AppNumbers.parseDecimal(v)!,
-                      ),
-                      const SizedBox(height: 6),
-                      _buildMarginHint(),
-                    ],
-                  ),
-                ),
-                field(
-                  TextFormField(
-                    initialValue: isEditing || _units != 0
-                        ? _units.toString()
-                        : '',
-                    textInputAction: TextInputAction.done,
-                    decoration: InputDecoration(
-                      labelText: context.l10n.unitsInStock,
-                    ),
-                    keyboardType: TextInputType.number,
-                    inputFormatters: AppNumbers.integerInputFormatters,
-                    validator: (v) => _validateNumber(v, integer: true),
-                    onSaved: (v) => _units = AppNumbers.parseInt(v)!,
-                    onFieldSubmitted: (_) => _saveProduct(),
-                  ),
-                ),
-                field(
-                  DropdownButtonFormField<int?>(
-                    initialValue: _selectedPromotionId,
-                    decoration: InputDecoration(
-                      labelText: context.l10n.appliedPromotion,
-                    ),
-                    items: [
-                      DropdownMenuItem(
-                        value: null,
-                        child: Text(context.l10n.noPromotion),
-                      ),
-                      ...widget.promotionsMap.values.map(
-                        (p) =>
-                            DropdownMenuItem(value: p.id, child: Text(p.name)),
-                      ),
-                    ],
-                    onChanged: (v) => setState(() => _selectedPromotionId = v),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+    return AdaptiveFormScaffold(
+      title: isEditing
+          ? context.l10n.productFormEditTitle
+          : context.l10n.productFormNewTitle,
+      dialogWidth: dialogWidth,
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
@@ -375,6 +264,110 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
           child: Text(isEditing ? context.l10n.update : context.l10n.save),
         ),
       ],
+      child: Form(
+        key: _formKey,
+        child: Wrap(
+          alignment: WrapAlignment.center,
+          spacing: 12,
+          runSpacing: 12,
+          // Orden de uso: nombre → precio → coste (margen) → unidades.
+          // "Siguiente" en el teclado salta de campo; el último guarda.
+          children: [
+            field(_buildImagePicker()),
+            field(
+              TextFormField(
+                initialValue: _name,
+                autofocus: !isEditing,
+                textCapitalization: TextCapitalization.sentences,
+                textInputAction: TextInputAction.next,
+                decoration: InputDecoration(
+                  labelText: context.l10n.productName,
+                ),
+                validator: (v) => v == null || v.trim().isEmpty
+                    ? context.l10n.required
+                    : null,
+                onSaved: (v) => _name = v!.trim(),
+              ),
+            ),
+            field(
+              CategoryField(categoryName: _categoryName, onTap: _pickCategory),
+            ),
+            field(
+              TextFormField(
+                initialValue: _price == 0.0 ? '' : context.amountInput(_price),
+                textInputAction: TextInputAction.next,
+                decoration: InputDecoration(
+                  labelText: context.l10n.salePrice,
+                  suffixText: '€',
+                ),
+                keyboardType: AppNumbers.decimalKeyboard,
+                inputFormatters: AppNumbers.decimalInputFormatters,
+                validator: _validateNumber,
+                onChanged: (v) =>
+                    setState(() => _livePrice = AppNumbers.parseDecimal(v)),
+                onSaved: (v) => _price = AppNumbers.parseDecimal(v)!,
+              ),
+            ),
+            field(
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextFormField(
+                    initialValue: _cost == 0.0
+                        ? ''
+                        : context.amountInput(_cost),
+                    textInputAction: TextInputAction.next,
+                    decoration: InputDecoration(
+                      labelText: context.l10n.acquisitionCost,
+                      suffixText: '€',
+                    ),
+                    keyboardType: AppNumbers.decimalKeyboard,
+                    inputFormatters: AppNumbers.decimalInputFormatters,
+                    validator: _validateNumber,
+                    onChanged: (v) =>
+                        setState(() => _liveCost = AppNumbers.parseDecimal(v)),
+                    onSaved: (v) => _cost = AppNumbers.parseDecimal(v)!,
+                  ),
+                  const SizedBox(height: 6),
+                  _buildMarginHint(),
+                ],
+              ),
+            ),
+            field(
+              TextFormField(
+                initialValue: isEditing || _units != 0 ? _units.toString() : '',
+                textInputAction: TextInputAction.done,
+                decoration: InputDecoration(
+                  labelText: context.l10n.unitsInStock,
+                ),
+                keyboardType: TextInputType.number,
+                inputFormatters: AppNumbers.integerInputFormatters,
+                validator: (v) => _validateNumber(v, integer: true),
+                onSaved: (v) => _units = AppNumbers.parseInt(v)!,
+                onFieldSubmitted: (_) => _saveProduct(),
+              ),
+            ),
+            field(
+              DropdownButtonFormField<int?>(
+                initialValue: _selectedPromotionId,
+                decoration: InputDecoration(
+                  labelText: context.l10n.appliedPromotion,
+                ),
+                items: [
+                  DropdownMenuItem(
+                    value: null,
+                    child: Text(context.l10n.noPromotion),
+                  ),
+                  ...widget.promotionsMap.values.map(
+                    (p) => DropdownMenuItem(value: p.id, child: Text(p.name)),
+                  ),
+                ],
+                onChanged: (v) => setState(() => _selectedPromotionId = v),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

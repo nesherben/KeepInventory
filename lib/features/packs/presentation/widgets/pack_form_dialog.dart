@@ -1,3 +1,5 @@
+import '../../../../core/shared_widgets/adaptive_form.dart';
+
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -349,6 +351,46 @@ class _PackFormDialogState extends State<PackFormDialog> {
         .where((product) => !selectedItems.containsKey(product))
         .toList();
     final parsedUnits = int.tryParse(packUnits.toString()) ?? 1;
+
+    // Móvil: panel a pantalla completa con los botones siempre visibles
+    if (AdaptiveForm.isSingleColumn(context)) {
+      return AdaptiveFormScaffold(
+        title: widget.existingPack == null
+            ? context.l10n.createPackTitle
+            : context.l10n.editPackTitle,
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(context.l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: _savePack,
+            child: Text(
+              widget.existingPack == null
+                  ? context.l10n.save
+                  : context.l10n.update,
+            ),
+          ),
+        ],
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildPackDetails(),
+              const Divider(height: 32, thickness: 1),
+              _buildComponentsSection(
+                availableOptions,
+                parsedUnits,
+                centerEmptyState: false,
+                constrainList: false,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),

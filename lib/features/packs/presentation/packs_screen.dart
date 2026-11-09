@@ -1,3 +1,5 @@
+import '../../../core/shared_widgets/adaptive_form.dart';
+
 import 'package:flutter/material.dart';
 
 import '../../../core/shared_widgets/app_ui.dart';
@@ -148,8 +150,8 @@ class _PacksScreenState extends State<PacksScreen> {
 
     if (!mounted) return;
 
-    showDialog(
-      context: context,
+    AdaptiveForm.show(
+      context,
       builder: (context) => PackFormDialog(
         existingPack: existingPack,
         availableProducts: _availableProducts,

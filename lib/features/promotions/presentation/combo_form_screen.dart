@@ -1,3 +1,5 @@
+import '../../../core/shared_widgets/adaptive_form.dart';
+
 import 'package:flutter/material.dart';
 import 'package:keepinventory/core/utils/app_numbers.dart';
 import 'package:keepinventory/l10n/app_localizations_ext.dart';
@@ -346,78 +348,11 @@ class _ComboFormScreenState extends State<ComboFormScreen> {
 
     // Mismo formato que el formulario de promociones: diálogo con
     // Cancelar / Guardar abajo
-    return AlertDialog(
-      title: Text(
-        widget.combo == null
-            ? context.l10n.comboNewTitle
-            : context.l10n.comboEditTitle,
-      ),
-      content: SizedBox(
-        width: 520,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              TextField(
-                controller: _name,
-                textCapitalization: TextCapitalization.sentences,
-                decoration: InputDecoration(
-                  labelText: context.l10n.comboNameLabel,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.xl),
-              SectionLabel(
-                context.l10n.comboSlotsSection,
-                padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-              ),
-              for (var i = 0; i < _slots.length; i++) _buildSlot(i),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: TextButton.icon(
-                  onPressed: () => setState(() => _slots.add(_SlotDraft())),
-                  icon: const Icon(Icons.add),
-                  label: Text(context.l10n.comboSlotAdd),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              TextField(
-                controller: _price,
-                keyboardType: AppNumbers.decimalKeyboard,
-                inputFormatters: AppNumbers.decimalInputFormatters,
-                onChanged: (_) => setState(() {}),
-                decoration: InputDecoration(
-                  labelText: context.l10n.comboPriceLabel,
-                  suffixText: '€',
-                ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              AppCard(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                child: Row(
-                  children: [
-                    const IconBadge(Icons.extension),
-                    const SizedBox(width: AppSpacing.md),
-                    Expanded(
-                      child: Text(
-                        context.l10n.comboSeparateTotal(
-                          context.amount(separate),
-                        ),
-                        style: TextStyle(color: colors.onSurfaceVariant),
-                      ),
-                    ),
-                    if (saving != null && saving > 0)
-                      Text(
-                        context.l10n.comboSaving(context.amount(saving)),
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+    return AdaptiveFormScaffold(
+      title: widget.combo == null
+          ? context.l10n.comboNewTitle
+          : context.l10n.comboEditTitle,
+      dialogWidth: 520,
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
@@ -430,6 +365,67 @@ class _ComboFormScreenState extends State<ComboFormScreen> {
           ),
         ),
       ],
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            TextField(
+              controller: _name,
+              textCapitalization: TextCapitalization.sentences,
+              decoration: InputDecoration(
+                labelText: context.l10n.comboNameLabel,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xl),
+            SectionLabel(
+              context.l10n.comboSlotsSection,
+              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+            ),
+            for (var i = 0; i < _slots.length; i++) _buildSlot(i),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: () => setState(() => _slots.add(_SlotDraft())),
+                icon: const Icon(Icons.add),
+                label: Text(context.l10n.comboSlotAdd),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            TextField(
+              controller: _price,
+              keyboardType: AppNumbers.decimalKeyboard,
+              inputFormatters: AppNumbers.decimalInputFormatters,
+              onChanged: (_) => setState(() {}),
+              decoration: InputDecoration(
+                labelText: context.l10n.comboPriceLabel,
+                suffixText: '€',
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            AppCard(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: Row(
+                children: [
+                  const IconBadge(Icons.extension),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Text(
+                      context.l10n.comboSeparateTotal(context.amount(separate)),
+                      style: TextStyle(color: colors.onSurfaceVariant),
+                    ),
+                  ),
+                  if (saving != null && saving > 0)
+                    Text(
+                      context.l10n.comboSaving(context.amount(saving)),
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
