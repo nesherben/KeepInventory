@@ -1,21 +1,90 @@
-MIT License
+LICENCIA PERSONALIZADA DE USO Y DISTRIBUCIÓN DE KEEPINVENTORY
+No es una licencia de código abierto aprobada por la OSI
 
 Copyright (c) 2026 Néstor Hernández Benito
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+IMPORTANTE: Esta licencia permite consultar, usar, modificar y compartir el
+Software gratuitamente. Prohíbe venderlo o monetizar su distribución. Por ello,
+el Software no se considera "open source" según la definición de la Open Source
+Initiative (OSI).
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+1. Definiciones
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+"Software" se refiere al código fuente y la documentación de KeepInventory
+propiedad del titular de los derechos de autor. Los componentes de terceros,
+incluidos paquetes, imágenes, fuentes y otras obras, se rigen por sus propias
+licencias y no quedan sujetos a esta licencia cuando sus términos indiquen lo
+contrario.
+
+"Contribución" se refiere a cualquier código, documentación u otro material
+original que una persona envíe deliberadamente al titular para su posible
+inclusión en el Software.
+
+2. Titularidad y contribuciones
+
+El titular conserva los derechos sobre el Software original y sobre las partes
+que haya creado. Una contribución no transfiere automáticamente al titular los
+derechos de autor de su autor: quien la crea conserva esos derechos.
+
+Al enviar una Contribución para su inclusión en KeepInventory, su autor acepta
+conceder al titular una licencia mundial, perpetua, irrevocable, no exclusiva y
+libre de regalías para usarla, reproducirla, modificarla, crear obras derivadas
+de ella e integrarla en el Software, así como distribuirla y sublicenciarla
+como parte del Software, bajo esta licencia. Esta autorización permite mantener
+y distribuir el proyecto aunque el autor retire posteriormente su Contribución.
+No transfiere la titularidad de la Contribución ni permite vender KeepInventory
+o sus obras derivadas, lo que sigue prohibido por la sección 5.
+
+3. Permisos
+
+Siempre que cumplas esta licencia, puedes usar, copiar, estudiar, modificar y
+crear obras derivadas del Software, así como distribuir copias del Software y
+de tus modificaciones, en cualquier medio y territorio, sin pagar regalías.
+Estos permisos no transfieren la titularidad del Software ni conceden derechos
+sobre marcas o nombres comerciales. Estos permisos no cambian la titularidad
+del Software original ni de las contribuciones de terceros.
+
+4. Condiciones de distribución
+
+Al compartir el Software o una obra derivada, debes:
+
+- incluir este texto de licencia y los avisos de derechos de autor aplicables;
+- indicar claramente que has realizado modificaciones, si las hay; y
+- no afirmar que tu versión está publicada o respaldada oficialmente por el
+  titular del Software.
+
+Las obras derivadas que distribuyas deben ofrecerse bajo esta misma licencia.
+No puedes otorgar a terceros derechos más amplios sobre el Software que los que
+esta licencia concede.
+
+5. Prohibición de venta y monetización
+
+No puedes, ni puedes autorizar a terceros a:
+
+- vender, ofrecer a la venta o cobrar por el Software o una obra derivada;
+- cobrar por el acceso, descarga, uso, licencia o redistribución del Software
+  o de una obra derivada;
+- incluir el Software o una obra derivada en un producto, paquete,
+  suscripción o servicio de pago cuando el cobro corresponda, total o
+  parcialmente, al Software; ni
+- monetizar la distribución o el acceso al Software o a una obra derivada,
+  incluso mediante publicidad o acceso de pago.
+
+Puedes compartir el Software y tus modificaciones gratuitamente. Las
+donaciones voluntarias que no condicionen el acceso, uso o descarga no se
+consideran un cobro a estos efectos.
+
+6. Incumplimiento
+
+Los permisos de esta licencia terminan automáticamente si incumples sus
+condiciones. Si se terminan, debes dejar de distribuir el Software y las obras
+derivadas. Los derechos que la ley aplicable reconozca de forma irrenunciable
+no se ven afectados.
+
+7. Ausencia de garantía y limitación de responsabilidad
+
+EL SOFTWARE SE PROPORCIONA "TAL CUAL", SIN GARANTÍAS EXPRESAS NI IMPLÍCITAS,
+INCLUIDAS, ENTRE OTRAS, LAS GARANTÍAS DE COMERCIABILIDAD, IDONEIDAD PARA UN FIN
+CONCRETO Y NO INFRACCIÓN, EN LA MEDIDA PERMITIDA POR LA LEY. EN LA MEDIDA
+PERMITIDA POR LA LEY, EL TITULAR NO SERÁ RESPONSABLE DE DAÑOS O RECLAMACIONES
+DERIVADOS DEL USO O LA IMPOSIBILIDAD DE USAR EL SOFTWARE.

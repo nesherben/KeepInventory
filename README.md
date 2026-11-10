@@ -13,7 +13,7 @@ Funciona 100 % sin conexión: tus datos viven en tu móvil.
 [![Build](https://img.shields.io/github/actions/workflow/status/nesherben/KeepInventory/build.yml?branch=main&label=build)](https://github.com/nesherben/KeepInventory/actions/workflows/build.yml)
 ![Flutter](https://img.shields.io/badge/Flutter-02569B?logo=flutter&logoColor=white)
 ![Platform](https://img.shields.io/badge/plataforma-Android-3DDC84?logo=android&logoColor=white)
-[![License: MIT](https://img.shields.io/badge/licencia-MIT-blue.svg)](LICENSE)
+[![Licencia personalizada](https://img.shields.io/badge/licencia-personalizada-orange.svg)](LICENSE)
 [![PayPal](https://img.shields.io/badge/donar-PayPal-00457C?logo=paypal&logoColor=white)](https://www.paypal.me/nestor8299)
 
 </div>
@@ -191,6 +191,6 @@ www.paypal.me/nestor8299
 
 <div align="center">
 
-Hecho con ❤️ por **Néstor Hernández** · [Licencia MIT](LICENSE)
+Hecho con ❤️ por **Néstor Hernández** · [Licencia personalizada (no open source OSI)](LICENSE)
 
 </div>
