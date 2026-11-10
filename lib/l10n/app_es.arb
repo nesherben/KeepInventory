@@ -930,5 +930,10 @@
     }
   },
   "categoryChooseTitle": "Elige una categoría",
-  "databaseExportFirst": "Exportar copia antes"
+  "databaseExportFirst": "Exportar copia antes",
+  "salesAdjustTotal": "Ajustar total",
+  "salesAgreedTotal": "Total acordado (€)",
+  "salesCartAdjustmentHint": "El ajuste se repartirá entre todos los artículos y se mantendrá proporcionalmente si cambia el carrito.",
+  "salesResetTotalAdjustment": "Quitar ajuste",
+  "salesInvalidAgreedTotal": "Introduce un total válido igual o superior a cero."
 }

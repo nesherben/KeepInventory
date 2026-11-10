@@ -24,7 +24,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 17, // Versión 17: devoluciones visibles en el ticket
+      version: 18, // Versión 18: ajuste global del total de venta
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
       onConfigure: _onConfigure,

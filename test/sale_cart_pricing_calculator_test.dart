@@ -116,10 +116,12 @@ void main() {
       products: {product: 2},
       packs: {pack: 1},
       promotions: {7: promotion},
+      adjustmentFactor: 0.8,
     );
 
     expect(sale.date, saleDate);
-    expect(sale.totalAmount, 24);
+    expect(sale.totalAmount, closeTo(19.2, 1e-9));
+    expect(sale.adjustmentFactor, 0.8);
     expect(sale.items.single.historicalPrice, 9);
     expect(sale.items.single.originalPrice, 10);
     expect(sale.items.single.promoType, 'percentage');

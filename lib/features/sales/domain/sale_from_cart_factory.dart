@@ -15,6 +15,7 @@ class SaleFromCartFactory {
     required Map<int, Promotion> promotions,
     List<Combo> combos = const [],
     PaymentMethod paymentMethod = PaymentMethod.defaultMethod,
+    double adjustmentFactor = 1.0,
   }) {
     final pricing = SaleCartPricingCalculator.price(
       products: products,
@@ -110,11 +111,12 @@ class SaleFromCartFactory {
 
     return Sale(
       date: date,
-      totalAmount: pricing.total,
+      totalAmount: pricing.total * adjustmentFactor,
       items: saleItems,
       packItems: salePacks,
       paymentMethod: paymentMethod,
       combos: saleCombos,
+      adjustmentFactor: adjustmentFactor,
     );
   }
 }

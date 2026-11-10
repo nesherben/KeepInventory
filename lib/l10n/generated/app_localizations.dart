@@ -2953,6 +2953,36 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Exportar copia antes'**
   String get databaseExportFirst;
+
+  /// No description provided for @salesAdjustTotal.
+  ///
+  /// In es, this message translates to:
+  /// **'Ajustar total'**
+  String get salesAdjustTotal;
+
+  /// No description provided for @salesAgreedTotal.
+  ///
+  /// In es, this message translates to:
+  /// **'Total acordado (€)'**
+  String get salesAgreedTotal;
+
+  /// No description provided for @salesCartAdjustmentHint.
+  ///
+  /// In es, this message translates to:
+  /// **'El ajuste se repartirá entre todos los artículos y se mantendrá proporcionalmente si cambia el carrito.'**
+  String get salesCartAdjustmentHint;
+
+  /// No description provided for @salesResetTotalAdjustment.
+  ///
+  /// In es, this message translates to:
+  /// **'Quitar ajuste'**
+  String get salesResetTotalAdjustment;
+
+  /// No description provided for @salesInvalidAgreedTotal.
+  ///
+  /// In es, this message translates to:
+  /// **'Introduce un total válido igual o superior a cero.'**
+  String get salesInvalidAgreedTotal;
 }
 
 class _AppLocalizationsDelegate

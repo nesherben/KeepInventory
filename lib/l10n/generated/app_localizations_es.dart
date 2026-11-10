@@ -1789,4 +1789,21 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get databaseExportFirst => 'Exportar copia antes';
+
+  @override
+  String get salesAdjustTotal => 'Ajustar total';
+
+  @override
+  String get salesAgreedTotal => 'Total acordado (€)';
+
+  @override
+  String get salesCartAdjustmentHint =>
+      'El ajuste se repartirá entre todos los artículos y se mantendrá proporcionalmente si cambia el carrito.';
+
+  @override
+  String get salesResetTotalAdjustment => 'Quitar ajuste';
+
+  @override
+  String get salesInvalidAgreedTotal =>
+      'Introduce un total válido igual o superior a cero.';
 }

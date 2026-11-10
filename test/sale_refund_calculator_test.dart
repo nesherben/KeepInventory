@@ -29,6 +29,75 @@ void main() {
       expect(total, 9);
     });
 
+    test('applies the sale-wide adjustment after a promotion is broken', () {
+      final item = _promotedItem(
+        1,
+        originalPrice: 10,
+        quantity: 3,
+        historicalPrice: 8,
+      );
+      final keptValue = SaleRefundCalculator.calculateRemainingCartValue(
+        originalItemQuantities: {item: 3},
+        keptItemQuantities: {item: 2},
+        keptPackQuantities: {},
+        adjustmentFactor: 0.8,
+      );
+
+      // Romper la promo sube lo que queda a 20 €, y luego se aplica el 20%
+      // de ajuste global: queda un valor de 16 €.
+      expect(keptValue, 16);
+    });
+
+    test('refunds the adjusted difference when a promotion is broken', () {
+      final item = _promotedItem(
+        1,
+        originalPrice: 10,
+        quantity: 3,
+        historicalPrice: 8,
+      );
+      final refund = SaleRefundCalculator.calculateRefundAmount(
+        originalItemQuantities: {item: 3},
+        keptItemQuantities: {item: 2},
+        originalPackQuantities: {},
+        keptPackQuantities: {},
+        adjustmentFactor: 0.8,
+      );
+
+      expect(refund, closeTo(3.2, 1e-9));
+    });
+
+    test('keeps raw line values when recalculating repeated refunds', () {
+      final item = _promotedItem(
+        1,
+        originalPrice: 10,
+        quantity: 3,
+        historicalPrice: 8,
+      );
+      final sale = Sale(
+        date: DateTime(2026),
+        totalAmount: 19.2,
+        items: [item],
+        adjustmentFactor: 0.8,
+      );
+      final remaining = SaleRefundCalculator.remainingAfterRefund(
+        sale: sale,
+        itemsToRefund: {item: 1},
+      );
+
+      expect(remaining.items.single.historicalPrice, 10);
+      expect(
+        SaleRefundCalculator.calculateRemainingCartValue(
+          originalItemQuantities: {
+            remaining.items.single: remaining.items.single.quantity,
+          },
+          keptItemQuantities: {remaining.items.single: 1},
+          keptPackQuantities: {},
+          adjustmentFactor: sale.adjustmentFactor,
+        ),
+        8,
+      );
+    });
+
     test('keeps paid price of a non-promoted item after a partial return', () {
       final item = SaleItem(
         productId: 1,

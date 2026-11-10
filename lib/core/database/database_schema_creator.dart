@@ -124,6 +124,7 @@ class DatabaseSchemaCreator {
         id $idType,
         date $textType,
         total_amount $realType,
+        adjustment_factor REAL NOT NULL DEFAULT 1.0,
         fair_name TEXT,
         payment_method TEXT
       )

@@ -28,6 +28,7 @@ class DatabaseMigrationRunner {
     await _upgradeFairsCatalog(oldVersion, execute);
     await _upgradeCategories(oldVersion, execute);
     await _upgradeSaleRefunds(oldVersion, execute);
+    await _upgradeSaleAdjustment(oldVersion, execute);
   }
 
   /// v17: historial de devoluciones parciales por venta.
@@ -38,6 +39,24 @@ class DatabaseMigrationRunner {
     if (oldVersion >= 17) return;
     await execute(DatabaseSchemaCreator.saleRefundsTable);
   }
+
+  /// v18: factor global aplicado al total y conservado en devoluciones.
+  static Future<void> _upgradeSaleAdjustment(
+    int oldVersion,
+    DatabaseSqlExecutor execute,
+  ) async {
+    if (oldVersion >= 18) return;
+    try {
+      await execute(saleAdjustmentAlter);
+    } catch (error) {
+      if (!error.toString().toLowerCase().contains('duplicate column')) {
+        rethrow;
+      }
+    }
+  }
+
+  static const saleAdjustmentAlter =
+      'ALTER TABLE sales ADD COLUMN adjustment_factor REAL NOT NULL DEFAULT 1.0';
 
   static const productCategoryAlter =
       'ALTER TABLE products ADD COLUMN category_id INTEGER '

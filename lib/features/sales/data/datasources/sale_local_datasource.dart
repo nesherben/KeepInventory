@@ -17,6 +17,7 @@ class SaleLocalDatasource {
       final saleId = await txn.insert('sales', {
         'date': sale.date.toIso8601String(),
         'total_amount': sale.totalAmount,
+        'adjustment_factor': sale.adjustmentFactor,
         'fair_name': sale.fairName,
         'payment_method': sale.paymentMethod.dbValue,
       });
@@ -157,6 +158,8 @@ class SaleLocalDatasource {
           id: saleId,
           date: DateTime.parse(saleMap['date'] as String),
           totalAmount: (saleMap['total_amount'] as num).toDouble(),
+          adjustmentFactor:
+              (saleMap['adjustment_factor'] as num?)?.toDouble() ?? 1.0,
           fairName: saleMap['fair_name'] as String?,
           items: itemsList,
           packItems: packItemsList,
@@ -377,9 +380,30 @@ class SaleLocalDatasource {
       }
 
       final newTotalAmount = originalSale.totalAmount - customRefundAmount;
+      final remainingBaseAmount =
+          remainingItemRows.fold<double>(
+            0,
+            (total, item) =>
+                total +
+                (item['historical_price'] as num).toDouble() *
+                    (item['quantity'] as int),
+          ) +
+          remainingPackRows.fold<double>(
+            0,
+            (total, pack) =>
+                total +
+                (pack['historical_price'] as num).toDouble() *
+                    (pack['quantity'] as int),
+          );
+      final adjustedTotal = newTotalAmount > 0 ? newTotalAmount : 0.0;
       await txn.update(
         'sales',
-        {'total_amount': newTotalAmount > 0 ? newTotalAmount : 0.0},
+        {
+          'total_amount': adjustedTotal,
+          'adjustment_factor': remainingBaseAmount > 0
+              ? adjustedTotal / remainingBaseAmount
+              : originalSale.adjustmentFactor,
+        },
         where: 'id = ?',
         whereArgs: [originalSale.id],
       );

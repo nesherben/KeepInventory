@@ -110,6 +110,7 @@ class Sale {
   final List<SalePackItem> packItems; // <--- Nuevo para los packs vendidos
   final PaymentMethod paymentMethod;
   final List<SaleCombo> combos;
+  final double adjustmentFactor;
 
   /// Devoluciones parciales ya hechas (la más antigua primero).
   final List<SaleRefund> refunds;
@@ -123,6 +124,7 @@ class Sale {
     this.packItems = const [],
     this.paymentMethod = PaymentMethod.defaultMethod,
     this.combos = const [],
+    this.adjustmentFactor = 1.0,
     this.refunds = const [],
   });
 

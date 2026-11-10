@@ -81,6 +81,7 @@ class _PartialRefundDialogState extends State<PartialRefundDialog> {
       keptItemQuantities: keptItemQuantities,
       keptPackQuantities: keptPackQuantities,
       combos: widget.sale.combos,
+      adjustmentFactor: widget.sale.adjustmentFactor,
     );
     final refundAmount = (widget.sale.totalAmount - remainingValue).clamp(
       0.0,
@@ -97,7 +98,11 @@ class _PartialRefundDialogState extends State<PartialRefundDialog> {
       title: item.productName ?? context.l10n.unknown,
       summary: context.l10n.purchasedItemSummary(
         item.quantity.toString(),
-        context.amount(item.quantity * item.historicalPrice),
+        context.amount(
+          item.quantity *
+              item.historicalPrice *
+              widget.sale.adjustmentFactor,
+        ),
       ),
       value: _refundItemQuantities[item] ?? 0,
       maxValue: item.quantity,
@@ -204,7 +209,11 @@ class _PartialRefundDialogState extends State<PartialRefundDialog> {
       ),
       summary: context.l10n.purchasedPackSummary(
         pack.quantity.toString(),
-        context.amount(pack.quantity * pack.historicalPrice),
+        context.amount(
+          pack.quantity *
+              pack.historicalPrice *
+              widget.sale.adjustmentFactor,
+        ),
       ),
       value: _refundPackQuantities[pack] ?? 0,
       maxValue: pack.quantity,

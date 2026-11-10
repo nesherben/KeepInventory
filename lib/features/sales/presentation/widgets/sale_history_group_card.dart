@@ -231,7 +231,8 @@ class _SaleTicketCard extends StatelessWidget {
   Widget _buildSaleItem(BuildContext context, SaleItem item) {
     final colors = Theme.of(context).colorScheme;
     final originalTotal = item.originalPrice * item.quantity;
-    final discountedTotal = item.historicalPrice * item.quantity;
+    final discountedTotal =
+        item.historicalPrice * item.quantity * sale.adjustmentFactor;
     final hasDiscount = originalTotal > discountedTotal + 0.005;
 
     return Padding(
@@ -299,7 +300,9 @@ class _SaleTicketCard extends StatelessWidget {
       grouped.addAll(lines);
       final total = lines.fold<double>(
         0,
-        (t, i) => t + i.historicalPrice * i.quantity,
+        (t, i) =>
+            t +
+            i.historicalPrice * i.quantity * sale.adjustmentFactor,
       );
       final full = lines.fold<double>(
         0,
@@ -405,7 +408,11 @@ class _SaleTicketCard extends StatelessWidget {
             ),
           ),
           Text(
-            context.money(packItem.quantity * packItem.historicalPrice),
+            context.money(
+              packItem.quantity *
+                  packItem.historicalPrice *
+                  sale.adjustmentFactor,
+            ),
             style: TextStyle(
               fontWeight: FontWeight.w600,
               color: colorScheme.secondary,

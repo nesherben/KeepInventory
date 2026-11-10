@@ -55,23 +55,25 @@ class SaleRefundCalculator {
     required Map<SalePackItem, int> originalPackQuantities,
     required Map<SalePackItem, int> keptPackQuantities,
     List<SaleCombo> combos = const [],
+    double adjustmentFactor = 1.0,
   }) {
     final paid =
-        originalItemQuantities.entries.fold<double>(
-          0,
-          (t, e) => t + e.key.historicalPrice * e.value,
-        ) +
-        originalPackQuantities.entries.fold<double>(
-          0,
-          (t, e) => t + e.key.historicalPrice * e.value,
-        );
+        (originalItemQuantities.entries.fold<double>(
+              0,
+              (t, e) => t + e.key.historicalPrice * e.value,
+            ) +
+            originalPackQuantities.entries.fold<double>(
+              0,
+              (t, e) => t + e.key.historicalPrice * e.value,
+            )) *
+        adjustmentFactor;
     final kept = calculateKeptValue(
       originalItemQuantities: originalItemQuantities,
       keptItemQuantities: keptItemQuantities,
       keptPackQuantities: keptPackQuantities,
       combos: combos,
     );
-    final refund = paid - kept.total;
+    final refund = paid - kept.total * adjustmentFactor;
     return refund < 0 ? 0 : refund;
   }
 
@@ -81,12 +83,13 @@ class SaleRefundCalculator {
     required Map<SaleItem, int> keptItemQuantities,
     required Map<SalePackItem, int> keptPackQuantities,
     List<SaleCombo> combos = const [],
+    double adjustmentFactor = 1.0,
   }) => calculateKeptValue(
     originalItemQuantities: originalItemQuantities,
     keptItemQuantities: keptItemQuantities,
     keptPackQuantities: keptPackQuantities,
     combos: combos,
-  ).total;
+  ).total * adjustmentFactor;
 
   static KeptSaleValue calculateKeptValue({
     required Map<SaleItem, int> originalItemQuantities,

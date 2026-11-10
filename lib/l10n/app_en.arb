@@ -520,5 +520,10 @@
   "unitsShortLabel": "units",
   "comboSavingUpTo": "Save up to €{amount}",
   "categoryChooseTitle": "Choose a category",
-  "databaseExportFirst": "Export a backup first"
+  "databaseExportFirst": "Export a backup first",
+  "salesAdjustTotal": "Adjust total",
+  "salesAgreedTotal": "Agreed total (€)",
+  "salesCartAdjustmentHint": "The adjustment is shared across the whole sale and stays proportional if the cart changes.",
+  "salesResetTotalAdjustment": "Remove adjustment",
+  "salesInvalidAgreedTotal": "Enter a valid total of zero or more."
 }
