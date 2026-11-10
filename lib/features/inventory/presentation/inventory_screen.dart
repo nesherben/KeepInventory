@@ -1,27 +1,20 @@
-import '../../../core/shared_widgets/adaptive_form.dart';
 import 'categories_screen.dart';
 import '../data/datasources/category_local_datasource.dart';
 import '../data/repositories/category_repository_impl.dart';
-import 'widgets/category_picker.dart';
 
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:keepinventory/core/utils/app_numbers.dart';
-import 'package:flutter/services.dart';
 
 import 'widgets/inventory_product_widgets.dart';
+import 'widgets/inventory_filters_bar.dart';
 import '../domain/inventory_view.dart';
 
 import '../../../core/shared_widgets/app_ui.dart';
 
-import 'package:image_picker/image_picker.dart';
 import 'package:keepinventory/l10n/app_localizations_ext.dart';
-import 'package:keepinventory/core/services/image_compression_service.dart';
 
 import '../../../core/shared_widgets/app_drawer.dart';
-import '../../../core/shared_widgets/app_alerts.dart'; // 💡 Importante para las alertas en cola
 
 // Imports de la feature INVENTORY
 import '../../promotions/data/repositories/promotion_repository_impl.dart';
@@ -37,7 +30,7 @@ import '../../promotions/data/repositories/combo_repository_impl.dart';
 
 // Widgets modularizados
 import 'widgets/inventory_products_table.dart';
-import 'widgets/product_form_dialog.dart';
+import 'inventory_product_editor.dart';
 
 class InventoryScreen extends StatefulWidget {
   const InventoryScreen({super.key});
@@ -54,8 +47,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
   final _promotionRepository = PromotionRepositoryImpl(
     PromotionLocalDatasource(),
   );
-
-  final ImagePicker _picker = ImagePicker();
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final ScrollController _horizontalScrollController = ScrollController();
@@ -89,6 +80,14 @@ class _InventoryScreenState extends State<InventoryScreen> {
   /// nueva, se descarta.
   int _loadSeq = 0;
 
+  InventoryProductEditor get _productEditor => InventoryProductEditor(
+    repository: _productRepository,
+    promotions: () => _promotionsMap,
+    categories: () => _categoryNames,
+    reloadProducts: _loadProducts,
+    discardPendingStock: _discardPendingStock,
+  );
+
   @override
   void initState() {
     super.initState();
@@ -108,27 +107,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
     _horizontalScrollController.dispose();
     _searchController.dispose();
     super.dispose();
-  }
-
-  Future<void> _processAndSaveNewImage(
-    Product product,
-    ImageSource source,
-  ) async {
-    final pickedFile = await _picker.pickImage(source: source);
-    if (pickedFile != null) {
-      final file = File(pickedFile.path);
-      final compressedBytes = await ImageCompressionService.compressFile(file);
-
-      await _productRepository.updateFields(
-        product.id!,
-        imageBytes: compressedBytes,
-      );
-      _loadProducts();
-
-      if (mounted) {
-        AppAlerts.showSuccess(context, context.l10n.photoUpdated);
-      }
-    }
   }
 
   /// Recarga los datos. El indicador de carga solo se ve en la primera carga
@@ -168,45 +146,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
     });
   }
 
-  Future<void> _deleteProduct(int id) async {
-    _discardPendingStock(id);
-    await _productRepository.deleteProduct(id);
-    _loadProducts();
-
-    if (mounted) {
-      AppAlerts.showWarning(context, context.l10n.productDeleted);
-    }
-  }
-
-  void _showDeleteConfirmation(int id) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(context.l10n.deleteProductTitle),
-          content: Text(context.l10n.deleteProductConfirm),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(context.l10n.cancel),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.error,
-                foregroundColor: Theme.of(context).colorScheme.onError,
-              ),
-              onPressed: () {
-                Navigator.pop(context);
-                _deleteProduct(id);
-              },
-              child: Text(context.l10n.delete),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   void _updateStockQuickly(Product product, int amountChange) {
     final productId = product.id!;
     final prodIndex = _products.indexWhere((p) => p.id == productId);
@@ -243,267 +182,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
     _pendingStock.remove(productId);
   }
 
-  void _showEditSingleFieldDialog({
-    required Product product,
-    required String title,
-    required String initialValue,
-    required TextInputType keyboardType,
-    required Future<void> Function(String) onSave,
-    List<TextInputFormatter>? inputFormatters,
-    String? suffixText,
-  }) {
-    // Texto seleccionado al abrir: se sobrescribe escribiendo directamente
-    final TextEditingController controller =
-        TextEditingController(text: initialValue)
-          ..selection = TextSelection(
-            baseOffset: 0,
-            extentOffset: initialValue.length,
-          );
-
-    var saving = false;
-    Future<void> save() async {
-      if (saving) return;
-      saving = true;
-      try {
-        await onSave(controller.text);
-      } finally {
-        saving = false;
-      }
-    }
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(context.l10n.editFieldTitle(title)),
-          content: TextField(
-            controller: controller,
-            keyboardType: keyboardType,
-            inputFormatters: inputFormatters,
-            decoration: InputDecoration(
-              labelText: context.l10n.newValue,
-              suffixText: suffixText,
-            ),
-            autofocus: true,
-            onSubmitted: (_) => save(),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(context.l10n.cancel),
-            ),
-            ElevatedButton(onPressed: save, child: Text(context.l10n.save)),
-          ],
-        );
-      },
-    );
-  }
-
-  void _showPromotionSelectDialog(Product product) {
-    int? selectedPromotionId = product.promotionId;
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              title: Text(context.l10n.selectPromotion),
-              content: DropdownButtonFormField<int?>(
-                initialValue: selectedPromotionId,
-                decoration: InputDecoration(
-                  labelText: context.l10n.appliedPromotion,
-                  border: OutlineInputBorder(),
-                ),
-                items: [
-                  DropdownMenuItem(
-                    value: null,
-                    child: Text(context.l10n.noPromotion),
-                  ),
-                  ..._promotionsMap.values.map(
-                    (p) => DropdownMenuItem(value: p.id, child: Text(p.name)),
-                  ),
-                ],
-                onChanged: (value) {
-                  setDialogState(() => selectedPromotionId = value);
-                },
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text(context.l10n.cancel),
-                ),
-                ElevatedButton(
-                  onPressed: () async {
-                    await _productRepository.updateFields(
-                      product.id!,
-                      promotionId: selectedPromotionId,
-                      clearPromotion: selectedPromotionId == null,
-                    );
-                    if (context.mounted) {
-                      Navigator.pop(context);
-                      _loadProducts();
-                      AppAlerts.showSuccess(
-                        context,
-                        context.l10n.promotionUpdated,
-                      );
-                    }
-                  },
-                  child: Text(context.l10n.save),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
-
-  void _editSingleImage(Product product) {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.camera_alt),
-              title: Text(context.l10n.takeNewPhoto),
-              onTap: () async {
-                Navigator.pop(context);
-                await _processAndSaveNewImage(product, ImageSource.camera);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.photo_library),
-              title: Text(context.l10n.chooseGalleryPhoto),
-              onTap: () async {
-                Navigator.pop(context);
-                await _processAndSaveNewImage(product, ImageSource.gallery);
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showProductFormDialog({Product? productToEdit}) {
-    AdaptiveForm.show(
-      context,
-      builder: (context) {
-        return ProductFormDialog(
-          productToEdit: productToEdit,
-          promotionsMap: _promotionsMap,
-          categoryNames: _categoryNames,
-          onSave: (productModel, isEditing) async {
-            if (isEditing) {
-              _discardPendingStock(productModel.id!);
-              await _productRepository.updateProduct(productModel);
-            } else {
-              await _productRepository.insertProduct(productModel);
-            }
-            // El diálogo se cierra solo tras guardar
-            if (context.mounted) {
-              _loadProducts();
-              AppAlerts.showSuccess(
-                context,
-                isEditing
-                    ? context.l10n.productUpdated
-                    : context.l10n.productCreated,
-              );
-            }
-          },
-        );
-      },
-    );
-  }
-
-  void _showProductFieldDialog(Product product, InventoryProductField field) {
-    late final String title;
-    late final String initialValue;
-    late final TextInputType keyboardType;
-    List<TextInputFormatter>? formatters;
-    String? suffix;
-
-    switch (field) {
-      case InventoryProductField.name:
-        title = context.l10n.fieldName;
-        initialValue = product.name;
-        keyboardType = TextInputType.text;
-      case InventoryProductField.units:
-        title = context.l10n.fieldUnits;
-        initialValue = product.units.toString();
-        keyboardType = TextInputType.number;
-        formatters = AppNumbers.integerInputFormatters;
-      case InventoryProductField.price:
-        title = context.l10n.fieldSalePrice;
-        initialValue = context.amountInput(product.price);
-        keyboardType = AppNumbers.decimalKeyboard;
-        formatters = AppNumbers.decimalInputFormatters;
-        suffix = '€';
-      case InventoryProductField.cost:
-        title = context.l10n.fieldAcquisitionCost;
-        initialValue = context.amountInput(product.cost);
-        keyboardType = AppNumbers.decimalKeyboard;
-        formatters = AppNumbers.decimalInputFormatters;
-        suffix = '€';
-    }
-
-    _showEditSingleFieldDialog(
-      product: product,
-      title: title,
-      initialValue: initialValue,
-      keyboardType: keyboardType,
-      inputFormatters: formatters,
-      suffixText: suffix,
-      onSave: (value) => _saveProductField(product, field, value),
-    );
-  }
-
-  void _showInvalidNumber() =>
-      AppAlerts.showError(context, context.l10n.invalidNumber);
-
-  Future<void> _saveProductField(
-    Product product,
-    InventoryProductField field,
-    String value,
-  ) async {
-    late final String successMessage;
-    final id = product.id!;
-
-    switch (field) {
-      case InventoryProductField.name:
-        if (value.trim().isEmpty) return;
-        await _productRepository.updateFields(id, name: value.trim());
-        if (!mounted) return;
-        successMessage = context.l10n.nameUpdated;
-      case InventoryProductField.units:
-        final units = AppNumbers.parseInt(value);
-        if (units == null || units < 0) return _showInvalidNumber();
-        _discardPendingStock(id);
-        await _productRepository.updateFields(id, units: units);
-        if (!mounted) return;
-        successMessage = context.l10n.stockUpdated;
-      case InventoryProductField.price:
-        final price = AppNumbers.parseDecimal(value);
-        if (price == null || price < 0) return _showInvalidNumber();
-        await _productRepository.updateFields(id, price: price);
-        if (!mounted) return;
-        successMessage = context.l10n.salePriceUpdated;
-      case InventoryProductField.cost:
-        final cost = AppNumbers.parseDecimal(value);
-        if (cost == null || cost < 0) return _showInvalidNumber();
-        await _productRepository.updateFields(id, cost: cost);
-        if (!mounted) return;
-        successMessage = context.l10n.costUpdated;
-    }
-
-    Navigator.pop(context);
-    _loadProducts();
-    AppAlerts.showSuccess(context, successMessage);
-  }
-
   // --- Filtros, orden y vista (tarjetas en móvil / tabla en tablet) ---
 
   void _onSort(InventorySort sort) {
@@ -522,234 +200,21 @@ class _InventoryScreenState extends State<InventoryScreen> {
     _sortAscending = true;
   });
 
-  String _sortLabel(InventorySort sort) => switch (sort) {
-    InventorySort.name => context.l10n.inventorySortName,
-    InventorySort.units => context.l10n.inventorySortUnits,
-    InventorySort.price => context.l10n.inventorySortPrice,
-    InventorySort.cost => context.l10n.inventorySortCost,
-    InventorySort.margin => context.l10n.inventoryMargin,
-  };
-
-  /// Menú de orden para móvil (las tarjetas no tienen cabeceras que tocar).
-  /// Comparte estado con la tabla. Elegir el criterio activo invierte el sentido.
-  Widget _buildSortButton() {
-    final colors = Theme.of(context).colorScheme;
-    final active = _sort;
-    final arrow = _sortAscending ? Icons.arrow_upward : Icons.arrow_downward;
-    const defaultChoice = -1;
-
-    PopupMenuItem<int> option(int value, String label, bool selected) =>
-        PopupMenuItem<int>(
-          value: value,
-          child: Row(
-            children: [
-              SizedBox(
-                width: 28,
-                child: selected
-                    ? Icon(
-                        value == defaultChoice ? Icons.check : arrow,
-                        size: 18,
-                        color: colors.primary,
-                      )
-                    : null,
-              ),
-              Text(
-                label,
-                style: TextStyle(
-                  fontWeight: selected ? FontWeight.bold : FontWeight.normal,
-                  color: selected ? colors.primary : null,
-                ),
-              ),
-            ],
-          ),
-        );
-
-    return PopupMenuButton<int>(
-      tooltip: context.l10n.inventorySortTitle,
-      onSelected: (value) => value == defaultChoice
-          ? _resetSort()
-          : _onSort(InventorySort.values[value]),
-      itemBuilder: (context) => [
-        option(
-          defaultChoice,
-          context.l10n.inventorySortDefault,
-          active == null,
-        ),
-        const PopupMenuDivider(),
-        for (final sort in InventorySort.values)
-          option(sort.index, _sortLabel(sort), active == sort),
-      ],
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.sm,
-          vertical: AppSpacing.xs,
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.sort,
-              size: 18,
-              color: active == null ? colors.onSurfaceVariant : colors.primary,
-            ),
-            const SizedBox(width: AppSpacing.xs),
-            Text(
-              active == null
-                  ? context.l10n.inventorySortTitle
-                  : _sortLabel(active),
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: active == null
-                    ? colors.onSurfaceVariant
-                    : colors.primary,
-              ),
-            ),
-            if (active != null) ...[
-              const SizedBox(width: 2),
-              Icon(arrow, size: 14, color: colors.primary),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
-  InventoryProductActions get _productActions => InventoryProductActions(
-    onEditProduct: (product) => _showProductFormDialog(productToEdit: product),
-    onDeleteProduct: (product) => _showDeleteConfirmation(product.id!),
-    onEditImage: _editSingleImage,
-    onEditField: _showProductFieldDialog,
-    onStockChange: _updateStockQuickly,
-    onEditPromotion: _showPromotionSelectDialog,
-    onEditCategory: _editCategory,
-  );
-
-  /// Cambia solo la categoría del producto (tocando su etiqueta).
-  Future<void> _editCategory(Product product) async {
-    final pick = await pickCategory(context, currentId: product.categoryId);
-    if (pick == null || !mounted) {
-      // Puede haberse borrado alguna categoría desde el panel
-      if (mounted) _loadProducts();
-      return;
-    }
-    await _productRepository.updateFields(
-      product.id!,
-      categoryId: pick.category?.id,
-      clearCategory: pick.category == null,
-    );
-    if (mounted) _loadProducts();
-  }
-
-  /// Chip de categoría: abre un menú con "Todas" y cada categoría.
-  Widget _buildCategoryFilter() {
-    final selected = _categoryFilter;
-    final names = _categoryNames.entries.toList()
-      ..sort((a, b) => InventoryView.compareNames(a.value, b.value));
-    return PopupMenuButton<int>(
-      tooltip: context.l10n.productCategory,
-      onSelected: (id) =>
-          setState(() => _categoryFilter = id == -1 ? null : id),
-      itemBuilder: (context) => [
-        CheckedPopupMenuItem(
-          value: -1,
-          checked: selected == null,
-          child: Text(context.l10n.categoryAll),
-        ),
-        const PopupMenuDivider(),
-        for (final e in names)
-          CheckedPopupMenuItem(
-            value: e.key,
-            checked: selected == e.key,
-            child: Text(e.value),
-          ),
-      ],
-      child: IgnorePointer(
-        child: FilterChip(
-          avatar: const Icon(Icons.sell_outlined, size: 16),
-          label: Text(
-            selected == null
-                ? context.l10n.productCategory
-                : _categoryNames[selected]!,
-          ),
-          selected: selected != null,
-          showCheckmark: false,
-          onSelected: (_) {},
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFilters(InventorySummary summary) {
-    final colors = Theme.of(context).colorScheme;
-    final isNarrow = MediaQuery.sizeOf(context).width < _tableMinWidth;
-    Widget chip(InventoryFilter filter, String label, {int? count}) {
-      final selected = _filter == filter;
-      return Padding(
-        padding: const EdgeInsets.only(right: AppSpacing.sm),
-        child: ChoiceChip(
-          label: Text(count == null ? label : '$label ($count)'),
-          selected: selected,
-          showCheckmark: false,
-          onSelected: (_) => setState(() => _filter = filter),
-        ),
-      );
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.fromLTRB(16, 8, 8, 0),
-          child: Row(
-            children: [
-              chip(InventoryFilter.all, context.l10n.inventoryFilterAll),
-              chip(
-                InventoryFilter.lowStock,
-                context.l10n.inventoryFilterLow,
-                count: summary.lowStock,
-              ),
-              chip(
-                InventoryFilter.outOfStock,
-                context.l10n.inventoryFilterOut,
-                count: summary.outOfStock,
-              ),
-              chip(
-                InventoryFilter.withPromotion,
-                context.l10n.inventoryFilterPromo,
-              ),
-              if (_categoryNames.isNotEmpty) _buildCategoryFilter(),
-            ],
-          ),
-        ),
-        Padding(
-          padding: EdgeInsets.fromLTRB(20, isNarrow ? 4 : 8, 8, 4),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  context.l10n.inventorySummary(
-                    summary.products,
-                    summary.units,
-                    summary.outOfStock,
-                  ),
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: colors.onSurfaceVariant,
-                  ),
-                ),
-              ),
-              // En tablet se ordena tocando las cabeceras de la tabla
-              if (isNarrow) _buildSortButton(),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _buildProductList(List<Product> products) {
+    final editor = _productEditor;
+    final actions = InventoryProductActions(
+      onEditProduct: (product) =>
+          editor.showProductFormDialog(context, productToEdit: product),
+      onDeleteProduct: (product) =>
+          editor.showDeleteConfirmation(context, product.id!),
+      onEditImage: (product) => editor.editSingleImage(context, product),
+      onEditField: (product, field) =>
+          editor.showProductFieldDialog(context, product, field),
+      onStockChange: _updateStockQuickly,
+      onEditPromotion: (product) =>
+          editor.showPromotionSelectDialog(context, product),
+      onEditCategory: (product) => editor.editCategory(context, product),
+    );
     return ListView.builder(
       // Hueco para el botón ＋ y la barra de navegación
       padding: EdgeInsets.fromLTRB(
@@ -766,7 +231,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
           promotion: product.promotionId == null
               ? null
               : _promotionsMap[product.promotionId],
-          actions: _productActions,
+          actions: actions,
           comboName: _comboNames[product.id],
           categoryName: _categoryNames[product.categoryId],
         );
@@ -778,6 +243,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
     List<Product> products,
     BoxConstraints constraints,
   ) {
+    final editor = _productEditor;
     return SingleChildScrollView(
       padding: const EdgeInsets.only(bottom: 96),
       child: SingleChildScrollView(
@@ -790,14 +256,17 @@ class _InventoryScreenState extends State<InventoryScreen> {
             promotions: _promotionsMap,
             comboNames: _comboNames,
             categoryNames: _categoryNames,
-            onEditCategory: _editCategory,
+            onEditCategory: (product) => editor.editCategory(context, product),
             onEditProduct: (product) =>
-                _showProductFormDialog(productToEdit: product),
-            onDeleteProduct: (product) => _showDeleteConfirmation(product.id!),
-            onEditImage: _editSingleImage,
-            onEditField: _showProductFieldDialog,
+                editor.showProductFormDialog(context, productToEdit: product),
+            onDeleteProduct: (product) =>
+                editor.showDeleteConfirmation(context, product.id!),
+            onEditImage: (product) => editor.editSingleImage(context, product),
+            onEditField: (product, field) =>
+                editor.showProductFieldDialog(context, product, field),
             onStockChange: _updateStockQuickly,
-            onEditPromotion: _showPromotionSelectDialog,
+            onEditPromotion: (product) =>
+                editor.showPromotionSelectDialog(context, product),
             sort: _sort,
             ascending: _sortAscending,
             onSort: _onSort,
@@ -891,7 +360,23 @@ class _InventoryScreenState extends State<InventoryScreen> {
                       ),
                     ),
                   ),
-                  if (_products.isNotEmpty) _buildFilters(summary),
+                  if (_products.isNotEmpty)
+                    InventoryFiltersBar(
+                      summary: summary,
+                      filter: _filter,
+                      onFilterChanged: (filter) =>
+                          setState(() => _filter = filter),
+                      categoryNames: _categoryNames,
+                      categoryFilter: _categoryFilter,
+                      onCategoryChanged: (categoryId) =>
+                          setState(() => _categoryFilter = categoryId),
+                      sort: _sort,
+                      ascending: _sortAscending,
+                      onSort: _onSort,
+                      onResetSort: _resetSort,
+                      isNarrow:
+                          MediaQuery.sizeOf(context).width < _tableMinWidth,
+                    ),
                   Expanded(
                     child: filteredProducts.isEmpty
                         ? EmptyState(
@@ -901,7 +386,10 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                 : context.l10n.productsNotFound,
                             action: _products.isEmpty
                                 ? FilledButton.icon(
-                                    onPressed: () => _showProductFormDialog(),
+                                    onPressed: () =>
+                                        _productEditor.showProductFormDialog(
+                                          context,
+                                        ),
                                     icon: const Icon(Icons.add),
                                     label: Text(context.l10n.inventoryAddFirst),
                                   )
@@ -920,7 +408,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 ],
               ),
         floatingActionButton: FloatingActionButton(
-          onPressed: () => _showProductFormDialog(),
+          onPressed: () => _productEditor.showProductFormDialog(context),
           child: const Icon(Icons.add),
         ),
       ),

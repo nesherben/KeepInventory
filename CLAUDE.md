@@ -9,6 +9,10 @@ Flutter app (Android) for inventory + POS sales/tickets. Local SQLite (`sqflite`
 - `lib/core/shared_widgets/`, `lib/core/theme/`.
 - `lib/features/<feature>/` (dashboard, inventory, packs, promotions, sales, sync) — clean layers:
   `domain/` (entities, pure logic, `repositories/` abstract) → `data/` (`*_model.dart`, `datasources/*_local_datasource.dart`, `repositories/*_impl.dart`) → `presentation/` (screens, `widgets/`).
+- Dashboard balance UI is in `lib/features/dashboard/presentation/widgets/dashboard_chart.dart`; its private scale and `CustomPainter` implementations live in the sibling `dashboard_chart_painters.dart` part file.
+- Inventory filter, category, summary, and mobile sort controls are isolated in `lib/features/inventory/presentation/widgets/inventory_filters_bar.dart`; `inventory_screen.dart` owns their state.
+- Inventory product mutations and dialogs are handled by `lib/features/inventory/presentation/inventory_product_editor.dart`; `inventory_screen.dart` owns loading, filters, stock debounce, and view state.
+- Sales checkout composition is in `lib/features/sales/presentation/sales_screen.dart`; cart total controls, catalog search/categories, landscape cart panel, and mobile draggable cart are isolated in `presentation/widgets/`.
 - Sales pricing/refund logic lives in pure classes in `lib/features/sales/domain/` (`sale_cart_pricing_calculator`, `sale_refund_calculator`, …) — keep logic there, unit-test it in `test/`.
 - `lib/l10n/*.arb` → generated `lib/l10n/generated/` (never edit generated).
 - Tests: flat `test/<subject>_test.dart`.

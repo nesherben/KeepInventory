@@ -42,6 +42,10 @@ import 'widgets/product_grid_widget.dart';
 import 'widgets/packs_grid_widget.dart';
 import 'widgets/cart_items_list_widget.dart';
 import 'widgets/payment_method_widgets.dart';
+import 'widgets/sales_cart_sheet.dart';
+import 'widgets/sales_cart_total_summary.dart';
+import 'widgets/sales_catalog_header.dart';
+import 'widgets/sales_landscape_cart_panel.dart';
 import '../domain/payment_method.dart';
 
 class SalesScreen extends StatefulWidget {
@@ -50,8 +54,6 @@ class SalesScreen extends StatefulWidget {
   @override
   State<SalesScreen> createState() => _SalesScreenState();
 }
-
-enum _CartTotalAction { adjust, reset }
 
 class _SalesScreenState extends State<SalesScreen>
     with SingleTickerProviderStateMixin {
@@ -253,144 +255,18 @@ class _SalesScreenState extends State<SalesScreen>
 
   double get _cartTotal => _pricing.total * _cartAdjustmentFactor;
 
-  Future<void> _adjustCartTotal() async {
-    final baseTotal = _pricing.total;
-    if (baseTotal <= 0) return;
-
-    final controller = TextEditingController(
-      text: context.amountInput(_cartTotal),
-    );
-    final agreedTotal = await showDialog<double>(
-      context: context,
-      builder: (dialogContext) {
-        String? errorText;
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            void submit() {
-              final value = AppNumbers.parseDecimal(controller.text);
-              if (value == null || !value.isFinite || value < 0) {
-                setDialogState(() {
-                  errorText = context.l10n.salesInvalidAgreedTotal;
-                });
-                return;
-              }
-              Navigator.pop(dialogContext, value);
-            }
-
-            return AlertDialog(
-              title: Text(context.l10n.salesAdjustTotal),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(context.l10n.salesCartAdjustmentHint),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: controller,
-                    autofocus: true,
-                    keyboardType: AppNumbers.decimalKeyboard,
-                    inputFormatters: AppNumbers.decimalInputFormatters,
-                    decoration: InputDecoration(
-                      labelText: context.l10n.salesAgreedTotal,
-                      errorText: errorText,
-                    ),
-                    onChanged: (_) {
-                      if (errorText != null) {
-                        setDialogState(() => errorText = null);
-                      }
-                    },
-                    onSubmitted: (_) => submit(),
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(dialogContext),
-                  child: Text(context.l10n.cancel),
-                ),
-                FilledButton(onPressed: submit, child: Text(context.l10n.save)),
-              ],
-            );
-          },
-        );
-      },
-    );
-    controller.dispose();
-
-    if (!mounted || agreedTotal == null) return;
-    setState(() => _cartAdjustmentFactor = agreedTotal / baseTotal);
-  }
-
-  void _resetCartAdjustment() {
-    setState(() => _cartAdjustmentFactor = 1.0);
-  }
-
-  Widget _buildCartTotalMenuButton({required bool hasAdjustment}) =>
-      PopupMenuButton<_CartTotalAction>(
-        enabled: _cartItemCount > 0,
-        tooltip: context.l10n.salesAdjustTotal,
-        padding: EdgeInsets.zero,
-        constraints: const BoxConstraints.tightFor(width: 40, height: 40),
-        iconSize: 20,
-        onSelected: (action) {
-          switch (action) {
-            case _CartTotalAction.adjust:
-              _adjustCartTotal();
-            case _CartTotalAction.reset:
-              _resetCartAdjustment();
-          }
-        },
-        itemBuilder: (context) => [
-          PopupMenuItem(
-            value: _CartTotalAction.adjust,
-            child: Text(context.l10n.salesAdjustTotal),
-          ),
-          if (hasAdjustment)
-            PopupMenuItem(
-              value: _CartTotalAction.reset,
-              child: Text(context.l10n.salesResetTotalAdjustment),
-            ),
-        ],
-      );
-
   Widget _buildCartTotalSummary({required double fontSize, Color? color}) {
-    final hasAdjustment = (_cartAdjustmentFactor - 1).abs() > 0.0000001;
-    final textStyle = TextStyle(
+    return SalesCartTotalSummary(
+      baseTotal: _pricing.total,
+      total: _cartTotal,
+      itemCount: _cartItemCount,
       fontSize: fontSize,
-      fontWeight: FontWeight.w800,
+      hasAdjustment: (_cartAdjustmentFactor - 1).abs() > 0.0000001,
       color: color,
-    );
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        if (hasAdjustment)
-          Text(
-            context.money(_pricing.total),
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-              decoration: TextDecoration.lineThrough,
-              fontSize: 12,
-            ),
-          ),
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Text(
-              context.l10n.cartTotal(context.amount(_cartTotal)),
-              style: textStyle,
-            ),
-            const SizedBox(width: 4),
-            SizedBox(
-              width: 40,
-              height: 40,
-              child: _buildCartTotalMenuButton(hasAdjustment: hasAdjustment),
-            ),
-          ],
-        ),
-      ],
+      onTotalAdjusted: (agreedTotal) => setState(
+        () => _cartAdjustmentFactor = agreedTotal / _pricing.total,
+      ),
+      onReset: () => setState(() => _cartAdjustmentFactor = 1.0),
     );
   }
 
@@ -480,72 +356,19 @@ class _SalesScreenState extends State<SalesScreen>
 
   /// Buscador y, en Productos, chips de categoría.
   Widget _buildCatalogHeader() {
-    final showCategories = _categories.isNotEmpty && _tabController.index == 0;
-    if (!showCategories) return _buildSearchField();
-    Widget chip(int? id, String label) => Padding(
-      padding: const EdgeInsets.only(right: AppSpacing.sm),
-      child: ChoiceChip(
-        label: Text(label),
-        selected: _categoryFilter == id,
-        showCheckmark: false,
-        onSelected: (_) => setState(() => _categoryFilter = id),
-      ),
-    );
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _buildSearchField(),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.fromLTRB(12, 0, 4, 4),
-          child: Row(
-            children: [
-              chip(null, context.l10n.categoryAll),
-              for (final c in _categories) chip(c.id, c.name),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSearchField() {
-    final isProductTab = _tabController.index == 0;
-    final controller = isProductTab
-        ? _productSearchController
-        : _packSearchController;
-    final query = isProductTab ? _productSearchQuery : _packSearchQuery;
-
-    void update(String value) => setState(() {
-      if (isProductTab) {
-        _productSearchQuery = value;
-      } else {
-        _packSearchQuery = value;
-      }
-    });
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
-      child: TextField(
-        controller: controller,
-        onChanged: update,
-        decoration: InputDecoration(
-          hintText: isProductTab
-              ? context.l10n.searchProducts
-              : context.l10n.searchPacksOrComponents,
-          prefixIcon: const Icon(Icons.search, size: 20),
-          suffixIcon: query.isEmpty
-              ? null
-              : IconButton(
-                  icon: const Icon(Icons.close, size: 18),
-                  onPressed: () {
-                    controller.clear();
-                    update('');
-                  },
-                ),
-          fillColor: Theme.of(context).cardColor,
-        ),
-      ),
+    return SalesCatalogHeader(
+      isProductTab: _tabController.index == 0,
+      productSearchController: _productSearchController,
+      packSearchController: _packSearchController,
+      productSearchQuery: _productSearchQuery,
+      packSearchQuery: _packSearchQuery,
+      categories: _categories,
+      categoryFilter: _categoryFilter,
+      onProductSearchChanged: (value) =>
+          setState(() => _productSearchQuery = value),
+      onPackSearchChanged: (value) => setState(() => _packSearchQuery = value),
+      onCategoryChanged: (categoryId) =>
+          setState(() => _categoryFilter = categoryId),
     );
   }
 
@@ -702,65 +525,26 @@ class _SalesScreenState extends State<SalesScreen>
                     ),
                   ),
                   const VerticalDivider(width: 1, thickness: 1),
-                  Container(
-                    width: 380,
-                    color: Theme.of(context).cardColor,
-                    child: Column(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                context.l10n.cartItemsCount(
-                                  _cartItemCount.toString(),
-                                ),
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              _buildCartTotalSummary(fontSize: 22),
-                            ],
-                          ),
-                        ),
-                        const Divider(height: 1),
-                        Expanded(
-                          child: CartItemsListWidget(
-                            cart: _cart,
-                            catalog: _products,
-                            onAddToCart: _addToCart,
-                            onLocateProduct: _locateProduct,
-                            cartPacks: _cartPacks,
-                            promotionsMap: _promotionsMap,
-                            pricing: _pricing,
-                            onRemoveFromCart: _removeFromCart,
-                            onRemoveAllFromCart: _removeAllFromCart,
-                            onRemovePackFromCart: _removePackFromCart,
-                            onRemoveAllPackFromCart: _removeAllPackFromCart,
-                          ),
-                        ),
-                        const Divider(height: 1),
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                          child: _buildPaymentMethodSelector(),
-                        ),
-                        Padding(
-                          // Por encima de la barra de navegación de Android
-                          padding: EdgeInsets.fromLTRB(
-                            16,
-                            16,
-                            16,
-                            16 + MediaQuery.viewPaddingOf(context).bottom,
-                          ),
-                          child: SizedBox(
-                            width: double.infinity,
-                            child: _buildCheckoutButton(large: false),
-                          ),
-                        ),
-                      ],
+                  SalesLandscapeCartPanel(
+                    itemCountLabel: context.l10n.cartItemsCount(
+                      _cartItemCount.toString(),
                     ),
+                    totalSummary: _buildCartTotalSummary(fontSize: 22),
+                    cartItems: CartItemsListWidget(
+                      cart: _cart,
+                      catalog: _products,
+                      onAddToCart: _addToCart,
+                      onLocateProduct: _locateProduct,
+                      cartPacks: _cartPacks,
+                      promotionsMap: _promotionsMap,
+                      pricing: _pricing,
+                      onRemoveFromCart: _removeFromCart,
+                      onRemoveAllFromCart: _removeAllFromCart,
+                      onRemovePackFromCart: _removePackFromCart,
+                      onRemoveAllPackFromCart: _removeAllPackFromCart,
+                    ),
+                    paymentMethodSelector: _buildPaymentMethodSelector(),
+                    checkoutButton: _buildCheckoutButton(large: false),
                   ),
                 ],
               )
@@ -787,214 +571,35 @@ class _SalesScreenState extends State<SalesScreen>
                           ),
                         ],
                       ),
-                      DraggableScrollableSheet(
+                      SalesCartSheet(
                         controller: _cartSheetController,
-                        initialChildSize: _cartMinSize,
-                        minChildSize: _cartMinSize,
-                        maxChildSize: 0.7,
-                        builder: (BuildContext context, ScrollController scrollController) {
-                          return LayoutBuilder(
-                            builder: (context, constraints) {
-                              // Plegado = solo la cabecera (artículos y total)
-                              final bool isExpanded =
-                                  constraints.maxHeight >
-                                  _cartMinSize * bodyConstraints.maxHeight + 8;
-
-                              return Container(
-                                decoration: BoxDecoration(
-                                  color: Theme.of(context).cardColor,
-                                  borderRadius: const BorderRadius.vertical(
-                                    top: Radius.circular(24),
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withValues(
-                                        alpha: 0.2,
-                                      ),
-                                      blurRadius: 10,
-                                      spreadRadius: 2,
-                                      offset: const Offset(0, -2),
-                                    ),
-                                  ],
-                                ),
-                                child: ClipRRect(
-                                  borderRadius: const BorderRadius.vertical(
-                                    top: Radius.circular(24),
-                                  ),
-                                  child: Stack(
-                                    children: [
-                                      ListView(
-                                        controller: scrollController,
-                                        padding: EdgeInsets.only(
-                                          top: 75,
-                                          bottom:
-                                              (isExpanded &&
-                                                  (_cart.isNotEmpty ||
-                                                      _cartPacks.isNotEmpty))
-                                              ? 170 +
-                                                    MediaQuery.viewPaddingOf(
-                                                          context,
-                                                        )
-                                                        .bottom // botón + pago
-                                              : 20,
-                                        ),
-                                        children: [
-                                          // Plegado no se pinta la lista: si no,
-                                          // asoma bajo la barra de navegación
-                                          if (isExpanded)
-                                            CartItemsListWidget(
-                                              cart: _cart,
-                                              catalog: _products,
-                                              onAddToCart: _addToCart,
-                                              onLocateProduct: _locateProduct,
-                                              cartPacks: _cartPacks,
-                                              promotionsMap: _promotionsMap,
-                                              pricing: _pricing,
-                                              onRemoveFromCart: _removeFromCart,
-                                              onRemoveAllFromCart:
-                                                  _removeAllFromCart,
-                                              onRemovePackFromCart:
-                                                  _removePackFromCart,
-                                              onRemoveAllPackFromCart:
-                                                  _removeAllPackFromCart,
-                                            ),
-                                        ],
-                                      ),
-                                      Positioned(
-                                        top: 0,
-                                        left: 0,
-                                        right: 0,
-                                        child: Stack(
-                                          children: [
-                                            IgnorePointer(
-                                              child: Container(
-                                                color: Theme.of(context)
-                                                    .cardColor,
-                                                child: Column(
-                                                  mainAxisSize:
-                                                      MainAxisSize.min,
-                                                  children: [
-                                                    const SizedBox(height: 8),
-                                                    Container(
-                                                      width: 40,
-                                                      height: 5,
-                                                      decoration: BoxDecoration(
-                                                        color: Theme.of(context)
-                                                            .colorScheme
-                                                            .outlineVariant,
-                                                        borderRadius:
-                                                            BorderRadius.circular(
-                                                              10,
-                                                            ),
-                                                      ),
-                                                    ),
-                                                    Padding(
-                                                      padding:
-                                                          const EdgeInsets.symmetric(
-                                                            horizontal: 24.0,
-                                                            vertical: 12.0,
-                                                          ),
-                                                      child: Row(
-                                                        mainAxisAlignment:
-                                                            MainAxisAlignment
-                                                                .spaceBetween,
-                                                        children: [
-                                                          Text(
-                                                            context.l10n
-                                                                .cartItemsCount(
-                                                                  _cartItemCount
-                                                                      .toString(),
-                                                                ),
-                                                            style:
-                                                                const TextStyle(
-                                                                  fontSize: 18,
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .bold,
-                                                                ),
-                                                          ),
-                                                          SizedBox(
-                                                            width: 40,
-                                                            height:
-                                                                (_cartAdjustmentFactor -
-                                                                            1)
-                                                                        .abs() >
-                                                                    0.0000001
-                                                                ? 54
-                                                                : 40,
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                    const Divider(height: 1),
-                                                  ],
-                                                ),
-                                              ),
-                                            ),
-                                            Positioned(
-                                              top: 25,
-                                              right: 24,
-                                              child: _buildCartTotalSummary(
-                                                fontSize: 22,
-                                                color: Theme.of(context)
-                                                    .colorScheme
-                                                    .primary,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      if (isExpanded &&
-                                          (_cart.isNotEmpty ||
-                                              _cartPacks.isNotEmpty))
-                                        Positioned(
-                                          bottom: 0,
-                                          left: 0,
-                                          right: 0,
-                                          child: Container(
-                                            // Por encima de la barra de
-                                            // navegación de Android
-                                            padding: EdgeInsets.fromLTRB(
-                                              16,
-                                              16,
-                                              16,
-                                              16 +
-                                                  MediaQuery.viewPaddingOf(
-                                                    context,
-                                                  ).bottom,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: Theme.of(context)
-                                                  .cardColor,
-                                              border: Border(
-                                                top: BorderSide(
-                                                  color: Theme.of(context)
-                                                      .dividerColor,
-                                                ),
-                                              ),
-                                            ),
-                                            child: Column(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                _buildPaymentMethodSelector(),
-                                                const SizedBox(height: 12),
-                                                SizedBox(
-                                                  width: double.infinity,
-                                                  child: _buildCheckoutButton(
-                                                    large: true,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            },
-                          );
-                        },
+                        minSize: _cartMinSize,
+                        bodyHeight: bodyConstraints.maxHeight,
+                        itemCountLabel: context.l10n.cartItemsCount(
+                          _cartItemCount.toString(),
+                        ),
+                        hasAdjustment:
+                            (_cartAdjustmentFactor - 1).abs() > 0.0000001,
+                        hasItems: _cart.isNotEmpty || _cartPacks.isNotEmpty,
+                        totalSummary: _buildCartTotalSummary(
+                          fontSize: 22,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        cartItems: CartItemsListWidget(
+                          cart: _cart,
+                          catalog: _products,
+                          onAddToCart: _addToCart,
+                          onLocateProduct: _locateProduct,
+                          cartPacks: _cartPacks,
+                          promotionsMap: _promotionsMap,
+                          pricing: _pricing,
+                          onRemoveFromCart: _removeFromCart,
+                          onRemoveAllFromCart: _removeAllFromCart,
+                          onRemovePackFromCart: _removePackFromCart,
+                          onRemoveAllPackFromCart: _removeAllPackFromCart,
+                        ),
+                        paymentMethodSelector: _buildPaymentMethodSelector(),
+                        checkoutButton: _buildCheckoutButton(large: true),
                       ),
                     ],
                   );
