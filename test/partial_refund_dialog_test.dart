@@ -63,11 +63,21 @@ void main() {
 
     final refundField = tester.widget<TextField>(find.byType(TextField));
     expect(refundField.controller!.text, '5,00');
+    expect(
+      find.textContaining(localizations.salesRefundOriginalUnitPrice('5,00')),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.byType(TextField));
+    await tester.enterText(find.byType(TextField), '3.2');
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pump();
+    expect(refundField.controller!.text, '3,20');
 
     await tester.tap(find.text(localizations.confirm));
     await tester.pumpAndSettle();
 
     expect(submittedItems, {item: 1});
-    expect(submittedAmount, 5);
+    expect(submittedAmount, 3.2);
   });
 }

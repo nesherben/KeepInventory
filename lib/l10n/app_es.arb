@@ -935,5 +935,13 @@
   "salesAgreedTotal": "Total acordado (€)",
   "salesCartAdjustmentHint": "El ajuste se repartirá entre todos los artículos y se mantendrá proporcionalmente si cambia el carrito.",
   "salesResetTotalAdjustment": "Quitar ajuste",
-  "salesInvalidAgreedTotal": "Introduce un total válido igual o superior a cero."
+  "salesInvalidAgreedTotal": "Introduce un total válido igual o superior a cero.",
+  "salesRefundOriginalUnitPrice": "Precio original: {amount} €/ud",
+  "@salesRefundOriginalUnitPrice": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  }
 }

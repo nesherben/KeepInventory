@@ -1806,4 +1806,9 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get salesInvalidAgreedTotal =>
       'Introduce un total válido igual o superior a cero.';
+
+  @override
+  String salesRefundOriginalUnitPrice(String amount) {
+    return 'Precio original: $amount €/ud';
+  }
 }

@@ -1794,4 +1794,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get salesInvalidAgreedTotal => 'Enter a valid total of zero or more.';
+
+  @override
+  String salesRefundOriginalUnitPrice(String amount) {
+    return 'Original price: €$amount/unit';
+  }
 }

@@ -525,5 +525,6 @@
   "salesAgreedTotal": "Agreed total (€)",
   "salesCartAdjustmentHint": "The adjustment is shared across the whole sale and stays proportional if the cart changes.",
   "salesResetTotalAdjustment": "Remove adjustment",
-  "salesInvalidAgreedTotal": "Enter a valid total of zero or more."
+  "salesInvalidAgreedTotal": "Enter a valid total of zero or more.",
+  "salesRefundOriginalUnitPrice": "Original price: €{amount}/unit"
 }

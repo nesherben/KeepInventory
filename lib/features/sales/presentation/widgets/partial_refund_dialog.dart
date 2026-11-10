@@ -35,6 +35,7 @@ class _PartialRefundDialogState extends State<PartialRefundDialog> {
   late final Map<SaleItem, int> _refundItemQuantities;
   late final Map<SalePackItem, int> _refundPackQuantities;
   final _refundAmountController = TextEditingController(text: '0');
+  late final FocusNode _refundAmountFocusNode;
   bool _restockAsComponents = false;
 
   int get _totalItemsToRefund =>
@@ -55,12 +56,32 @@ class _PartialRefundDialogState extends State<PartialRefundDialog> {
     super.initState();
     _refundItemQuantities = {for (final item in widget.sale.items) item: 0};
     _refundPackQuantities = {for (final pack in widget.sale.packItems) pack: 0};
+    _refundAmountFocusNode = FocusNode()
+      ..addListener(_onRefundAmountFocusChanged);
   }
 
   @override
   void dispose() {
+    _refundAmountFocusNode
+      ..removeListener(_onRefundAmountFocusChanged)
+      ..dispose();
     _refundAmountController.dispose();
     super.dispose();
+  }
+
+  void _onRefundAmountFocusChanged() {
+    if (!_refundAmountFocusNode.hasFocus) _formatRefundAmount();
+  }
+
+  void _formatRefundAmount() {
+    final amount = AppNumbers.parseDecimal(_refundAmountController.text);
+    if (amount == null || !amount.isFinite) return;
+    final formatted = context.amountInput(amount);
+    if (_refundAmountController.text == formatted) return;
+    _refundAmountController.value = TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
   }
 
   void _recalculateDefaultRefund() {
@@ -96,14 +117,8 @@ class _PartialRefundDialogState extends State<PartialRefundDialog> {
     return _buildRefundLine(
       context,
       title: item.productName ?? context.l10n.unknown,
-      summary: context.l10n.purchasedItemSummary(
-        item.quantity.toString(),
-        context.amount(
-          item.quantity *
-              item.historicalPrice *
-              widget.sale.adjustmentFactor,
-        ),
-      ),
+      summary:
+          '${context.l10n.purchasedItemSummary(item.quantity.toString(), context.amount(item.quantity * item.historicalPrice * widget.sale.adjustmentFactor))}\n${context.l10n.salesRefundOriginalUnitPrice(context.amount(item.refundUnitPrice))}',
       value: _refundItemQuantities[item] ?? 0,
       maxValue: item.quantity,
       backgroundColor: colors.surfaceContainerHighest.withValues(alpha: 0.3),
@@ -207,14 +222,8 @@ class _PartialRefundDialogState extends State<PartialRefundDialog> {
       title: context.l10n.packNameLabel(
         pack.packName ?? context.l10n.unknownPackDeleted,
       ),
-      summary: context.l10n.purchasedPackSummary(
-        pack.quantity.toString(),
-        context.amount(
-          pack.quantity *
-              pack.historicalPrice *
-              widget.sale.adjustmentFactor,
-        ),
-      ),
+      summary:
+          '${context.l10n.purchasedPackSummary(pack.quantity.toString(), context.amount(pack.quantity * pack.historicalPrice * widget.sale.adjustmentFactor))}\n${context.l10n.salesRefundOriginalUnitPrice(context.amount(pack.historicalPrice))}',
       value: _refundPackQuantities[pack] ?? 0,
       maxValue: pack.quantity,
       backgroundColor: colors.secondaryContainer.withValues(alpha: 0.3),
@@ -381,8 +390,11 @@ class _PartialRefundDialogState extends State<PartialRefundDialog> {
         const SizedBox(height: 8),
         TextField(
           controller: _refundAmountController,
+          focusNode: _refundAmountFocusNode,
           keyboardType: AppNumbers.decimalKeyboard,
           inputFormatters: AppNumbers.decimalInputFormatters,
+          onEditingComplete: _formatRefundAmount,
+          onSubmitted: (_) => _refundAmountFocusNode.unfocus(),
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.w900,

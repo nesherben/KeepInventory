@@ -2983,6 +2983,12 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Introduce un total válido igual o superior a cero.'**
   String get salesInvalidAgreedTotal;
+
+  /// No description provided for @salesRefundOriginalUnitPrice.
+  ///
+  /// In es, this message translates to:
+  /// **'Precio original: {amount} €/ud'**
+  String salesRefundOriginalUnitPrice(String amount);
 }
 
 class _AppLocalizationsDelegate

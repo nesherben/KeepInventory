@@ -330,6 +330,7 @@ class _SalesScreenState extends State<SalesScreen>
         enabled: _cartItemCount > 0,
         tooltip: context.l10n.salesAdjustTotal,
         padding: EdgeInsets.zero,
+        constraints: const BoxConstraints.tightFor(width: 40, height: 40),
         iconSize: 20,
         onSelected: (action) {
           switch (action) {
@@ -352,11 +353,7 @@ class _SalesScreenState extends State<SalesScreen>
         ],
       );
 
-  Widget _buildCartTotalSummary({
-    required double fontSize,
-    Color? color,
-    bool includeMenu = true,
-  }) {
+  Widget _buildCartTotalSummary({required double fontSize, Color? color}) {
     final hasAdjustment = (_cartAdjustmentFactor - 1).abs() > 0.0000001;
     final textStyle = TextStyle(
       fontSize: fontSize,
@@ -364,32 +361,35 @@ class _SalesScreenState extends State<SalesScreen>
       color: color,
     );
 
-    return Row(
+    return Column(
       mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
+        if (hasAdjustment)
+          Text(
+            context.money(_pricing.total),
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              decoration: TextDecoration.lineThrough,
+              fontSize: 12,
+            ),
+          ),
+        Row(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            if (hasAdjustment)
-              Text(
-                context.money(_pricing.total),
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  decoration: TextDecoration.lineThrough,
-                  fontSize: 12,
-                ),
-              ),
             Text(
               context.l10n.cartTotal(context.amount(_cartTotal)),
               style: textStyle,
             ),
+            const SizedBox(width: 4),
+            SizedBox(
+              width: 40,
+              height: 40,
+              child: _buildCartTotalMenuButton(hasAdjustment: hasAdjustment),
+            ),
           ],
         ),
-        if (includeMenu)
-          _buildCartTotalMenuButton(hasAdjustment: hasAdjustment)
-        else
-          const SizedBox(width: 48),
       ],
     );
   }
@@ -913,15 +913,15 @@ class _SalesScreenState extends State<SalesScreen>
                                                                           .bold,
                                                                 ),
                                                           ),
-                                                          _buildCartTotalSummary(
-                                                            fontSize: 22,
-                                                            color:
-                                                                Theme.of(
-                                                                      context,
-                                                                    )
-                                                                    .colorScheme
-                                                                    .primary,
-                                                            includeMenu: false,
+                                                          SizedBox(
+                                                            width: 40,
+                                                            height:
+                                                                (_cartAdjustmentFactor -
+                                                                            1)
+                                                                        .abs() >
+                                                                    0.0000001
+                                                                ? 54
+                                                                : 40,
                                                           ),
                                                         ],
                                                       ),
@@ -931,23 +931,14 @@ class _SalesScreenState extends State<SalesScreen>
                                                 ),
                                               ),
                                             ),
-                                            Positioned.fill(
-                                              child: Padding(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                      horizontal: 24,
-                                                    ),
-                                                child: Align(
-                                                  alignment:
-                                                      Alignment.centerRight,
-                                                  child: _buildCartTotalMenuButton(
-                                                    hasAdjustment:
-                                                        (_cartAdjustmentFactor -
-                                                                1)
-                                                            .abs() >
-                                                        0.0000001,
-                                                  ),
-                                                ),
+                                            Positioned(
+                                              top: 25,
+                                              right: 24,
+                                              child: _buildCartTotalSummary(
+                                                fontSize: 22,
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .primary,
                                               ),
                                             ),
                                           ],
