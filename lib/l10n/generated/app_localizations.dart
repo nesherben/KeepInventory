@@ -2989,6 +2989,12 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Precio original: {amount} €/ud'**
   String salesRefundOriginalUnitPrice(String amount);
+
+  /// No description provided for @inventoryInPacks.
+  ///
+  /// In es, this message translates to:
+  /// **'+{count} en pack'**
+  String inventoryInPacks(int count);
 }
 
 class _AppLocalizationsDelegate

@@ -37,7 +37,7 @@ Funciona 100 % sin conexión: tus datos viven en tu móvil.
 
 | | |
 |---|---|
-| 📦 **Inventario** | Productos con foto, unidades, precio de venta y coste. Margen calculado (también en vivo al crear el producto), alertas de stock bajo / agotado, filtros y ordenación (nombre, unidades, precio, coste, margen). Vista en tarjetas en el móvil (con botón **Ordenar**) y tabla en pantallas grandes. Edición rápida de stock con − / + y de cada campo tocándolo. |
+| 📦 **Inventario** | Productos con foto, unidades, precio de venta y coste. Margen calculado (también en vivo al crear el producto), alertas de stock bajo / agotado, filtros y ordenación (nombre, unidades, precio, coste, margen). Vista en tarjetas en el móvil (con botón **Ordenar**) y tabla en pantallas grandes con la cabecera siempre visible al hacer scroll. Junto a las unidades, el icono 🎁 con un número indica cuántas unidades del producto están dentro de packs montados (no cuentan como stock disponible). Edición rápida de stock con − / + y de cada campo tocándolo. |
 | 🗂️ **Categorías** | Opcionales (p. ej. *Camisetas*, *Tazas*): se eligen o se crean desde el producto, sirven para filtrar en Inventario y Ventas, para aplicar una promoción a todos sus productos de golpe y para combos del tipo *"cualquier camiseta + cualquier taza"*. Los productos que ya son un grupo en sí (p. ej. *Llaveros variados*, todos al mismo precio) no necesitan categoría. |
 | 🎁 **Packs** | Agrupa varios productos en un pack con su propio precio y stock de unidades montadas. Muestra cuánto ahorra el cliente frente a comprarlos por separado y cuántos más se pueden montar con el stock actual. |
 | 🏷️ **Promociones** | Descuento por porcentaje (p. ej. 10 % a partir de 2 uds.) o precio fijo por lote (p. ej. *3 por 12 €*), con soporte Mix & Match entre productos de la misma promoción. Al crearla, una frase explica la regla y se sugiere el nombre. |
@@ -81,7 +81,7 @@ El menú lateral (desliza desde el borde izquierdo o pulsa ☰) da acceso a toda
 ### 2. Crea packs (opcional)
 1. En **Packs**, pulsa **＋**, ponle nombre, precio y foto.
 2. Pulsa **Añadir producto** (con buscador) para elegir los productos que lo forman y cuántas unidades de cada uno lleva. Verás cuánto ahorra el cliente frente a comprarlos sueltos.
-3. Indica cuántos packs tienes montados: es el stock que se descuenta al venderlos. Con − / + en la lista montas o desmontas packs; al desplegar uno verás el stock de cada componente y cuántos más puedes montar.
+3. Indica cuántos packs tienes montados: al crearlos (o cambiar su cantidad) sus componentes salen del inventario, porque ya están en la bolsa; al venderlos solo baja el número de packs. Con − / + en la lista montas o desmontas packs; al desplegar uno verás el stock de cada componente y cuántos más puedes montar.
 
 ### 3. Configura promociones y combos (opcional)
 1. En **Ofertas → Promociones**, crea una promoción eligiendo el tipo:

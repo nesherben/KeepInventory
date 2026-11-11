@@ -13,6 +13,8 @@ import '../domain/inventory_view.dart';
 import '../../../core/shared_widgets/app_ui.dart';
 
 import 'package:keepinventory/l10n/app_localizations_ext.dart';
+import '../../packs/data/datasources/pack_local_datasource.dart';
+import '../../packs/data/repositories/pack_repository_impl.dart';
 
 import '../../../core/shared_widgets/app_drawer.dart';
 
@@ -50,6 +52,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final ScrollController _horizontalScrollController = ScrollController();
+  final ScrollController _verticalScrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
 
   double? _startX;
@@ -60,6 +63,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
 
   /// Nombre del combo de cada producto (informativo).
   Map<int, String> _comboNames = {};
+  Map<int, int> _packedUnits = {};
 
   /// Categorías (id -> nombre) y filtro por categoría (null = todas).
   Map<int, String> _categoryNames = {};
@@ -105,6 +109,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
     }
     _pendingStock.clear();
     _horizontalScrollController.dispose();
+    _verticalScrollController.dispose();
     _searchController.dispose();
     super.dispose();
   }
@@ -120,6 +125,16 @@ class _InventoryScreenState extends State<InventoryScreen> {
         .getCategories();
     final combos = await ComboRepositoryImpl(ComboLocalDatasource())
         .getCombos();
+
+    final packs = await PackRepositoryImpl(PackLocalDatasource()).getPacks();
+    // Unidades de cada producto encerradas en packs montados
+    final packedUnits = <int, int>{};
+    for (final pack in packs) {
+      for (final item in pack.items) {
+        packedUnits[item.productId] =
+            (packedUnits[item.productId] ?? 0) + item.quantity * pack.units;
+      }
+    }
 
     final Map<int, Promotion> promoMap = {for (var p in promotions) p.id!: p};
 
@@ -142,6 +157,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
         for (final combo in combos)
           for (final id in combo.productIds) id: combo.name,
       };
+      _packedUnits = packedUnits;
       _isLoading = false;
     });
   }
@@ -233,6 +249,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
               : _promotionsMap[product.promotionId],
           actions: actions,
           comboName: _comboNames[product.id],
+          packedUnits: _packedUnits[product.id] ?? 0,
           categoryName: _categoryNames[product.categoryId],
         );
       },
@@ -245,16 +262,18 @@ class _InventoryScreenState extends State<InventoryScreen> {
   ) {
     final editor = _productEditor;
     return SingleChildScrollView(
+      controller: _verticalScrollController,
       padding: const EdgeInsets.only(bottom: 96),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         controller: _horizontalScrollController,
-        child: ConstrainedBox(
-          constraints: BoxConstraints(minWidth: constraints.maxWidth),
-          child: InventoryProductsTable(
+        child: InventoryProductsTable(
+            verticalController: _verticalScrollController,
+            minWidth: constraints.maxWidth,
             products: products,
             promotions: _promotionsMap,
             comboNames: _comboNames,
+            packedUnits: _packedUnits,
             categoryNames: _categoryNames,
             onEditCategory: (product) => editor.editCategory(context, product),
             onEditProduct: (product) =>
@@ -271,7 +290,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
             ascending: _sortAscending,
             onSort: _onSort,
             onResetSort: _resetSort,
-          ),
         ),
       ),
     );

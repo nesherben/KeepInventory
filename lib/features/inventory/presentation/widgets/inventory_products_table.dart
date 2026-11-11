@@ -32,7 +32,23 @@ class InventoryProductsTable extends StatelessWidget {
     this.comboNames = const {},
     this.categoryNames = const {},
     this.onEditCategory,
+    this.verticalController,
+    this.minWidth = 0,
+    this.packedUnits = const {},
   });
+
+  /// Unidades dentro de packs montados, por id de producto.
+  final Map<int, int> packedUnits;
+
+  /// Altura de la cabecera de la tabla.
+  static const kHeadingHeight = 56.0;
+
+  /// Controlador del scroll vertical que contiene la tabla: si se pasa, la
+  /// cabecera queda fija arriba al hacer scroll.
+  final ScrollController? verticalController;
+
+  /// Ancho mínimo de la tabla (ancho disponible).
+  final double minWidth;
 
   /// Nombre de la categoría de cada producto (por id de categoría).
   final Map<int, String> categoryNames;
@@ -122,7 +138,13 @@ class InventoryProductsTable extends StatelessWidget {
                 : () => onEditCategory!(product),
           ),
         ),
-        DataCell(InventoryStockStepper(product: product, actions: actions)),
+        DataCell(
+          InventoryStockStepper(
+            product: product,
+            actions: actions,
+            packedUnits: packedUnits[product.id] ?? 0,
+          ),
+        ),
         DataCell(
           InventoryTableCell(
             text: context.money(product.price),
@@ -167,8 +189,59 @@ class InventoryProductsTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final table = ConstrainedBox(
+      constraints: BoxConstraints(minWidth: minWidth),
+      child: _buildTable(context),
+    );
+    final controller = verticalController;
+    if (controller == null) return table;
+
+    // Cabecera fija: una copia de la tabla recortada a la altura de la
+    // cabecera se desplaza con el scroll vertical (mismas anchuras de columna).
+    // El hueco tiene el ancho exacto de la tabla y la altura de la cabecera;
+    // Transform solo la desplaza al pintar (sin rehacer el layout).
+    return Stack(
+      children: [
+        table,
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          height: kHeadingHeight,
+          child: ListenableBuilder(
+            listenable: controller,
+            builder: (context, child) {
+              final offset = controller.hasClients && controller.offset > 0
+                  ? controller.offset
+                  : 0.0;
+              return Transform.translate(
+                offset: Offset(0, offset),
+                child: child,
+              );
+            },
+            child: RepaintBoundary(
+              child: ClipRect(
+                child: OverflowBox(
+                  alignment: Alignment.topLeft,
+                  minHeight: 0,
+                  maxHeight: double.infinity,
+                  child: ColoredBox(
+                    color: Theme.of(context).colorScheme.surface,
+                    child: table,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTable(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     return DataTable(
+      headingRowHeight: kHeadingHeight,
       headingRowColor: WidgetStateProperty.all(
         colors.surfaceContainerHighest.withValues(alpha: 0.5),
       ),

@@ -192,15 +192,19 @@ class InventoryStockStepper extends StatelessWidget {
     super.key,
     required this.product,
     required this.actions,
+    this.packedUnits = 0,
   });
 
   final Product product;
   final InventoryProductActions actions;
 
+  /// Unidades guardadas dentro de packs montados (no están en el stock).
+  final int packedUnits;
+
   @override
   Widget build(BuildContext context) {
     final level = StockLevel.of(product.units);
-    return QuantityStepper(
+    final stepper = QuantityStepper(
       label: '${product.units}',
       isEmpty: level == StockLevel.out,
       isLow: level == StockLevel.low,
@@ -210,6 +214,34 @@ class InventoryStockStepper extends StatelessWidget {
       onIncrement: () => actions.onStockChange(product, 1),
       onTapLabel: () =>
           actions.onEditField(product, InventoryProductField.units),
+    );
+    if (packedUnits <= 0) return stepper;
+    // Marca compacta al lado: icono de pack + unidades dentro de packs
+    final color = Theme.of(context).colorScheme.onSurfaceVariant;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        stepper,
+        const SizedBox(width: AppSpacing.xs),
+        Tooltip(
+          message: context.l10n.inventoryInPacks(packedUnits),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.card_giftcard_outlined, size: 14, color: color),
+              const SizedBox(width: 2),
+              Text(
+                '$packedUnits',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: color,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
@@ -338,8 +370,11 @@ class InventoryProductCard extends StatelessWidget {
     required this.actions,
     this.comboName,
     this.categoryName,
+    this.packedUnits = 0,
   });
 
+  /// Unidades dentro de packs montados.
+  final int packedUnits;
   final Product product;
   final Promotion? promotion;
   final InventoryProductActions actions;
@@ -416,7 +451,11 @@ class InventoryProductCard extends StatelessWidget {
                   runSpacing: AppSpacing.xs,
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    InventoryStockStepper(product: product, actions: actions),
+                    InventoryStockStepper(
+                      product: product,
+                      actions: actions,
+                      packedUnits: packedUnits,
+                    ),
                     InventoryPromotionChip(
                       promotion: promotion,
                       onTap: () => actions.onEditPromotion(product),

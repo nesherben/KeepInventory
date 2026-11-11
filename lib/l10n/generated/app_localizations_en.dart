@@ -1799,4 +1799,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String salesRefundOriginalUnitPrice(String amount) {
     return 'Original price: €$amount/unit';
   }
+
+  @override
+  String inventoryInPacks(int count) {
+    return '+$count in packs';
+  }
 }
