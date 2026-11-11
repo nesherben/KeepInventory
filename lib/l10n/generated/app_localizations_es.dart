@@ -1816,4 +1816,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String inventoryInPacks(int count) {
     return '+$count en pack';
   }
+
+  @override
+  String get promotionPickTitle => 'Promoción del producto';
+
+  @override
+  String get promotionRemove => 'Quitar promoción';
 }

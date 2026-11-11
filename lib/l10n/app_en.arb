@@ -527,5 +527,7 @@
   "salesResetTotalAdjustment": "Remove adjustment",
   "salesInvalidAgreedTotal": "Enter a valid total of zero or more.",
   "salesRefundOriginalUnitPrice": "Original price: €{amount}/unit",
-  "inventoryInPacks": "+{count} in packs"
+  "inventoryInPacks": "+{count} in packs",
+  "promotionPickTitle": "Product promotion",
+  "promotionRemove": "Remove promotion"
 }

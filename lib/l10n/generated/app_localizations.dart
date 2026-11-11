@@ -2995,6 +2995,18 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'+{count} en pack'**
   String inventoryInPacks(int count);
+
+  /// No description provided for @promotionPickTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Promoción del producto'**
+  String get promotionPickTitle;
+
+  /// No description provided for @promotionRemove.
+  ///
+  /// In es, this message translates to:
+  /// **'Quitar promoción'**
+  String get promotionRemove;
 }
 
 class _AppLocalizationsDelegate

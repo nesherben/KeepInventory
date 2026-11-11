@@ -951,5 +951,7 @@
         "type": "int"
       }
     }
-  }
+  },
+  "promotionPickTitle": "Promoción del producto",
+  "promotionRemove": "Quitar promoción"
 }

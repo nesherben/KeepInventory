@@ -14,6 +14,7 @@ import '../domain/product.dart';
 import '../../promotions/domain/promotion.dart';
 import 'widgets/category_picker.dart';
 import 'widgets/inventory_product_widgets.dart';
+import 'widgets/promotion_picker.dart';
 import 'widgets/product_form_dialog.dart';
 
 class InventoryProductEditor {
@@ -141,62 +142,28 @@ class InventoryProductEditor {
     );
   }
 
-  void showPromotionSelectDialog(BuildContext context, Product product) {
-    int? selectedPromotionId = product.promotionId;
-
-    showDialog(
-      context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (dialogContext, setDialogState) => AlertDialog(
-          title: Text(dialogContext.l10n.selectPromotion),
-          content: DropdownButtonFormField<int?>(
-            initialValue: selectedPromotionId,
-            decoration: InputDecoration(
-              labelText: dialogContext.l10n.appliedPromotion,
-              border: const OutlineInputBorder(),
-            ),
-            items: [
-              DropdownMenuItem(
-                value: null,
-                child: Text(dialogContext.l10n.noPromotion),
-              ),
-              ...promotions().values.map(
-                (promotion) => DropdownMenuItem(
-                  value: promotion.id,
-                  child: Text(promotion.name),
-                ),
-              ),
-            ],
-            onChanged: (value) {
-              setDialogState(() => selectedPromotionId = value);
-            },
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: Text(dialogContext.l10n.cancel),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                await repository.updateFields(
-                  product.id!,
-                  promotionId: selectedPromotionId,
-                  clearPromotion: selectedPromotionId == null,
-                );
-                if (!dialogContext.mounted) return;
-                Navigator.pop(dialogContext);
-                reloadProducts();
-                AppAlerts.showSuccess(
-                  dialogContext,
-                  dialogContext.l10n.promotionUpdated,
-                );
-              },
-              child: Text(dialogContext.l10n.save),
-            ),
-          ],
-        ),
-      ),
+  /// Panel de promoción (mismo estilo que el de categoría): tocar aplica.
+  Future<void> showPromotionSelectDialog(
+    BuildContext context,
+    Product product,
+  ) async {
+    final current = product.promotionId;
+    final pick = await pickPromotion(
+      context,
+      promotions: promotions().values.toList(),
+      // Una promoción borrada no cuenta como actual
+      currentId: promotions().containsKey(current) ? current : null,
     );
+    if (pick == null || pick.promotion?.id == current) return;
+
+    await repository.updateFields(
+      product.id!,
+      promotionId: pick.promotion?.id,
+      clearPromotion: pick.promotion == null,
+    );
+    if (!context.mounted) return;
+    reloadProducts();
+    AppAlerts.showSuccess(context, context.l10n.promotionUpdated);
   }
 
   void editSingleImage(BuildContext context, Product product) {
