@@ -14,6 +14,9 @@ class AppPreferences {
   static const _lastDriveBackupKey = 'last_drive_backup_at';
   static const _driveSignatureKey = 'last_drive_backup_signature';
   static const _driveEmailKey = 'drive_account_email';
+  static const _driveStatusKnownKey = 'drive_status_known';
+  static const _driveStatusAccountKey = 'drive_status_account';
+  static const _driveStatusBackupAtKey = 'drive_status_backup_at';
   static const _backupFailuresKey = 'backup_failures';
   static final ValueNotifier<bool> privacyModeEnabled = ValueNotifier(false);
 
@@ -40,6 +43,15 @@ class AppPreferences {
 
   /// Cuenta de Google con la sesión iniciada (solo para mostrarla).
   static String? driveEmail;
+  static final ValueNotifier<String?> driveEmailNotifier = ValueNotifier(null);
+  static bool driveStatusKnown = false;
+  static String? driveStatusAccount;
+  static int? driveStatusBackupAt;
+
+  static bool get hasCachedDriveStatus =>
+      driveStatusKnown &&
+      driveEmail != null &&
+      driveStatusAccount == driveEmail;
 
   /// Copias automáticas fallidas seguidas (0 = la última salió bien).
   static int backupFailures = 0;
@@ -54,7 +66,11 @@ class AppPreferences {
     lastLocalSignature = preferences.getString(_localSignatureKey);
     lastDriveBackupAt = preferences.getInt(_lastDriveBackupKey);
     lastDriveSignature = preferences.getString(_driveSignatureKey);
+    driveStatusKnown = preferences.getBool(_driveStatusKnownKey) ?? false;
+    driveStatusAccount = preferences.getString(_driveStatusAccountKey);
+    driveStatusBackupAt = preferences.getInt(_driveStatusBackupAtKey);
     driveEmail = preferences.getString(_driveEmailKey);
+    driveEmailNotifier.value = driveEmail;
     backupFailures = preferences.getInt(_backupFailuresKey) ?? 0;
     privacyModeEnabled.value = preferences.getBool(_privacyModeKey) ?? false;
     tutorialSeen = preferences.getBool(_tutorialSeenKey) ?? false;
@@ -111,8 +127,26 @@ class AppPreferences {
     await preferences.setString(_driveSignatureKey, signature);
   }
 
+  static Future<void> recordDriveStatus({
+    required String account,
+    required int? backupAt,
+  }) async {
+    driveStatusKnown = true;
+    driveStatusAccount = account;
+    driveStatusBackupAt = backupAt;
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.setBool(_driveStatusKnownKey, true);
+    await preferences.setString(_driveStatusAccountKey, account);
+    if (backupAt == null) {
+      await preferences.remove(_driveStatusBackupAtKey);
+    } else {
+      await preferences.setInt(_driveStatusBackupAtKey, backupAt);
+    }
+  }
+
   static Future<void> setDriveEmail(String? email) async {
     driveEmail = email;
+    driveEmailNotifier.value = email;
     final preferences = await SharedPreferences.getInstance();
     if (email == null) {
       await preferences.remove(_driveEmailKey);

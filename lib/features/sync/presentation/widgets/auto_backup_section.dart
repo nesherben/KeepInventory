@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:keepinventory/l10n/app_localizations_ext.dart';
@@ -49,18 +51,32 @@ class _AutoBackupSectionState extends State<AutoBackupSection>
   bool _unsaved = false;
   List<LocalBackupFile> _backups = const [];
   int _refreshGeneration = 0;
+  int _driveRefreshGeneration = 0;
+  bool _driveChecking = false;
+  bool _driveUnavailable = false;
+  DateTime? _driveBackupModified;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     BackupCoordinator.revision.addListener(_refresh);
+    AppPreferences.driveEmailNotifier.addListener(_refreshDrive);
+    if (AppPreferences.hasCachedDriveStatus) {
+      final backupAt = AppPreferences.driveStatusBackupAt;
+      _driveBackupModified = backupAt == null
+          ? null
+          : DateTime.fromMillisecondsSinceEpoch(backupAt);
+    }
     _refresh();
+    unawaited(_refreshDrive());
   }
 
   @override
   void dispose() {
     BackupCoordinator.revision.removeListener(_refresh);
+    AppPreferences.driveEmailNotifier.removeListener(_refreshDrive);
+    _driveRefreshGeneration++;
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -68,7 +84,10 @@ class _AutoBackupSectionState extends State<AutoBackupSection>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     // Al volver de Ajustes puede haberse concedido el permiso
-    if (state == AppLifecycleState.resumed) _refresh();
+    if (state == AppLifecycleState.resumed) {
+      _refresh();
+      unawaited(_refreshDrive());
+    }
   }
 
   Future<void> _refresh() async {
@@ -87,6 +106,57 @@ class _AutoBackupSectionState extends State<AutoBackupSection>
       if (generation == _refreshGeneration) {
         debugPrint('No se pudo leer el estado de las copias: $e');
       }
+    }
+  }
+
+  Future<void> _refreshDrive() async {
+    if (!widget.showStatusCard) return;
+    if (!DriveBackupService.isConfigured || AppPreferences.driveEmail == null) {
+      _driveRefreshGeneration++;
+      if (!mounted) return;
+      setState(() {
+        _driveBackupModified = null;
+        _driveChecking = false;
+        _driveUnavailable = false;
+      });
+      return;
+    }
+    if (_driveChecking) return;
+    final generation = ++_driveRefreshGeneration;
+    final account = AppPreferences.driveEmail!;
+
+    if (mounted) {
+      setState(() {
+        _driveChecking = true;
+        _driveUnavailable = false;
+      });
+    }
+    try {
+      final backup = await DriveBackupService().findBackup(
+        promptIfNecessary: false,
+      );
+      if (!mounted ||
+          generation != _driveRefreshGeneration ||
+          AppPreferences.driveEmail != account) {
+        return;
+      }
+      await AppPreferences.recordDriveStatus(
+        account: account,
+        backupAt: backup?.modified.millisecondsSinceEpoch,
+      );
+      setState(() {
+        _driveBackupModified = backup?.modified;
+        _driveChecking = false;
+        _driveUnavailable = false;
+      });
+    } catch (error) {
+      if (!mounted || generation != _driveRefreshGeneration) return;
+      debugPrint('No se pudo consultar la copia de Drive: $error');
+      setState(() {
+        _driveBackupModified = null;
+        _driveChecking = false;
+        _driveUnavailable = true;
+      });
     }
   }
 
@@ -120,6 +190,7 @@ class _AutoBackupSectionState extends State<AutoBackupSection>
     if (!mounted) return;
     var driveUploaded = false;
     DriveException? driveError;
+    DriveBackupInfo? uploadedDriveBackup;
     final driveNotConnected =
         includeDrive &&
         (!DriveBackupService.isConfigured || AppPreferences.driveEmail == null);
@@ -127,7 +198,7 @@ class _AutoBackupSectionState extends State<AutoBackupSection>
         includeDrive &&
         !driveNotConnected) {
       try {
-        await runWithBlockingProgress(
+        uploadedDriveBackup = await runWithBlockingProgress(
           context,
           title: l10n.backupOperationUploading,
           task: (reportProgress) =>
@@ -139,6 +210,24 @@ class _AutoBackupSectionState extends State<AutoBackupSection>
       } catch (error) {
         debugPrint('No se pudo subir la copia a Drive: $error');
         driveError = const DriveException(DriveFailure.failed);
+      }
+    }
+    final completedUpload = uploadedDriveBackup;
+    if (completedUpload != null) {
+      final driveEmail = AppPreferences.driveEmail;
+      if (driveEmail != null) {
+        await AppPreferences.recordDriveStatus(
+          account: driveEmail,
+          backupAt: completedUpload.modified.millisecondsSinceEpoch,
+        );
+      }
+      _driveRefreshGeneration++;
+      if (mounted) {
+        setState(() {
+          _driveBackupModified = completedUpload.modified;
+          _driveChecking = false;
+          _driveUnavailable = false;
+        });
       }
     }
     await BackupCoordinator.refresh();
@@ -216,6 +305,16 @@ class _AutoBackupSectionState extends State<AutoBackupSection>
         !AppPreferences.backupRiskAccepted;
     final failures = AppPreferences.backupFailures;
     final canAct = widget.enabled && !_busy;
+    final driveStatus =
+        !DriveBackupService.isConfigured || AppPreferences.driveEmail == null
+        ? l10n.backupDriveNotConnected
+        : _driveChecking
+        ? l10n.backupDriveChecking
+        : _driveUnavailable
+        ? l10n.backupDriveStatusUnavailable
+        : _driveBackupModified == null
+        ? l10n.backupDriveNoBackup
+        : formatBackupDate(context, _driveBackupModified!);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -225,6 +324,13 @@ class _AutoBackupSectionState extends State<AutoBackupSection>
           _StatusCard(
             unsaved: _unsaved,
             busy: _busy,
+            driveStatus: driveStatus,
+            driveChecking: _driveChecking,
+            onRefreshDrive:
+                AppPreferences.driveEmail == null ||
+                    !DriveBackupService.isConfigured
+                ? null
+                : () => unawaited(_refreshDrive()),
             onBackup: canAct ? () => _backupNow(includeDrive: true) : null,
           ),
         ],
@@ -284,11 +390,17 @@ class _StatusCard extends StatelessWidget {
   const _StatusCard({
     required this.unsaved,
     required this.busy,
+    required this.driveStatus,
+    required this.driveChecking,
+    required this.onRefreshDrive,
     required this.onBackup,
   });
 
   final bool unsaved;
   final bool busy;
+  final String driveStatus;
+  final bool driveChecking;
+  final VoidCallback? onRefreshDrive;
   final VoidCallback? onBackup;
 
   @override
@@ -296,7 +408,6 @@ class _StatusCard extends StatelessWidget {
     final l10n = context.l10n;
     final colors = Theme.of(context).colorScheme;
     final lastLocal = AppPreferences.lastLocalBackupAt;
-    final lastDrive = AppPreferences.lastDriveBackupAt;
 
     final (
       IconData icon,
@@ -376,7 +487,10 @@ class _StatusCard extends StatelessWidget {
                 child: _LastCopy(
                   icon: Icons.cloud_outlined,
                   label: l10n.backupStatusDrive,
-                  value: when(lastDrive),
+                  value: driveStatus,
+                  onRefresh: onRefreshDrive,
+                  refreshing: driveChecking,
+                  refreshTooltip: l10n.update,
                 ),
               ),
             ],
@@ -411,11 +525,17 @@ class _LastCopy extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.value,
+    this.onRefresh,
+    this.refreshing = false,
+    this.refreshTooltip,
   });
 
   final IconData icon;
   final String label;
   final String value;
+  final VoidCallback? onRefresh;
+  final bool refreshing;
+  final String? refreshTooltip;
 
   @override
   Widget build(BuildContext context) {
@@ -445,6 +565,25 @@ class _LastCopy extends StatelessWidget {
                   ),
                 ),
               ),
+              if (onRefresh != null) ...[
+                const SizedBox(width: AppSpacing.xs),
+                SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: refreshing
+                      ? const CircularProgressIndicator(strokeWidth: 1.5)
+                      : IconButton(
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints.tightFor(
+                            width: 20,
+                            height: 20,
+                          ),
+                          tooltip: refreshTooltip,
+                          onPressed: onRefresh,
+                          icon: const Icon(Icons.refresh, size: 15),
+                        ),
+                ),
+              ],
             ],
           ),
           const SizedBox(height: AppSpacing.xs),

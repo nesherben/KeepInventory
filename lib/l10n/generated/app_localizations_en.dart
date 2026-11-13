@@ -2200,4 +2200,17 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get backupLocalDriveFailed =>
       'Backup saved on this phone, but it could not be saved to Google Drive.';
+
+  @override
+  String get backupDriveChecking => 'Checking Drive backup…';
+
+  @override
+  String get backupDriveStatusUnavailable => 'Could not check Drive';
+
+  @override
+  String get backupDriveNoBackup => 'No backup in Drive';
+
+  @override
+  String get backupDriveNotConnected =>
+      'Connect your Google account to check Drive';
 }

@@ -1134,5 +1134,9 @@
   "backupLocalAndDriveDone": "Copia guardada en el móvil y en Google Drive.",
   "backupLocalOnlyOffline": "Copia guardada en el móvil. Sin conexión; no se pudo guardar en Google Drive.",
   "backupLocalOnlyNotConnected": "Copia guardada en el móvil. Conecta Google Drive para guardar también allí.",
-  "backupLocalDriveFailed": "Copia guardada en el móvil, pero no se pudo guardar en Google Drive."
+  "backupLocalDriveFailed": "Copia guardada en el móvil, pero no se pudo guardar en Google Drive.",
+  "backupDriveChecking": "Comprobando copia de Drive…",
+  "backupDriveStatusUnavailable": "No se pudo consultar Drive",
+  "backupDriveNoBackup": "No hay ninguna copia en Drive",
+  "backupDriveNotConnected": "Conecta tu cuenta de Google para consultar Drive"
 }

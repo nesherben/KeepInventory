@@ -58,6 +58,10 @@ void main() {
       AppPreferences.lastDriveBackupAt = null;
       AppPreferences.lastDriveSignature = null;
       AppPreferences.driveEmail = null;
+      AppPreferences.driveStatusKnown = false;
+      AppPreferences.driveStatusAccount = null;
+      AppPreferences.driveStatusBackupAt = null;
+      AppPreferences.driveEmailNotifier.value = null;
       AppPreferences.backupFailures = 0;
     });
 
@@ -98,6 +102,28 @@ void main() {
 
       expect(AppPreferences.driveEmail, isNull);
     });
+
+    test(
+      'conserva el estado remoto de Drive para no consultarlo cada vez',
+      () async {
+        await AppPreferences.setDriveEmail('a@b.c');
+        await AppPreferences.recordDriveStatus(
+          account: 'a@b.c',
+          backupAt: 1234,
+        );
+
+        AppPreferences.driveStatusKnown = false;
+        AppPreferences.driveStatusAccount = null;
+        AppPreferences.driveStatusBackupAt = null;
+        await AppPreferences.load();
+
+        expect(AppPreferences.hasCachedDriveStatus, isTrue);
+        expect(AppPreferences.driveStatusBackupAt, 1234);
+
+        await AppPreferences.setDriveEmail('otra@cuenta.com');
+        expect(AppPreferences.hasCachedDriveStatus, isFalse);
+      },
+    );
 
     test('los fallos se acumulan y una copia buena los pone a cero', () async {
       await AppPreferences.recordBackupFailure();

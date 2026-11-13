@@ -43,6 +43,30 @@ void main() {
     expect(await service.findBackup(), isNull);
   });
 
+  test(
+    'findBackup puede consultar sin solicitar autenticación interactiva',
+    () async {
+      var interactiveAuthRequested = false;
+      var silentAuthRequested = false;
+      final service = DriveBackupService(
+        client: MockClient((_) async => http.Response('{"files": []}', 200)),
+        authHeaders: () async {
+          interactiveAuthRequested = true;
+          return {'Authorization': 'interactive'};
+        },
+        silentAuthHeaders: () async {
+          silentAuthRequested = true;
+          return {'Authorization': 'silent'};
+        },
+      );
+
+      await service.findBackup(promptIfNecessary: false);
+
+      expect(silentAuthRequested, isTrue);
+      expect(interactiveAuthRequested, isFalse);
+    },
+  );
+
   test('findBackup lee id, fecha y tamaño de la copia', () async {
     final service = _service(
       MockClient(

@@ -635,5 +635,9 @@
   "backupLocalAndDriveDone": "Backup saved on this phone and to Google Drive.",
   "backupLocalOnlyOffline": "Backup saved on this phone. No connection, so it could not be saved to Google Drive.",
   "backupLocalOnlyNotConnected": "Backup saved on this phone. Connect Google Drive to save a copy there too.",
-  "backupLocalDriveFailed": "Backup saved on this phone, but it could not be saved to Google Drive."
+  "backupLocalDriveFailed": "Backup saved on this phone, but it could not be saved to Google Drive.",
+  "backupDriveChecking": "Checking Drive backup…",
+  "backupDriveStatusUnavailable": "Could not check Drive",
+  "backupDriveNoBackup": "No backup in Drive",
+  "backupDriveNotConnected": "Connect your Google account to check Drive"
 }

@@ -2214,4 +2214,17 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get backupLocalDriveFailed =>
       'Copia guardada en el móvil, pero no se pudo guardar en Google Drive.';
+
+  @override
+  String get backupDriveChecking => 'Comprobando copia de Drive…';
+
+  @override
+  String get backupDriveStatusUnavailable => 'No se pudo consultar Drive';
+
+  @override
+  String get backupDriveNoBackup => 'No hay ninguna copia en Drive';
+
+  @override
+  String get backupDriveNotConnected =>
+      'Conecta tu cuenta de Google para consultar Drive';
 }

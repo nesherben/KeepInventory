@@ -55,9 +55,12 @@ class DriveBackupService {
   DriveBackupService({
     http.Client? client,
     Future<Map<String, String>> Function()? authHeaders,
+    Future<Map<String, String>> Function()? silentAuthHeaders,
     Future<Directory> Function()? temporaryDirectory,
   }) : _client = client ?? http.Client(),
        _authHeaders = authHeaders ?? _googleAuthHeaders,
+       _silentAuthHeaders =
+           silentAuthHeaders ?? authHeaders ?? _googleSilentAuthHeaders,
        _temporaryDirectory = temporaryDirectory ?? getTemporaryDirectory;
 
   static const fileName = 'keepinventory_backup.db';
@@ -66,11 +69,13 @@ class DriveBackupService {
 
   final http.Client _client;
   final Future<Map<String, String>> Function() _authHeaders;
+  final Future<Map<String, String>> Function() _silentAuthHeaders;
   final Future<Directory> Function() _temporaryDirectory;
 
   static bool get isConfigured => driveServerClientId.isNotEmpty;
 
   static bool _initialized = false;
+  static GoogleSignInAccount? _driveAccount;
 
   static Future<void> _ensureInitialized() async {
     if (!isConfigured) throw const DriveException(DriveFailure.notConfigured);
@@ -87,6 +92,7 @@ class DriveBackupService {
     try {
       final account = await GoogleSignIn.instance.authenticate();
       await account.authorizationClient.authorizeScopes([driveAppDataScope]);
+      _driveAccount = account;
       await AppPreferences.setDriveEmail(account.email);
       return account.email;
     } on GoogleSignInException catch (e) {
@@ -105,16 +111,29 @@ class DriveBackupService {
     } catch (e) {
       debugPrint('Error al cerrar la sesión de Google: $e');
     }
+    _driveAccount = null;
     await AppPreferences.setDriveEmail(null);
   }
 
   static Future<Map<String, String>> _googleAuthHeaders() async {
+    return _googleHeaders(promptIfNecessary: true);
+  }
+
+  static Future<Map<String, String>> _googleSilentAuthHeaders() async {
+    return _googleHeaders(promptIfNecessary: false);
+  }
+
+  static Future<Map<String, String>> _googleHeaders({
+    required bool promptIfNecessary,
+  }) async {
     await _ensureInitialized();
     try {
-      // Recupera la sesión anterior sin mostrar nada si es posible
-      await GoogleSignIn.instance.attemptLightweightAuthentication();
-      final headers = await GoogleSignIn.instance.authorizationClient
-          .authorizationHeaders([driveAppDataScope], promptIfNecessary: true);
+      final authorizationClient =
+          _driveAccount?.authorizationClient ??
+          GoogleSignIn.instance.authorizationClient;
+      final headers = await authorizationClient.authorizationHeaders([
+        driveAppDataScope,
+      ], promptIfNecessary: promptIfNecessary);
       if (headers == null) throw const DriveException(DriveFailure.cancelled);
       return headers;
     } on GoogleSignInException catch (e) {
@@ -129,8 +148,10 @@ class DriveBackupService {
   // ── Drive ────────────────────────────────────────────────────────────────
 
   /// La copia que hay en Drive (null si todavía no se ha subido ninguna).
-  Future<DriveBackupInfo?> findBackup() async {
-    final headers = await _authHeaders();
+  Future<DriveBackupInfo?> findBackup({bool promptIfNecessary = true}) async {
+    final headers = await (promptIfNecessary
+        ? _authHeaders()
+        : _silentAuthHeaders());
     final uri = Uri.parse(_api).replace(
       queryParameters: {
         'spaces': 'appDataFolder',

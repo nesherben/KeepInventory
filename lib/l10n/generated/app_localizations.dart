@@ -3643,6 +3643,30 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Copia guardada en el móvil, pero no se pudo guardar en Google Drive.'**
   String get backupLocalDriveFailed;
+
+  /// No description provided for @backupDriveChecking.
+  ///
+  /// In es, this message translates to:
+  /// **'Comprobando copia de Drive…'**
+  String get backupDriveChecking;
+
+  /// No description provided for @backupDriveStatusUnavailable.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo consultar Drive'**
+  String get backupDriveStatusUnavailable;
+
+  /// No description provided for @backupDriveNoBackup.
+  ///
+  /// In es, this message translates to:
+  /// **'No hay ninguna copia en Drive'**
+  String get backupDriveNoBackup;
+
+  /// No description provided for @backupDriveNotConnected.
+  ///
+  /// In es, this message translates to:
+  /// **'Conecta tu cuenta de Google para consultar Drive'**
+  String get backupDriveNotConnected;
 }
 
 class _AppLocalizationsDelegate
