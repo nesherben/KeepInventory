@@ -24,7 +24,7 @@ class BackupPermissionFlow {
   const BackupPermissionFlow._();
 
   static Future<BackupPermissionResult> ensure(BuildContext context) async {
-    if (await LocalBackupService.canWriteSharedFolder()) {
+    if (await LocalBackupService.hasFilesAccess()) {
       return BackupPermissionResult.granted;
     }
     if (AppPreferences.backupRiskAccepted) {

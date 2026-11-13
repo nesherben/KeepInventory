@@ -970,7 +970,7 @@
   },
   "backupNoCopyYet": "Todavía no hay copias",
   "backupPendingChanges": "Cambios sin copiar",
-  "backupNowTitle": "Copiar ahora",
+  "backupNowTitle": "Hacer copia de seguridad",
   "backupNowDone": "Copia guardada",
   "backupNowUnchanged": "No hay cambios desde la última copia",
   "backupNowEmpty": "No hay datos que copiar todavía",
@@ -1123,5 +1123,16 @@
   "backupRestoreFromDriveHint": "La copia guardada en tu Drive",
   "backupRestoreChooseFile": "Elegir otro archivo…",
   "backupRestoreChooseFileHint": "Una copia que te hayan pasado o desde el PC",
-  "backupShare": "Compartir copia"
+  "backupShare": "Compartir copia",
+  "backupOperationUploading": "Subiendo copia a Google Drive…",
+  "backupOperationDownloading": "Descargando copia de Google Drive…",
+  "backupOperationRestoring": "Restaurando la copia…",
+  "backupLocalManualTitle": "Guardar copia en este móvil",
+  "backupLocalManualSubtitle": "Solo es una copia local; no se sube a Google Drive.",
+  "backupLocalSectionTitle": "Copias locales",
+  "backupRestoreChooseAction": "Elegir copia para restaurar",
+  "backupLocalAndDriveDone": "Copia guardada en el móvil y en Google Drive.",
+  "backupLocalOnlyOffline": "Copia guardada en el móvil. Sin conexión; no se pudo guardar en Google Drive.",
+  "backupLocalOnlyNotConnected": "Copia guardada en el móvil. Conecta Google Drive para guardar también allí.",
+  "backupLocalDriveFailed": "Copia guardada en el móvil, pero no se pudo guardar en Google Drive."
 }

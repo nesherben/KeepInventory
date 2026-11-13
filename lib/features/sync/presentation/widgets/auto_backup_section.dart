@@ -16,16 +16,27 @@ import '../backup_permission_flow.dart';
 import '../backup_restore_flow.dart';
 import 'settings_group.dart';
 
-/// Parte de arriba de Copias y sincronización: tarjeta de estado (¿están mis
-/// datos a salvo?) con "Copiar ahora", y el grupo de la copia automática.
+/// Estado y acciones de copias locales, junto con la selección de restauración.
 class AutoBackupSection extends StatefulWidget {
-  const AutoBackupSection({super.key, this.enabled = true, this.onPickFile});
+  const AutoBackupSection({
+    super.key,
+    this.enabled = true,
+    this.onPickFile,
+    this.showStatusCard = true,
+    this.showLocalBackups = true,
+  });
 
   /// Se desactivan las acciones mientras otra operación de datos está en curso.
   final bool enabled;
 
   /// Restaurar un archivo elegido a mano (selector del sistema).
   final Future<void> Function()? onPickFile;
+
+  /// Permite colocar la tarjeta de estado en una columna distinta.
+  final bool showStatusCard;
+
+  /// Permite colocar las acciones locales en una columna distinta.
+  final bool showLocalBackups;
 
   @override
   State<AutoBackupSection> createState() => _AutoBackupSectionState();
@@ -34,9 +45,10 @@ class AutoBackupSection extends StatefulWidget {
 class _AutoBackupSectionState extends State<AutoBackupSection>
     with WidgetsBindingObserver {
   bool _busy = false;
-  bool _hasPermission = false;
+  bool? _hasPermission;
   bool _unsaved = false;
   List<LocalBackupFile> _backups = const [];
+  int _refreshGeneration = 0;
 
   @override
   void initState() {
@@ -60,19 +72,21 @@ class _AutoBackupSectionState extends State<AutoBackupSection>
   }
 
   Future<void> _refresh() async {
+    final generation = ++_refreshGeneration;
     try {
-      final permission = await LocalBackupService.canWriteSharedFolder();
+      final permission = await LocalBackupService.hasFilesAccess();
       final unsaved = await LocalBackupService.hasUnsavedChanges();
       final backups = await LocalBackupService.listBackups();
-      if (!mounted) return;
+      if (!mounted || generation != _refreshGeneration) return;
       setState(() {
         _hasPermission = permission;
         _unsaved = unsaved;
         _backups = backups;
       });
     } catch (e) {
-      // Sin acceso a archivos o a la BD el estado se queda como estaba
-      debugPrint('No se pudo leer el estado de las copias: $e');
+      if (generation == _refreshGeneration) {
+        debugPrint('No se pudo leer el estado de las copias: $e');
+      }
     }
   }
 
@@ -95,18 +109,56 @@ class _AutoBackupSectionState extends State<AutoBackupSection>
     await _backupNow(quiet: true);
   }
 
-  Future<void> _backupNow({bool quiet = false}) async {
+  Future<void> _backupNow({
+    bool quiet = false,
+    bool includeDrive = false,
+  }) async {
     if (_busy) return;
+    final l10n = context.l10n;
     setState(() => _busy = true);
     final result = await LocalBackupService.createBackup(force: !quiet);
+    if (!mounted) return;
+    var driveUploaded = false;
+    DriveException? driveError;
+    final driveNotConnected =
+        includeDrive &&
+        (!DriveBackupService.isConfigured || AppPreferences.driveEmail == null);
+    if (result.status == LocalBackupStatus.created &&
+        includeDrive &&
+        !driveNotConnected) {
+      try {
+        await runWithBlockingProgress(
+          context,
+          title: l10n.backupOperationUploading,
+          task: (reportProgress) =>
+              DriveBackupService().upload(onProgress: reportProgress),
+        );
+        driveUploaded = true;
+      } on DriveException catch (error) {
+        driveError = error;
+      } catch (error) {
+        debugPrint('No se pudo subir la copia a Drive: $error');
+        driveError = const DriveException(DriveFailure.failed);
+      }
+    }
     await BackupCoordinator.refresh();
     await _refresh();
     if (!mounted) return;
     setState(() => _busy = false);
-    final l10n = context.l10n;
     switch (result.status) {
       case LocalBackupStatus.created:
-        AppAlerts.showSuccess(context, l10n.backupNowDone);
+        if (quiet) return;
+        if (!includeDrive) {
+          AppAlerts.showSuccess(context, l10n.backupNowDone);
+        } else if (driveUploaded) {
+          AppAlerts.showSuccess(context, l10n.backupLocalAndDriveDone);
+        } else if (driveNotConnected) {
+          AppAlerts.showWarning(context, l10n.backupLocalOnlyNotConnected);
+        } else if (driveError?.failure == DriveFailure.offline) {
+          AppAlerts.showWarning(context, l10n.backupLocalOnlyOffline);
+        } else {
+          AppAlerts.showWarning(context, l10n.backupLocalDriveFailed);
+        }
       case LocalBackupStatus.unchanged:
         if (!quiet) AppAlerts.showInfo(context, l10n.backupNowUnchanged);
       case LocalBackupStatus.empty:
@@ -159,78 +211,85 @@ class _AutoBackupSectionState extends State<AutoBackupSection>
     final l10n = context.l10n;
     final enabled = AppPreferences.autoBackupEnabled;
     final needsPermissionSteps =
-        enabled && !_hasPermission && !AppPreferences.backupRiskAccepted;
+        enabled &&
+        _hasPermission == false &&
+        !AppPreferences.backupRiskAccepted;
     final failures = AppPreferences.backupFailures;
     final canAct = widget.enabled && !_busy;
-    final copies = _backups.where((b) => !b.beforeRestore).length;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        DataSectionLabel(l10n.dataBackupSection),
-        _StatusCard(
-          unsaved: _unsaved,
-          busy: _busy,
-          onBackupNow: canAct ? () => _backupNow() : null,
-        ),
-        DataSectionLabel(l10n.backupAutoSectionTitle),
-        SettingsGroup(
-          children: [
-            SettingsRow(
-              icon: Icons.schedule,
-              title: l10n.backupAutoTitle,
-              subtitle: l10n.backupAutoSubtitleShort,
-              trailing: Switch(
-                value: enabled,
-                onChanged: canAct ? _toggle : null,
-              ),
-              onTap: canAct ? () => _toggle(!enabled) : null,
-            ),
-            if (needsPermissionSteps)
+        if (widget.showStatusCard) ...[
+          DataSectionLabel(l10n.dataBackupSection),
+          _StatusCard(
+            unsaved: _unsaved,
+            busy: _busy,
+            onBackup: canAct ? () => _backupNow(includeDrive: true) : null,
+          ),
+        ],
+        if (widget.showLocalBackups) ...[
+          DataSectionLabel(l10n.backupAutoSectionTitle),
+          SettingsGroup(
+            children: [
               SettingsRow(
-                icon: Icons.warning_amber_rounded,
-                iconColor: AppColors.warning,
-                subtitleColor: AppColors.warning,
-                title: l10n.backupPermissionDeniedTitle,
-                subtitle: l10n.backupStepsWarning,
-                trailing: TextButton(
-                  onPressed: canAct ? _completeSteps : null,
-                  child: Text(l10n.backupCompleteSteps),
+                icon: Icons.schedule,
+                title: l10n.backupAutoTitle,
+                subtitle: l10n.backupAutoSubtitleShort,
+                trailing: Switch(
+                  value: enabled,
+                  onChanged: canAct ? _toggle : null,
                 ),
+                onTap: canAct ? () => _toggle(!enabled) : null,
               ),
-            if (failures >= 2)
+              if (needsPermissionSteps)
+                SettingsRow(
+                  icon: Icons.warning_amber_rounded,
+                  iconColor: AppColors.warning,
+                  subtitleColor: AppColors.warning,
+                  title: l10n.backupPermissionDeniedTitle,
+                  subtitle: l10n.backupStepsWarning,
+                  trailing: TextButton(
+                    onPressed: canAct ? _completeSteps : null,
+                    child: Text(l10n.backupCompleteSteps),
+                  ),
+                ),
+              if (failures >= 2)
+                SettingsRow(
+                  icon: Icons.error_outline,
+                  iconColor: AppColors.warning,
+                  title: l10n.backupFailuresWarning(failures),
+                ),
+            ],
+          ),
+          DataSectionLabel(l10n.backupRestoreTitle),
+          SettingsGroup(
+            children: [
               SettingsRow(
-                icon: Icons.error_outline,
-                iconColor: AppColors.warning,
-                title: l10n.backupFailuresWarning(failures),
+                icon: Icons.restore,
+                title: l10n.backupRestoreChooseAction,
+                subtitle: l10n.backupRestoreSources,
+                onTap: canAct ? _openRestoreSheet : null,
               ),
-            SettingsRow(
-              icon: Icons.restore,
-              title: l10n.backupRestoreTitle,
-              subtitle: copies == 0
-                  ? l10n.backupRestoreSources
-                  : l10n.backupLocalCount(copies),
-              onTap: canAct ? _openRestoreSheet : null,
-            ),
-          ],
-        ),
+            ],
+          ),
+        ],
       ],
     );
   }
 }
 
-/// Tarjeta de estado: ¿mis datos están a salvo? Con la fecha de la última
-/// copia en el móvil y en Drive, y el botón "Copiar ahora".
+/// Estado de las copias con las fechas locales y de Drive.
 class _StatusCard extends StatelessWidget {
   const _StatusCard({
     required this.unsaved,
     required this.busy,
-    required this.onBackupNow,
+    required this.onBackup,
   });
 
   final bool unsaved;
   final bool busy;
-  final VoidCallback? onBackupNow;
+  final VoidCallback? onBackup;
 
   @override
   Widget build(BuildContext context) {
@@ -326,7 +385,7 @@ class _StatusCard extends StatelessWidget {
           SizedBox(
             height: 48,
             child: FilledButton.icon(
-              onPressed: onBackupNow,
+              onPressed: onBackup,
               icon: busy
                   ? SizedBox(
                       width: 18,

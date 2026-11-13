@@ -46,7 +46,7 @@ Funciona 100 % sin conexión: tus datos viven en tu móvil.
 | 🕘 **Tickets y ferias** | Historial de ventas agrupado por día o por feria, ticket de cada venta y devoluciones parciales o totales (los packs pueden devolverse enteros o por componentes) calculadas correctamente aunque hubiera promociones o combos. |
 | 🏠 **Inicio** | Ingresos, beneficio y desglose por método de pago, con gráfica de ventas a pantalla completa. |
 | 🔄 **Sincronización** | Pasa toda la base de datos a otro móvil con un QR. **No hace falta Wi‑Fi compartida**: la app crea su propio punto de acceso. |
-| 💾 **Backups** | Copia automática diaria (a las 00:00) en el móvil que se restaura sola en una instalación nueva, copia manual en Google Drive y exportación / importación de la base de datos. |
+| 💾 **Backups** | Copia automática diaria (a las 00:00) en el móvil, copia manual en el móvil y Google Drive, restauración unificada y exportación / importación de la base de datos. |
 | 🎨 **Personalización** | Tema claro / oscuro, colores dinámicos (Material You), español e inglés (idioma del móvil; inglés si no está traducido). |
 | ⬆️ **Actualizaciones** | La app avisa cuando hay una nueva versión publicada en GitHub Releases. |
 
@@ -134,21 +134,21 @@ Las fotos van dentro de la base de datos, así que **una copia es un solo archiv
 - Activa **Copia diaria a las 00:00**: se guarda en `Documentos/KeepInventory` y se conservan los últimos 7 días. Además se copia al abrir la app y al pasarla a segundo plano si hay cambios.
 - La app pide el permiso **Acceso a todos los archivos** justo antes de activarla: es lo que permite que la copia **sobreviva a desinstalar la app**. Si no lo das, la copia queda dentro de la app y se borra al desinstalarla (puedes elegir *Entiendo los riesgos* para que no vuelva a avisar).
 - Android no garantiza la hora exacta: puede hacerse unos minutos más tarde, o al abrir la app si el móvil estaba apagado.
-- **Copiar ahora** (en la tarjeta de estado de arriba) hace una copia al momento, en la misma carpeta que la automática. La tarjeta te dice si tus datos están a salvo y cuándo fue la última copia en el móvil y en Drive. En el Inicio aparece un aviso si hay cambios sin copiar y la última copia tiene más de un día.
+- **Hacer copia de seguridad** (en la tarjeta de estado) guarda una copia local y, si Google está conectado y hay conexión, también la sube a Drive. Sin conexión se conserva la copia local y la app avisa de que Drive no se ha actualizado. La tarjeta indica cuándo se guardó la última copia en cada sitio. En el Inicio aparece un aviso si hay cambios sin copiar y la última copia local tiene más de un día.
 - **Restaurar copia** reúne todo en un solo sitio: las copias del móvil (con fecha, tamaño y resumen de productos y ventas, y un botón para **compartirlas** por correo o Telegram), la copia de **Google Drive** y **Elegir otro archivo…** para una copia que te hayan pasado. Antes de sustituir tus datos se guarda una copia de los actuales por si te equivocas.
 
 ### Instalación nueva o cambio de móvil
 Al abrir la app por primera vez sin datos aparece **¿Tienes una copia de este móvil?**: restaura la más reciente de un toque, elige otro archivo, restaura desde Google Drive o empieza desde cero.
 
-### Google Drive (manual)
-Inicia sesión con Google y usa **Subir copia ahora** o **Restaurar desde Drive**. Se guarda un único archivo en una carpeta oculta y privada de la app (no ve el resto de tu Drive) y cada subida **sobrescribe la anterior**. Se muestra la fecha de la última subida y se pone en rojo cuando hay cambios sin subir.
+### Google Drive
+Conecta tu cuenta de Google en la sección **Google Drive**. Al usar **Hacer copia de seguridad**, la copia local también se sube a una carpeta oculta y privada de la app (no ve el resto de tu Drive); cada subida **sobrescribe la anterior**. Si no hay conexión, solo se guarda la copia local y se avisa. También puedes restaurar la copia de Drive desde **Restaurar copia**.
 
 > ☁️ Drive necesita configurar un cliente OAuth de Google Cloud (ver `lib/core/services/drive_config.dart`); mientras no esté, la sección aparece como *pendiente de configurar*.
 
 ### Más información
 - Se pueden restaurar copias de **versiones anteriores** de la app (se actualizan solas); las de una versión más nueva se rechazan sin cambiar nada.
 - **Borrar la base de datos** (en la *Zona peligrosa*) no borra las copias del móvil ni la de Drive, y ofrece hacer una copia antes.
-- En tablet la pantalla se organiza en dos columnas: lo más usado en ferias (sincronización por QR y copias) a la izquierda y Drive y la zona peligrosa a la derecha.
+- En tablet la pantalla se organiza en dos columnas: la tarjeta de estado y copia manual a la izquierda; copia diaria, restauración y conexión con Google Drive a la derecha. El QR queda arriba y la zona peligrosa al final.
 
 ---
 
@@ -165,23 +165,29 @@ flutter test           # tests unitarios
 flutter build apk --release
 ```
 
-**Estructura** (capas limpias por feature):
+**Estructura** (capas limpias por funcionalidad):
 
 ```
-lib/
-├── core/            # base de datos, servicios, tema, widgets compartidos
-├── features/
-│   ├── dashboard/
-│   ├── inventory/
-│   ├── packs/
-│   ├── promotions/  # promociones y combos (emparejamiento en domain/)
-│   ├── sales/       # lógica de precios y devoluciones en domain/
-│   ├── tutorial/
-│   └── sync/
-└── l10n/            # traducciones (.arb)
+lib/                         # Código de la aplicación
+├── core/                     # Infraestructura y componentes compartidos
+│   ├── database/             # Base de datos SQLite, esquema y migraciones
+│   ├── localization/         # Utilidades comunes de localización
+│   ├── services/             # Servicios de aplicación
+│   ├── shared_widgets/       # Widgets compartidos
+│   ├── theme/                # Tema y estilos
+│   └── utils/                # Utilidades generales
+├── features/                 # Funcionalidades organizadas por módulo
+│   ├── dashboard/            # Inicio y resumen
+│   ├── inventory/            # Productos e inventario
+│   ├── packs/                # Packs de productos
+│   ├── promotions/           # Promociones y combos
+│   ├── sales/                # Ventas, caja y devoluciones
+│   ├── sync/                 # Copias de seguridad y sincronización
+│   └── tutorial/             # Tutorial de bienvenida
+└── l10n/                     # Traducciones y archivos ARB
 ```
 
-Cada feature se divide en `domain/` (entidades y lógica pura) → `data/` (modelos, datasources, repositorios) → `presentation/` (pantallas y widgets).
+Cada módulo de `features/` se organiza en `domain/` (entidades y lógica), `data/` (modelos, datasources y repositorios) y `presentation/` (pantallas y widgets).
 
 - **Cambios de esquema:** sube la versión en `database_helper.dart`, añade la migración en `database_migration_runner.dart` y actualiza `database_schema_creator.dart`.
 - **CI:** cada push a `main` pasa el análisis y los tests y compila un APK de prueba (GitHub Actions). Las releases se compilan en local y se publican en GitHub Releases.

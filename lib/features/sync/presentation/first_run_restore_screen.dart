@@ -39,7 +39,7 @@ class _FirstRunRestoreScreenState extends State<FirstRunRestoreScreen> {
     LocalBackupFile? latest;
     BackupInfo? latestInfo;
     try {
-      access = await LocalBackupService.canWriteSharedFolder();
+      access = await LocalBackupService.hasFilesAccess();
       for (final backup in await LocalBackupService.listBackups()) {
         final info = await BackupValidator.inspect(backup.file);
         if (info.isValid && !info.isEmpty) {
@@ -89,7 +89,12 @@ class _FirstRunRestoreScreenState extends State<FirstRunRestoreScreen> {
       if (info == null) {
         AppAlerts.showInfo(context, context.l10n.driveNoBackups);
       } else {
-        final file = await service.download(info);
+        final file = await runWithBlockingProgress(
+          context,
+          title: context.l10n.backupOperationDownloading,
+          task: (reportProgress) =>
+              service.download(info, onProgress: reportProgress),
+        );
         if (!mounted) return;
         await confirmAndRestore(
           context,

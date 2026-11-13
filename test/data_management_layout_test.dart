@@ -20,28 +20,53 @@ Future<AppLocalizations> _pump(WidgetTester tester, Size size) async {
 }
 
 void main() {
-  testWidgets('en móvil la sincronización por QR va lo primero', (
-    tester,
-  ) async {
+  testWidgets('en móvil QR va primero y borrar queda al final', (tester) async {
     final l10n = await _pump(tester, const Size(400, 900));
 
     final qr = tester.getTopLeft(find.text(l10n.syncByQrTitle));
     final backup = tester.getTopLeft(find.text(l10n.backupNowTitle));
-
-    expect(qr.dy, lessThan(backup.dy));
-  });
-
-  testWidgets('en tablet hay dos columnas: QR y copias a la izquierda, Drive '
-      'a la derecha', (tester) async {
-    final l10n = await _pump(tester, const Size(1280, 900));
-
-    final qr = tester.getTopLeft(find.text(l10n.syncByQrTitle));
+    final daily = tester.getTopLeft(find.text(l10n.backupAutoTitle));
     final drive = tester.getTopLeft(
       find.text(l10n.driveSectionTitle.toUpperCase()),
     );
+    final restore = tester.getTopLeft(
+      find.text(l10n.backupRestoreChooseAction),
+    );
+    final delete = tester.getTopLeft(find.text(l10n.databaseDeleteTitle));
 
-    // Drive empieza arriba, a la derecha de la tarjeta del QR
-    expect(drive.dx, greaterThan(qr.dx + 300));
-    expect(drive.dy, lessThan(qr.dy));
+    expect(qr.dy, lessThan(backup.dy));
+    expect(backup.dy, lessThan(daily.dy));
+    expect(daily.dy, lessThan(restore.dy));
+    expect(restore.dy, lessThan(drive.dy));
+    expect(drive.dy, lessThan(delete.dy));
+    expect(find.text(l10n.driveUploadTitle), findsNothing);
+  });
+
+  testWidgets('en tablet la tarjeta de copias queda a la izquierda; '
+      'copia diaria, restauración y Google a la derecha', (tester) async {
+    final l10n = await _pump(tester, const Size(1280, 900));
+
+    final qr = tester.getTopLeft(find.text(l10n.syncByQrTitle));
+    final backup = tester.getTopLeft(find.text(l10n.backupNowTitle));
+    final daily = tester.getTopLeft(find.text(l10n.backupAutoTitle));
+    final drive = tester.getTopLeft(
+      find.text(l10n.driveSectionTitle.toUpperCase()),
+    );
+    final restore = tester.getTopLeft(
+      find.text(l10n.backupRestoreChooseAction),
+    );
+    final delete = tester.getTopLeft(find.text(l10n.databaseDeleteTitle));
+
+    expect(backup.dy, greaterThan(qr.dy));
+    expect(drive.dy, greaterThan(qr.dy));
+    expect(backup.dx, lessThan(daily.dx));
+    expect(restore.dy, greaterThan(daily.dy));
+    expect(daily.dx, greaterThan(backup.dx));
+    expect(restore.dx, greaterThan(backup.dx));
+    expect(drive.dx, greaterThan(backup.dx));
+    expect(find.text(l10n.driveUploadTitle), findsNothing);
+    expect(delete.dy, greaterThan(backup.dy));
+    expect(delete.dy, greaterThan(drive.dy));
+    expect(delete.dy, greaterThan(restore.dy));
   });
 }

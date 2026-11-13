@@ -12,25 +12,28 @@ DriveBackupService _service(MockClient client) => DriveBackupService(
 );
 
 void main() {
-  test('findBackup pide solo el archivo de la app en la carpeta oculta', () async {
-    late http.Request captured;
-    final service = _service(
-      MockClient((request) async {
-        captured = request;
-        return http.Response('{"files": []}', 200);
-      }),
-    );
+  test(
+    'findBackup pide solo el archivo de la app en la carpeta oculta',
+    () async {
+      late http.Request captured;
+      final service = _service(
+        MockClient((request) async {
+          captured = request;
+          return http.Response('{"files": []}', 200);
+        }),
+      );
 
-    await service.findBackup();
+      await service.findBackup();
 
-    expect(captured.method, 'GET');
-    expect(captured.url.queryParameters['spaces'], 'appDataFolder');
-    expect(
-      captured.url.queryParameters['q'],
-      "name = '${DriveBackupService.fileName}'",
-    );
-    expect(captured.headers['Authorization'], 'Bearer test-token');
-  });
+      expect(captured.method, 'GET');
+      expect(captured.url.queryParameters['spaces'], 'appDataFolder');
+      expect(
+        captured.url.queryParameters['q'],
+        "name = '${DriveBackupService.fileName}'",
+      );
+      expect(captured.headers['Authorization'], 'Bearer test-token');
+    },
+  );
 
   test('findBackup devuelve null si todavía no hay copia', () async {
     final service = _service(
@@ -56,6 +59,37 @@ void main() {
     expect(info!.id, 'abc');
     expect(info.sizeBytes, 2048);
     expect(info.modified.toUtc(), DateTime.utc(2026, 11, 13, 0, 2));
+  });
+
+  test('download writes the file in chunks and reports progress', () async {
+    final directory = await Directory.systemTemp.createTemp(
+      'drive_backup_download_test',
+    );
+    addTearDown(() => directory.delete(recursive: true));
+    final progress = <double>[];
+    final service = DriveBackupService(
+      client: MockClient((request) async {
+        expect(request.method, 'GET');
+        expect(request.url.path, '/drive/v3/files/backup-id');
+        return http.Response('backup!', 200);
+      }),
+      authHeaders: () async => {'Authorization': '******'},
+      temporaryDirectory: () async => directory,
+    );
+
+    final file = await service.download(
+      DriveBackupInfo(
+        id: 'backup-id',
+        modified: DateTime.utc(2026, 11, 13),
+        sizeBytes: 7,
+      ),
+      onProgress: progress.add,
+    );
+
+    expect(await file.readAsString(), 'backup!');
+    expect(progress.first, 0);
+    expect(progress.last, 1);
+    expect(File('${file.path}.part').existsSync(), isFalse);
   });
 
   test('sin conexión se traduce a DriveFailure.offline', () async {

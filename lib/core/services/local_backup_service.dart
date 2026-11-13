@@ -25,7 +25,11 @@ enum LocalBackupStatus {
 }
 
 class LocalBackupResult {
-  const LocalBackupResult(this.status, {this.file, this.inSharedFolder = false});
+  const LocalBackupResult(
+    this.status, {
+    this.file,
+    this.inSharedFolder = false,
+  });
 
   final LocalBackupStatus status;
   final File? file;
@@ -72,8 +76,7 @@ class LocalBackupService {
 
   // ── Lógica pura (testeable) ──────────────────────────────────────────────
 
-  static String autoFileName(DateTime when) =>
-      '$_autoPrefix${_stamp(when)}.db';
+  static String autoFileName(DateTime when) => '$_autoPrefix${_stamp(when)}.db';
 
   static String beforeRestoreFileName(DateTime when) =>
       '$_beforeRestorePrefix${_stamp(when)}.db';
@@ -167,35 +170,51 @@ class LocalBackupService {
   /// Documentos/KeepInventory se puede leer tras desinstalar y reinstalar: sin
   /// él, Android 11+ deja escribir archivos propios pero la app nueva no los ve.
   static Future<bool> hasFilesAccess() async {
-    try {
+    Future<bool> check() async {
       final manage = await Permission.manageExternalStorage.status;
       if (manage.isGranted) return true;
       // Android 10 o anterior: no existe ese permiso y vale el clásico
       if (manage.isRestricted) return await Permission.storage.isGranted;
+      return false;
+    }
+
+    try {
+      if (await check()) return true;
+      // Android puede devolver un estado provisional justo al reanudar desde
+      // Ajustes; confirma el resultado antes de mostrar que falta el permiso.
+      await Future<void>.delayed(const Duration(milliseconds: 400));
+      return await check();
     } catch (e) {
       debugPrint('No se pudo leer el permiso de archivos: $e');
+      return false;
     }
-    return false;
   }
 
   /// ¿Se puede guardar de forma duradera en Documentos/KeepInventory? Hace
   /// falta el permiso y, además, que se pueda escribir de verdad.
   static Future<bool> canWriteSharedFolder() async {
     if (!await hasFilesAccess()) return false;
-    try {
-      final dir = Directory(sharedFolderPath);
-      await dir.create(recursive: true);
-      final probe = File(join(dir.path, '.probe'));
-      await probe.writeAsString('ok');
-      await probe.delete();
-      return true;
-    } catch (_) {
-      return false;
+    Future<bool> probe() async {
+      try {
+        final dir = Directory(sharedFolderPath);
+        await dir.create(recursive: true);
+        final file = File(join(dir.path, '.probe'));
+        await file.writeAsString('ok');
+        await file.delete();
+        return true;
+      } catch (e) {
+        debugPrint('No se pudo comprobar la carpeta compartida: $e');
+        return false;
+      }
     }
+
+    if (await probe()) return true;
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+    return probe();
   }
 
   /// Pide "Acceso a todos los archivos" (abre Ajustes en Android 11+). Devuelve
-  /// si al volver ya se puede guardar en la carpeta compartida.
+  /// si al volver el permiso aparece concedido.
   static Future<bool> requestFilesAccess() async {
     try {
       final manage = await Permission.manageExternalStorage.request();
@@ -204,7 +223,7 @@ class LocalBackupService {
     } catch (e) {
       debugPrint('No se pudo pedir el permiso de archivos: $e');
     }
-    return canWriteSharedFolder();
+    return hasFilesAccess();
   }
 
   /// Abre los ajustes de la app para dar el permiso a mano.
@@ -344,7 +363,7 @@ class LocalBackupService {
   /// de la más nueva a la más antigua.
   static Future<List<LocalBackupFile>> listBackups() async {
     final folders = <Directory>[
-      if (await canWriteSharedFolder()) Directory(sharedFolderPath),
+      if (await hasFilesAccess()) Directory(sharedFolderPath),
       await _privateFolder(),
     ];
     final found = <LocalBackupFile>[];

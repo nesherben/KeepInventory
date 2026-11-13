@@ -3047,7 +3047,7 @@ abstract class AppLocalizations {
   /// No description provided for @backupNowTitle.
   ///
   /// In es, this message translates to:
-  /// **'Copiar ahora'**
+  /// **'Hacer copia de seguridad'**
   String get backupNowTitle;
 
   /// No description provided for @backupNowDone.
@@ -3577,6 +3577,72 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Compartir copia'**
   String get backupShare;
+
+  /// No description provided for @backupOperationUploading.
+  ///
+  /// In es, this message translates to:
+  /// **'Subiendo copia a Google Drive…'**
+  String get backupOperationUploading;
+
+  /// No description provided for @backupOperationDownloading.
+  ///
+  /// In es, this message translates to:
+  /// **'Descargando copia de Google Drive…'**
+  String get backupOperationDownloading;
+
+  /// No description provided for @backupOperationRestoring.
+  ///
+  /// In es, this message translates to:
+  /// **'Restaurando la copia…'**
+  String get backupOperationRestoring;
+
+  /// No description provided for @backupLocalManualTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Guardar copia en este móvil'**
+  String get backupLocalManualTitle;
+
+  /// No description provided for @backupLocalManualSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Solo es una copia local; no se sube a Google Drive.'**
+  String get backupLocalManualSubtitle;
+
+  /// No description provided for @backupLocalSectionTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Copias locales'**
+  String get backupLocalSectionTitle;
+
+  /// No description provided for @backupRestoreChooseAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Elegir copia para restaurar'**
+  String get backupRestoreChooseAction;
+
+  /// No description provided for @backupLocalAndDriveDone.
+  ///
+  /// In es, this message translates to:
+  /// **'Copia guardada en el móvil y en Google Drive.'**
+  String get backupLocalAndDriveDone;
+
+  /// No description provided for @backupLocalOnlyOffline.
+  ///
+  /// In es, this message translates to:
+  /// **'Copia guardada en el móvil. Sin conexión; no se pudo guardar en Google Drive.'**
+  String get backupLocalOnlyOffline;
+
+  /// No description provided for @backupLocalOnlyNotConnected.
+  ///
+  /// In es, this message translates to:
+  /// **'Copia guardada en el móvil. Conecta Google Drive para guardar también allí.'**
+  String get backupLocalOnlyNotConnected;
+
+  /// No description provided for @backupLocalDriveFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'Copia guardada en el móvil, pero no se pudo guardar en Google Drive.'**
+  String get backupLocalDriveFailed;
 }
 
 class _AppLocalizationsDelegate

@@ -1845,7 +1845,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get backupPendingChanges => 'Cambios sin copiar';
 
   @override
-  String get backupNowTitle => 'Copiar ahora';
+  String get backupNowTitle => 'Hacer copia de seguridad';
 
   @override
   String get backupNowDone => 'Copia guardada';
@@ -2176,4 +2176,42 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get backupShare => 'Compartir copia';
+
+  @override
+  String get backupOperationUploading => 'Subiendo copia a Google Drive…';
+
+  @override
+  String get backupOperationDownloading => 'Descargando copia de Google Drive…';
+
+  @override
+  String get backupOperationRestoring => 'Restaurando la copia…';
+
+  @override
+  String get backupLocalManualTitle => 'Guardar copia en este móvil';
+
+  @override
+  String get backupLocalManualSubtitle =>
+      'Solo es una copia local; no se sube a Google Drive.';
+
+  @override
+  String get backupLocalSectionTitle => 'Copias locales';
+
+  @override
+  String get backupRestoreChooseAction => 'Elegir copia para restaurar';
+
+  @override
+  String get backupLocalAndDriveDone =>
+      'Copia guardada en el móvil y en Google Drive.';
+
+  @override
+  String get backupLocalOnlyOffline =>
+      'Copia guardada en el móvil. Sin conexión; no se pudo guardar en Google Drive.';
+
+  @override
+  String get backupLocalOnlyNotConnected =>
+      'Copia guardada en el móvil. Conecta Google Drive para guardar también allí.';
+
+  @override
+  String get backupLocalDriveFailed =>
+      'Copia guardada en el móvil, pero no se pudo guardar en Google Drive.';
 }

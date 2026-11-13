@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -56,8 +55,10 @@ class DriveBackupService {
   DriveBackupService({
     http.Client? client,
     Future<Map<String, String>> Function()? authHeaders,
+    Future<Directory> Function()? temporaryDirectory,
   }) : _client = client ?? http.Client(),
-       _authHeaders = authHeaders ?? _googleAuthHeaders;
+       _authHeaders = authHeaders ?? _googleAuthHeaders,
+       _temporaryDirectory = temporaryDirectory ?? getTemporaryDirectory;
 
   static const fileName = 'keepinventory_backup.db';
   static const _api = 'https://www.googleapis.com/drive/v3/files';
@@ -65,6 +66,7 @@ class DriveBackupService {
 
   final http.Client _client;
   final Future<Map<String, String>> Function() _authHeaders;
+  final Future<Directory> Function() _temporaryDirectory;
 
   static bool get isConfigured => driveServerClientId.isNotEmpty;
 
@@ -150,11 +152,13 @@ class DriveBackupService {
   }
 
   /// Sube la copia actual sobrescribiendo la anterior. Devuelve la subida.
-  Future<DriveBackupInfo> upload() async {
+  Future<DriveBackupInfo> upload({
+    void Function(double progress)? onProgress,
+  }) async {
     final headers = await _authHeaders();
     final signature = await LocalBackupService.currentSignature();
     final temp = File(
-      '${(await getTemporaryDirectory()).path}/drive_upload_$fileName',
+      '${(await _temporaryDirectory()).path}/drive_upload_$fileName',
     );
     await LocalBackupService.snapshot(temp.path);
     try {
@@ -163,7 +167,7 @@ class DriveBackupService {
       if (!check.isValid || check.isEmpty) {
         throw const DriveException(DriveFailure.failed, 'copia vacía o dañada');
       }
-      final bytes = await temp.readAsBytes();
+      final fileLength = await temp.length();
       final existing = await findBackup();
       final http.Response response;
       if (existing == null) {
@@ -172,46 +176,48 @@ class DriveBackupService {
           'name': fileName,
           'parents': ['appDataFolder'],
         });
-        final body = BytesBuilder()
-          ..add(
-            utf8.encode(
-              '--$boundary\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n'
-              '$metadata\r\n--$boundary\r\nContent-Type: application/octet-stream\r\n\r\n',
-            ),
-          )
-          ..add(bytes)
-          ..add(utf8.encode('\r\n--$boundary--'));
-        response = await _send(
-          () => _client.post(
-            Uri.parse(
-              _upload,
-            ).replace(queryParameters: {'uploadType': 'multipart', 'fields': 'id,modifiedTime,size'}),
-            headers: {
-              ...headers,
-              'Content-Type': 'multipart/related; boundary=$boundary',
+        final prefix = utf8.encode(
+          '--$boundary\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n'
+          '$metadata\r\n--$boundary\r\nContent-Type: application/octet-stream\r\n\r\n',
+        );
+        response = await _sendFile(
+          method: 'POST',
+          uri: Uri.parse(_upload).replace(
+            queryParameters: {
+              'uploadType': 'multipart',
+              'fields': 'id,modifiedTime,size',
             },
-            body: body.takeBytes(),
           ),
+          headers: {
+            ...headers,
+            'Content-Type': 'multipart/related; boundary=$boundary',
+          },
+          file: temp,
+          fileLength: fileLength,
+          prefix: prefix,
+          suffix: utf8.encode('\r\n--$boundary--'),
+          onProgress: onProgress,
         );
       } else {
-        response = await _send(
-          () => _client.patch(
-            Uri.parse('$_upload/${existing.id}').replace(
-              queryParameters: {
-                'uploadType': 'media',
-                'fields': 'id,modifiedTime,size',
-              },
-            ),
-            headers: {...headers, 'Content-Type': 'application/octet-stream'},
-            body: bytes,
+        response = await _sendFile(
+          method: 'PATCH',
+          uri: Uri.parse('$_upload/${existing.id}').replace(
+            queryParameters: {
+              'uploadType': 'media',
+              'fields': 'id,modifiedTime,size',
+            },
           ),
+          headers: {...headers, 'Content-Type': 'application/octet-stream'},
+          file: temp,
+          fileLength: fileLength,
+          onProgress: onProgress,
         );
       }
       final json = jsonDecode(response.body) as Map<String, dynamic>;
       final info = DriveBackupInfo(
         id: json['id'] as String,
         modified: DateTime.parse(json['modifiedTime'] as String).toLocal(),
-        sizeBytes: int.tryParse('${json['size']}') ?? bytes.length,
+        sizeBytes: int.tryParse('${json['size']}') ?? fileLength,
       );
       await AppPreferences.recordDriveBackup(
         info.modified.millisecondsSinceEpoch,
@@ -223,20 +229,109 @@ class DriveBackupService {
     }
   }
 
+  Future<http.Response> _sendFile({
+    required String method,
+    required Uri uri,
+    required Map<String, String> headers,
+    required File file,
+    required int fileLength,
+    List<int> prefix = const [],
+    List<int> suffix = const [],
+    void Function(double progress)? onProgress,
+  }) async {
+    final request = http.StreamedRequest(method, uri)
+      ..headers.addAll(headers)
+      ..contentLength = prefix.length + fileLength + suffix.length;
+
+    onProgress?.call(0);
+    final body = (() async* {
+      if (prefix.isNotEmpty) yield prefix;
+      var sent = 0;
+      await for (final chunk in file.openRead()) {
+        sent += chunk.length;
+        yield chunk;
+        onProgress?.call((sent / fileLength).clamp(0.0, 1.0));
+      }
+      if (suffix.isNotEmpty) yield suffix;
+    })();
+
+    final responseFuture = _client.send(request);
+    final transferFuture = request.sink
+        .addStream(body)
+        .then((_) => request.sink.close());
+    return _send(() async {
+      await transferFuture;
+      return http.Response.fromStream(await responseFuture);
+    });
+  }
+
   /// Baja la copia de Drive a un archivo temporal y lo devuelve.
-  Future<File> download(DriveBackupInfo info) async {
+  Future<File> download(
+    DriveBackupInfo info, {
+    void Function(double progress)? onProgress,
+  }) async {
     final headers = await _authHeaders();
-    final response = await _send(
-      () => _client.get(
-        Uri.parse('$_api/${info.id}').replace(queryParameters: {'alt': 'media'}),
-        headers: headers,
-      ),
-    );
+    final request = http.Request(
+      'GET',
+      Uri.parse('$_api/${info.id}').replace(queryParameters: {'alt': 'media'}),
+    )..headers.addAll(headers);
+    final http.StreamedResponse response;
+    try {
+      response = await _client
+          .send(request)
+          .timeout(const Duration(minutes: 2));
+    } on SocketException {
+      throw const DriveException(DriveFailure.offline);
+    } on http.ClientException {
+      throw const DriveException(DriveFailure.offline);
+    } on TimeoutException {
+      throw const DriveException(DriveFailure.offline);
+    } on HandshakeException {
+      throw const DriveException(DriveFailure.offline);
+    }
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      final body = await response.stream.bytesToString();
+      throw DriveException(
+        DriveFailure.failed,
+        'HTTP ${response.statusCode}: $body',
+      );
+    }
+
     final file = File(
-      '${(await getTemporaryDirectory()).path}/drive_download_$fileName',
+      '${(await _temporaryDirectory()).path}/drive_download_$fileName',
     );
-    await file.writeAsBytes(response.bodyBytes, flush: true);
-    return file;
+    final partial = File('${file.path}.part');
+    final sink = partial.openWrite();
+    var received = 0;
+    onProgress?.call(0);
+    try {
+      await for (final chunk in response.stream.timeout(
+        const Duration(minutes: 2),
+      )) {
+        sink.add(chunk);
+        received += chunk.length;
+        if (info.sizeBytes > 0) {
+          onProgress?.call((received / info.sizeBytes).clamp(0.0, 1.0));
+        }
+      }
+      await sink.flush();
+      await sink.close();
+      if (await file.exists()) await file.delete();
+      await partial.rename(file.path);
+      onProgress?.call(1);
+      return file;
+    } catch (error) {
+      await sink.close();
+      if (await partial.exists()) await partial.delete();
+      if (error is SocketException ||
+          error is http.ClientException ||
+          error is TimeoutException ||
+          error is HandshakeException) {
+        throw const DriveException(DriveFailure.offline);
+      }
+      rethrow;
+    }
   }
 
   Future<http.Response> _send(Future<http.Response> Function() request) async {

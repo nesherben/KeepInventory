@@ -536,7 +536,7 @@
   "backupLastCopy": "Last copy: {date} · {size}",
   "backupNoCopyYet": "No copies yet",
   "backupPendingChanges": "Unsaved changes",
-  "backupNowTitle": "Copy now",
+  "backupNowTitle": "Back up now",
   "backupNowDone": "Copy saved",
   "backupNowUnchanged": "No changes since the last copy",
   "backupNowEmpty": "There is no data to copy yet",
@@ -624,5 +624,16 @@
   "backupRestoreFromDriveHint": "The copy saved in your Drive",
   "backupRestoreChooseFile": "Choose another file…",
   "backupRestoreChooseFileHint": "A copy someone sent you or from your computer",
-  "backupShare": "Share copy"
+  "backupShare": "Share copy",
+  "backupOperationUploading": "Uploading backup to Google Drive…",
+  "backupOperationDownloading": "Downloading backup from Google Drive…",
+  "backupOperationRestoring": "Restoring backup…",
+  "backupLocalManualTitle": "Save a copy on this phone",
+  "backupLocalManualSubtitle": "This is a local copy only; it is not uploaded to Google Drive.",
+  "backupLocalSectionTitle": "Local copies",
+  "backupRestoreChooseAction": "Choose a backup to restore",
+  "backupLocalAndDriveDone": "Backup saved on this phone and to Google Drive.",
+  "backupLocalOnlyOffline": "Backup saved on this phone. No connection, so it could not be saved to Google Drive.",
+  "backupLocalOnlyNotConnected": "Backup saved on this phone. Connect Google Drive to save a copy there too.",
+  "backupLocalDriveFailed": "Backup saved on this phone, but it could not be saved to Google Drive."
 }

@@ -266,83 +266,94 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
     final busy = _isImporting || _isDeleting;
     final width = MediaQuery.sizeOf(context).width;
     final page = AppSpacing.page(context);
-    // Tablet: dos columnas (lo prioritario a la izquierda) y como mucho
-    // 1100 px de ancho; móvil: una columna
+    // Tablet: dos columnas para copias. QR y borrado ocupan todo el ancho.
     final twoColumns = width >= 840;
     final side = math.max(page, (width - (twoColumns ? 1100 : 720)) / 2);
     final bottom = page + MediaQuery.paddingOf(context).bottom;
 
-    // Lo más usado en ferias: pasar los datos a otro móvil con un QR
-    final syncSection = [
-      DataSectionLabel(context.l10n.dataSyncSection, first: true),
-      _SyncCard(
-        onTap: busy
-            ? null
-            : () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const SyncScreen()),
-              ),
-      ),
-    ];
+    final syncSection = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        DataSectionLabel(context.l10n.dataSyncSection, first: true),
+        _SyncCard(
+          onTap: busy
+              ? null
+              : () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SyncScreen()),
+                ),
+        ),
+      ],
+    );
     final backupSection = AutoBackupSection(
       enabled: !busy,
       onPickFile: _handleImport,
     );
-    final dangerSection = [
-      DataSectionLabel(context.l10n.dataDangerSection),
-      SettingsGroup(
-        borderColor: Theme.of(context).colorScheme.error
-            .withValues(alpha: 0.35),
-        children: [
-          SettingsRow(
-            icon: Icons.delete_forever_outlined,
-            title: context.l10n.databaseDeleteTitle,
-            subtitle: context.l10n.databaseDeleteDescription,
-            loading: _isDeleting,
-            danger: true,
-            onTap: busy ? null : _confirmDatabaseDeletion,
-          ),
-        ],
-      ),
-    ];
-
-    final Widget body;
-    if (twoColumns) {
-      body = SingleChildScrollView(
-        padding: EdgeInsets.fromLTRB(side, page, side, bottom),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    final backupStatusSection = AutoBackupSection(
+      key: const ValueKey('backup-status'),
+      enabled: !busy,
+      onPickFile: _handleImport,
+      showLocalBackups: false,
+    );
+    final localBackupSection = AutoBackupSection(
+      key: const ValueKey('local-backups'),
+      enabled: !busy,
+      onPickFile: _handleImport,
+      showStatusCard: false,
+    );
+    final dangerSection = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        DataSectionLabel(context.l10n.dataDangerSection),
+        SettingsGroup(
+          borderColor: Theme.of(context).colorScheme.error
+              .withValues(alpha: 0.35),
           children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [...syncSection, backupSection],
-              ),
-            ),
-            const SizedBox(width: AppSpacing.xl),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  DriveBackupSection(enabled: !busy, firstInColumn: true),
-                  ...dangerSection,
-                ],
-              ),
+            SettingsRow(
+              icon: Icons.delete_forever_outlined,
+              title: context.l10n.databaseDeleteTitle,
+              subtitle: context.l10n.databaseDeleteDescription,
+              loading: _isDeleting,
+              danger: true,
+              onTap: busy ? null : _confirmDatabaseDeletion,
             ),
           ],
         ),
-      );
-    } else {
-      body = ListView(
-        padding: EdgeInsets.fromLTRB(side, page, side, bottom),
+      ],
+    );
+
+    final Widget body = SingleChildScrollView(
+      padding: EdgeInsets.fromLTRB(side, page, side, bottom),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          ...syncSection,
-          backupSection,
-          DriveBackupSection(enabled: !busy),
-          ...dangerSection,
+          syncSection,
+          if (twoColumns) ...[
+            const SizedBox(height: AppSpacing.xl),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(child: backupStatusSection),
+                const SizedBox(width: AppSpacing.xl),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      localBackupSection,
+                      DriveBackupSection(enabled: !busy),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ] else ...[
+            backupSection,
+            DriveBackupSection(enabled: !busy),
+          ],
+          dangerSection,
         ],
-      );
-    }
+      ),
+    );
 
     return Listener(
       onPointerDown: (event) {

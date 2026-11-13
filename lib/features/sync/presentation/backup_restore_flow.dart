@@ -4,13 +4,54 @@ import 'package:flutter/material.dart';
 import 'package:keepinventory/l10n/app_localizations_ext.dart';
 import 'package:restart_app/restart_app.dart';
 
-import '../../../core/services/app_preferences.dart';
 import '../../../core/services/backup_restore_service.dart';
+import '../../../core/services/app_preferences.dart';
 import '../../../core/services/backup_validator.dart';
 import '../../../core/services/drive_backup_service.dart';
 import '../../../core/services/local_backup_service.dart';
 import '../../../core/shared_widgets/app_alerts.dart';
 import '../../../core/utils/backup_formatters.dart';
+
+/// Ejecuta una operación de datos bloqueando navegación e interacción.
+Future<T> runWithBlockingProgress<T>(
+  BuildContext context, {
+  required String title,
+  required Future<T> Function(void Function(double) reportProgress) task,
+}) async {
+  final navigator = Navigator.of(context, rootNavigator: true);
+  final progress = ValueNotifier<double?>(null);
+  final dialog = showDialog<void>(
+    context: context,
+    useRootNavigator: true,
+    barrierDismissible: false,
+    builder: (context) => PopScope(
+      canPop: false,
+      child: AlertDialog(
+        title: Text(title),
+        content: ValueListenableBuilder<double?>(
+          valueListenable: progress,
+          builder: (context, value, _) => Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              LinearProgressIndicator(value: value),
+              if (value != null) ...[
+                const SizedBox(height: 12),
+                Text('${(value * 100).round()}%'),
+              ],
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
+  try {
+    return await task((value) => progress.value = value.clamp(0.0, 1.0));
+  } finally {
+    if (navigator.mounted && navigator.canPop()) navigator.pop();
+    await dialog;
+    progress.dispose();
+  }
+}
 
 /// Diálogo "datos restaurados": hay que reiniciar para abrir la BD nueva.
 Future<void> showRestoredDialog(BuildContext context) {
@@ -127,24 +168,29 @@ Future<bool> _confirmAndRestore(
   );
   if (confirmed != true || !context.mounted) return false;
 
-  final result = await BackupRestoreService.restoreFrom(file);
+  final result = await runWithBlockingProgress(
+    context,
+    title: context.l10n.backupOperationRestoring,
+    task: (_) async {
+      final result = await BackupRestoreService.restoreFrom(file);
+      if (result.status == RestoreStatus.restored) {
+        await AppPreferences.markTutorialSeen();
+        final signature = await LocalBackupService.currentSignature();
+        if (signature != null) {
+          final at = (date ?? info.modified).millisecondsSinceEpoch;
+          if (fromDrive) {
+            await AppPreferences.recordDriveBackup(at, signature);
+          } else {
+            await AppPreferences.recordLocalBackup(at, signature);
+          }
+        }
+      }
+      return result;
+    },
+  );
   if (!context.mounted) return false;
   switch (result.status) {
     case RestoreStatus.restored:
-      // Quien restaura una copia no necesita el tutorial de bienvenida
-      await AppPreferences.markTutorialSeen();
-      // Los datos restaurados ya están en esa copia: no cuentan como "cambios
-      // sin copiar" (ni en el móvil ni, si viene de Drive, en Drive)
-      final signature = await LocalBackupService.currentSignature();
-      if (signature != null) {
-        final at = (date ?? info.modified).millisecondsSinceEpoch;
-        if (fromDrive) {
-          await AppPreferences.recordDriveBackup(at, signature);
-        } else {
-          await AppPreferences.recordLocalBackup(at, signature);
-        }
-      }
-      if (!context.mounted) return true;
       await showRestoredDialog(context);
       return true;
     case RestoreStatus.invalid:
@@ -186,7 +232,12 @@ Future<bool> restoreFromDrive(BuildContext context) async {
       AppAlerts.showInfo(context, context.l10n.driveNoBackups);
       return false;
     }
-    final file = await service.download(info);
+    final file = await runWithBlockingProgress(
+      context,
+      title: context.l10n.backupOperationDownloading,
+      task: (reportProgress) =>
+          service.download(info, onProgress: reportProgress),
+    );
     if (!context.mounted) return false;
     return await confirmAndRestore(
       context,

@@ -1833,7 +1833,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get backupPendingChanges => 'Unsaved changes';
 
   @override
-  String get backupNowTitle => 'Copy now';
+  String get backupNowTitle => 'Back up now';
 
   @override
   String get backupNowDone => 'Copy saved';
@@ -2161,4 +2161,43 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get backupShare => 'Share copy';
+
+  @override
+  String get backupOperationUploading => 'Uploading backup to Google Drive…';
+
+  @override
+  String get backupOperationDownloading =>
+      'Downloading backup from Google Drive…';
+
+  @override
+  String get backupOperationRestoring => 'Restoring backup…';
+
+  @override
+  String get backupLocalManualTitle => 'Save a copy on this phone';
+
+  @override
+  String get backupLocalManualSubtitle =>
+      'This is a local copy only; it is not uploaded to Google Drive.';
+
+  @override
+  String get backupLocalSectionTitle => 'Local copies';
+
+  @override
+  String get backupRestoreChooseAction => 'Choose a backup to restore';
+
+  @override
+  String get backupLocalAndDriveDone =>
+      'Backup saved on this phone and to Google Drive.';
+
+  @override
+  String get backupLocalOnlyOffline =>
+      'Backup saved on this phone. No connection, so it could not be saved to Google Drive.';
+
+  @override
+  String get backupLocalOnlyNotConnected =>
+      'Backup saved on this phone. Connect Google Drive to save a copy there too.';
+
+  @override
+  String get backupLocalDriveFailed =>
+      'Backup saved on this phone, but it could not be saved to Google Drive.';
 }
