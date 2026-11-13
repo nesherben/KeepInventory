@@ -77,6 +77,14 @@ class AppDrawer extends StatelessWidget {
   Widget build(BuildContext context) {
     final currentRoute = ModalRoute.of(context)?.settings.name;
 
+    void go(String route) {
+      if (currentRoute == route) {
+        Navigator.pop(context);
+      } else {
+        Navigator.pushNamedAndRemoveUntil(context, route, (_) => false);
+      }
+    }
+
     Widget item(
       String route,
       IconData icon,
@@ -89,13 +97,7 @@ class AppDrawer extends StatelessWidget {
       label: label,
       subtitle: subtitle,
       selected: currentRoute == route,
-      onTap: () {
-        if (currentRoute == route) {
-          Navigator.pop(context);
-        } else {
-          Navigator.pushNamedAndRemoveUntil(context, route, (_) => false);
-        }
-      },
+      onTap: () => go(route),
     );
 
     Widget section(String text) =>
@@ -103,118 +105,105 @@ class AppDrawer extends StatelessWidget {
 
     return Drawer(
       child: SafeArea(
-        // El pie (autor y donación) queda abajo del todo si hay sitio; si no,
-        // aparece al final al hacer scroll
-        child: CustomScrollView(
-          slivers: [
-            SliverList.list(
-              children: [
-                _DrawerHeader(onTap: () => _cycleTheme(context)),
-                const Padding(
-                  padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
-                  child: Divider(),
-                ),
-                // Inicio va suelto arriba: es lo primero que se ve
-                const SizedBox(height: AppSpacing.sm),
-                item(
-                  '/',
-                  Icons.home_outlined,
-                  Icons.home,
-                  context.l10n.navDashboard,
-                ),
-                section(context.l10n.navSectionSell),
-                item(
-                  '/sales',
-                  Icons.point_of_sale_outlined,
-                  Icons.point_of_sale,
-                  context.l10n.navSales,
-                ),
-                item(
-                  '/history',
-                  Icons.receipt_long_outlined,
-                  Icons.receipt_long,
-                  context.l10n.navHistory,
-                  subtitle: context.l10n.navHistorySubtitle,
-                ),
-                section(context.l10n.navSectionCatalog),
-                ValueListenableBuilder<bool>(
-                  valueListenable: catalogEmpty,
-                  builder: (context, empty, _) {
-                    if (!empty) {
-                      return item(
-                        '/inventory',
-                        Icons.inventory_2_outlined,
-                        Icons.inventory_2,
-                        context.l10n.navInventory,
-                        subtitle: context.l10n.navInventorySubtitle,
+        // El menú hace scroll y el pie (autoría y donación) queda fijo debajo,
+        // por encima de la barra de navegación del sistema
+        child: Column(
+          children: [
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                children: [
+                  _DrawerHeader(onTap: () => _cycleTheme(context)),
+                  const Padding(
+                    padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
+                    child: Divider(),
+                  ),
+                  // Inicio va suelto arriba: es lo primero que se ve
+                  const SizedBox(height: AppSpacing.sm),
+                  item(
+                    '/',
+                    Icons.home_outlined,
+                    Icons.home,
+                    context.l10n.navDashboard,
+                  ),
+                  section(context.l10n.navSectionSell),
+                  item(
+                    '/sales',
+                    Icons.point_of_sale_outlined,
+                    Icons.point_of_sale,
+                    context.l10n.navSales,
+                  ),
+                  item(
+                    '/history',
+                    Icons.receipt_long_outlined,
+                    Icons.receipt_long,
+                    context.l10n.navHistory,
+                    subtitle: context.l10n.navHistorySubtitle,
+                  ),
+                  section(context.l10n.navSectionCatalog),
+                  ValueListenableBuilder<bool>(
+                    valueListenable: catalogEmpty,
+                    builder: (context, empty, _) {
+                      if (!empty) {
+                        return item(
+                          '/inventory',
+                          Icons.inventory_2_outlined,
+                          Icons.inventory_2,
+                          context.l10n.navInventory,
+                          subtitle: context.l10n.navInventorySubtitle,
+                        );
+                      }
+                      return _PulsingHint(
+                        child: _NavItem(
+                          icon: Icons.inventory_2_outlined,
+                          selectedIcon: Icons.inventory_2,
+                          label: context.l10n.navInventory,
+                          subtitle: context.l10n.drawerStartHint,
+                          selected: currentRoute == '/inventory',
+                          padded: false,
+                          onTap: () => go('/inventory'),
+                        ),
                       );
-                    }
-                    return _PulsingHint(
-                      child: _NavItem(
-                        icon: Icons.inventory_2_outlined,
-                        selectedIcon: Icons.inventory_2,
-                        label: context.l10n.navInventory,
-                        subtitle: context.l10n.drawerStartHint,
-                        selected: currentRoute == '/inventory',
-                        padded: false,
-                        onTap: () {
-                          if (currentRoute == '/inventory') {
-                            Navigator.pop(context);
-                          } else {
-                            Navigator.pushNamedAndRemoveUntil(
-                              context,
-                              '/inventory',
-                              (_) => false,
-                            );
-                          }
-                        },
-                      ),
-                    );
-                  },
-                ),
-                item(
-                  '/promotions',
-                  Icons.local_offer_outlined,
-                  Icons.local_offer,
-                  context.l10n.navPromotions,
-                  subtitle: context.l10n.navPromotionsSubtitle,
-                ),
-                item(
-                  '/packs',
-                  Icons.card_giftcard_outlined,
-                  Icons.card_giftcard,
-                  context.l10n.navPacks,
-                ),
-                section(context.l10n.navSectionData),
-                item(
-                  '/data-management',
-                  Icons.storage_outlined,
-                  Icons.storage,
-                  context.l10n.navDataManagement,
-                ),
-                section(context.l10n.navSectionHelp),
-                // El tutorial se abre encima de la pantalla actual (push, no replace)
-                _NavItem(
-                  icon: Icons.school_outlined,
-                  selectedIcon: Icons.school,
-                  label: context.l10n.navTutorial,
-                  subtitle: context.l10n.navTutorialSubtitle,
-                  selected: false,
-                  onTap: () {
-                    final navigator = Navigator.of(context);
-                    navigator.pop();
-                    navigator.pushNamed('/tutorial');
-                  },
-                ),
-              ],
-            ),
-            const SliverFillRemaining(
-              hasScrollBody: false,
-              child: Align(
-                alignment: Alignment.bottomCenter,
-                child: _DrawerFooter(),
+                    },
+                  ),
+                  item(
+                    '/promotions',
+                    Icons.local_offer_outlined,
+                    Icons.local_offer,
+                    context.l10n.navPromotions,
+                    subtitle: context.l10n.navPromotionsSubtitle,
+                  ),
+                  item(
+                    '/packs',
+                    Icons.card_giftcard_outlined,
+                    Icons.card_giftcard,
+                    context.l10n.navPacks,
+                  ),
+                  section(context.l10n.navSectionData),
+                  item(
+                    '/data-management',
+                    Icons.storage_outlined,
+                    Icons.storage,
+                    context.l10n.navDataManagement,
+                  ),
+                  section(context.l10n.navSectionHelp),
+                  // El tutorial se abre encima de la pantalla actual (push, no replace)
+                  _NavItem(
+                    icon: Icons.school_outlined,
+                    selectedIcon: Icons.school,
+                    label: context.l10n.navTutorial,
+                    subtitle: context.l10n.navTutorialSubtitle,
+                    selected: false,
+                    onTap: () {
+                      final navigator = Navigator.of(context);
+                      navigator.pop();
+                      navigator.pushNamed('/tutorial');
+                    },
+                  ),
+                ],
               ),
             ),
+            const _DrawerFooter(),
           ],
         ),
       ),
@@ -222,7 +211,8 @@ class AppDrawer extends StatelessWidget {
   }
 }
 
-/// Pie del menú: autor, enlace al código y donación por PayPal.
+/// Pie fijo del menú, compacto: autoría con enlace al código y botón ancho
+/// de donación.
 class _DrawerFooter extends StatelessWidget {
   const _DrawerFooter();
 
@@ -244,37 +234,51 @@ class _DrawerFooter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, AppSpacing.lg, 16, AppSpacing.sm),
-      child: AppCard(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              context.l10n.drawerMadeBy(_authorName),
-              style: const TextStyle(fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              context.l10n.drawerFreeApp,
-              style: TextStyle(fontSize: 12, color: colors.onSurfaceVariant),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            FilledButton.tonalIcon(
-              onPressed: () => _open(context, _donateUrl),
-              icon: const Icon(Icons.coffee_outlined, size: 18),
-              label: Text(context.l10n.drawerDonate),
-            ),
-            TextButton.icon(
-              onPressed: () => _open(context, _repoUrl),
-              icon: const Icon(Icons.code, size: 18),
-              label: Text(context.l10n.drawerSourceCode),
-            ),
-          ],
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Divider(height: 1),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 2, 8, 10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      context.l10n.drawerMadeBy(_authorName),
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: context.l10n.drawerSourceCode,
+                    visualDensity: VisualDensity.compact,
+                    icon: const Icon(Icons.code, size: 20),
+                    onPressed: () => _open(context, _repoUrl),
+                  ),
+                ],
+              ),
+              Padding(
+                padding: const EdgeInsets.only(right: 12),
+                child: SizedBox(
+                  height: 42,
+                  child: FilledButton.tonalIcon(
+                    onPressed: () => _open(context, _donateUrl),
+                    icon: const Icon(Icons.coffee_outlined, size: 18),
+                    label: Text(context.l10n.drawerDonate),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
-      ),
+      ],
     );
   }
 }

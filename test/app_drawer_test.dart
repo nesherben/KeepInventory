@@ -35,6 +35,40 @@ void main() {
     expect(find.text('Pantalla de inicio'), findsOneWidget);
     expect(find.text('Submenú'), findsNothing);
   });
+
+  testWidgets(
+    'footer with donate button stays pinned at the bottom on a tablet',
+    (tester) async {
+      tester.view.physicalSize = const Size(1600, 2560);
+      tester.view.devicePixelRatio = 2;
+      addTearDown(tester.view.reset);
+      const locale = Locale('es');
+      final l10n = await AppLocalizations.delegate.load(locale);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          locale: locale,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const _HomeScreen(),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Abrir submenú'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byIcon(Icons.menu));
+      await tester.pumpAndSettle();
+
+      // El pie queda fijo abajo, con la donación como botón con texto
+      final donate = find.text(l10n.drawerDonate);
+      expect(donate, findsOneWidget);
+      final screenHeight =
+          tester.view.physicalSize.height / tester.view.devicePixelRatio;
+      expect(tester.getBottomLeft(donate).dy, greaterThan(screenHeight - 80));
+      expect(find.text(l10n.drawerMadeBy('Néstor')), findsOneWidget);
+      expect(find.byTooltip(l10n.drawerSourceCode), findsOneWidget);
+    },
+  );
 }
 
 class _HomeScreen extends StatelessWidget {
@@ -51,9 +85,7 @@ class _HomeScreen extends StatelessWidget {
           TextButton(
             onPressed: () => Navigator.push(
               context,
-              MaterialPageRoute<void>(
-                builder: (_) => const _SubmenuScreen(),
-              ),
+              MaterialPageRoute<void>(builder: (_) => const _SubmenuScreen()),
             ),
             child: const Text('Abrir submenú'),
           ),
