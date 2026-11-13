@@ -17,6 +17,14 @@ void main() {
       );
 
       final l10n = await AppLocalizations.delegate.load(const Locale('es'));
+      // El botón queda más abajo, tras las secciones de copias
+      await tester.scrollUntilVisible(
+        find.text(l10n.databaseDeleteTitle),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.ensureVisible(find.text(l10n.databaseDeleteTitle));
+      await tester.pumpAndSettle();
       await tester.tap(find.text(l10n.databaseDeleteTitle));
       await tester.pumpAndSettle();
 

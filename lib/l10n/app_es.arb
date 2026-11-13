@@ -930,7 +930,7 @@
     }
   },
   "categoryChooseTitle": "Elige una categoría",
-  "databaseExportFirst": "Exportar copia antes",
+  "databaseExportFirst": "Hacer una copia antes",
   "salesAdjustTotal": "Ajustar total",
   "salesAgreedTotal": "Total acordado (€)",
   "salesCartAdjustmentHint": "El ajuste se repartirá entre todos los artículos y se mantendrá proporcionalmente si cambia el carrito.",
@@ -953,5 +953,175 @@
     }
   },
   "promotionPickTitle": "Promoción del producto",
-  "promotionRemove": "Quitar promoción"
+  "promotionRemove": "Quitar promoción",
+  "backupAutoSectionTitle": "COPIA AUTOMÁTICA EN EL MÓVIL",
+  "backupAutoTitle": "Copia diaria a las 00:00",
+  "backupAutoSubtitle": "Se guarda en Documentos/KeepInventory y se conservan 7 días",
+  "backupLastCopy": "Última copia: {date} · {size}",
+  "@backupLastCopy": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "backupNoCopyYet": "Todavía no hay copias",
+  "backupPendingChanges": "Cambios sin copiar",
+  "backupNowTitle": "Copiar ahora",
+  "backupNowDone": "Copia guardada",
+  "backupNowUnchanged": "No hay cambios desde la última copia",
+  "backupNowEmpty": "No hay datos que copiar todavía",
+  "backupNowFailed": "No se pudo guardar la copia",
+  "backupFailuresWarning": "La copia automática ha fallado {count} veces seguidas",
+  "@backupFailuresWarning": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "backupPermissionTitle": "Permiso de archivos",
+  "backupPermissionExplain": "Para que la copia sobreviva a una desinstalación se guarda en Documentos/KeepInventory. Solo usamos esa carpeta. En Ajustes activa «Permitir gestión de todos los archivos» y vuelve.",
+  "backupPermissionContinue": "Continuar",
+  "backupPermissionDeniedTitle": "Sin permiso de archivos",
+  "backupPermissionDeniedBody": "Sin este permiso la copia solo se guarda dentro de la app y se borra si la desinstalas. Puedes darlo ahora en Ajustes.",
+  "backupOpenSettings": "Abrir ajustes",
+  "backupAcceptRisk": "Entiendo los riesgos",
+  "backupStepsWarning": "La copia no sobrevivirá a una desinstalación: falta dar el permiso de archivos",
+  "backupCompleteSteps": "Completar",
+  "backupRestoreLocalTitle": "Restaurar copia del móvil",
+  "backupRestoreLocalSubtitle": "Elige una de las copias guardadas en este móvil",
+  "backupLocalListTitle": "Copias en este móvil",
+  "backupBeforeRestoreLabel": "Antes de restaurar",
+  "backupSummary": "{products, plural, =1{1 producto} other{{products} productos}} · {sales, plural, =1{1 venta} other{{sales} ventas}}",
+  "@backupSummary": {
+    "placeholders": {
+      "products": {
+        "type": "int"
+      },
+      "sales": {
+        "type": "int"
+      }
+    }
+  },
+  "backupRestoreConfirmTitle": "¿Restaurar esta copia?",
+  "backupRestoreConfirmBody": "Se sustituirán los datos de este móvil por la copia del {date} ({products, plural, =1{1 producto} other{{products} productos}}, {sales, plural, =1{1 venta} other{{sales} ventas}}). Antes se guardará una copia de tus datos actuales.",
+  "@backupRestoreConfirmBody": {
+    "placeholders": {
+      "products": {
+        "type": "int"
+      },
+      "sales": {
+        "type": "int"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "backupRestoreOlderVersion": "Esta copia es de la versión {version}: se actualizará al restaurarla.",
+  "@backupRestoreOlderVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "backupRestoreConfirmButton": "Sustituir datos",
+  "backupRestoreInvalid": "La copia está dañada o no es de KeepInventory",
+  "backupRestoreNewer": "La copia es de una versión más nueva de la app. Actualiza KeepInventory e inténtalo de nuevo.",
+  "backupNoCopies": "No hay copias en este móvil",
+  "driveSectionTitle": "GOOGLE DRIVE",
+  "driveNotConfiguredTitle": "Google Drive pendiente de configurar",
+  "driveNotConfiguredBody": "Pendiente de configurar en esta versión de la app.",
+  "driveSignIn": "Iniciar sesión con Google",
+  "driveSignOut": "Cerrar sesión",
+  "driveUploadTitle": "Subir copia ahora",
+  "driveLastUpload": "Última subida: {date}. Cada subida sobrescribe la anterior.",
+  "@driveLastUpload": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "driveNeverUploaded": "Aún no has subido ninguna copia",
+  "driveUnsavedWarning": "Hay cambios sin subir. Guarda una copia en Drive.",
+  "driveUploadDone": "Copia subida a Drive",
+  "driveRestoreTitle": "Restaurar desde Drive",
+  "driveRestoreSubtitle": "Copia del {date}",
+  "@driveRestoreSubtitle": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "driveNoBackups": "Aún no hay copia en esta cuenta",
+  "driveErrorOffline": "Sin conexión. Tus datos locales no han cambiado.",
+  "driveErrorGeneric": "No se pudo completar la operación con Drive",
+  "driveSignInCancelled": "Inicio de sesión cancelado",
+  "firstRunTitle": "¿Tienes una copia de este móvil?",
+  "firstRunBody": "Si ya usabas KeepInventory, recupera tus datos. Si no, empieza desde cero.",
+  "firstRunSearchLocal": "Buscar copia en este móvil",
+  "firstRunPermissionHint": "Para encontrar tus copias hace falta el permiso de archivos.",
+  "firstRunNoCopies": "No encontramos copias en este móvil.",
+  "firstRunLatestCopy": "Copia más reciente",
+  "firstRunRestore": "Restaurar copia",
+  "firstRunChooseFile": "Elegir otro archivo",
+  "firstRunFromDrive": "Restaurar desde Google Drive",
+  "firstRunStartFresh": "Empezar desde cero",
+  "backupReminderTitle": "Tienes cambios sin copiar",
+  "backupReminderNever": "Todavía no hay ninguna copia de seguridad.",
+  "backupReminderLast": "Última copia: {date}.",
+  "@backupReminderLast": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "backupReminderLater": "Más tarde",
+  "tutorialBackupTitle": "Copias de seguridad",
+  "tutorialBackupBody": "Activa la copia diaria. Si desinstalas la app se borran los datos del móvil; la copia local solo sobrevive si das permiso de archivos. Para más seguridad, sube una copia a Drive.",
+  "tutorialBackupAction": "Activar copia diaria",
+  "databaseDeleteKeepsBackups": "Las copias guardadas en el móvil y en Drive no se borran.",
+  "driveRestoreHint": "Sustituye los datos de este móvil por la copia de Drive",
+  "backupStatusSafeTitle": "Datos protegidos",
+  "backupStatusSafeBody": "La última copia incluye todos tus cambios.",
+  "backupStatusPendingTitle": "Cambios sin copiar",
+  "backupStatusPendingBody": "Has hecho cambios desde la última copia.",
+  "backupStatusNoneTitle": "Sin copias todavía",
+  "backupStatusNoneBody": "Activa la copia diaria o haz una ahora.",
+  "backupStatusPhone": "En el móvil",
+  "backupStatusDrive": "En Drive",
+  "backupStatusNever": "Nunca",
+  "backupAutoSubtitleShort": "Documentos/KeepInventory · últimos 7 días",
+  "backupLocalCount": "{count, plural, =1{1 copia guardada} other{{count} copias guardadas}}",
+  "@backupLocalCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "driveSignInSubtitle": "Guarda una copia privada en tu Google Drive",
+  "driveConnectedAs": "Conectado como",
+  "dataMoreSection": "Más opciones",
+  "dataDangerSection": "Zona peligrosa",
+  "syncByQrShort": "Pasa todo a otro móvil cercano con un QR",
+  "exportBackupShort": "Guarda un archivo donde quieras",
+  "restoreBackupShort": "Carga un archivo de copia",
+  "dataSyncSection": "Pasar a otro móvil",
+  "dataBackupSection": "Copia de seguridad",
+  "backupRestoreTitle": "Restaurar copia",
+  "backupRestoreSources": "Del móvil, de Drive o de un archivo",
+  "backupRestoreFromDrive": "Desde Google Drive",
+  "backupRestoreFromDriveHint": "La copia guardada en tu Drive",
+  "backupRestoreChooseFile": "Elegir otro archivo…",
+  "backupRestoreChooseFileHint": "Una copia que te hayan pasado o desde el PC",
+  "backupShare": "Compartir copia"
 }

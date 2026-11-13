@@ -2951,7 +2951,7 @@ abstract class AppLocalizations {
   /// No description provided for @databaseExportFirst.
   ///
   /// In es, this message translates to:
-  /// **'Exportar copia antes'**
+  /// **'Hacer una copia antes'**
   String get databaseExportFirst;
 
   /// No description provided for @salesAdjustTotal.
@@ -3007,6 +3007,576 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Quitar promoción'**
   String get promotionRemove;
+
+  /// No description provided for @backupAutoSectionTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'COPIA AUTOMÁTICA EN EL MÓVIL'**
+  String get backupAutoSectionTitle;
+
+  /// No description provided for @backupAutoTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Copia diaria a las 00:00'**
+  String get backupAutoTitle;
+
+  /// No description provided for @backupAutoSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Se guarda en Documentos/KeepInventory y se conservan 7 días'**
+  String get backupAutoSubtitle;
+
+  /// No description provided for @backupLastCopy.
+  ///
+  /// In es, this message translates to:
+  /// **'Última copia: {date} · {size}'**
+  String backupLastCopy(String date, String size);
+
+  /// No description provided for @backupNoCopyYet.
+  ///
+  /// In es, this message translates to:
+  /// **'Todavía no hay copias'**
+  String get backupNoCopyYet;
+
+  /// No description provided for @backupPendingChanges.
+  ///
+  /// In es, this message translates to:
+  /// **'Cambios sin copiar'**
+  String get backupPendingChanges;
+
+  /// No description provided for @backupNowTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Copiar ahora'**
+  String get backupNowTitle;
+
+  /// No description provided for @backupNowDone.
+  ///
+  /// In es, this message translates to:
+  /// **'Copia guardada'**
+  String get backupNowDone;
+
+  /// No description provided for @backupNowUnchanged.
+  ///
+  /// In es, this message translates to:
+  /// **'No hay cambios desde la última copia'**
+  String get backupNowUnchanged;
+
+  /// No description provided for @backupNowEmpty.
+  ///
+  /// In es, this message translates to:
+  /// **'No hay datos que copiar todavía'**
+  String get backupNowEmpty;
+
+  /// No description provided for @backupNowFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo guardar la copia'**
+  String get backupNowFailed;
+
+  /// No description provided for @backupFailuresWarning.
+  ///
+  /// In es, this message translates to:
+  /// **'La copia automática ha fallado {count} veces seguidas'**
+  String backupFailuresWarning(int count);
+
+  /// No description provided for @backupPermissionTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Permiso de archivos'**
+  String get backupPermissionTitle;
+
+  /// No description provided for @backupPermissionExplain.
+  ///
+  /// In es, this message translates to:
+  /// **'Para que la copia sobreviva a una desinstalación se guarda en Documentos/KeepInventory. Solo usamos esa carpeta. En Ajustes activa «Permitir gestión de todos los archivos» y vuelve.'**
+  String get backupPermissionExplain;
+
+  /// No description provided for @backupPermissionContinue.
+  ///
+  /// In es, this message translates to:
+  /// **'Continuar'**
+  String get backupPermissionContinue;
+
+  /// No description provided for @backupPermissionDeniedTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin permiso de archivos'**
+  String get backupPermissionDeniedTitle;
+
+  /// No description provided for @backupPermissionDeniedBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin este permiso la copia solo se guarda dentro de la app y se borra si la desinstalas. Puedes darlo ahora en Ajustes.'**
+  String get backupPermissionDeniedBody;
+
+  /// No description provided for @backupOpenSettings.
+  ///
+  /// In es, this message translates to:
+  /// **'Abrir ajustes'**
+  String get backupOpenSettings;
+
+  /// No description provided for @backupAcceptRisk.
+  ///
+  /// In es, this message translates to:
+  /// **'Entiendo los riesgos'**
+  String get backupAcceptRisk;
+
+  /// No description provided for @backupStepsWarning.
+  ///
+  /// In es, this message translates to:
+  /// **'La copia no sobrevivirá a una desinstalación: falta dar el permiso de archivos'**
+  String get backupStepsWarning;
+
+  /// No description provided for @backupCompleteSteps.
+  ///
+  /// In es, this message translates to:
+  /// **'Completar'**
+  String get backupCompleteSteps;
+
+  /// No description provided for @backupRestoreLocalTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Restaurar copia del móvil'**
+  String get backupRestoreLocalTitle;
+
+  /// No description provided for @backupRestoreLocalSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Elige una de las copias guardadas en este móvil'**
+  String get backupRestoreLocalSubtitle;
+
+  /// No description provided for @backupLocalListTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Copias en este móvil'**
+  String get backupLocalListTitle;
+
+  /// No description provided for @backupBeforeRestoreLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Antes de restaurar'**
+  String get backupBeforeRestoreLabel;
+
+  /// No description provided for @backupSummary.
+  ///
+  /// In es, this message translates to:
+  /// **'{products, plural, =1{1 producto} other{{products} productos}} · {sales, plural, =1{1 venta} other{{sales} ventas}}'**
+  String backupSummary(int products, int sales);
+
+  /// No description provided for @backupRestoreConfirmTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Restaurar esta copia?'**
+  String get backupRestoreConfirmTitle;
+
+  /// No description provided for @backupRestoreConfirmBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Se sustituirán los datos de este móvil por la copia del {date} ({products, plural, =1{1 producto} other{{products} productos}}, {sales, plural, =1{1 venta} other{{sales} ventas}}). Antes se guardará una copia de tus datos actuales.'**
+  String backupRestoreConfirmBody(int products, int sales, String date);
+
+  /// No description provided for @backupRestoreOlderVersion.
+  ///
+  /// In es, this message translates to:
+  /// **'Esta copia es de la versión {version}: se actualizará al restaurarla.'**
+  String backupRestoreOlderVersion(String version);
+
+  /// No description provided for @backupRestoreConfirmButton.
+  ///
+  /// In es, this message translates to:
+  /// **'Sustituir datos'**
+  String get backupRestoreConfirmButton;
+
+  /// No description provided for @backupRestoreInvalid.
+  ///
+  /// In es, this message translates to:
+  /// **'La copia está dañada o no es de KeepInventory'**
+  String get backupRestoreInvalid;
+
+  /// No description provided for @backupRestoreNewer.
+  ///
+  /// In es, this message translates to:
+  /// **'La copia es de una versión más nueva de la app. Actualiza KeepInventory e inténtalo de nuevo.'**
+  String get backupRestoreNewer;
+
+  /// No description provided for @backupNoCopies.
+  ///
+  /// In es, this message translates to:
+  /// **'No hay copias en este móvil'**
+  String get backupNoCopies;
+
+  /// No description provided for @driveSectionTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'GOOGLE DRIVE'**
+  String get driveSectionTitle;
+
+  /// No description provided for @driveNotConfiguredTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Google Drive pendiente de configurar'**
+  String get driveNotConfiguredTitle;
+
+  /// No description provided for @driveNotConfiguredBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Pendiente de configurar en esta versión de la app.'**
+  String get driveNotConfiguredBody;
+
+  /// No description provided for @driveSignIn.
+  ///
+  /// In es, this message translates to:
+  /// **'Iniciar sesión con Google'**
+  String get driveSignIn;
+
+  /// No description provided for @driveSignOut.
+  ///
+  /// In es, this message translates to:
+  /// **'Cerrar sesión'**
+  String get driveSignOut;
+
+  /// No description provided for @driveUploadTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Subir copia ahora'**
+  String get driveUploadTitle;
+
+  /// No description provided for @driveLastUpload.
+  ///
+  /// In es, this message translates to:
+  /// **'Última subida: {date}. Cada subida sobrescribe la anterior.'**
+  String driveLastUpload(String date);
+
+  /// No description provided for @driveNeverUploaded.
+  ///
+  /// In es, this message translates to:
+  /// **'Aún no has subido ninguna copia'**
+  String get driveNeverUploaded;
+
+  /// No description provided for @driveUnsavedWarning.
+  ///
+  /// In es, this message translates to:
+  /// **'Hay cambios sin subir. Guarda una copia en Drive.'**
+  String get driveUnsavedWarning;
+
+  /// No description provided for @driveUploadDone.
+  ///
+  /// In es, this message translates to:
+  /// **'Copia subida a Drive'**
+  String get driveUploadDone;
+
+  /// No description provided for @driveRestoreTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Restaurar desde Drive'**
+  String get driveRestoreTitle;
+
+  /// No description provided for @driveRestoreSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Copia del {date}'**
+  String driveRestoreSubtitle(String date);
+
+  /// No description provided for @driveNoBackups.
+  ///
+  /// In es, this message translates to:
+  /// **'Aún no hay copia en esta cuenta'**
+  String get driveNoBackups;
+
+  /// No description provided for @driveErrorOffline.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin conexión. Tus datos locales no han cambiado.'**
+  String get driveErrorOffline;
+
+  /// No description provided for @driveErrorGeneric.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo completar la operación con Drive'**
+  String get driveErrorGeneric;
+
+  /// No description provided for @driveSignInCancelled.
+  ///
+  /// In es, this message translates to:
+  /// **'Inicio de sesión cancelado'**
+  String get driveSignInCancelled;
+
+  /// No description provided for @firstRunTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Tienes una copia de este móvil?'**
+  String get firstRunTitle;
+
+  /// No description provided for @firstRunBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Si ya usabas KeepInventory, recupera tus datos. Si no, empieza desde cero.'**
+  String get firstRunBody;
+
+  /// No description provided for @firstRunSearchLocal.
+  ///
+  /// In es, this message translates to:
+  /// **'Buscar copia en este móvil'**
+  String get firstRunSearchLocal;
+
+  /// No description provided for @firstRunPermissionHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Para encontrar tus copias hace falta el permiso de archivos.'**
+  String get firstRunPermissionHint;
+
+  /// No description provided for @firstRunNoCopies.
+  ///
+  /// In es, this message translates to:
+  /// **'No encontramos copias en este móvil.'**
+  String get firstRunNoCopies;
+
+  /// No description provided for @firstRunLatestCopy.
+  ///
+  /// In es, this message translates to:
+  /// **'Copia más reciente'**
+  String get firstRunLatestCopy;
+
+  /// No description provided for @firstRunRestore.
+  ///
+  /// In es, this message translates to:
+  /// **'Restaurar copia'**
+  String get firstRunRestore;
+
+  /// No description provided for @firstRunChooseFile.
+  ///
+  /// In es, this message translates to:
+  /// **'Elegir otro archivo'**
+  String get firstRunChooseFile;
+
+  /// No description provided for @firstRunFromDrive.
+  ///
+  /// In es, this message translates to:
+  /// **'Restaurar desde Google Drive'**
+  String get firstRunFromDrive;
+
+  /// No description provided for @firstRunStartFresh.
+  ///
+  /// In es, this message translates to:
+  /// **'Empezar desde cero'**
+  String get firstRunStartFresh;
+
+  /// No description provided for @backupReminderTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Tienes cambios sin copiar'**
+  String get backupReminderTitle;
+
+  /// No description provided for @backupReminderNever.
+  ///
+  /// In es, this message translates to:
+  /// **'Todavía no hay ninguna copia de seguridad.'**
+  String get backupReminderNever;
+
+  /// No description provided for @backupReminderLast.
+  ///
+  /// In es, this message translates to:
+  /// **'Última copia: {date}.'**
+  String backupReminderLast(String date);
+
+  /// No description provided for @backupReminderLater.
+  ///
+  /// In es, this message translates to:
+  /// **'Más tarde'**
+  String get backupReminderLater;
+
+  /// No description provided for @tutorialBackupTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Copias de seguridad'**
+  String get tutorialBackupTitle;
+
+  /// No description provided for @tutorialBackupBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Activa la copia diaria. Si desinstalas la app se borran los datos del móvil; la copia local solo sobrevive si das permiso de archivos. Para más seguridad, sube una copia a Drive.'**
+  String get tutorialBackupBody;
+
+  /// No description provided for @tutorialBackupAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Activar copia diaria'**
+  String get tutorialBackupAction;
+
+  /// No description provided for @databaseDeleteKeepsBackups.
+  ///
+  /// In es, this message translates to:
+  /// **'Las copias guardadas en el móvil y en Drive no se borran.'**
+  String get databaseDeleteKeepsBackups;
+
+  /// No description provided for @driveRestoreHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Sustituye los datos de este móvil por la copia de Drive'**
+  String get driveRestoreHint;
+
+  /// No description provided for @backupStatusSafeTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Datos protegidos'**
+  String get backupStatusSafeTitle;
+
+  /// No description provided for @backupStatusSafeBody.
+  ///
+  /// In es, this message translates to:
+  /// **'La última copia incluye todos tus cambios.'**
+  String get backupStatusSafeBody;
+
+  /// No description provided for @backupStatusPendingTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Cambios sin copiar'**
+  String get backupStatusPendingTitle;
+
+  /// No description provided for @backupStatusPendingBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Has hecho cambios desde la última copia.'**
+  String get backupStatusPendingBody;
+
+  /// No description provided for @backupStatusNoneTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin copias todavía'**
+  String get backupStatusNoneTitle;
+
+  /// No description provided for @backupStatusNoneBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Activa la copia diaria o haz una ahora.'**
+  String get backupStatusNoneBody;
+
+  /// No description provided for @backupStatusPhone.
+  ///
+  /// In es, this message translates to:
+  /// **'En el móvil'**
+  String get backupStatusPhone;
+
+  /// No description provided for @backupStatusDrive.
+  ///
+  /// In es, this message translates to:
+  /// **'En Drive'**
+  String get backupStatusDrive;
+
+  /// No description provided for @backupStatusNever.
+  ///
+  /// In es, this message translates to:
+  /// **'Nunca'**
+  String get backupStatusNever;
+
+  /// No description provided for @backupAutoSubtitleShort.
+  ///
+  /// In es, this message translates to:
+  /// **'Documentos/KeepInventory · últimos 7 días'**
+  String get backupAutoSubtitleShort;
+
+  /// No description provided for @backupLocalCount.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =1{1 copia guardada} other{{count} copias guardadas}}'**
+  String backupLocalCount(int count);
+
+  /// No description provided for @driveSignInSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Guarda una copia privada en tu Google Drive'**
+  String get driveSignInSubtitle;
+
+  /// No description provided for @driveConnectedAs.
+  ///
+  /// In es, this message translates to:
+  /// **'Conectado como'**
+  String get driveConnectedAs;
+
+  /// No description provided for @dataMoreSection.
+  ///
+  /// In es, this message translates to:
+  /// **'Más opciones'**
+  String get dataMoreSection;
+
+  /// No description provided for @dataDangerSection.
+  ///
+  /// In es, this message translates to:
+  /// **'Zona peligrosa'**
+  String get dataDangerSection;
+
+  /// No description provided for @syncByQrShort.
+  ///
+  /// In es, this message translates to:
+  /// **'Pasa todo a otro móvil cercano con un QR'**
+  String get syncByQrShort;
+
+  /// No description provided for @exportBackupShort.
+  ///
+  /// In es, this message translates to:
+  /// **'Guarda un archivo donde quieras'**
+  String get exportBackupShort;
+
+  /// No description provided for @restoreBackupShort.
+  ///
+  /// In es, this message translates to:
+  /// **'Carga un archivo de copia'**
+  String get restoreBackupShort;
+
+  /// No description provided for @dataSyncSection.
+  ///
+  /// In es, this message translates to:
+  /// **'Pasar a otro móvil'**
+  String get dataSyncSection;
+
+  /// No description provided for @dataBackupSection.
+  ///
+  /// In es, this message translates to:
+  /// **'Copia de seguridad'**
+  String get dataBackupSection;
+
+  /// No description provided for @backupRestoreTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Restaurar copia'**
+  String get backupRestoreTitle;
+
+  /// No description provided for @backupRestoreSources.
+  ///
+  /// In es, this message translates to:
+  /// **'Del móvil, de Drive o de un archivo'**
+  String get backupRestoreSources;
+
+  /// No description provided for @backupRestoreFromDrive.
+  ///
+  /// In es, this message translates to:
+  /// **'Desde Google Drive'**
+  String get backupRestoreFromDrive;
+
+  /// No description provided for @backupRestoreFromDriveHint.
+  ///
+  /// In es, this message translates to:
+  /// **'La copia guardada en tu Drive'**
+  String get backupRestoreFromDriveHint;
+
+  /// No description provided for @backupRestoreChooseFile.
+  ///
+  /// In es, this message translates to:
+  /// **'Elegir otro archivo…'**
+  String get backupRestoreChooseFile;
+
+  /// No description provided for @backupRestoreChooseFileHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Una copia que te hayan pasado o desde el PC'**
+  String get backupRestoreChooseFileHint;
+
+  /// No description provided for @backupShare.
+  ///
+  /// In es, this message translates to:
+  /// **'Compartir copia'**
+  String get backupShare;
 }
 
 class _AppLocalizationsDelegate

@@ -52,12 +52,16 @@ dependencies:
   qr_flutter: ^4.1.0       # Para pintar el código QR con la IP
   mobile_scanner: ^7.4.0   # Para que el receptor escanee el QR (si no lo tienes ya)
   network_info_plus: ^8.2.1 # Para detectar automáticamente la IP local del dispositivo emisor
+  permission_handler: ^12.0.1
+  workmanager: ^0.10.10
+  google_sign_in: ^7.2.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.14.4 # Añade esta línea (o la versión actual)
+  sqflite_common_ffi: ^2.4.7
 
 flutter_launcher_icons:
   android: true

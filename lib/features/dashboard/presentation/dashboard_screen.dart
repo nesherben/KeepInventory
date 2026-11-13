@@ -1,3 +1,4 @@
+import 'widgets/backup_reminder_banner.dart';
 import '../../inventory/data/repositories/product_repository_impl.dart';
 import '../../inventory/data/datasources/product_local_datasource.dart';
 
@@ -552,6 +553,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: ListView(
                   padding: EdgeInsets.all(isWideScreen ? 24.0 : 16.0),
                   children: [
+                    const BackupReminderBanner(),
                     if (isWideScreen) ...[
                       IntrinsicHeight(
                         child: Row(

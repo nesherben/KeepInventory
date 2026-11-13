@@ -7,6 +7,8 @@ import 'package:sqflite/sqflite.dart';
 
 import '../database/database_helper.dart';
 import 'app_version.dart';
+import 'backup_validator.dart';
+import 'local_backup_service.dart';
 
 /// Resultado de restaurar un backup.
 enum BackupImportStatus {
@@ -16,7 +18,8 @@ enum BackupImportStatus {
   /// El usuario no eligió archivo o falló la copia: no ha cambiado nada.
   failed,
 
-  /// El backup es de otra versión de la app: se ha deshecho, no ha cambiado nada.
+  /// El backup es de una versión de la app más nueva: se ha deshecho, no ha
+  /// cambiado nada.
   versionMismatch,
 
   /// El backup no lleva versión (anterior a 1.14.1): queda pendiente de
@@ -84,6 +87,12 @@ class DatabaseBackupService {
       if (await failsafe.exists()) await failsafe.delete();
       _hadOriginal = await dbFile.exists();
       if (_hadOriginal) await dbFile.copy(failsafe.path);
+      // Copia persistente: el failsafe se borra al terminar, esta no
+      try {
+        await LocalBackupService.saveBeforeRestore();
+      } catch (e) {
+        debugPrint('No se pudo guardar la copia previa: $e');
+      }
 
       // 2. Android sustituye el archivo por el backup elegido
       final bool success = await platform.invokeMethod('restoreDatabase');
@@ -104,13 +113,36 @@ class DatabaseBackupService {
             appVersion: mine,
           );
         case VersionMatch.different:
-          await rollbackPendingImport();
+          // Una copia más antigua se acepta y se migra al abrirla; solo se
+          // rechaza si es de una versión más nueva o está dañada
+          final info = await BackupValidator.inspect(dbFile);
+          if (!info.isValid) {
+            await rollbackPendingImport();
+            return BackupImportResult(
+              info.problem == BackupProblem.newer
+                  ? BackupImportStatus.versionMismatch
+                  : BackupImportStatus.failed,
+              backupVersion: theirs,
+              appVersion: mine,
+            );
+          }
+          await _discardFailsafe();
           return BackupImportResult(
-            BackupImportStatus.versionMismatch,
+            BackupImportStatus.restored,
             backupVersion: theirs,
             appVersion: mine,
           );
         case VersionMatch.unknown:
+          final unknownInfo = await BackupValidator.inspect(dbFile);
+          if (!unknownInfo.isValid) {
+            await rollbackPendingImport();
+            return BackupImportResult(
+              unknownInfo.problem == BackupProblem.newer
+                  ? BackupImportStatus.versionMismatch
+                  : BackupImportStatus.failed,
+              appVersion: mine,
+            );
+          }
           return BackupImportResult(
             BackupImportStatus.unknownVersion,
             appVersion: mine,

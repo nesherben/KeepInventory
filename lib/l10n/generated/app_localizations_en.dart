@@ -1777,7 +1777,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get categoryChooseTitle => 'Choose a category';
 
   @override
-  String get databaseExportFirst => 'Export a backup first';
+  String get databaseExportFirst => 'Make a copy first';
 
   @override
   String get salesAdjustTotal => 'Adjust total';
@@ -1810,4 +1810,355 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get promotionRemove => 'Remove promotion';
+
+  @override
+  String get backupAutoSectionTitle => 'AUTOMATIC COPY ON THIS PHONE';
+
+  @override
+  String get backupAutoTitle => 'Daily copy at 00:00';
+
+  @override
+  String get backupAutoSubtitle =>
+      'Saved in Documents/KeepInventory, last 7 days are kept';
+
+  @override
+  String backupLastCopy(String date, String size) {
+    return 'Last copy: $date · $size';
+  }
+
+  @override
+  String get backupNoCopyYet => 'No copies yet';
+
+  @override
+  String get backupPendingChanges => 'Unsaved changes';
+
+  @override
+  String get backupNowTitle => 'Copy now';
+
+  @override
+  String get backupNowDone => 'Copy saved';
+
+  @override
+  String get backupNowUnchanged => 'No changes since the last copy';
+
+  @override
+  String get backupNowEmpty => 'There is no data to copy yet';
+
+  @override
+  String get backupNowFailed => 'The copy could not be saved';
+
+  @override
+  String backupFailuresWarning(int count) {
+    return 'The automatic copy has failed $count times in a row';
+  }
+
+  @override
+  String get backupPermissionTitle => 'File access permission';
+
+  @override
+  String get backupPermissionExplain =>
+      'So the copy survives an uninstall, it is saved in Documents/KeepInventory. We only use that folder. In Settings enable \"Allow management of all files\" and come back.';
+
+  @override
+  String get backupPermissionContinue => 'Continue';
+
+  @override
+  String get backupPermissionDeniedTitle => 'No file access';
+
+  @override
+  String get backupPermissionDeniedBody =>
+      'Without this permission the copy is only kept inside the app and is deleted if you uninstall it. You can grant it now in Settings.';
+
+  @override
+  String get backupOpenSettings => 'Open settings';
+
+  @override
+  String get backupAcceptRisk => 'I understand the risks';
+
+  @override
+  String get backupStepsWarning =>
+      'The copy will not survive an uninstall: file access is missing';
+
+  @override
+  String get backupCompleteSteps => 'Complete';
+
+  @override
+  String get backupRestoreLocalTitle => 'Restore copy from this phone';
+
+  @override
+  String get backupRestoreLocalSubtitle =>
+      'Choose one of the copies saved on this phone';
+
+  @override
+  String get backupLocalListTitle => 'Copies on this phone';
+
+  @override
+  String get backupBeforeRestoreLabel => 'Before restoring';
+
+  @override
+  String backupSummary(int products, int sales) {
+    String _temp0 = intl.Intl.pluralLogic(
+      products,
+      locale: localeName,
+      other: '$products products',
+      one: '1 product',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      sales,
+      locale: localeName,
+      other: '$sales sales',
+      one: '1 sale',
+    );
+    return '$_temp0 · $_temp1';
+  }
+
+  @override
+  String get backupRestoreConfirmTitle => 'Restore this copy?';
+
+  @override
+  String backupRestoreConfirmBody(int products, int sales, String date) {
+    String _temp0 = intl.Intl.pluralLogic(
+      products,
+      locale: localeName,
+      other: '$products products',
+      one: '1 product',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      sales,
+      locale: localeName,
+      other: '$sales sales',
+      one: '1 sale',
+    );
+    return 'This phone\'s data will be replaced with the copy from $date ($_temp0, $_temp1). A copy of your current data is saved first.';
+  }
+
+  @override
+  String backupRestoreOlderVersion(String version) {
+    return 'This copy is from version $version: it will be updated when restored.';
+  }
+
+  @override
+  String get backupRestoreConfirmButton => 'Replace data';
+
+  @override
+  String get backupRestoreInvalid =>
+      'The copy is damaged or is not from KeepInventory';
+
+  @override
+  String get backupRestoreNewer =>
+      'The copy is from a newer version of the app. Update KeepInventory and try again.';
+
+  @override
+  String get backupNoCopies => 'No copies on this phone';
+
+  @override
+  String get driveSectionTitle => 'GOOGLE DRIVE';
+
+  @override
+  String get driveNotConfiguredTitle => 'Google Drive not set up yet';
+
+  @override
+  String get driveNotConfiguredBody =>
+      'Pending setup in this version of the app.';
+
+  @override
+  String get driveSignIn => 'Sign in with Google';
+
+  @override
+  String get driveSignOut => 'Sign out';
+
+  @override
+  String get driveUploadTitle => 'Upload copy now';
+
+  @override
+  String driveLastUpload(String date) {
+    return 'Last upload: $date. Each upload overwrites the previous one.';
+  }
+
+  @override
+  String get driveNeverUploaded => 'You have not uploaded a copy yet';
+
+  @override
+  String get driveUnsavedWarning =>
+      'There are changes not uploaded. Save a copy to Drive.';
+
+  @override
+  String get driveUploadDone => 'Copy uploaded to Drive';
+
+  @override
+  String get driveRestoreTitle => 'Restore from Drive';
+
+  @override
+  String driveRestoreSubtitle(String date) {
+    return 'Copy from $date';
+  }
+
+  @override
+  String get driveNoBackups => 'There is no copy in this account yet';
+
+  @override
+  String get driveErrorOffline =>
+      'No connection. Your local data has not changed.';
+
+  @override
+  String get driveErrorGeneric =>
+      'The Google Drive operation could not be completed';
+
+  @override
+  String get driveSignInCancelled => 'Sign-in cancelled';
+
+  @override
+  String get firstRunTitle => 'Do you have a copy from this phone?';
+
+  @override
+  String get firstRunBody =>
+      'If you already used KeepInventory, get your data back. Otherwise, start from scratch.';
+
+  @override
+  String get firstRunSearchLocal => 'Look for a copy on this phone';
+
+  @override
+  String get firstRunPermissionHint =>
+      'File access permission is needed to find your copies.';
+
+  @override
+  String get firstRunNoCopies => 'No copies found on this phone.';
+
+  @override
+  String get firstRunLatestCopy => 'Latest copy';
+
+  @override
+  String get firstRunRestore => 'Restore copy';
+
+  @override
+  String get firstRunChooseFile => 'Choose another file';
+
+  @override
+  String get firstRunFromDrive => 'Restore from Google Drive';
+
+  @override
+  String get firstRunStartFresh => 'Start from scratch';
+
+  @override
+  String get backupReminderTitle => 'You have unsaved changes';
+
+  @override
+  String get backupReminderNever => 'There is no backup copy yet.';
+
+  @override
+  String backupReminderLast(String date) {
+    return 'Last copy: $date.';
+  }
+
+  @override
+  String get backupReminderLater => 'Later';
+
+  @override
+  String get tutorialBackupTitle => 'Backups';
+
+  @override
+  String get tutorialBackupBody =>
+      'Turn on the daily copy. Uninstalling the app deletes the phone\'s data; the local copy survives only if you grant file access. For extra safety, upload a copy to Drive.';
+
+  @override
+  String get tutorialBackupAction => 'Turn on daily copy';
+
+  @override
+  String get databaseDeleteKeepsBackups =>
+      'Copies saved on the phone and in Drive are not deleted.';
+
+  @override
+  String get driveRestoreHint =>
+      'Replaces this phone\'s data with the copy from Drive';
+
+  @override
+  String get backupStatusSafeTitle => 'Your data is safe';
+
+  @override
+  String get backupStatusSafeBody =>
+      'The latest copy includes all your changes.';
+
+  @override
+  String get backupStatusPendingTitle => 'Unsaved changes';
+
+  @override
+  String get backupStatusPendingBody => 'You made changes since the last copy.';
+
+  @override
+  String get backupStatusNoneTitle => 'No copies yet';
+
+  @override
+  String get backupStatusNoneBody => 'Turn on the daily copy or make one now.';
+
+  @override
+  String get backupStatusPhone => 'On this phone';
+
+  @override
+  String get backupStatusDrive => 'In Drive';
+
+  @override
+  String get backupStatusNever => 'Never';
+
+  @override
+  String get backupAutoSubtitleShort => 'Documents/KeepInventory · last 7 days';
+
+  @override
+  String backupLocalCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count saved copies',
+      one: '1 saved copy',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get driveSignInSubtitle => 'Save a private copy in your Google Drive';
+
+  @override
+  String get driveConnectedAs => 'Signed in as';
+
+  @override
+  String get dataMoreSection => 'More options';
+
+  @override
+  String get dataDangerSection => 'Danger zone';
+
+  @override
+  String get syncByQrShort => 'Send everything to a nearby phone with a QR';
+
+  @override
+  String get exportBackupShort => 'Save a file wherever you want';
+
+  @override
+  String get restoreBackupShort => 'Load a backup file';
+
+  @override
+  String get dataSyncSection => 'Send to another phone';
+
+  @override
+  String get dataBackupSection => 'Backup';
+
+  @override
+  String get backupRestoreTitle => 'Restore a copy';
+
+  @override
+  String get backupRestoreSources => 'From this phone, Drive or a file';
+
+  @override
+  String get backupRestoreFromDrive => 'From Google Drive';
+
+  @override
+  String get backupRestoreFromDriveHint => 'The copy saved in your Drive';
+
+  @override
+  String get backupRestoreChooseFile => 'Choose another file…';
+
+  @override
+  String get backupRestoreChooseFileHint =>
+      'A copy someone sent you or from your computer';
+
+  @override
+  String get backupShare => 'Share copy';
 }

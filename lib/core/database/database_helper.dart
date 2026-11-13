@@ -12,6 +12,9 @@ class DatabaseHelper {
 
   DatabaseHelper._init();
 
+  /// Versión del esquema (`PRAGMA user_version`) que entiende esta app.
+  static const schemaVersion = 18;
+
   Future<Database> get database async {
     if (_database != null) return _database!;
     _database = await _initDB('keepinventory.db');
@@ -24,7 +27,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 18, // Versión 18: ajuste global del total de venta
+      version: schemaVersion, // 18: ajuste global del total de venta
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
       onConfigure: _onConfigure,
@@ -35,9 +38,19 @@ class DatabaseHelper {
   /// Marca el archivo con la versión de la app que lo abre: así un backup o
   /// una copia sincronizada saben de qué versión vienen.
   Future<void> _stampAppVersion(Database db) async {
+    final current = await AppVersion.current();
+    // Solo se escribe si cambia: abrir la app no debe contar como "cambios"
+    // para el aviso de copia de seguridad
+    final rows = await db.query(
+      'app_meta',
+      columns: ['value'],
+      where: 'key = ?',
+      whereArgs: [appVersionKey],
+    );
+    if (rows.isNotEmpty && rows.first['value'] == current) return;
     await db.insert('app_meta', {
       'key': appVersionKey,
-      'value': await AppVersion.current(),
+      'value': current,
     }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 

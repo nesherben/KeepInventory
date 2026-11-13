@@ -1788,7 +1788,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get categoryChooseTitle => 'Elige una categoría';
 
   @override
-  String get databaseExportFirst => 'Exportar copia antes';
+  String get databaseExportFirst => 'Hacer una copia antes';
 
   @override
   String get salesAdjustTotal => 'Ajustar total';
@@ -1822,4 +1822,358 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get promotionRemove => 'Quitar promoción';
+
+  @override
+  String get backupAutoSectionTitle => 'COPIA AUTOMÁTICA EN EL MÓVIL';
+
+  @override
+  String get backupAutoTitle => 'Copia diaria a las 00:00';
+
+  @override
+  String get backupAutoSubtitle =>
+      'Se guarda en Documentos/KeepInventory y se conservan 7 días';
+
+  @override
+  String backupLastCopy(String date, String size) {
+    return 'Última copia: $date · $size';
+  }
+
+  @override
+  String get backupNoCopyYet => 'Todavía no hay copias';
+
+  @override
+  String get backupPendingChanges => 'Cambios sin copiar';
+
+  @override
+  String get backupNowTitle => 'Copiar ahora';
+
+  @override
+  String get backupNowDone => 'Copia guardada';
+
+  @override
+  String get backupNowUnchanged => 'No hay cambios desde la última copia';
+
+  @override
+  String get backupNowEmpty => 'No hay datos que copiar todavía';
+
+  @override
+  String get backupNowFailed => 'No se pudo guardar la copia';
+
+  @override
+  String backupFailuresWarning(int count) {
+    return 'La copia automática ha fallado $count veces seguidas';
+  }
+
+  @override
+  String get backupPermissionTitle => 'Permiso de archivos';
+
+  @override
+  String get backupPermissionExplain =>
+      'Para que la copia sobreviva a una desinstalación se guarda en Documentos/KeepInventory. Solo usamos esa carpeta. En Ajustes activa «Permitir gestión de todos los archivos» y vuelve.';
+
+  @override
+  String get backupPermissionContinue => 'Continuar';
+
+  @override
+  String get backupPermissionDeniedTitle => 'Sin permiso de archivos';
+
+  @override
+  String get backupPermissionDeniedBody =>
+      'Sin este permiso la copia solo se guarda dentro de la app y se borra si la desinstalas. Puedes darlo ahora en Ajustes.';
+
+  @override
+  String get backupOpenSettings => 'Abrir ajustes';
+
+  @override
+  String get backupAcceptRisk => 'Entiendo los riesgos';
+
+  @override
+  String get backupStepsWarning =>
+      'La copia no sobrevivirá a una desinstalación: falta dar el permiso de archivos';
+
+  @override
+  String get backupCompleteSteps => 'Completar';
+
+  @override
+  String get backupRestoreLocalTitle => 'Restaurar copia del móvil';
+
+  @override
+  String get backupRestoreLocalSubtitle =>
+      'Elige una de las copias guardadas en este móvil';
+
+  @override
+  String get backupLocalListTitle => 'Copias en este móvil';
+
+  @override
+  String get backupBeforeRestoreLabel => 'Antes de restaurar';
+
+  @override
+  String backupSummary(int products, int sales) {
+    String _temp0 = intl.Intl.pluralLogic(
+      products,
+      locale: localeName,
+      other: '$products productos',
+      one: '1 producto',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      sales,
+      locale: localeName,
+      other: '$sales ventas',
+      one: '1 venta',
+    );
+    return '$_temp0 · $_temp1';
+  }
+
+  @override
+  String get backupRestoreConfirmTitle => '¿Restaurar esta copia?';
+
+  @override
+  String backupRestoreConfirmBody(int products, int sales, String date) {
+    String _temp0 = intl.Intl.pluralLogic(
+      products,
+      locale: localeName,
+      other: '$products productos',
+      one: '1 producto',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      sales,
+      locale: localeName,
+      other: '$sales ventas',
+      one: '1 venta',
+    );
+    return 'Se sustituirán los datos de este móvil por la copia del $date ($_temp0, $_temp1). Antes se guardará una copia de tus datos actuales.';
+  }
+
+  @override
+  String backupRestoreOlderVersion(String version) {
+    return 'Esta copia es de la versión $version: se actualizará al restaurarla.';
+  }
+
+  @override
+  String get backupRestoreConfirmButton => 'Sustituir datos';
+
+  @override
+  String get backupRestoreInvalid =>
+      'La copia está dañada o no es de KeepInventory';
+
+  @override
+  String get backupRestoreNewer =>
+      'La copia es de una versión más nueva de la app. Actualiza KeepInventory e inténtalo de nuevo.';
+
+  @override
+  String get backupNoCopies => 'No hay copias en este móvil';
+
+  @override
+  String get driveSectionTitle => 'GOOGLE DRIVE';
+
+  @override
+  String get driveNotConfiguredTitle => 'Google Drive pendiente de configurar';
+
+  @override
+  String get driveNotConfiguredBody =>
+      'Pendiente de configurar en esta versión de la app.';
+
+  @override
+  String get driveSignIn => 'Iniciar sesión con Google';
+
+  @override
+  String get driveSignOut => 'Cerrar sesión';
+
+  @override
+  String get driveUploadTitle => 'Subir copia ahora';
+
+  @override
+  String driveLastUpload(String date) {
+    return 'Última subida: $date. Cada subida sobrescribe la anterior.';
+  }
+
+  @override
+  String get driveNeverUploaded => 'Aún no has subido ninguna copia';
+
+  @override
+  String get driveUnsavedWarning =>
+      'Hay cambios sin subir. Guarda una copia en Drive.';
+
+  @override
+  String get driveUploadDone => 'Copia subida a Drive';
+
+  @override
+  String get driveRestoreTitle => 'Restaurar desde Drive';
+
+  @override
+  String driveRestoreSubtitle(String date) {
+    return 'Copia del $date';
+  }
+
+  @override
+  String get driveNoBackups => 'Aún no hay copia en esta cuenta';
+
+  @override
+  String get driveErrorOffline =>
+      'Sin conexión. Tus datos locales no han cambiado.';
+
+  @override
+  String get driveErrorGeneric => 'No se pudo completar la operación con Drive';
+
+  @override
+  String get driveSignInCancelled => 'Inicio de sesión cancelado';
+
+  @override
+  String get firstRunTitle => '¿Tienes una copia de este móvil?';
+
+  @override
+  String get firstRunBody =>
+      'Si ya usabas KeepInventory, recupera tus datos. Si no, empieza desde cero.';
+
+  @override
+  String get firstRunSearchLocal => 'Buscar copia en este móvil';
+
+  @override
+  String get firstRunPermissionHint =>
+      'Para encontrar tus copias hace falta el permiso de archivos.';
+
+  @override
+  String get firstRunNoCopies => 'No encontramos copias en este móvil.';
+
+  @override
+  String get firstRunLatestCopy => 'Copia más reciente';
+
+  @override
+  String get firstRunRestore => 'Restaurar copia';
+
+  @override
+  String get firstRunChooseFile => 'Elegir otro archivo';
+
+  @override
+  String get firstRunFromDrive => 'Restaurar desde Google Drive';
+
+  @override
+  String get firstRunStartFresh => 'Empezar desde cero';
+
+  @override
+  String get backupReminderTitle => 'Tienes cambios sin copiar';
+
+  @override
+  String get backupReminderNever =>
+      'Todavía no hay ninguna copia de seguridad.';
+
+  @override
+  String backupReminderLast(String date) {
+    return 'Última copia: $date.';
+  }
+
+  @override
+  String get backupReminderLater => 'Más tarde';
+
+  @override
+  String get tutorialBackupTitle => 'Copias de seguridad';
+
+  @override
+  String get tutorialBackupBody =>
+      'Activa la copia diaria. Si desinstalas la app se borran los datos del móvil; la copia local solo sobrevive si das permiso de archivos. Para más seguridad, sube una copia a Drive.';
+
+  @override
+  String get tutorialBackupAction => 'Activar copia diaria';
+
+  @override
+  String get databaseDeleteKeepsBackups =>
+      'Las copias guardadas en el móvil y en Drive no se borran.';
+
+  @override
+  String get driveRestoreHint =>
+      'Sustituye los datos de este móvil por la copia de Drive';
+
+  @override
+  String get backupStatusSafeTitle => 'Datos protegidos';
+
+  @override
+  String get backupStatusSafeBody =>
+      'La última copia incluye todos tus cambios.';
+
+  @override
+  String get backupStatusPendingTitle => 'Cambios sin copiar';
+
+  @override
+  String get backupStatusPendingBody =>
+      'Has hecho cambios desde la última copia.';
+
+  @override
+  String get backupStatusNoneTitle => 'Sin copias todavía';
+
+  @override
+  String get backupStatusNoneBody => 'Activa la copia diaria o haz una ahora.';
+
+  @override
+  String get backupStatusPhone => 'En el móvil';
+
+  @override
+  String get backupStatusDrive => 'En Drive';
+
+  @override
+  String get backupStatusNever => 'Nunca';
+
+  @override
+  String get backupAutoSubtitleShort =>
+      'Documentos/KeepInventory · últimos 7 días';
+
+  @override
+  String backupLocalCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count copias guardadas',
+      one: '1 copia guardada',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get driveSignInSubtitle =>
+      'Guarda una copia privada en tu Google Drive';
+
+  @override
+  String get driveConnectedAs => 'Conectado como';
+
+  @override
+  String get dataMoreSection => 'Más opciones';
+
+  @override
+  String get dataDangerSection => 'Zona peligrosa';
+
+  @override
+  String get syncByQrShort => 'Pasa todo a otro móvil cercano con un QR';
+
+  @override
+  String get exportBackupShort => 'Guarda un archivo donde quieras';
+
+  @override
+  String get restoreBackupShort => 'Carga un archivo de copia';
+
+  @override
+  String get dataSyncSection => 'Pasar a otro móvil';
+
+  @override
+  String get dataBackupSection => 'Copia de seguridad';
+
+  @override
+  String get backupRestoreTitle => 'Restaurar copia';
+
+  @override
+  String get backupRestoreSources => 'Del móvil, de Drive o de un archivo';
+
+  @override
+  String get backupRestoreFromDrive => 'Desde Google Drive';
+
+  @override
+  String get backupRestoreFromDriveHint => 'La copia guardada en tu Drive';
+
+  @override
+  String get backupRestoreChooseFile => 'Elegir otro archivo…';
+
+  @override
+  String get backupRestoreChooseFileHint =>
+      'Una copia que te hayan pasado o desde el PC';
+
+  @override
+  String get backupShare => 'Compartir copia';
 }

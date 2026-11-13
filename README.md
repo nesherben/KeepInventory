@@ -46,7 +46,7 @@ Funciona 100 % sin conexión: tus datos viven en tu móvil.
 | 🕘 **Tickets y ferias** | Historial de ventas agrupado por día o por feria, ticket de cada venta y devoluciones parciales o totales (los packs pueden devolverse enteros o por componentes) calculadas correctamente aunque hubiera promociones o combos. |
 | 🏠 **Inicio** | Ingresos, beneficio y desglose por método de pago, con gráfica de ventas a pantalla completa. |
 | 🔄 **Sincronización** | Pasa toda la base de datos a otro móvil con un QR. **No hace falta Wi‑Fi compartida**: la app crea su propio punto de acceso. |
-| 💾 **Backups** | Exporta / comparte la base de datos y restáurala cuando quieras. |
+| 💾 **Backups** | Copia automática diaria (a las 00:00) en el móvil que se restaura sola en una instalación nueva, copia manual en Google Drive y exportación / importación de la base de datos. |
 | 🎨 **Personalización** | Tema claro / oscuro, colores dinámicos (Material You), español e inglés (idioma del móvil; inglés si no está traducido). |
 | ⬆️ **Actualizaciones** | La app avisa cuando hay una nueva versión publicada en GitHub Releases. |
 
@@ -128,14 +128,27 @@ Ideal para pasar el inventario a otro móvil del puesto. Ve a **Copias y sincron
 
 ## 💾 Copias de seguridad
 
-En **Copias y sincronización** puedes:
+Las fotos van dentro de la base de datos, así que **una copia es un solo archivo** con todo. En **Copias y sincronización** tienes:
 
-- **Exportar / compartir** la base de datos (por correo, Drive, Telegram…).
-- **Importar** un backup anterior para restaurarlo.
+### Copia automática en el móvil
+- Activa **Copia diaria a las 00:00**: se guarda en `Documentos/KeepInventory` y se conservan los últimos 7 días. Además se copia al abrir la app y al pasarla a segundo plano si hay cambios.
+- La app pide el permiso **Acceso a todos los archivos** justo antes de activarla: es lo que permite que la copia **sobreviva a desinstalar la app**. Si no lo das, la copia queda dentro de la app y se borra al desinstalarla (puedes elegir *Entiendo los riesgos* para que no vuelva a avisar).
+- Android no garantiza la hora exacta: puede hacerse unos minutos más tarde, o al abrir la app si el móvil estaba apagado.
+- **Copiar ahora** (en la tarjeta de estado de arriba) hace una copia al momento, en la misma carpeta que la automática. La tarjeta te dice si tus datos están a salvo y cuándo fue la última copia en el móvil y en Drive. En el Inicio aparece un aviso si hay cambios sin copiar y la última copia tiene más de un día.
+- **Restaurar copia** reúne todo en un solo sitio: las copias del móvil (con fecha, tamaño y resumen de productos y ventas, y un botón para **compartirlas** por correo o Telegram), la copia de **Google Drive** y **Elegir otro archivo…** para una copia que te hayan pasado. Antes de sustituir tus datos se guarda una copia de los actuales por si te equivocas.
 
-> 📲 El backup debe ser de la **misma versión** de la app. Si es de otra versión, la app lo avisa y no cambia nada. Los backups hechos antes de la 1.14.1 no guardan su versión: la app avisa y te deja elegir *Restaurar igualmente*.
+### Instalación nueva o cambio de móvil
+Al abrir la app por primera vez sin datos aparece **¿Tienes una copia de este móvil?**: restaura la más reciente de un toque, elige otro archivo, restaura desde Google Drive o empieza desde cero.
 
-Como la app no usa la nube, haz backups de vez en cuando para no perder nada si cambias de móvil.
+### Google Drive (manual)
+Inicia sesión con Google y usa **Subir copia ahora** o **Restaurar desde Drive**. Se guarda un único archivo en una carpeta oculta y privada de la app (no ve el resto de tu Drive) y cada subida **sobrescribe la anterior**. Se muestra la fecha de la última subida y se pone en rojo cuando hay cambios sin subir.
+
+> ☁️ Drive necesita configurar un cliente OAuth de Google Cloud (ver `lib/core/services/drive_config.dart`); mientras no esté, la sección aparece como *pendiente de configurar*.
+
+### Más información
+- Se pueden restaurar copias de **versiones anteriores** de la app (se actualizan solas); las de una versión más nueva se rechazan sin cambiar nada.
+- **Borrar la base de datos** (en la *Zona peligrosa*) no borra las copias del móvil ni la de Drive, y ofrece hacer una copia antes.
+- En tablet la pantalla se organiza en dos columnas: lo más usado en ferias (sincronización por QR y copias) a la izquierda y Drive y la zona peligrosa a la derecha.
 
 ---
 

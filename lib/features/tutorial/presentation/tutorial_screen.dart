@@ -3,7 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:keepinventory/l10n/app_localizations_ext.dart';
 
 import '../../../core/services/app_preferences.dart';
+import '../../../core/services/backup_scheduler.dart';
+import '../../../core/services/local_backup_service.dart';
+import '../../../core/shared_widgets/app_alerts.dart';
 import '../../../core/shared_widgets/app_ui.dart';
+import '../../sync/presentation/backup_permission_flow.dart';
 
 /// Tutorial de bienvenida: carrusel de pasos que se muestra en el primer
 /// arranque y que se puede volver a abrir desde el menú lateral.
@@ -15,11 +19,21 @@ class TutorialScreen extends StatefulWidget {
 }
 
 class _TutorialStep {
-  const _TutorialStep(this.icon, this.title, this.body);
+  const _TutorialStep(
+    this.icon,
+    this.title,
+    this.body, {
+    this.actionLabel,
+    this.onAction,
+  });
 
   final IconData icon;
   final String title;
   final String body;
+
+  /// Botón opcional bajo el texto (p. ej. activar la copia diaria).
+  final String? actionLabel;
+  final VoidCallback? onAction;
 }
 
 class _TutorialScreenState extends State<TutorialScreen> {
@@ -70,7 +84,31 @@ class _TutorialScreenState extends State<TutorialScreen> {
         l10n.tutorialDataTitle,
         l10n.tutorialDataBody,
       ),
+      _TutorialStep(
+        Icons.backup_outlined,
+        l10n.tutorialBackupTitle,
+        l10n.tutorialBackupBody,
+        actionLabel: l10n.tutorialBackupAction,
+        onAction: _enableDailyBackup,
+      ),
     ];
+  }
+
+  /// Activa la copia diaria desde el tutorial (pide el permiso de archivos).
+  Future<void> _enableDailyBackup() async {
+    final result = await BackupPermissionFlow.ensure(context);
+    if (!mounted || result == BackupPermissionResult.declined) return;
+    await AppPreferences.setAutoBackupEnabled(true);
+    await BackupScheduler.schedule();
+    // Aún no hay datos: la primera copia se hará cuando los haya
+    final backup = await LocalBackupService.createBackup();
+    if (!mounted) return;
+    if (backup.status == LocalBackupStatus.created) {
+      AppAlerts.showSuccess(context, context.l10n.backupNowDone);
+    } else {
+      // Sin datos todavía: queda activada para cuando los haya
+      AppAlerts.showInfo(context, context.l10n.backupAutoTitle);
+    }
   }
 
   /// Marca el tutorial como visto y vuelve atrás; si es el primer arranque
@@ -221,6 +259,14 @@ class _StepPage extends StatelessWidget {
                   height: 1.4,
                 ),
               ),
+              if (step.actionLabel != null) ...[
+                const SizedBox(height: AppSpacing.xl),
+                FilledButton.tonalIcon(
+                  onPressed: step.onAction,
+                  icon: const Icon(Icons.backup_outlined),
+                  label: Text(step.actionLabel!),
+                ),
+              ],
             ],
           ),
         ),

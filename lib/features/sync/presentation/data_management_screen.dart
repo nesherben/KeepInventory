@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import 'widgets/slide_to_trash_sheet.dart';
@@ -10,8 +12,14 @@ import 'package:keepinventory/l10n/app_localizations_ext.dart';
 import '../../../core/database/database_helper.dart';
 import '../../../core/shared_widgets/app_drawer.dart';
 import '../../../core/shared_widgets/app_alerts.dart';
+import '../../../core/services/backup_coordinator.dart';
 import '../../../core/services/database_backup_service.dart';
+import '../../../core/services/local_backup_service.dart';
+import 'backup_restore_flow.dart';
 import 'sync_screen.dart';
+import 'widgets/settings_group.dart';
+import 'widgets/auto_backup_section.dart';
+import 'widgets/drive_backup_section.dart';
 
 class DataManagementScreen extends StatefulWidget {
   const DataManagementScreen({super.key});
@@ -26,25 +34,23 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
   double? _startX;
   double? _startY;
 
-  bool _isExporting = false;
   bool _isImporting = false;
   bool _isDeleting = false;
 
-  Future<void> _handleExport() async {
-    if (_isExporting) return;
-    setState(() => _isExporting = true);
-
-    AppAlerts.showInfo(context, context.l10n.exportPrompt);
-
-    final success = await DatabaseBackupService.exportDatabase();
-
-    if (mounted) {
-      setState(() => _isExporting = false);
-      if (success) {
-        AppAlerts.showSuccess(context, context.l10n.backupSaved);
-      } else {
-        AppAlerts.showWarning(context, context.l10n.exportFailed);
-      }
+  /// "Hacer una copia antes" de borrar: copia en la carpeta de siempre.
+  Future<void> _copyBeforeDelete() async {
+    final result = await LocalBackupService.createBackup(force: true);
+    await BackupCoordinator.refresh();
+    if (!mounted) return;
+    final l10n = context.l10n;
+    switch (result.status) {
+      case LocalBackupStatus.created:
+        AppAlerts.showSuccess(context, l10n.backupNowDone);
+      case LocalBackupStatus.empty:
+      case LocalBackupStatus.unchanged:
+        AppAlerts.showInfo(context, l10n.backupNowEmpty);
+      case LocalBackupStatus.failed:
+        AppAlerts.showError(context, l10n.backupNowFailed);
     }
   }
 
@@ -67,6 +73,14 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
 
     switch (result.status) {
       case BackupImportStatus.restored:
+        // Copia de otra versión (anterior): se actualiza al abrirla
+        if (result.backupVersion != result.appVersion &&
+            result.backupVersion != null) {
+          AppAlerts.showInfo(
+            context,
+            l10n.backupRestoreOlderVersion(result.backupVersion!),
+          );
+        }
         _showRestartDialog();
       case BackupImportStatus.failed:
         AppAlerts.showWarning(context, l10n.restoreFailed);
@@ -129,7 +143,7 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
   }
 
   Future<void> _confirmDatabaseDeletion() async {
-    if (_isExporting || _isImporting || _isDeleting) return;
+    if (_isImporting || _isDeleting) return;
 
     final firstConfirmation = await showDialog<String>(
       context: context,
@@ -144,6 +158,14 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(context.l10n.databaseDeleteWarning),
+            const SizedBox(height: 8),
+            Text(
+              context.l10n.databaseDeleteKeepsBackups,
+              style: TextStyle(
+                fontSize: 12,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
             const SizedBox(height: 16),
             // Antes de borrar todo, la opción de guardar una copia
             OutlinedButton.icon(
@@ -168,8 +190,8 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
 
     if (!mounted) return;
     if (firstConfirmation == 'export') {
-      // "Exportar copia antes": se exporta y no se borra nada
-      await _handleExport();
+      // "Hacer una copia antes": se copia y no se borra nada
+      await _copyBeforeDelete();
       return;
     }
     if (firstConfirmation != 'continue') return;
@@ -237,32 +259,91 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
     );
   }
 
-  void _showRestartDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: Text(context.l10n.databaseRestoredTitle),
-        content: Text(context.l10n.databaseRestoredMessage),
-        actions: [
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.primary,
-              foregroundColor: Theme.of(context).colorScheme.onPrimary,
-            ),
-            onPressed: () {
-              Restart.restartApp();
-            },
-            child: Text(context.l10n.restartNow),
-          ),
-        ],
-      ),
-    );
-  }
+  void _showRestartDialog() => showRestoredDialog(context);
 
   @override
   Widget build(BuildContext context) {
-    final busy = _isExporting || _isImporting || _isDeleting;
+    final busy = _isImporting || _isDeleting;
+    final width = MediaQuery.sizeOf(context).width;
+    final page = AppSpacing.page(context);
+    // Tablet: dos columnas (lo prioritario a la izquierda) y como mucho
+    // 1100 px de ancho; móvil: una columna
+    final twoColumns = width >= 840;
+    final side = math.max(page, (width - (twoColumns ? 1100 : 720)) / 2);
+    final bottom = page + MediaQuery.paddingOf(context).bottom;
+
+    // Lo más usado en ferias: pasar los datos a otro móvil con un QR
+    final syncSection = [
+      DataSectionLabel(context.l10n.dataSyncSection, first: true),
+      _SyncCard(
+        onTap: busy
+            ? null
+            : () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const SyncScreen()),
+              ),
+      ),
+    ];
+    final backupSection = AutoBackupSection(
+      enabled: !busy,
+      onPickFile: _handleImport,
+    );
+    final dangerSection = [
+      DataSectionLabel(context.l10n.dataDangerSection),
+      SettingsGroup(
+        borderColor: Theme.of(context).colorScheme.error
+            .withValues(alpha: 0.35),
+        children: [
+          SettingsRow(
+            icon: Icons.delete_forever_outlined,
+            title: context.l10n.databaseDeleteTitle,
+            subtitle: context.l10n.databaseDeleteDescription,
+            loading: _isDeleting,
+            danger: true,
+            onTap: busy ? null : _confirmDatabaseDeletion,
+          ),
+        ],
+      ),
+    ];
+
+    final Widget body;
+    if (twoColumns) {
+      body = SingleChildScrollView(
+        padding: EdgeInsets.fromLTRB(side, page, side, bottom),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [...syncSection, backupSection],
+              ),
+            ),
+            const SizedBox(width: AppSpacing.xl),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  DriveBackupSection(enabled: !busy, firstInColumn: true),
+                  ...dangerSection,
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    } else {
+      body = ListView(
+        padding: EdgeInsets.fromLTRB(side, page, side, bottom),
+        children: [
+          ...syncSection,
+          backupSection,
+          DriveBackupSection(enabled: !busy),
+          ...dangerSection,
+        ],
+      );
+    }
+
     return Listener(
       onPointerDown: (event) {
         _startX = event.position.dx;
@@ -287,130 +368,57 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
         key: _scaffoldKey,
         appBar: AppBar(title: Text(context.l10n.dataManagementTitle)),
         drawer: const AppDrawer(),
-        body: ListView(
-          padding: EdgeInsets.all(AppSpacing.page(context)),
-          children: [
-            _ActionTile(
-              icon: Icons.sync_alt,
-              title: context.l10n.syncByQrTitle,
-              subtitle: context.l10n.syncByQrDescription,
-              highlighted: true,
-              onTap: busy
-                  ? null
-                  : () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const SyncScreen()),
-                    ),
-            ),
-            SectionLabel(
-              context.l10n.backupSectionTitle,
-              padding: const EdgeInsets.fromLTRB(4, 24, 4, 8),
-            ),
-            _ActionTile(
-              icon: Icons.download_rounded,
-              title: context.l10n.exportBackupTitle,
-              subtitle: context.l10n.exportBackupDescription,
-              loading: _isExporting,
-              onTap: busy ? null : _handleExport,
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            _ActionTile(
-              icon: Icons.upload_rounded,
-              title: context.l10n.restoreBackupTitle,
-              subtitle: context.l10n.restoreBackupDescription,
-              loading: _isImporting,
-              onTap: busy ? null : _handleImport,
-            ),
-            const SizedBox(height: AppSpacing.xl),
-            _ActionTile(
-              icon: Icons.delete_forever_outlined,
-              title: context.l10n.databaseDeleteTitle,
-              subtitle: context.l10n.databaseDeleteDescription,
-              loading: _isDeleting,
-              danger: true,
-              onTap: busy ? null : _confirmDatabaseDeletion,
-            ),
-          ],
-        ),
+        body: body,
       ),
     );
   }
 }
 
-/// Fila de acción: icono (o progreso) · título y descripción · flecha.
-/// [danger] la pinta en rojo; [highlighted] destaca la acción principal.
-class _ActionTile extends StatelessWidget {
-  const _ActionTile({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-    this.loading = false,
-    this.danger = false,
-    this.highlighted = false,
-  });
+/// Tarjeta destacada de la sincronización por QR: lo más usado en ferias.
+class _SyncCard extends StatelessWidget {
+  const _SyncCard({required this.onTap});
 
-  final IconData icon;
-  final String title;
-  final String subtitle;
   final VoidCallback? onTap;
-  final bool loading;
-  final bool danger;
-  final bool highlighted;
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    final accent = danger ? colors.error : colors.primary;
-
     return AppCard(
       onTap: onTap,
-      borderColor: danger
-          ? colors.error.withValues(alpha: 0.35)
-          : highlighted
-          ? colors.primary.withValues(alpha: 0.35)
-          : null,
+      borderColor: colors.primary.withValues(alpha: 0.4),
+      color: Color.alphaBlend(
+        colors.primary.withValues(alpha: 0.06),
+        Theme.of(context).cardColor,
+      ),
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Row(
         children: [
-          SizedBox(
-            width: 44,
-            height: 44,
-            child: loading
-                ? Padding(
-                    padding: const EdgeInsets.all(10),
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.5,
-                      color: accent,
-                    ),
-                  )
-                : IconBadge(icon, color: accent, size: highlighted ? 24 : 20),
-          ),
-          const SizedBox(width: AppSpacing.md),
+          const IconBadge(Icons.qr_code_2, size: 28),
+          const SizedBox(width: AppSpacing.lg),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  title,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: highlighted ? 16 : 15,
-                    color: danger ? colors.error : colors.onSurface,
+                  context.l10n.syncByQrTitle,
+                  style: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  subtitle,
+                  context.l10n.syncByQrDescription,
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: 13,
                     color: colors.onSurfaceVariant,
                   ),
                 ),
               ],
             ),
           ),
-          Icon(Icons.chevron_right, color: colors.onSurfaceVariant),
+          const SizedBox(width: AppSpacing.sm),
+          Icon(Icons.chevron_right, color: colors.primary),
         ],
       ),
     );

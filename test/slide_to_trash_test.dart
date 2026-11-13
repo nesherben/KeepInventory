@@ -84,6 +84,14 @@ void main() {
       'bin keeps everything', (tester) async {
     await tester.pumpWidget(_app(const DataManagementScreen()));
 
+    // El botón queda más abajo, tras las secciones de copias
+    await tester.scrollUntilVisible(
+      find.text(l10n.databaseDeleteTitle),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.ensureVisible(find.text(l10n.databaseDeleteTitle));
+    await tester.pumpAndSettle();
     await tester.tap(find.text(l10n.databaseDeleteTitle));
     await tester.pumpAndSettle();
     await tester.tap(find.text(l10n.databaseDeleteContinue));

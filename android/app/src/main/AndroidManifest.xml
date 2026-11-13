@@ -11,7 +11,13 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" android:maxSdkVersion="32" />
     <!-- Android 13+: permiso de dispositivos Wi‑Fi cercanos, sin uso de ubicación -->
     <uses-permission android:name="android.permission.NEARBY_WIFI_DEVICES" android:usesPermissionFlags="neverForLocation" />
+    <!-- Copia automática en Documentos/KeepInventory: así sobrevive a desinstalar
+         la app. La app se distribuye por GitHub, no por Play Store -->
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
     <application
+        android:requestLegacyExternalStorage="true"
         android:label="KeepInventory"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
