@@ -44,6 +44,13 @@ class SalesCartTotalSummary extends StatelessWidget {
                 });
                 return;
               }
+              // Un punto mal tecleado ("10.555") se leería como miles
+              if (value > baseTotal * 2) {
+                setDialogState(() {
+                  errorText = context.l10n.salesAgreedTotalTooHigh;
+                });
+                return;
+              }
               Navigator.pop(dialogContext, value);
             }
 
@@ -96,7 +103,8 @@ class SalesCartTotalSummary extends StatelessWidget {
     enabled: itemCount > 0,
     tooltip: context.l10n.salesAdjustTotal,
     padding: EdgeInsets.zero,
-    constraints: const BoxConstraints.tightFor(width: 40, height: 40),
+    // El tamaño del botón lo fija el SizedBox de fuera: `constraints` de
+    // PopupMenuButton se aplica al MENÚ y lo dejaba de 40 px de ancho
     iconSize: 20,
     onSelected: (action) {
       switch (action) {

@@ -63,12 +63,16 @@ class InventoryProductEditor {
     }
   }
 
-  void showDeleteConfirmation(BuildContext context, int id) {
+  void showDeleteConfirmation(BuildContext context, Product product) {
+    final id = product.id!;
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(dialogContext.l10n.deleteProductTitle),
-        content: Text(dialogContext.l10n.deleteProductConfirm),
+        // Nombra el producto: con la lista llena evita borrar el equivocado
+        content: Text(
+          dialogContext.l10n.deleteProductConfirmNamed(product.name),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),

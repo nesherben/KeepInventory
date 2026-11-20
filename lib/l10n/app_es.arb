@@ -147,7 +147,7 @@
   "packCreated": "¡Pack creado con éxito!",
   "packModified": "¡Pack modificado con éxito!",
   "deletePackTitle": "Eliminar Pack",
-  "confirmDeletePack": "¿Seguro que deseas eliminar \"{pack}\"? Los componentes de los {quantity} packs montados volverán al almacén.",
+  "confirmDeletePack": "¿Seguro que deseas eliminar \"{pack}\"? Los componentes de los {quantity} packs montados volverán al almacén. Los tickets antiguos que lo incluyen se conservan.",
   "@confirmDeletePack": { "placeholders": { "pack": {}, "quantity": {} } },
   "packDeleted": "Pack eliminado y componentes devueltos al almacén.",
   "createPackTitle": "Crear Nuevo Pack / Bundle",
@@ -1138,5 +1138,24 @@
   "backupDriveChecking": "Comprobando copia de Drive…",
   "backupDriveStatusUnavailable": "No se pudo consultar Drive",
   "backupDriveNoBackup": "No hay ninguna copia en Drive",
-  "backupDriveNotConnected": "Conecta tu cuenta de Google para consultar Drive"
+  "backupDriveNotConnected": "Conecta tu cuenta de Google para consultar Drive",
+  "saleFailed": "No se pudo registrar la venta. El carrito se ha conservado; inténtalo de nuevo.",
+  "deleteProductConfirmNamed": "¿Eliminar «{name}»? Su stock pasará a 0 y dejará de aparecer en el inventario; las ventas ya hechas se conservan.",
+  "@deleteProductConfirmNamed": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "salesAgreedTotalTooHigh": "El total acordado no puede ser más del doble del carrito. Revisa el importe.",
+  "salesLeaveCartTitle": "¿Salir sin cobrar?",
+  "salesLeaveCartBody": "Hay artículos en el carrito. Si sales, se perderán.",
+  "salesLeaveCartStay": "Seguir aquí",
+  "salesLeaveCartExit": "Salir",
+  "discardChangesTitle": "¿Descartar cambios?",
+  "discardChangesBody": "Has escrito datos que se perderán si sales ahora.",
+  "discardChangesStay": "Seguir editando",
+  "discardChangesLeave": "Descartar",
+  "refundFullTicketNote": "Al devolver todo el ticket se elimina del historial y deja de contar en los totales de ese día."
 }

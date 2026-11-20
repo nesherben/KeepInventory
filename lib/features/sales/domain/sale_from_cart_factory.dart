@@ -111,7 +111,8 @@ class SaleFromCartFactory {
 
     return Sale(
       date: date,
-      totalAmount: pricing.total * adjustmentFactor,
+      // Redondeado a céntimos para no guardar ruido de coma flotante
+      totalAmount: (pricing.total * adjustmentFactor * 100).round() / 100,
       items: saleItems,
       packItems: salePacks,
       paymentMethod: paymentMethod,

@@ -433,7 +433,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String confirmDeletePack(Object pack, Object quantity) {
-    return '¿Seguro que deseas eliminar \"$pack\"? Los componentes de los $quantity packs montados volverán al almacén.';
+    return '¿Seguro que deseas eliminar \"$pack\"? Los componentes de los $quantity packs montados volverán al almacén. Los tickets antiguos que lo incluyen se conservan.';
   }
 
   @override
@@ -2227,4 +2227,47 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get backupDriveNotConnected =>
       'Conecta tu cuenta de Google para consultar Drive';
+
+  @override
+  String get saleFailed =>
+      'No se pudo registrar la venta. El carrito se ha conservado; inténtalo de nuevo.';
+
+  @override
+  String deleteProductConfirmNamed(String name) {
+    return '¿Eliminar «$name»? Su stock pasará a 0 y dejará de aparecer en el inventario; las ventas ya hechas se conservan.';
+  }
+
+  @override
+  String get salesAgreedTotalTooHigh =>
+      'El total acordado no puede ser más del doble del carrito. Revisa el importe.';
+
+  @override
+  String get salesLeaveCartTitle => '¿Salir sin cobrar?';
+
+  @override
+  String get salesLeaveCartBody =>
+      'Hay artículos en el carrito. Si sales, se perderán.';
+
+  @override
+  String get salesLeaveCartStay => 'Seguir aquí';
+
+  @override
+  String get salesLeaveCartExit => 'Salir';
+
+  @override
+  String get discardChangesTitle => '¿Descartar cambios?';
+
+  @override
+  String get discardChangesBody =>
+      'Has escrito datos que se perderán si sales ahora.';
+
+  @override
+  String get discardChangesStay => 'Seguir editando';
+
+  @override
+  String get discardChangesLeave => 'Descartar';
+
+  @override
+  String get refundFullTicketNote =>
+      'Al devolver todo el ticket se elimina del historial y deja de contar en los totales de ese día.';
 }

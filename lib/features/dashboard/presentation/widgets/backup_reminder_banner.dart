@@ -6,6 +6,7 @@ import '../../../../core/services/backup_coordinator.dart';
 import '../../../../core/services/local_backup_service.dart';
 import '../../../../core/shared_widgets/app_alerts.dart';
 import '../../../../core/shared_widgets/app_ui.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/backup_formatters.dart';
 import '../../../sync/presentation/backup_permission_flow.dart';
 
@@ -49,10 +50,9 @@ class _BackupReminderBannerState extends State<BackupReminderBanner> {
         valueListenable: BackupCoordinator.reminderNeeded,
         builder: (context, needed, _) {
           final l10n = context.l10n;
-          final colors = Theme.of(context).colorScheme;
           if (failures >= 2 && AppPreferences.autoBackupEnabled) {
             return _Banner(
-              color: colors.error,
+              color: AppColors.warning,
               icon: Icons.error_outline,
               title: l10n.backupFailuresWarning(failures),
               body: null,
@@ -66,7 +66,7 @@ class _BackupReminderBannerState extends State<BackupReminderBanner> {
           if (!needed) return const SizedBox.shrink();
           final lastAt = AppPreferences.lastLocalBackupAt;
           return _Banner(
-            color: colors.tertiary,
+            color: AppColors.warning,
             icon: Icons.backup_outlined,
             title: l10n.backupReminderTitle,
             body: lastAt == null

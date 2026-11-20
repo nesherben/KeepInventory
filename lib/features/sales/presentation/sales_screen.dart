@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:keepinventory/core/utils/app_numbers.dart';
 import 'package:keepinventory/l10n/app_localizations_ext.dart';
 
@@ -263,9 +264,8 @@ class _SalesScreenState extends State<SalesScreen>
       fontSize: fontSize,
       hasAdjustment: (_cartAdjustmentFactor - 1).abs() > 0.0000001,
       color: color,
-      onTotalAdjusted: (agreedTotal) => setState(
-        () => _cartAdjustmentFactor = agreedTotal / _pricing.total,
-      ),
+      onTotalAdjusted: (agreedTotal) =>
+          setState(() => _cartAdjustmentFactor = agreedTotal / _pricing.total),
       onReset: () => setState(() => _cartAdjustmentFactor = 1.0),
     );
   }
@@ -311,8 +311,20 @@ class _SalesScreenState extends State<SalesScreen>
     onChanged: (method) => setState(() => _paymentMethod = method),
   );
 
+  /// Evita que un doble toque en "Cobrar" registre la venta dos veces.
+  bool _processing = false;
+
   Future<void> _processSale() async {
-    if (_cart.isEmpty && _cartPacks.isEmpty) return;
+    if (_processing || (_cart.isEmpty && _cartPacks.isEmpty)) return;
+    setState(() => _processing = true);
+    try {
+      await _registerSale();
+    } finally {
+      if (mounted) setState(() => _processing = false);
+    }
+  }
+
+  Future<void> _registerSale() async {
     final sale = SaleFromCartFactory.create(
       date: DateTime.now(),
       products: _cart,
@@ -323,7 +335,14 @@ class _SalesScreenState extends State<SalesScreen>
       adjustmentFactor: _cartAdjustmentFactor,
     );
 
-    final saleId = await _saleRepository.processSale(sale);
+    final int saleId;
+    try {
+      saleId = await _saleRepository.processSale(sale);
+    } catch (_) {
+      // La transacción se deshace entera: el carrito se conserva
+      if (mounted) AppAlerts.showError(context, context.l10n.saleFailed);
+      return;
+    }
     final method = _paymentMethod;
 
     setState(() {
@@ -382,7 +401,7 @@ class _SalesScreenState extends State<SalesScreen>
           borderRadius: BorderRadius.circular(AppRadius.lg),
         ),
       ),
-      onPressed: isEmpty ? null : _processSale,
+      onPressed: isEmpty || _processing ? null : _processSale,
       icon: const Icon(Icons.point_of_sale),
       label: Text(
         isEmpty
@@ -459,153 +478,194 @@ class _SalesScreenState extends State<SalesScreen>
       _packSearchQuery,
     );
 
-    return Listener(
-      onPointerDown: (event) {
-        _startX = event.position.dx;
-        _startY = event.position.dy;
-      },
-      onPointerMove: (event) {
-        if (_startX == null || _startY == null) return;
-        final dx = event.position.dx - _startX!;
-        final dy = event.position.dy - _startY!;
-
-        if (_tabController.index == 0 && dx > 50 && dy.abs() < 30) {
-          _startX = null;
-          _startY = null;
-          _scaffoldKey.currentState?.openDrawer();
+    final hasCart = _cart.isNotEmpty || _cartPacks.isNotEmpty;
+    return PopScope(
+      // Con el carrito lleno, "atrás" pide confirmar antes de perderlo
+      canPop: !hasCart,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        final navigator = Navigator.of(context);
+        final leave = await _confirmLeaveWithCart();
+        if (!leave) return;
+        // pop() directo no vuelve a pasar por este PopScope
+        if (navigator.canPop()) {
+          navigator.pop();
+        } else {
+          await SystemNavigator.pop();
         }
       },
-      onPointerUp: (_) {
-        _startX = null;
-        _startY = null;
-      },
-      onPointerCancel: (_) {
-        _startX = null;
-        _startY = null;
-      },
-      child: Scaffold(
-        key: _scaffoldKey,
-        drawerEnableOpenDragGesture: _tabController.index == 0,
-        appBar: AppBar(
-          title: Text(context.l10n.salesTitle),
-          bottom: TabBar(
-            controller: _tabController,
-            tabs: [
-              Tab(
-                icon: const Icon(Icons.inventory_2),
-                text: context.l10n.salesProductsTab,
-              ),
-              Tab(
-                icon: const Icon(Icons.card_giftcard),
-                text: context.l10n.salesPacksTab,
-              ),
-            ],
+      child: Listener(
+        onPointerDown: (event) {
+          _startX = event.position.dx;
+          _startY = event.position.dy;
+        },
+        onPointerMove: (event) {
+          if (_startX == null || _startY == null) return;
+          final dx = event.position.dx - _startX!;
+          final dy = event.position.dy - _startY!;
+
+          if (_tabController.index == 0 && dx > 50 && dy.abs() < 30) {
+            _startX = null;
+            _startY = null;
+            _scaffoldKey.currentState?.openDrawer();
+          }
+        },
+        onPointerUp: (_) {
+          _startX = null;
+          _startY = null;
+        },
+        onPointerCancel: (_) {
+          _startX = null;
+          _startY = null;
+        },
+        child: Scaffold(
+          key: _scaffoldKey,
+          drawerEnableOpenDragGesture: _tabController.index == 0,
+          appBar: AppBar(
+            title: Text(context.l10n.salesTitle),
+            bottom: TabBar(
+              controller: _tabController,
+              tabs: [
+                Tab(
+                  icon: const Icon(Icons.inventory_2),
+                  text: context.l10n.salesProductsTab,
+                ),
+                Tab(
+                  icon: const Icon(Icons.card_giftcard),
+                  text: context.l10n.salesPacksTab,
+                ),
+              ],
+            ),
           ),
-        ),
-        drawer: const AppDrawer(),
-        body: _isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : isLandscape
-            ? Row(
-                children: [
-                  Expanded(
-                    flex: 3,
-                    child: Column(
-                      children: [
-                        _buildCatalogHeader(),
-                        Expanded(
-                          child: _buildCatalogTabs(
-                            filteredProducts: filteredProducts,
-                            filteredPacks: filteredPacks,
-                            crossAxisCount: 4,
-                            bottomPadding: 16,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const VerticalDivider(width: 1, thickness: 1),
-                  SalesLandscapeCartPanel(
-                    itemCountLabel: context.l10n.cartItemsCount(
-                      _cartItemCount.toString(),
-                    ),
-                    totalSummary: _buildCartTotalSummary(fontSize: 22),
-                    cartItems: CartItemsListWidget(
-                      cart: _cart,
-                      catalog: _products,
-                      onAddToCart: _addToCart,
-                      onLocateProduct: _locateProduct,
-                      cartPacks: _cartPacks,
-                      promotionsMap: _promotionsMap,
-                      pricing: _pricing,
-                      onRemoveFromCart: _removeFromCart,
-                      onRemoveAllFromCart: _removeAllFromCart,
-                      onRemovePackFromCart: _removePackFromCart,
-                      onRemoveAllPackFromCart: _removeAllPackFromCart,
-                    ),
-                    paymentMethodSelector: _buildPaymentMethodSelector(),
-                    checkoutButton: _buildCheckoutButton(large: false),
-                  ),
-                ],
-              )
-            : LayoutBuilder(
-                builder: (context, bodyConstraints) {
-                  final navBar = MediaQuery.viewPaddingOf(context).bottom;
-                  _cartMinSize =
-                      ((_cartHeaderHeight + navBar) / bodyConstraints.maxHeight)
-                          .clamp(0.08, 0.3);
-                  return Stack(
-                    children: [
-                      Column(
+          drawer: const AppDrawer(),
+          body: _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : isLandscape
+              ? Row(
+                  children: [
+                    Expanded(
+                      flex: 3,
+                      child: Column(
                         children: [
                           _buildCatalogHeader(),
                           Expanded(
                             child: _buildCatalogTabs(
                               filteredProducts: filteredProducts,
                               filteredPacks: filteredPacks,
-                              crossAxisCount: 3,
-                              // Que el carrito plegado no tape la última fila
-                              bottomPadding:
-                                  _cartMinSize * bodyConstraints.maxHeight + 24,
+                              crossAxisCount: 4,
+                              bottomPadding: 16,
                             ),
                           ),
                         ],
                       ),
-                      SalesCartSheet(
-                        controller: _cartSheetController,
-                        minSize: _cartMinSize,
-                        bodyHeight: bodyConstraints.maxHeight,
-                        itemCountLabel: context.l10n.cartItemsCount(
-                          _cartItemCount.toString(),
-                        ),
-                        hasAdjustment:
-                            (_cartAdjustmentFactor - 1).abs() > 0.0000001,
-                        hasItems: _cart.isNotEmpty || _cartPacks.isNotEmpty,
-                        totalSummary: _buildCartTotalSummary(
-                          fontSize: 22,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                        cartItems: CartItemsListWidget(
-                          cart: _cart,
-                          catalog: _products,
-                          onAddToCart: _addToCart,
-                          onLocateProduct: _locateProduct,
-                          cartPacks: _cartPacks,
-                          promotionsMap: _promotionsMap,
-                          pricing: _pricing,
-                          onRemoveFromCart: _removeFromCart,
-                          onRemoveAllFromCart: _removeAllFromCart,
-                          onRemovePackFromCart: _removePackFromCart,
-                          onRemoveAllPackFromCart: _removeAllPackFromCart,
-                        ),
-                        paymentMethodSelector: _buildPaymentMethodSelector(),
-                        checkoutButton: _buildCheckoutButton(large: true),
+                    ),
+                    const VerticalDivider(width: 1, thickness: 1),
+                    SalesLandscapeCartPanel(
+                      itemCountLabel: context.l10n.cartItemsCount(
+                        _cartItemCount.toString(),
                       ),
-                    ],
-                  );
-                },
-              ),
+                      totalSummary: _buildCartTotalSummary(fontSize: 22),
+                      cartItems: CartItemsListWidget(
+                        cart: _cart,
+                        catalog: _products,
+                        onAddToCart: _addToCart,
+                        onLocateProduct: _locateProduct,
+                        cartPacks: _cartPacks,
+                        promotionsMap: _promotionsMap,
+                        pricing: _pricing,
+                        onRemoveFromCart: _removeFromCart,
+                        onRemoveAllFromCart: _removeAllFromCart,
+                        onRemovePackFromCart: _removePackFromCart,
+                        onRemoveAllPackFromCart: _removeAllPackFromCart,
+                      ),
+                      paymentMethodSelector: _buildPaymentMethodSelector(),
+                      checkoutButton: _buildCheckoutButton(large: false),
+                    ),
+                  ],
+                )
+              : LayoutBuilder(
+                  builder: (context, bodyConstraints) {
+                    final navBar = MediaQuery.viewPaddingOf(context).bottom;
+                    _cartMinSize =
+                        ((_cartHeaderHeight + navBar) /
+                                bodyConstraints.maxHeight)
+                            .clamp(0.08, 0.3);
+                    return Stack(
+                      children: [
+                        Column(
+                          children: [
+                            _buildCatalogHeader(),
+                            Expanded(
+                              child: _buildCatalogTabs(
+                                filteredProducts: filteredProducts,
+                                filteredPacks: filteredPacks,
+                                crossAxisCount: 3,
+                                // Que el carrito plegado no tape la última fila
+                                bottomPadding:
+                                    _cartMinSize * bodyConstraints.maxHeight +
+                                    24,
+                              ),
+                            ),
+                          ],
+                        ),
+                        SalesCartSheet(
+                          controller: _cartSheetController,
+                          minSize: _cartMinSize,
+                          bodyHeight: bodyConstraints.maxHeight,
+                          itemCountLabel: context.l10n.cartItemsCount(
+                            _cartItemCount.toString(),
+                          ),
+                          hasAdjustment:
+                              (_cartAdjustmentFactor - 1).abs() > 0.0000001,
+                          hasItems: _cart.isNotEmpty || _cartPacks.isNotEmpty,
+                          totalSummary: _buildCartTotalSummary(
+                            fontSize: 22,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          cartItems: CartItemsListWidget(
+                            cart: _cart,
+                            catalog: _products,
+                            onAddToCart: _addToCart,
+                            onLocateProduct: _locateProduct,
+                            cartPacks: _cartPacks,
+                            promotionsMap: _promotionsMap,
+                            pricing: _pricing,
+                            onRemoveFromCart: _removeFromCart,
+                            onRemoveAllFromCart: _removeAllFromCart,
+                            onRemovePackFromCart: _removePackFromCart,
+                            onRemoveAllPackFromCart: _removeAllPackFromCart,
+                          ),
+                          paymentMethodSelector: _buildPaymentMethodSelector(),
+                          checkoutButton: _buildCheckoutButton(large: true),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+        ),
       ),
     );
+  }
+
+  /// Pregunta si se descarta el carrito al salir de Ventas.
+  Future<bool> _confirmLeaveWithCart() async {
+    final leave = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(dialogContext.l10n.salesLeaveCartTitle),
+        content: Text(dialogContext.l10n.salesLeaveCartBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(dialogContext.l10n.salesLeaveCartStay),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(dialogContext.l10n.salesLeaveCartExit),
+          ),
+        ],
+      ),
+    );
+    return leave ?? false;
   }
 }

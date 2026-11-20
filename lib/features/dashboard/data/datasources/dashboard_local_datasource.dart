@@ -96,23 +96,28 @@ class DashboardLocalDatasource {
   Future<double> getActualNetProfit() async {
     final database = await db;
     final prodProfitResult = await database.rawQuery('''
-      SELECT SUM((si.historical_price - COALESCE(p.cost, 0)) * si.quantity) as net_profit 
-      FROM sale_items si 
+      SELECT SUM(
+        (si.historical_price * s.adjustment_factor - COALESCE(p.cost, 0))
+        * si.quantity
+      ) as net_profit
+      FROM sale_items si
+      JOIN sales s ON s.id = si.sale_id
       LEFT JOIN products p ON si.product_id = p.id
     ''');
 
     final packProfitResult = await database.rawQuery('''
       SELECT SUM(
         sp.quantity * (
-          sp.historical_price - COALESCE((
-            SELECT SUM(p.cost * pi.quantity) 
-            FROM pack_items pi 
-            JOIN products p ON pi.product_id = p.id 
+          sp.historical_price * s.adjustment_factor - COALESCE((
+            SELECT SUM(p.cost * pi.quantity)
+            FROM pack_items pi
+            JOIN products p ON pi.product_id = p.id
             WHERE pi.pack_id = sp.pack_id
           ), 0)
         )
-      ) as net_profit 
+      ) as net_profit
       FROM sale_packs sp
+      JOIN sales s ON s.id = sp.sale_id
     ''');
 
     return ((prodProfitResult.first['net_profit'] as num?)?.toDouble() ?? 0.0) +
@@ -124,8 +129,8 @@ class DashboardLocalDatasource {
     final result = await database.rawQuery('''
       SELECT COALESCE(fair_name, date(date)) as group_key, SUM(total_amount) as total 
       FROM sales 
-      GROUP BY group_key 
-      ORDER BY date ASC
+      GROUP BY group_key
+      ORDER BY MIN(date) ASC
     ''');
 
     return {
@@ -144,13 +149,15 @@ class DashboardLocalDatasource {
         GROUP BY pi.pack_id
       ), sale_profits AS (
         SELECT s.fair_name, date(s.date) AS sale_date,
-          (si.historical_price - COALESCE(p.cost, 0)) * si.quantity AS profit
+          (si.historical_price * s.adjustment_factor - COALESCE(p.cost, 0))
+            * si.quantity AS profit
         FROM sales s
         JOIN sale_items si ON si.sale_id = s.id
         LEFT JOIN products p ON p.id = si.product_id
         UNION ALL
         SELECT s.fair_name, date(s.date) AS sale_date,
-          (sp.historical_price - COALESCE(pc.unit_cost, 0)) * sp.quantity AS profit
+          (sp.historical_price * s.adjustment_factor
+            - COALESCE(pc.unit_cost, 0)) * sp.quantity AS profit
         FROM sales s
         JOIN sale_packs sp ON sp.sale_id = s.id
         LEFT JOIN pack_costs pc ON pc.pack_id = sp.pack_id

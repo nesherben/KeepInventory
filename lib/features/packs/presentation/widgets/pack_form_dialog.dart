@@ -345,8 +345,63 @@ class _PackFormDialogState extends State<PackFormDialog> {
     );
   }
 
+  /// Algún campo tocado desde que se abrió el formulario.
+  bool _formDirty = false;
+
+  void _markDirty() {
+    if (!_formDirty) setState(() => _formDirty = true);
+  }
+
+  /// Hay datos que se perderían al salir (campos, foto o componentes).
+  bool get _hasChanges {
+    if (_formDirty) return true;
+    final pack = widget.existingPack;
+    if (selectedImageBytes != pack?.imageBytes) return true;
+    final initial = {
+      for (final item in pack?.items ?? <PackItem>[])
+        item.productId: item.quantity,
+    };
+    final current = {for (final e in selectedItems.entries) e.key.id: e.value};
+    if (initial.length != current.length) return true;
+    return current.entries.any((e) => initial[e.key] != e.value);
+  }
+
+  Future<bool> _confirmDiscard() async {
+    final discard = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(dialogContext.l10n.discardChangesTitle),
+        content: Text(dialogContext.l10n.discardChangesBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(dialogContext.l10n.discardChangesStay),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(dialogContext.l10n.discardChangesLeave),
+          ),
+        ],
+      ),
+    );
+    return discard ?? false;
+  }
+
   @override
   Widget build(BuildContext context) {
+    // "Atrás" no pierde en silencio lo escrito; Cancelar sí descarta directo
+    return PopScope(
+      canPop: !_hasChanges,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        final navigator = Navigator.of(context);
+        if (await _confirmDiscard()) navigator.pop();
+      },
+      child: _buildForm(context),
+    );
+  }
+
+  Widget _buildForm(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
     final isLandscape = screenSize.width > screenSize.height;
     final availableOptions = widget.availableProducts
@@ -376,6 +431,7 @@ class _PackFormDialogState extends State<PackFormDialog> {
         ],
         child: Form(
           key: _formKey,
+          onChanged: _markDirty,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             mainAxisSize: MainAxisSize.min,
@@ -406,6 +462,7 @@ class _PackFormDialogState extends State<PackFormDialog> {
           padding: const EdgeInsets.all(20),
           child: Form(
             key: _formKey,
+            onChanged: _markDirty,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               mainAxisSize: MainAxisSize.min,

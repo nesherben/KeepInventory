@@ -431,7 +431,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String confirmDeletePack(Object pack, Object quantity) {
-    return 'Are you sure you want to delete \"$pack\"? Components from the $quantity assembled packs will return to inventory.';
+    return 'Delete \"$pack\"? The components of the $quantity assembled packs go back to inventory. Past tickets that include it are kept.';
   }
 
   @override
@@ -2213,4 +2213,47 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get backupDriveNotConnected =>
       'Connect your Google account to check Drive';
+
+  @override
+  String get saleFailed =>
+      'The sale could not be saved. The cart was kept; please try again.';
+
+  @override
+  String deleteProductConfirmNamed(String name) {
+    return 'Delete “$name”? Its stock will be set to 0 and it will disappear from the inventory; past sales are kept.';
+  }
+
+  @override
+  String get salesAgreedTotalTooHigh =>
+      'The agreed total can\'t be more than double the cart. Check the amount.';
+
+  @override
+  String get salesLeaveCartTitle => 'Leave without charging?';
+
+  @override
+  String get salesLeaveCartBody =>
+      'There are items in the cart. If you leave, they will be lost.';
+
+  @override
+  String get salesLeaveCartStay => 'Stay here';
+
+  @override
+  String get salesLeaveCartExit => 'Leave';
+
+  @override
+  String get discardChangesTitle => 'Discard changes?';
+
+  @override
+  String get discardChangesBody =>
+      'You have entered data that will be lost if you leave now.';
+
+  @override
+  String get discardChangesStay => 'Keep editing';
+
+  @override
+  String get discardChangesLeave => 'Discard';
+
+  @override
+  String get refundFullTicketNote =>
+      'Refunding the whole ticket removes it from the history and from that day\'s totals.';
 }

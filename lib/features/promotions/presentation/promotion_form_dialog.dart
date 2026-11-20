@@ -194,6 +194,8 @@ class _PromotionFormDialogState extends State<PromotionFormDialog> {
                       ),
                       keyboardType: TextInputType.number,
                       inputFormatters: AppNumbers.integerInputFormatters,
+                      // Re-valida al teclear: el error no se queda pegado
+                      autovalidateMode: AutovalidateMode.onUserInteraction,
                       onChanged: (_) => _onValuesChanged(),
                       validator: (value) {
                         final n = AppNumbers.parseInt(value);
@@ -217,6 +219,7 @@ class _PromotionFormDialogState extends State<PromotionFormDialog> {
                       ),
                       keyboardType: AppNumbers.decimalKeyboard,
                       inputFormatters: AppNumbers.decimalInputFormatters,
+                      autovalidateMode: AutovalidateMode.onUserInteraction,
                       onChanged: (_) => _onValuesChanged(),
                       validator: (value) {
                         final v = AppNumbers.parseDecimal(value);

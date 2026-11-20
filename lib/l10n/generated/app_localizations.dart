@@ -869,7 +869,7 @@ abstract class AppLocalizations {
   /// No description provided for @confirmDeletePack.
   ///
   /// In es, this message translates to:
-  /// **'¿Seguro que deseas eliminar \"{pack}\"? Los componentes de los {quantity} packs montados volverán al almacén.'**
+  /// **'¿Seguro que deseas eliminar \"{pack}\"? Los componentes de los {quantity} packs montados volverán al almacén. Los tickets antiguos que lo incluyen se conservan.'**
   String confirmDeletePack(Object pack, Object quantity);
 
   /// No description provided for @packDeleted.
@@ -3667,6 +3667,78 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Conecta tu cuenta de Google para consultar Drive'**
   String get backupDriveNotConnected;
+
+  /// No description provided for @saleFailed.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo registrar la venta. El carrito se ha conservado; inténtalo de nuevo.'**
+  String get saleFailed;
+
+  /// No description provided for @deleteProductConfirmNamed.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Eliminar «{name}»? Su stock pasará a 0 y dejará de aparecer en el inventario; las ventas ya hechas se conservan.'**
+  String deleteProductConfirmNamed(String name);
+
+  /// No description provided for @salesAgreedTotalTooHigh.
+  ///
+  /// In es, this message translates to:
+  /// **'El total acordado no puede ser más del doble del carrito. Revisa el importe.'**
+  String get salesAgreedTotalTooHigh;
+
+  /// No description provided for @salesLeaveCartTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Salir sin cobrar?'**
+  String get salesLeaveCartTitle;
+
+  /// No description provided for @salesLeaveCartBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Hay artículos en el carrito. Si sales, se perderán.'**
+  String get salesLeaveCartBody;
+
+  /// No description provided for @salesLeaveCartStay.
+  ///
+  /// In es, this message translates to:
+  /// **'Seguir aquí'**
+  String get salesLeaveCartStay;
+
+  /// No description provided for @salesLeaveCartExit.
+  ///
+  /// In es, this message translates to:
+  /// **'Salir'**
+  String get salesLeaveCartExit;
+
+  /// No description provided for @discardChangesTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Descartar cambios?'**
+  String get discardChangesTitle;
+
+  /// No description provided for @discardChangesBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Has escrito datos que se perderán si sales ahora.'**
+  String get discardChangesBody;
+
+  /// No description provided for @discardChangesStay.
+  ///
+  /// In es, this message translates to:
+  /// **'Seguir editando'**
+  String get discardChangesStay;
+
+  /// No description provided for @discardChangesLeave.
+  ///
+  /// In es, this message translates to:
+  /// **'Descartar'**
+  String get discardChangesLeave;
+
+  /// No description provided for @refundFullTicketNote.
+  ///
+  /// In es, this message translates to:
+  /// **'Al devolver todo el ticket se elimina del historial y deja de contar en los totales de ese día.'**
+  String get refundFullTicketNote;
 }
 
 class _AppLocalizationsDelegate

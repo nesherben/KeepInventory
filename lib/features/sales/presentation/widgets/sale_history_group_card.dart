@@ -300,9 +300,7 @@ class _SaleTicketCard extends StatelessWidget {
       grouped.addAll(lines);
       final total = lines.fold<double>(
         0,
-        (t, i) =>
-            t +
-            i.historicalPrice * i.quantity * sale.adjustmentFactor,
+        (t, i) => t + i.historicalPrice * i.quantity * sale.adjustmentFactor,
       );
       final full = lines.fold<double>(
         0,
@@ -436,6 +434,19 @@ class _SaleTicketCard extends StatelessWidget {
       child: Theme(
         data: theme.copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
+          // Al abrir un ticket del final de la lista, el botón Devolver
+          // quedaba fuera de pantalla: se hace scroll hasta que se vea
+          onExpansionChanged: (expanded) {
+            if (!expanded) return;
+            Future.delayed(const Duration(milliseconds: 250), () {
+              if (!context.mounted) return;
+              Scrollable.ensureVisible(
+                context,
+                duration: const Duration(milliseconds: 200),
+                alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
+              );
+            });
+          },
           tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           shape: const Border(),
           collapsedShape: const Border(),

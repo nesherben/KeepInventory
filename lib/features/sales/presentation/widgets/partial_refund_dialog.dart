@@ -48,6 +48,12 @@ class _PartialRefundDialogState extends State<PartialRefundDialog> {
         (total, quantity) => total + quantity,
       );
 
+  /// Se devuelve todo lo que queda del ticket (la venta se elimina).
+  bool get _isFullRefund =>
+      _totalItemsToRefund > 0 &&
+      _refundItemQuantities.entries.every((e) => e.value == e.key.quantity) &&
+      _refundPackQuantities.entries.every((e) => e.value == e.key.quantity);
+
   bool get _hasPacksSelected =>
       _refundPackQuantities.values.any((quantity) => quantity > 0);
 
@@ -487,6 +493,29 @@ class _PartialRefundDialogState extends State<PartialRefundDialog> {
           ..._buildPromotionWarnings(context),
           const Divider(height: 32),
           _buildRefundAmountField(context),
+          if (_isFullRefund) ...[
+            const SizedBox(height: 12),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.info_outline,
+                  size: 18,
+                  color: colors.onSurfaceVariant,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    context.l10n.refundFullTicketNote,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: colors.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );

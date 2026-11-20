@@ -13,6 +13,7 @@ import '../domain/inventory_view.dart';
 import '../../../core/shared_widgets/app_ui.dart';
 
 import 'package:keepinventory/l10n/app_localizations_ext.dart';
+
 import '../../packs/data/datasources/pack_local_datasource.dart';
 import '../../packs/data/repositories/pack_repository_impl.dart';
 
@@ -222,7 +223,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
       onEditProduct: (product) =>
           editor.showProductFormDialog(context, productToEdit: product),
       onDeleteProduct: (product) =>
-          editor.showDeleteConfirmation(context, product.id!),
+          editor.showDeleteConfirmation(context, product),
       onEditImage: (product) => editor.editSingleImage(context, product),
       onEditField: (product, field) =>
           editor.showProductFieldDialog(context, product, field),
@@ -268,28 +269,28 @@ class _InventoryScreenState extends State<InventoryScreen> {
         scrollDirection: Axis.horizontal,
         controller: _horizontalScrollController,
         child: InventoryProductsTable(
-            verticalController: _verticalScrollController,
-            minWidth: constraints.maxWidth,
-            products: products,
-            promotions: _promotionsMap,
-            comboNames: _comboNames,
-            packedUnits: _packedUnits,
-            categoryNames: _categoryNames,
-            onEditCategory: (product) => editor.editCategory(context, product),
-            onEditProduct: (product) =>
-                editor.showProductFormDialog(context, productToEdit: product),
-            onDeleteProduct: (product) =>
-                editor.showDeleteConfirmation(context, product.id!),
-            onEditImage: (product) => editor.editSingleImage(context, product),
-            onEditField: (product, field) =>
-                editor.showProductFieldDialog(context, product, field),
-            onStockChange: _updateStockQuickly,
-            onEditPromotion: (product) =>
-                editor.showPromotionSelectDialog(context, product),
-            sort: _sort,
-            ascending: _sortAscending,
-            onSort: _onSort,
-            onResetSort: _resetSort,
+          verticalController: _verticalScrollController,
+          minWidth: constraints.maxWidth,
+          products: products,
+          promotions: _promotionsMap,
+          comboNames: _comboNames,
+          packedUnits: _packedUnits,
+          categoryNames: _categoryNames,
+          onEditCategory: (product) => editor.editCategory(context, product),
+          onEditProduct: (product) =>
+              editor.showProductFormDialog(context, productToEdit: product),
+          onDeleteProduct: (product) =>
+              editor.showDeleteConfirmation(context, product),
+          onEditImage: (product) => editor.editSingleImage(context, product),
+          onEditField: (product, field) =>
+              editor.showProductFieldDialog(context, product, field),
+          onStockChange: _updateStockQuickly,
+          onEditPromotion: (product) =>
+              editor.showPromotionSelectDialog(context, product),
+          sort: _sort,
+          ascending: _sortAscending,
+          onSort: _onSort,
+          onResetSort: _resetSort,
         ),
       ),
     );
@@ -404,10 +405,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                 : context.l10n.productsNotFound,
                             action: _products.isEmpty
                                 ? FilledButton.icon(
-                                    onPressed: () =>
-                                        _productEditor.showProductFormDialog(
-                                          context,
-                                        ),
+                                    onPressed: () => _productEditor
+                                        .showProductFormDialog(context),
                                     icon: const Icon(Icons.add),
                                     label: Text(context.l10n.inventoryAddFirst),
                                   )
