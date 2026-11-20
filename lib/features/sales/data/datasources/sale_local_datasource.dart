@@ -81,6 +81,8 @@ class SaleLocalDatasource {
           'sale_combo_id': item.saleComboId == null
               ? null
               : comboIds[item.saleComboId],
+          'manual_discount_type': item.manualDiscountType?.dbValue,
+          'manual_discount_value': item.manualDiscountValue,
         });
 
         await txn.rawUpdate(
@@ -139,6 +141,11 @@ class SaleLocalDatasource {
               promoThreshold: itemMap['promo_threshold'] as int?,
               promoDiscount: (itemMap['promo_discount'] as num?)?.toDouble(),
               saleComboId: itemMap['sale_combo_id'] as int?,
+              manualDiscountType: ManualDiscountType.fromDb(
+                itemMap['manual_discount_type'] as String?,
+              ),
+              manualDiscountValue: (itemMap['manual_discount_value'] as num?)
+                  ?.toDouble(),
             ),
           )
           .toList();
@@ -358,6 +365,8 @@ class SaleLocalDatasource {
           'promo_threshold': item.promoThreshold,
           'promo_discount': item.promoDiscount,
           'sale_combo_id': item.saleComboId,
+          'manual_discount_type': item.manualDiscountType?.dbValue,
+          'manual_discount_value': item.manualDiscountValue,
         });
       }
 

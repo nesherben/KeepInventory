@@ -13,6 +13,7 @@ void main() {
       DatabaseSchemaCreator.saleRefundsTable,
       DatabaseMigrationRunner.saleAdjustmentAlter,
       DatabaseMigrationRunner.packActivityAlter,
+      ...DatabaseMigrationRunner.manualDiscountAlters,
     ];
     const fairStatements = [
       DatabaseSchemaCreator.fairsTable,
@@ -119,6 +120,7 @@ void main() {
         DatabaseSchemaCreator.saleRefundsTable,
         DatabaseMigrationRunner.saleAdjustmentAlter,
         DatabaseMigrationRunner.packActivityAlter,
+        ...DatabaseMigrationRunner.manualDiscountAlters,
       ]);
     });
 
@@ -134,6 +136,7 @@ void main() {
       expect(statements, [
         DatabaseMigrationRunner.saleAdjustmentAlter,
         DatabaseMigrationRunner.packActivityAlter,
+        ...DatabaseMigrationRunner.manualDiscountAlters,
       ]);
     });
 
@@ -146,14 +149,37 @@ void main() {
         query: (_) async => [],
       );
 
-      expect(statements, [DatabaseMigrationRunner.packActivityAlter]);
+      expect(statements, [
+        DatabaseMigrationRunner.packActivityAlter,
+        ...DatabaseMigrationRunner.manualDiscountAlters,
+      ]);
     });
 
-    test('runs nothing for version 19', () async {
+    test('adds manual line discounts from version 19', () async {
       final statements = <String>[];
 
       await DatabaseMigrationRunner.upgrade(
         oldVersion: 19,
+        execute: (sql) async => statements.add(sql),
+        query: (_) async => [],
+      );
+
+      expect(statements, DatabaseMigrationRunner.manualDiscountAlters);
+    });
+
+    test('ignores manual discount columns already existing', () async {
+      await DatabaseMigrationRunner.upgrade(
+        oldVersion: 19,
+        execute: (sql) async => throw StateError('duplicate column name'),
+        query: (_) async => [],
+      );
+    });
+
+    test('runs nothing for version 20', () async {
+      final statements = <String>[];
+
+      await DatabaseMigrationRunner.upgrade(
+        oldVersion: 20,
         execute: (sql) async => statements.add(sql),
         query: (_) async => [],
       );

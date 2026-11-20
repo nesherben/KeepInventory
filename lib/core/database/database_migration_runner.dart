@@ -30,7 +30,30 @@ class DatabaseMigrationRunner {
     await _upgradeSaleRefunds(oldVersion, execute);
     await _upgradeSaleAdjustment(oldVersion, execute);
     await _upgradePackActivity(oldVersion, execute);
+    await _upgradeManualDiscounts(oldVersion, execute);
   }
+
+  /// v20: descuento manual por línea de venta (NULL = sin descuento).
+  static Future<void> _upgradeManualDiscounts(
+    int oldVersion,
+    DatabaseSqlExecutor execute,
+  ) async {
+    if (oldVersion >= 20) return;
+    for (final sql in manualDiscountAlters) {
+      try {
+        await execute(sql);
+      } catch (error) {
+        if (!error.toString().toLowerCase().contains('duplicate column')) {
+          rethrow;
+        }
+      }
+    }
+  }
+
+  static const manualDiscountAlters = [
+    'ALTER TABLE sale_items ADD COLUMN manual_discount_type TEXT',
+    'ALTER TABLE sale_items ADD COLUMN manual_discount_value REAL',
+  ];
 
   /// v19: borrado lógico de packs (los tickets antiguos conservan su pack).
   static Future<void> _upgradePackActivity(

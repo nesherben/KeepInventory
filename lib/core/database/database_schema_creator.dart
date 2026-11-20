@@ -143,6 +143,8 @@ class DatabaseSchemaCreator {
         promo_threshold INTEGER,
         promo_discount REAL,
         sale_combo_id INTEGER,
+        manual_discount_type TEXT,
+        manual_discount_value REAL,
         FOREIGN KEY (sale_id) REFERENCES sales (id) ON DELETE CASCADE,
         FOREIGN KEY (product_id) REFERENCES products (id) ON DELETE RESTRICT
       )
