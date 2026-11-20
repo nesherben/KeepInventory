@@ -16,6 +16,10 @@ class HistoryRecorder {
   /// Entradas que se conservan; al pasar el límite se borran las más antiguas.
   static const maxEntries = 500;
 
+  /// Clave de la foto con los nombres de las referencias (no es un campo de
+  /// configuración: no entra en las diferencias).
+  static const labelsKey = '_labels';
+
   /// Identificador para agrupar las entradas de una misma operación.
   static String newGroupId() =>
       DateTime.now().microsecondsSinceEpoch.toString();
@@ -135,13 +139,25 @@ class HistoryRecorder {
     );
     if (rows.isEmpty) return null;
     final r = rows.first;
+    final categoryId = r['category_id'];
+    final promotionId = r['promotion_id'];
     return {
       'name': r['name'],
       'price': r['price'],
       'cost': r['cost'],
-      'category_id': r['category_id'],
-      'promotion_id': r['promotion_id'],
+      'category_id': categoryId,
+      'promotion_id': promotionId,
       ChangeTracking.imageField: _imageHash(r['image_bytes']),
+      // Nombres resueltos AHORA: si la categoría o la promoción se borra justo
+      // después, la entrada sigue diciendo cómo se llamaba
+      labelsKey: {
+        'category': categoryId is int
+            ? await _nameOf(txn, 'categories', categoryId)
+            : null,
+        'promotion': promotionId is int
+            ? await _nameOf(txn, 'promotions', promotionId)
+            : null,
+      },
     };
   }
 
@@ -274,8 +290,16 @@ class HistoryRecorder {
     final diff = ChangeTracking.diff(entity, before: before, after: after);
     if (diff == null) return;
 
-    final storedBefore = await _storable(txn, diff.before);
-    final storedAfter = await _storable(txn, diff.after);
+    final storedBefore = await _storable(
+      txn,
+      diff.before,
+      before?[labelsKey] as Map<String, Object?>?,
+    );
+    final storedAfter = await _storable(
+      txn,
+      diff.after,
+      after?[labelsKey] as Map<String, Object?>?,
+    );
     if (extraBefore.isNotEmpty) storedBefore.addAll(extraBefore);
 
     final name = (after?['name'] ?? before?['name'] ?? '').toString();
@@ -314,6 +338,7 @@ class HistoryRecorder {
   static Future<Map<String, Object?>> _storable(
     DatabaseExecutor txn,
     Map<String, Object?> values,
+    Map<String, Object?>? labels,
   ) async {
     final result = <String, Object?>{};
     for (final entry in values.entries) {
@@ -323,11 +348,13 @@ class HistoryRecorder {
     }
     final categoryId = values['category_id'];
     if (categoryId is int) {
-      result['category'] = await _nameOf(txn, 'categories', categoryId);
+      result['category'] =
+          labels?['category'] ?? await _nameOf(txn, 'categories', categoryId);
     }
     final promotionId = values['promotion_id'];
     if (promotionId is int) {
-      result['promotion'] = await _nameOf(txn, 'promotions', promotionId);
+      result['promotion'] =
+          labels?['promotion'] ?? await _nameOf(txn, 'promotions', promotionId);
     }
     return result;
   }

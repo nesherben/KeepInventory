@@ -142,6 +142,41 @@ void main() {
       );
     });
 
+    test(
+      'names survive when the category is deleted before recording',
+      () async {
+        final ropa = await db.insert('categories', {'name': 'Ropa'});
+        final id = await insertProduct(categoryId: ropa);
+
+        // Igual que al borrar una categoría: foto, borrado y luego se anota
+        await db.transaction((txn) async {
+          final before = await HistoryRecorder.snapshot(
+            txn,
+            ChangeEntity.product,
+            id,
+          );
+          await txn.update(
+            'products',
+            {'category_id': null},
+            where: 'id = ?',
+            whereArgs: [id],
+          );
+          await txn.delete('categories', where: 'id = ?', whereArgs: [ropa]);
+          await HistoryRecorder.recordUpdated(
+            txn,
+            ChangeEntity.product,
+            id,
+            before: before,
+          );
+        });
+
+        final row = (await log()).last;
+        final before = jsonDecode(row['before_json'] as String) as Map;
+        expect(before['category_id'], ropa);
+        expect(before['category'], 'Ropa');
+      },
+    );
+
     test('images are recorded as a flag, never as bytes', () async {
       final id = await insertProduct();
 
