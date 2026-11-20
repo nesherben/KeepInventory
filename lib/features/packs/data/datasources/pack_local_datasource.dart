@@ -12,7 +12,8 @@ class PackLocalDatasource {
 
   Future<List<Pack>> getPacks() async {
     final database = await db;
-    final packMaps = await database.query('packs');
+    // Los packs borrados siguen en la BD (para los tickets) pero no se listan
+    final packMaps = await database.query('packs', where: 'is_active = 1');
     List<Pack> packs = [];
 
     for (var pMap in packMaps) {
@@ -147,7 +148,13 @@ class PackLocalDatasource {
           [totalReturn, item.productId],
         );
       }
-      await txn.delete('packs', where: 'id = ?', whereArgs: [pack.id]);
+      // Borrado lógico: ventas, devoluciones y beneficio conservan el pack
+      await txn.update(
+        'packs',
+        {'is_active': 0, 'units': 0},
+        where: 'id = ?',
+        whereArgs: [pack.id],
+      );
     });
   }
 }

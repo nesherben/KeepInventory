@@ -29,7 +29,26 @@ class DatabaseMigrationRunner {
     await _upgradeCategories(oldVersion, execute);
     await _upgradeSaleRefunds(oldVersion, execute);
     await _upgradeSaleAdjustment(oldVersion, execute);
+    await _upgradePackActivity(oldVersion, execute);
   }
+
+  /// v19: borrado lógico de packs (los tickets antiguos conservan su pack).
+  static Future<void> _upgradePackActivity(
+    int oldVersion,
+    DatabaseSqlExecutor execute,
+  ) async {
+    if (oldVersion >= 19) return;
+    try {
+      await execute(packActivityAlter);
+    } catch (error) {
+      if (!error.toString().toLowerCase().contains('duplicate column')) {
+        rethrow;
+      }
+    }
+  }
+
+  static const packActivityAlter =
+      'ALTER TABLE packs ADD COLUMN is_active INTEGER NOT NULL DEFAULT 1';
 
   /// v17: historial de devoluciones parciales por venta.
   static Future<void> _upgradeSaleRefunds(

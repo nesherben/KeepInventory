@@ -10,6 +10,36 @@ class SaleLocalDatasource {
 
   Future<Database> get db async => await _databaseHelper.database;
 
+  /// Devuelve [quantity] packs al stock. Si el pack fue borrado (oculto) sus
+  /// unidades no se acumulan invisibles: los componentes vuelven al inventario.
+  Future<void> _restockPack(Transaction txn, int packId, int quantity) async {
+    final rows = await txn.query(
+      'packs',
+      columns: ['is_active'],
+      where: 'id = ?',
+      whereArgs: [packId],
+    );
+    final active = rows.isEmpty || (rows.first['is_active'] as int? ?? 1) == 1;
+    if (active) {
+      await txn.rawUpdate('UPDATE packs SET units = units + ? WHERE id = ?', [
+        quantity,
+        packId,
+      ]);
+      return;
+    }
+    final items = await txn.query(
+      'pack_items',
+      where: 'pack_id = ?',
+      whereArgs: [packId],
+    );
+    for (final item in items) {
+      await txn.rawUpdate(
+        'UPDATE products SET units = units + ?, is_active = 1 WHERE id = ?',
+        [(item['quantity'] as int) * quantity, item['product_id']],
+      );
+    }
+  }
+
   /// Guarda la venta (y descuenta stock); devuelve su id.
   Future<int> processSale(Sale sale) async {
     final database = await db;
@@ -203,10 +233,7 @@ class SaleLocalDatasource {
         );
       }
       for (var packItem in sale.packItems) {
-        await txn.rawUpdate('UPDATE packs SET units = units + ? WHERE id = ?', [
-          packItem.quantity,
-          packItem.packId,
-        ]);
+        await _restockPack(txn, packItem.packId, packItem.quantity);
       }
       await txn.delete(
         'sale_items',
@@ -287,10 +314,7 @@ class SaleLocalDatasource {
               );
             }
           } else {
-            await txn.rawUpdate(
-              'UPDATE packs SET units = units + ? WHERE id = ?',
-              [refundQty, packId],
-            );
+            await _restockPack(txn, packId, refundQty);
           }
         }
       }

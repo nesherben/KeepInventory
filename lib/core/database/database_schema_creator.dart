@@ -155,7 +155,8 @@ class DatabaseSchemaCreator {
         price $realType,
         units INTEGER NOT NULL DEFAULT 1,
         image_path TEXT,
-        image_bytes BLOB
+        image_bytes BLOB,
+        is_active INTEGER NOT NULL DEFAULT 1
       )
     ''');
 

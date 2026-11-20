@@ -12,6 +12,7 @@ void main() {
       DatabaseMigrationRunner.slotCategoryAlter,
       DatabaseSchemaCreator.saleRefundsTable,
       DatabaseMigrationRunner.saleAdjustmentAlter,
+      DatabaseMigrationRunner.packActivityAlter,
     ];
     const fairStatements = [
       DatabaseSchemaCreator.fairsTable,
@@ -117,6 +118,7 @@ void main() {
       expect(statements, [
         DatabaseSchemaCreator.saleRefundsTable,
         DatabaseMigrationRunner.saleAdjustmentAlter,
+        DatabaseMigrationRunner.packActivityAlter,
       ]);
     });
 
@@ -129,14 +131,29 @@ void main() {
         query: (_) async => [],
       );
 
-      expect(statements, [DatabaseMigrationRunner.saleAdjustmentAlter]);
+      expect(statements, [
+        DatabaseMigrationRunner.saleAdjustmentAlter,
+        DatabaseMigrationRunner.packActivityAlter,
+      ]);
     });
 
-    test('runs nothing for version 18', () async {
+    test('adds pack soft delete from version 18', () async {
       final statements = <String>[];
 
       await DatabaseMigrationRunner.upgrade(
         oldVersion: 18,
+        execute: (sql) async => statements.add(sql),
+        query: (_) async => [],
+      );
+
+      expect(statements, [DatabaseMigrationRunner.packActivityAlter]);
+    });
+
+    test('runs nothing for version 19', () async {
+      final statements = <String>[];
+
+      await DatabaseMigrationRunner.upgrade(
+        oldVersion: 19,
         execute: (sql) async => statements.add(sql),
         query: (_) async => [],
       );
