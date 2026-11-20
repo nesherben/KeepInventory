@@ -3739,6 +3739,162 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Al devolver todo el ticket se elimina del historial y deja de contar en los totales de ese día.'**
   String get refundFullTicketNote;
+
+  /// No description provided for @lineDiscountTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Descuento · {name}'**
+  String lineDiscountTitle(String name);
+
+  /// No description provided for @lineDiscountModePercent.
+  ///
+  /// In es, this message translates to:
+  /// **'%'**
+  String get lineDiscountModePercent;
+
+  /// No description provided for @lineDiscountModeAmount.
+  ///
+  /// In es, this message translates to:
+  /// **'€'**
+  String get lineDiscountModeAmount;
+
+  /// No description provided for @lineDiscountModeFinal.
+  ///
+  /// In es, this message translates to:
+  /// **'Precio final'**
+  String get lineDiscountModeFinal;
+
+  /// No description provided for @lineDiscountPercentLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Descuento (%)'**
+  String get lineDiscountPercentLabel;
+
+  /// No description provided for @lineDiscountAmountLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Descuento (€)'**
+  String get lineDiscountAmountLabel;
+
+  /// No description provided for @lineDiscountFinalLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Precio final de la línea (€)'**
+  String get lineDiscountFinalLabel;
+
+  /// No description provided for @lineDiscountLineInfo.
+  ///
+  /// In es, this message translates to:
+  /// **'Se aplica al total de la línea ({qty} uds.): {total} €'**
+  String lineDiscountLineInfo(int qty, String total);
+
+  /// No description provided for @lineDiscountBefore.
+  ///
+  /// In es, this message translates to:
+  /// **'Antes'**
+  String get lineDiscountBefore;
+
+  /// No description provided for @lineDiscountAfter.
+  ///
+  /// In es, this message translates to:
+  /// **'Ahora'**
+  String get lineDiscountAfter;
+
+  /// No description provided for @lineDiscountApply.
+  ///
+  /// In es, this message translates to:
+  /// **'Aplicar'**
+  String get lineDiscountApply;
+
+  /// No description provided for @lineDiscountRemove.
+  ///
+  /// In es, this message translates to:
+  /// **'Quitar descuento'**
+  String get lineDiscountRemove;
+
+  /// No description provided for @lineDiscountErrorPercent.
+  ///
+  /// In es, this message translates to:
+  /// **'Introduce un porcentaje entre 0 y 100'**
+  String get lineDiscountErrorPercent;
+
+  /// No description provided for @lineDiscountErrorAmount.
+  ///
+  /// In es, this message translates to:
+  /// **'No puede superar {max} €'**
+  String lineDiscountErrorAmount(String max);
+
+  /// No description provided for @lineDiscountErrorFinal.
+  ///
+  /// In es, this message translates to:
+  /// **'Debe ser menor que {max} €'**
+  String lineDiscountErrorFinal(String max);
+
+  /// No description provided for @lineDiscountFreeLine.
+  ///
+  /// In es, this message translates to:
+  /// **'La línea quedará a 0 €'**
+  String get lineDiscountFreeLine;
+
+  /// No description provided for @lineDiscountTag.
+  ///
+  /// In es, this message translates to:
+  /// **'Descuento {value}'**
+  String lineDiscountTag(String value);
+
+  /// No description provided for @lineDiscountBlocked.
+  ///
+  /// In es, this message translates to:
+  /// **'Esta línea ya tiene promoción o combo: manda la promoción y no admite descuento manual.'**
+  String get lineDiscountBlocked;
+
+  /// No description provided for @lineDiscountDroppedByPromo.
+  ///
+  /// In es, this message translates to:
+  /// **'{name} ahora tiene promoción o combo: se quita el descuento manual.'**
+  String lineDiscountDroppedByPromo(String name);
+
+  /// No description provided for @lineDiscountClearTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Quitar los descuentos de línea?'**
+  String get lineDiscountClearTitle;
+
+  /// No description provided for @lineDiscountClearBody.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =1{Se quitará 1 descuento de línea (−{amount} €) para fijar el total acordado.} other{Se quitarán {count} descuentos de línea (−{amount} €) para fijar el total acordado.}}'**
+  String lineDiscountClearBody(int count, String amount);
+
+  /// No description provided for @lineDiscountClearConfirm.
+  ///
+  /// In es, this message translates to:
+  /// **'Quitar y fijar total'**
+  String get lineDiscountClearConfirm;
+
+  /// No description provided for @agreedTotalClearTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Quitar el total acordado?'**
+  String get agreedTotalClearTitle;
+
+  /// No description provided for @agreedTotalClearBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Hay un total acordado en el carrito. Si aplicas un descuento de línea, se quitará.'**
+  String get agreedTotalClearBody;
+
+  /// No description provided for @agreedTotalClearConfirm.
+  ///
+  /// In es, this message translates to:
+  /// **'Quitar y aplicar'**
+  String get agreedTotalClearConfirm;
+
+  /// No description provided for @cartSavings.
+  ///
+  /// In es, this message translates to:
+  /// **'Ahorro −{amount} €'**
+  String cartSavings(String amount);
 }
 
 class _AppLocalizationsDelegate

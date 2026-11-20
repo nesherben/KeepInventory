@@ -10,7 +10,20 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../inventory/domain/product.dart';
 import '../../../packs/domain/pack.dart';
 import '../../../promotions/domain/promotion.dart';
+import '../../domain/manual_line_discount.dart';
 import 'item_preview_info.dart';
+
+/// "Descuento −10 %" / "Descuento −2,00 €" de una línea con descuento manual
+/// ([value] es el porcentaje o el importe, según [type]).
+String lineDiscountLabel(
+  BuildContext context,
+  ManualDiscountType type,
+  double value,
+) => context.l10n.lineDiscountTag(
+  type == ManualDiscountType.percent
+      ? '−${context.percent(value, maxDecimals: 2)}'
+      : '−${context.money(value)}',
+);
 
 // ---------------------------------------------------------------------------
 // Imágenes

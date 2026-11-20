@@ -1157,5 +1157,93 @@
   "discardChangesBody": "Has escrito datos que se perderán si sales ahora.",
   "discardChangesStay": "Seguir editando",
   "discardChangesLeave": "Descartar",
-  "refundFullTicketNote": "Al devolver todo el ticket se elimina del historial y deja de contar en los totales de ese día."
+  "refundFullTicketNote": "Al devolver todo el ticket se elimina del historial y deja de contar en los totales de ese día.",
+  "lineDiscountTitle": "Descuento · {name}",
+  "@lineDiscountTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "lineDiscountModePercent": "%",
+  "lineDiscountModeAmount": "€",
+  "lineDiscountModeFinal": "Precio final",
+  "lineDiscountPercentLabel": "Descuento (%)",
+  "lineDiscountAmountLabel": "Descuento (€)",
+  "lineDiscountFinalLabel": "Precio final de la línea (€)",
+  "lineDiscountLineInfo": "Se aplica al total de la línea ({qty} uds.): {total} €",
+  "@lineDiscountLineInfo": {
+    "placeholders": {
+      "qty": {
+        "type": "int"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "lineDiscountBefore": "Antes",
+  "lineDiscountAfter": "Ahora",
+  "lineDiscountApply": "Aplicar",
+  "lineDiscountRemove": "Quitar descuento",
+  "lineDiscountErrorPercent": "Introduce un porcentaje entre 0 y 100",
+  "lineDiscountErrorAmount": "No puede superar {max} €",
+  "@lineDiscountErrorAmount": {
+    "placeholders": {
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "lineDiscountErrorFinal": "Debe ser menor que {max} €",
+  "@lineDiscountErrorFinal": {
+    "placeholders": {
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "lineDiscountFreeLine": "La línea quedará a 0 €",
+  "lineDiscountTag": "Descuento {value}",
+  "@lineDiscountTag": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "lineDiscountBlocked": "Esta línea ya tiene promoción o combo: manda la promoción y no admite descuento manual.",
+  "lineDiscountDroppedByPromo": "{name} ahora tiene promoción o combo: se quita el descuento manual.",
+  "@lineDiscountDroppedByPromo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "lineDiscountClearTitle": "¿Quitar los descuentos de línea?",
+  "lineDiscountClearBody": "{count, plural, =1{Se quitará 1 descuento de línea (−{amount} €) para fijar el total acordado.} other{Se quitarán {count} descuentos de línea (−{amount} €) para fijar el total acordado.}}",
+  "@lineDiscountClearBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "lineDiscountClearConfirm": "Quitar y fijar total",
+  "agreedTotalClearTitle": "¿Quitar el total acordado?",
+  "agreedTotalClearBody": "Hay un total acordado en el carrito. Si aplicas un descuento de línea, se quitará.",
+  "agreedTotalClearConfirm": "Quitar y aplicar",
+  "cartSavings": "Ahorro −{amount} €",
+  "@cartSavings": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  }
 }

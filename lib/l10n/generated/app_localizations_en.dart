@@ -2256,4 +2256,108 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get refundFullTicketNote =>
       'Refunding the whole ticket removes it from the history and from that day\'s totals.';
+
+  @override
+  String lineDiscountTitle(String name) {
+    return 'Discount · $name';
+  }
+
+  @override
+  String get lineDiscountModePercent => '%';
+
+  @override
+  String get lineDiscountModeAmount => '€';
+
+  @override
+  String get lineDiscountModeFinal => 'Final price';
+
+  @override
+  String get lineDiscountPercentLabel => 'Discount (%)';
+
+  @override
+  String get lineDiscountAmountLabel => 'Discount (€)';
+
+  @override
+  String get lineDiscountFinalLabel => 'Final line price (€)';
+
+  @override
+  String lineDiscountLineInfo(int qty, String total) {
+    return 'Applied to the line total ($qty units): $total €';
+  }
+
+  @override
+  String get lineDiscountBefore => 'Before';
+
+  @override
+  String get lineDiscountAfter => 'Now';
+
+  @override
+  String get lineDiscountApply => 'Apply';
+
+  @override
+  String get lineDiscountRemove => 'Remove discount';
+
+  @override
+  String get lineDiscountErrorPercent => 'Enter a percentage between 0 and 100';
+
+  @override
+  String lineDiscountErrorAmount(String max) {
+    return 'Can\'t exceed $max €';
+  }
+
+  @override
+  String lineDiscountErrorFinal(String max) {
+    return 'Must be lower than $max €';
+  }
+
+  @override
+  String get lineDiscountFreeLine => 'The line will be 0 €';
+
+  @override
+  String lineDiscountTag(String value) {
+    return 'Discount $value';
+  }
+
+  @override
+  String get lineDiscountBlocked =>
+      'This line already has a promotion or combo, which takes priority; manual discounts aren\'t allowed.';
+
+  @override
+  String lineDiscountDroppedByPromo(String name) {
+    return '$name now has a promotion or combo: the manual discount was removed.';
+  }
+
+  @override
+  String get lineDiscountClearTitle => 'Remove line discounts?';
+
+  @override
+  String lineDiscountClearBody(int count, String amount) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count line discounts (−$amount €) will be removed to set the agreed total.',
+      one:
+          '1 line discount (−$amount €) will be removed to set the agreed total.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get lineDiscountClearConfirm => 'Remove and set total';
+
+  @override
+  String get agreedTotalClearTitle => 'Remove the agreed total?';
+
+  @override
+  String get agreedTotalClearBody =>
+      'The cart has an agreed total. Applying a line discount will remove it.';
+
+  @override
+  String get agreedTotalClearConfirm => 'Remove and apply';
+
+  @override
+  String cartSavings(String amount) {
+    return 'Savings −$amount €';
+  }
 }

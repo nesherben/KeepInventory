@@ -15,6 +15,7 @@ import '../../inventory/data/repositories/product_repository_impl.dart';
 import '../../packs/data/repositories/pack_repository_impl.dart';
 import '../../promotions/data/repositories/promotion_repository_impl.dart';
 import '../data/repositories/sale_repository_imp.dart';
+import '../domain/manual_line_discount.dart';
 import '../domain/sale_catalog_filter.dart';
 import '../domain/sale_cart_pricing_calculator.dart';
 import '../domain/sale_from_cart_factory.dart';
@@ -105,6 +106,10 @@ class _SalesScreenState extends State<SalesScreen>
   final Map<Pack, int> _cartPacks = {};
   double _cartAdjustmentFactor = 1.0;
 
+  /// Descuentos manuales por línea (id de producto). Nunca conviven con el
+  /// total acordado: uno anula al otro.
+  final Map<int, ManualLineDiscount> _lineDiscounts = {};
+
   // Método de pago del cliente (solo informativo). Vuelve a efectivo tras cada venta.
   PaymentMethod _paymentMethod = PaymentMethod.defaultMethod;
 
@@ -169,6 +174,7 @@ class _SalesScreenState extends State<SalesScreen>
     setState(() {
       _cart[product] = currentQtyInCart + 1;
     });
+    _pruneLineDiscounts();
     // Aviso al meter la última unidad que queda
     if (currentQtyInCart + 1 == product.units) {
       AppAlerts.showWarning(
@@ -187,6 +193,7 @@ class _SalesScreenState extends State<SalesScreen>
         _cart[product] = _cart[product]! - 1;
       } else {
         _cart.remove(product);
+        _lineDiscounts.remove(product.id);
       }
       if (_cart.isEmpty && _cartPacks.isEmpty) {
         _cartAdjustmentFactor = 1.0;
@@ -199,6 +206,7 @@ class _SalesScreenState extends State<SalesScreen>
 
     setState(() {
       _cart.remove(product);
+      _lineDiscounts.remove(product.id);
       if (_cartPacks.isEmpty) _cartAdjustmentFactor = 1.0;
     });
 
@@ -247,27 +255,143 @@ class _SalesScreenState extends State<SalesScreen>
     AppAlerts.showInfo(context, context.l10n.packRemovedFromCart(pack.name));
   }
 
-  CartPricing get _pricing => SaleCartPricingCalculator.price(
-    products: _cart,
-    packs: _cartPacks,
-    promotions: _promotionsMap,
-    combos: _combos,
-  );
+  CartPricing _priceCart({bool withDiscounts = true}) =>
+      SaleCartPricingCalculator.price(
+        products: _cart,
+        packs: _cartPacks,
+        promotions: _promotionsMap,
+        combos: _combos,
+        lineDiscounts: withDiscounts ? _lineDiscounts : const {},
+      );
+
+  CartPricing get _pricing => _priceCart();
 
   double get _cartTotal => _pricing.total * _cartAdjustmentFactor;
 
+  bool get _hasAdjustment => (_cartAdjustmentFactor - 1).abs() > 0.0000001;
+
   Widget _buildCartTotalSummary({required double fontSize, Color? color}) {
+    final pricing = _pricing;
     return SalesCartTotalSummary(
-      baseTotal: _pricing.total,
+      // Base SIN descuentos: al fijar un total acordado se borran
+      baseTotal: _priceCart(withDiscounts: false).total,
       total: _cartTotal,
       itemCount: _cartItemCount,
       fontSize: fontSize,
-      hasAdjustment: (_cartAdjustmentFactor - 1).abs() > 0.0000001,
+      hasAdjustment: _hasAdjustment,
+      savings: pricing.discountTotal,
       color: color,
-      onTotalAdjusted: (agreedTotal) =>
-          setState(() => _cartAdjustmentFactor = agreedTotal / _pricing.total),
+      onTotalAdjusted: _applyAgreedTotal,
       onReset: () => setState(() => _cartAdjustmentFactor = 1.0),
     );
+  }
+
+  Future<bool> _confirmAction({
+    required String title,
+    required String body,
+    required String confirmLabel,
+  }) async {
+    // Un segundo toque durante la animación de cierre cerraría Ventas
+    var answered = false;
+    void answer(BuildContext dialogContext, bool value) {
+      if (answered) return;
+      answered = true;
+      Navigator.pop(dialogContext, value);
+    }
+
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(title),
+        content: Text(body),
+        actions: [
+          TextButton(
+            onPressed: () => answer(dialogContext, false),
+            child: Text(dialogContext.l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => answer(dialogContext, true),
+            child: Text(confirmLabel),
+          ),
+        ],
+      ),
+    );
+    return ok ?? false;
+  }
+
+  /// Fija el total acordado. Si hay descuentos de línea, se pide quitarlos
+  /// primero (el factor se calcula sobre el total SIN descuentos).
+  Future<void> _applyAgreedTotal(double agreedTotal) async {
+    final base = _priceCart(withDiscounts: false).total;
+    if (base <= 0) return;
+    final applied = _pricing.appliedDiscounts;
+    if (applied.isNotEmpty) {
+      final ok = await _confirmAction(
+        title: context.l10n.lineDiscountClearTitle,
+        body: context.l10n.lineDiscountClearBody(
+          applied.length,
+          context.amount(_pricing.discountTotal),
+        ),
+        confirmLabel: context.l10n.lineDiscountClearConfirm,
+      );
+      if (!ok || !mounted) return;
+    }
+    setState(() {
+      _lineDiscounts.clear();
+      _cartAdjustmentFactor = agreedTotal / base;
+    });
+  }
+
+  /// Aplica (o quita, si [discount] es null) el descuento manual de una línea.
+  /// Si había un total acordado, se pide quitarlo antes.
+  Future<void> _setLineDiscount(
+    Product product,
+    ManualLineDiscount? discount,
+  ) async {
+    final id = product.id;
+    if (id == null) return;
+    if (discount == null) {
+      setState(() => _lineDiscounts.remove(id));
+      return;
+    }
+    if (_hasAdjustment) {
+      final ok = await _confirmAction(
+        title: context.l10n.agreedTotalClearTitle,
+        body: context.l10n.agreedTotalClearBody,
+        confirmLabel: context.l10n.agreedTotalClearConfirm,
+      );
+      if (!ok || !mounted) return;
+    }
+    setState(() {
+      _cartAdjustmentFactor = 1.0;
+      _lineDiscounts[id] = discount;
+    });
+  }
+
+  /// Si una línea con descuento manual pasa a tener promoción o combo (p. ej.
+  /// al añadir otro producto del combo), manda la promoción/combo: se quita
+  /// el descuento y se avisa.
+  void _pruneLineDiscounts() {
+    if (_lineDiscounts.isEmpty) return;
+    final dropped = SaleCartPricingCalculator.lineDiscountsToDrop(
+      products: _cart,
+      packs: _cartPacks,
+      promotions: _promotionsMap,
+      combos: _combos,
+      discountedIds: _lineDiscounts.keys.toSet(),
+    );
+    if (dropped.isEmpty) return;
+    setState(() {
+      for (final product in dropped) {
+        _lineDiscounts.remove(product.id);
+      }
+    });
+    for (final product in dropped) {
+      AppAlerts.showInfo(
+        context,
+        context.l10n.lineDiscountDroppedByPromo(product.name),
+      );
+    }
   }
 
   /// Lleva al producto en el catálogo (desde el aviso de combo a medias):
@@ -333,6 +457,7 @@ class _SalesScreenState extends State<SalesScreen>
       combos: _combos,
       paymentMethod: _paymentMethod,
       adjustmentFactor: _cartAdjustmentFactor,
+      lineDiscounts: _lineDiscounts,
     );
 
     final int saleId;
@@ -348,6 +473,7 @@ class _SalesScreenState extends State<SalesScreen>
     setState(() {
       _cart.clear();
       _cartPacks.clear();
+      _lineDiscounts.clear();
       _cartAdjustmentFactor = 1.0;
       _paymentMethod = PaymentMethod.defaultMethod;
     });
@@ -577,6 +703,8 @@ class _SalesScreenState extends State<SalesScreen>
                         onRemoveAllFromCart: _removeAllFromCart,
                         onRemovePackFromCart: _removePackFromCart,
                         onRemoveAllPackFromCart: _removeAllPackFromCart,
+                        lineDiscounts: _lineDiscounts,
+                        onLineDiscountChanged: _setLineDiscount,
                       ),
                       paymentMethodSelector: _buildPaymentMethodSelector(),
                       checkoutButton: _buildCheckoutButton(large: false),
@@ -615,8 +743,8 @@ class _SalesScreenState extends State<SalesScreen>
                           itemCountLabel: context.l10n.cartItemsCount(
                             _cartItemCount.toString(),
                           ),
-                          hasAdjustment:
-                              (_cartAdjustmentFactor - 1).abs() > 0.0000001,
+                          hasExtraLine:
+                              _hasAdjustment || _lineDiscounts.isNotEmpty,
                           hasItems: _cart.isNotEmpty || _cartPacks.isNotEmpty,
                           totalSummary: _buildCartTotalSummary(
                             fontSize: 22,
@@ -634,6 +762,8 @@ class _SalesScreenState extends State<SalesScreen>
                             onRemoveAllFromCart: _removeAllFromCart,
                             onRemovePackFromCart: _removePackFromCart,
                             onRemoveAllPackFromCart: _removeAllPackFromCart,
+                            lineDiscounts: _lineDiscounts,
+                            onLineDiscountChanged: _setLineDiscount,
                           ),
                           paymentMethodSelector: _buildPaymentMethodSelector(),
                           checkoutButton: _buildCheckoutButton(large: true),

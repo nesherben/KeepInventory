@@ -69,10 +69,63 @@ void main() {
     final originalPrice = tester.widget<Text>(originalPriceFinder);
     expect(
       originalPrice.style?.color,
-      Theme.of(tester.element(originalPriceFinder)).colorScheme.error,
+      // El rojo se reserva a borrar: el precio tachado va neutro
+      Theme.of(tester.element(originalPriceFinder))
+          .colorScheme
+          .onSurfaceVariant,
     );
     await tester.tap(find.text(localizations.refund));
     await tester.pump();
     expect(refundedSale, sale);
+  });
+
+  testWidgets('shows the manual discount label on a discounted line', (
+    tester,
+  ) async {
+    const locale = Locale('es');
+    final localizations = await AppLocalizations.delegate.load(locale);
+    final sale = Sale(
+      id: 9,
+      date: DateTime(2026, 10, 2, 14, 5),
+      totalAmount: 9,
+      items: [
+        SaleItem(
+          productId: 1,
+          productName: 'Camiseta',
+          quantity: 1,
+          historicalPrice: 9,
+          originalPrice: 10,
+          manualDiscountType: ManualDiscountType.percent,
+          manualDiscountValue: 10,
+        ),
+      ],
+    );
+    final group = SaleHistoryGroup(
+      key: 'day:2026-10-02',
+      datePrefix: '2026-10-02',
+      sales: [sale],
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: locale,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: SaleHistoryGroupCard(
+              group: group,
+              onAssignFair: (_, _) {},
+              onRefund: (_) {},
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text(localizations.ticketTitle('9')));
+    await tester.pumpAndSettle();
+
+    expect(find.text(localizations.lineDiscountTag('−10 %')), findsOneWidget);
+    expect(find.text(localizations.discountApplied), findsNothing);
   });
 }

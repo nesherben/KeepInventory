@@ -13,8 +13,11 @@ import '../../../inventory/domain/product.dart';
 import '../../../packs/domain/pack.dart';
 import '../../../promotions/domain/combo_matcher.dart';
 import '../../../promotions/domain/promotion.dart';
+import '../../domain/manual_line_discount.dart';
 import '../../domain/sale_cart_pricing_calculator.dart';
 
+import '../../../../core/shared_widgets/app_alerts.dart';
+import 'line_discount_sheet.dart';
 import 'sales_ui_utils.dart';
 
 class CartItemsListWidget extends StatelessWidget {
@@ -37,6 +40,12 @@ class CartItemsListWidget extends StatelessWidget {
   /// Tocar el aviso de combo a medias: lleva al producto en el catálogo.
   final Function(Product)? onLocateProduct;
 
+  /// Descuentos manuales por producto (por id) y callback al editarlos
+  /// (null = quitar). Sin callback no se ofrece el descuento.
+  final Map<int, ManualLineDiscount> lineDiscounts;
+  final Future<void> Function(Product, ManualLineDiscount?)?
+  onLineDiscountChanged;
+
   const CartItemsListWidget({
     super.key,
     required this.cart,
@@ -50,7 +59,32 @@ class CartItemsListWidget extends StatelessWidget {
     this.catalog = const [],
     this.onAddToCart,
     this.onLocateProduct,
+    this.lineDiscounts = const {},
+    this.onLineDiscountChanged,
   });
+
+  /// Abre la hoja de descuento de una línea suelta (o avisa si no se puede).
+  Future<void> _editDiscount(
+    BuildContext context,
+    Product product,
+    int qty,
+    double lineSubtotal,
+    bool canDiscount,
+  ) async {
+    if (!canDiscount) {
+      AppAlerts.showInfo(context, context.l10n.lineDiscountBlocked);
+      return;
+    }
+    final result = await showLineDiscountSheet(
+      context,
+      productName: product.name,
+      quantity: qty,
+      lineSubtotal: lineSubtotal,
+      current: lineDiscounts[product.id],
+    );
+    if (result == null) return;
+    await onLineDiscountChanged?.call(product, result.discount);
+  }
 
   /// Añade al carrito lo que falta para completar el combo (null si no hay
   /// stock o no se puede añadir).
@@ -163,6 +197,25 @@ class CartItemsListWidget extends StatelessWidget {
           final promoActive =
               promo != null && qty + otherItemsInPromo >= promo.threshold;
 
+          // Descuento manual: solo en líneas sin promoción ni combo
+          final applied = pricing.appliedDiscounts[product.id] ?? 0.0;
+          final canDiscount = SaleCartPricingCalculator.canDiscount(
+            product,
+            promotionsMap,
+            comboUnits: pricing.comboUnitsOf(product),
+          );
+          final lineSubtotal = itemTotal + applied;
+          final discount = lineDiscounts[product.id];
+          final onDiscountTap = onLineDiscountChanged == null
+              ? null
+              : () => _editDiscount(
+                  context,
+                  product,
+                  qty,
+                  lineSubtotal,
+                  canDiscount,
+                );
+
           return _CartLine(
             image: buildProductImage(product),
             name: product.name,
@@ -182,8 +235,23 @@ class CartItemsListWidget extends StatelessWidget {
                           : context.l10n.promoAvailableName(promo.name),
                       active: promoActive,
                     ),
+              discount: discount != null && applied > 0
+                  ? _DiscountTag(
+                      label: lineDiscountLabel(
+                        context,
+                        discount.type,
+                        discount.type == ManualDiscountType.percent
+                            ? discount.value
+                            : applied,
+                      ),
+                      onTap: onDiscountTap,
+                    )
+                  : null,
               stock: _StockLeftTag.forProduct(product, cart[product] ?? 0),
             ),
+            onDiscount: onDiscountTap,
+            discountEnabled: canDiscount,
+            hasDiscount: applied > 0,
             onRemove: () => onRemoveFromCart(product),
             onRemoveAll: () => onRemoveAllFromCart(product),
             onLongPress: () => showCartProductPreview(
@@ -246,6 +314,9 @@ class _CartLine extends StatelessWidget {
     required this.onRemoveAll,
     required this.onLongPress,
     this.extra,
+    this.onDiscount,
+    this.discountEnabled = true,
+    this.hasDiscount = false,
   });
 
   final Widget image;
@@ -255,6 +326,11 @@ class _CartLine extends StatelessWidget {
   final double total;
   final double? originalTotal;
   final Widget? extra;
+
+  /// Botón de descuento manual (null = la línea no lo ofrece, p. ej. packs).
+  final VoidCallback? onDiscount;
+  final bool discountEnabled;
+  final bool hasDiscount;
   final VoidCallback onRemove;
   final VoidCallback onRemoveAll;
   final VoidCallback onLongPress;
@@ -346,7 +422,8 @@ class _CartLine extends StatelessWidget {
                 Text(
                   context.money(discountedOriginalTotal),
                   style: TextStyle(
-                    color: colors.error,
+                    // El rojo se reserva a borrar: el precio tachado va neutro
+                    color: colors.onSurfaceVariant,
                     decoration: TextDecoration.lineThrough,
                     fontSize: 12,
                   ),
@@ -359,25 +436,58 @@ class _CartLine extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: AppSpacing.sm),
-              Material(
-                color: colors.errorContainer,
-                borderRadius: BorderRadius.circular(AppRadius.sm),
-                clipBehavior: Clip.antiAlias,
-                child: InkWell(
-                  onTap: onRemove,
-                  onLongPress: onRemoveAll,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 6,
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (onDiscount != null) ...[
+                    Material(
+                      color: hasDiscount
+                          ? colors.tertiaryContainer
+                          : colors.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(AppRadius.sm),
+                      clipBehavior: Clip.antiAlias,
+                      child: InkWell(
+                        onTap: onDiscount,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
+                          child: Icon(
+                            Icons.sell_outlined,
+                            size: 18,
+                            color: !discountEnabled
+                                ? colors.onSurface.withValues(alpha: 0.38)
+                                : hasDiscount
+                                ? colors.onTertiaryContainer
+                                : colors.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
                     ),
-                    child: Icon(
-                      Icons.remove,
-                      size: 18,
-                      color: colors.onErrorContainer,
+                    const SizedBox(width: AppSpacing.sm),
+                  ],
+                  Material(
+                    color: colors.errorContainer,
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
+                    clipBehavior: Clip.antiAlias,
+                    child: InkWell(
+                      onTap: onRemove,
+                      onLongPress: onRemoveAll,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        child: Icon(
+                          Icons.remove,
+                          size: 18,
+                          color: colors.onErrorContainer,
+                        ),
+                      ),
                     ),
                   ),
-                ),
+                ],
               ),
             ],
           ),
@@ -695,14 +805,58 @@ class _ComboHintCard extends StatelessWidget {
 }
 
 /// Etiquetas extra de una línea del carrito (promoción y stock), apiladas.
-Widget? _lineExtras(BuildContext context, {Widget? promo, Widget? stock}) {
-  if (promo == null && stock == null) return null;
-  if (promo == null) return stock;
-  if (stock == null) return promo;
+Widget? _lineExtras(
+  BuildContext context, {
+  Widget? promo,
+  Widget? discount,
+  Widget? stock,
+}) {
+  final items = [promo, discount, stock].whereType<Widget>().toList();
+  if (items.isEmpty) return null;
+  if (items.length == 1) return items.first;
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
-    children: [promo, const SizedBox(height: 2), stock],
+    children: [
+      for (var i = 0; i < items.length; i++) ...[
+        if (i > 0) const SizedBox(height: 2),
+        items[i],
+      ],
+    ],
   );
+}
+
+/// Descuento manual de la línea: tocarlo abre la hoja para cambiarlo o quitarlo.
+class _DiscountTag extends StatelessWidget {
+  const _DiscountTag({required this.label, this.onTap});
+
+  final String label;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme.tertiary;
+    return InkWell(
+      onTap: onTap,
+      child: Row(
+        children: [
+          Icon(Icons.sell_outlined, size: 12, color: color),
+          const SizedBox(width: 4),
+          Expanded(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 /// "Quedan 2 en stock" / "Se agota con esta venta" cuando la venta deja el

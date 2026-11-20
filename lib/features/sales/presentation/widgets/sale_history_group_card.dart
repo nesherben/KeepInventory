@@ -8,6 +8,7 @@ import 'package:keepinventory/l10n/app_localizations_ext.dart';
 import '../../domain/sale.dart';
 import '../sale_history_group.dart';
 import 'payment_method_widgets.dart';
+import 'sales_ui_utils.dart';
 
 class SaleHistoryGroupCard extends StatelessWidget {
   const SaleHistoryGroupCard({
@@ -255,7 +256,13 @@ class _SaleTicketCard extends StatelessWidget {
                 ),
                 if (hasDiscount)
                   Text(
-                    context.l10n.discountApplied,
+                    item.hasManualDiscount
+                        ? lineDiscountLabel(
+                            context,
+                            item.manualDiscountType!,
+                            item.manualDiscountValue!,
+                          )
+                        : context.l10n.discountApplied,
                     style: TextStyle(
                       fontSize: 11,
                       color: Theme.of(context).colorScheme.tertiary,
@@ -272,7 +279,8 @@ class _SaleTicketCard extends StatelessWidget {
                 Text(
                   context.money(originalTotal),
                   style: TextStyle(
-                    color: colors.error,
+                    // El rojo se reserva a borrar: el precio tachado va neutro
+                    color: colors.onSurfaceVariant,
                     decoration: TextDecoration.lineThrough,
                     fontSize: 12,
                   ),

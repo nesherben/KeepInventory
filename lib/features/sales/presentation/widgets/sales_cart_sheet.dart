@@ -7,7 +7,7 @@ class SalesCartSheet extends StatelessWidget {
     required this.minSize,
     required this.bodyHeight,
     required this.itemCountLabel,
-    required this.hasAdjustment,
+    required this.hasExtraLine,
     required this.hasItems,
     required this.totalSummary,
     required this.cartItems,
@@ -19,7 +19,9 @@ class SalesCartSheet extends StatelessWidget {
   final double minSize;
   final double bodyHeight;
   final String itemCountLabel;
-  final bool hasAdjustment;
+
+  /// Hay una línea extra bajo el total (base tachada o ahorro): reserva hueco.
+  final bool hasExtraLine;
   final bool hasItems;
   final Widget totalSummary;
   final Widget cartItems;
@@ -108,7 +110,7 @@ class SalesCartSheet extends StatelessWidget {
                                       ),
                                       SizedBox(
                                         width: 40,
-                                        height: hasAdjustment ? 54 : 40,
+                                        height: hasExtraLine ? 54 : 40,
                                       ),
                                     ],
                                   ),

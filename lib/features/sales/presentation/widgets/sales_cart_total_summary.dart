@@ -15,6 +15,7 @@ class SalesCartTotalSummary extends StatelessWidget {
     required this.onTotalAdjusted,
     required this.onReset,
     this.color,
+    this.savings = 0,
   });
 
   final double baseTotal;
@@ -23,6 +24,9 @@ class SalesCartTotalSummary extends StatelessWidget {
   final double fontSize;
   final bool hasAdjustment;
   final Color? color;
+
+  /// Suma de los descuentos manuales de línea (0 = no se muestra).
+  final double savings;
   final ValueChanged<double> onTotalAdjusted;
   final VoidCallback onReset;
 
@@ -160,6 +164,18 @@ class SalesCartTotalSummary extends StatelessWidget {
             SizedBox(width: 40, height: 40, child: _buildMenu(context)),
           ],
         ),
+        if (savings > 0.004)
+          Padding(
+            padding: const EdgeInsets.only(right: 44),
+            child: Text(
+              context.l10n.cartSavings(context.amount(savings)),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.tertiary,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
       ],
     );
   }
