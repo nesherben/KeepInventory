@@ -1,6 +1,6 @@
 # Especificación funcional de KeepInventory
 
-Especificación en español, **bidireccional**: describe lo que hace hoy el código (código → spec) y sirve para pedir cambios (spec → código). Generada a partir del código de la versión 1.18.2 y actualizada con los arreglos posteriores (esquema de BD 20 tras el borrado lógico de packs y el descuento manual por línea).
+Especificación en español, **bidireccional**: describe lo que hace hoy el código (código → spec) y sirve para pedir cambios (spec → código). Generada a partir del código de la versión 1.18.2 y actualizada con los arreglos posteriores (esquema de BD 21 tras el borrado lógico de packs, el descuento manual por línea y el historial de cambios).
 
 ## Índice
 
@@ -13,6 +13,7 @@ Especificación en español, **bidireccional**: describe lo que hace hoy el cód
 | Dashboard (métricas, gráfico, avisos) | [dashboard.md](dashboard.md) | `DASH-` |
 | Sincronización entre móviles (servidor, aprobación, QR, hotspot) | [sync.md](sync.md) | `SYNC-` |
 | Copias de seguridad (local, Drive, restauración, programador) | [backups.md](backups.md) | `BKP-` |
+| Historial de cambios (registro de configuración, deshacer/rehacer) | [history.md](history.md) | `HIST-` |
 | Núcleo (BD, esquema, migraciones, preferencias, números, tema, l10n, arranque) | [core.md](core.md) | `CORE-` |
 
 ## Cómo usar la spec

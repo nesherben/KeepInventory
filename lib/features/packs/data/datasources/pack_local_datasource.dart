@@ -3,6 +3,8 @@ import 'dart:typed_data'; // 💡 IMPORTANTE: Necesario para Uint8List
 import 'package:sqflite/sqflite.dart';
 
 import '../../../../core/database/database_helper.dart';
+import '../../../history/data/history_recorder.dart';
+import '../../../history/domain/change_entry.dart';
 import '../../domain/pack.dart';
 
 class PackLocalDatasource {
@@ -83,12 +85,16 @@ class PackLocalDatasource {
           [totalDeduction, item.productId],
         );
       }
+      await HistoryRecorder.recordCreated(txn, ChangeEntity.pack, packId);
     });
   }
 
   Future<void> updatePack(Pack oldPack, Pack newPack) async {
     final database = await db;
     await database.transaction((txn) async {
+      final before = oldPack.id == null
+          ? null
+          : await HistoryRecorder.snapshot(txn, ChangeEntity.pack, oldPack.id!);
       // 1. Devolver el stock antiguo al inventario principal
       for (var oldItem in oldPack.items) {
         final totalReturn = oldItem.quantity * oldPack.units;
@@ -134,12 +140,23 @@ class PackLocalDatasource {
           [totalDeduction, newItem.productId],
         );
       }
+      if (oldPack.id != null) {
+        await HistoryRecorder.recordUpdated(
+          txn,
+          ChangeEntity.pack,
+          oldPack.id!,
+          before: before,
+        );
+      }
     });
   }
 
   Future<void> deletePack(Pack pack) async {
     final database = await db;
     await database.transaction((txn) async {
+      final before = pack.id == null
+          ? null
+          : await HistoryRecorder.snapshot(txn, ChangeEntity.pack, pack.id!);
       // Devolver los componentes no vendidos al almacén principal
       for (var item in pack.items) {
         final totalReturn = item.quantity * pack.units;
@@ -155,6 +172,14 @@ class PackLocalDatasource {
         where: 'id = ?',
         whereArgs: [pack.id],
       );
+      if (pack.id != null) {
+        await HistoryRecorder.recordDeleted(
+          txn,
+          ChangeEntity.pack,
+          pack.id!,
+          before: before,
+        );
+      }
     });
   }
 }

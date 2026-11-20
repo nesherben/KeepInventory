@@ -56,7 +56,7 @@ Reglas transversales:
 - **Reglas de negocio (`inspect`):** abre en **solo lectura** y comprueba, en orden:
   1. `PRAGMA quick_check` = `ok`, si no (o no abre) → `corrupt`.
   2. Debe tener las tablas `products` y `sales`, si no → `notABackup`.
-  3. `user_version` mayor que el esquema actual (20) → `newer` (no se migra hacia atrás).
+  3. `user_version` mayor que el esquema actual (21) → `newer` (no se migra hacia atrás).
   - Datos extraídos: versión de la app (`app_meta`, null si no hay: anterior a 1.14.1), `schemaVersion`, nº de productos, de ventas y `otherRows` (suma de filas de `categories, fairs, promotions, packs, combos, sale_refunds` que existan).
   - `isEmpty` = productos = 0, ventas = 0 y otherRows = 0; `needsMigration` = válida y esquema < actual.
   - `currentDatabaseHasData()`: la BD actual tiene algún dato (productos, ventas u otras tablas) → decide "instalación nueva" (CORE-006) y si hay recordatorio (DASH-006).

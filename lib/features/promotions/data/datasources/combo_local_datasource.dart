@@ -1,6 +1,8 @@
 import 'package:sqflite/sqflite.dart';
 
 import '../../../../core/database/database_helper.dart';
+import '../../../history/data/history_recorder.dart';
+import '../../../history/domain/change_entry.dart';
 import '../../domain/combo.dart';
 
 class ComboLocalDatasource {
@@ -81,6 +83,9 @@ class ComboLocalDatasource {
     final database = await db;
     return database.transaction((txn) async {
       final values = {'name': combo.name, 'price': combo.price};
+      final before = combo.id == null
+          ? null
+          : await HistoryRecorder.snapshot(txn, ChangeEntity.combo, combo.id!);
       int comboId;
       if (combo.id == null) {
         comboId = await txn.insert('combos', values);
@@ -117,6 +122,16 @@ class ComboLocalDatasource {
           });
         }
       }
+      if (combo.id == null) {
+        await HistoryRecorder.recordCreated(txn, ChangeEntity.combo, comboId);
+      } else {
+        await HistoryRecorder.recordUpdated(
+          txn,
+          ChangeEntity.combo,
+          comboId,
+          before: before,
+        );
+      }
       return comboId;
     });
   }
@@ -124,6 +139,19 @@ class ComboLocalDatasource {
   /// Las ventas no se ven afectadas: guardan su propia copia del combo.
   Future<void> deleteCombo(int id) async {
     final database = await db;
-    await database.delete('combos', where: 'id = ?', whereArgs: [id]);
+    await database.transaction((txn) async {
+      final before = await HistoryRecorder.snapshot(
+        txn,
+        ChangeEntity.combo,
+        id,
+      );
+      await txn.delete('combos', where: 'id = ?', whereArgs: [id]);
+      await HistoryRecorder.recordDeleted(
+        txn,
+        ChangeEntity.combo,
+        id,
+        before: before,
+      );
+    });
   }
 }

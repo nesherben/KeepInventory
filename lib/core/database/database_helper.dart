@@ -13,7 +13,7 @@ class DatabaseHelper {
   DatabaseHelper._init();
 
   /// Versión del esquema (`PRAGMA user_version`) que entiende esta app.
-  static const schemaVersion = 20;
+  static const schemaVersion = 21;
 
   Future<Database> get database async {
     if (_database != null) return _database!;
@@ -27,7 +27,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: schemaVersion, // 20: descuento manual por línea
+      version: schemaVersion, // 21: historial de cambios
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
       onConfigure: _onConfigure,

@@ -9,7 +9,7 @@ void main() {
       execute: (sql) async => statements.add(sql),
     );
 
-    expect(statements, hasLength(15));
+    expect(statements, hasLength(18));
     expect(statements[0], contains('categories ('));
     expect(statements[1], contains('CREATE TABLE promotions'));
     expect(statements[2], contains('CREATE TABLE products'));
@@ -30,5 +30,9 @@ void main() {
     expect(statements[13], contains('fairs ('));
     expect(statements[2], contains('category_id INTEGER'));
     expect(statements[9], contains('category_id INTEGER'));
+    expect(statements[15], contains('change_log ('));
+    expect(statements[15], contains('before_json TEXT NOT NULL'));
+    expect(statements[16], contains('idx_change_log_created'));
+    expect(statements[17], contains('idx_change_log_entity'));
   });
 }

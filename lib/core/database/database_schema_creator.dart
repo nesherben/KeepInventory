@@ -83,6 +83,33 @@ class DatabaseSchemaCreator {
       )
     ''';
 
+  /// v21: historial de cambios de configuración (deshacer / rehacer).
+  /// `changed_fields`, `before_json` y `after_json` son JSON; `undone` = 1
+  /// cuando el cambio se deshizo y aún se puede rehacer.
+  static const changeLogTable = '''
+      CREATE TABLE IF NOT EXISTS change_log (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        created_at TEXT NOT NULL,
+        entity TEXT NOT NULL,
+        entity_id INTEGER NOT NULL,
+        entity_name TEXT NOT NULL,
+        action TEXT NOT NULL,
+        changed_fields TEXT NOT NULL,
+        before_json TEXT NOT NULL,
+        after_json TEXT NOT NULL,
+        undone INTEGER NOT NULL DEFAULT 0,
+        group_id TEXT
+      )
+    ''';
+
+  static const changeLogIndexes = [
+    'CREATE INDEX IF NOT EXISTS idx_change_log_created ON change_log (created_at)',
+    'CREATE INDEX IF NOT EXISTS idx_change_log_entity ON change_log (entity, entity_id)',
+  ];
+
+  /// Tabla del historial y sus índices, en el orden en que se crean.
+  static const changeLogStatements = [changeLogTable, ...changeLogIndexes];
+
   static Future<void> create({
     required Future<void> Function(String sql) execute,
   }) async {
@@ -192,5 +219,8 @@ class DatabaseSchemaCreator {
     await execute(metaTable);
     await execute(fairsTable);
     await execute(saleRefundsTable);
+    for (final sql in changeLogStatements) {
+      await execute(sql);
+    }
   }
 }

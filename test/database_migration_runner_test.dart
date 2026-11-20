@@ -14,6 +14,7 @@ void main() {
       DatabaseMigrationRunner.saleAdjustmentAlter,
       DatabaseMigrationRunner.packActivityAlter,
       ...DatabaseMigrationRunner.manualDiscountAlters,
+      ...DatabaseSchemaCreator.changeLogStatements,
     ];
     const fairStatements = [
       DatabaseSchemaCreator.fairsTable,
@@ -121,6 +122,7 @@ void main() {
         DatabaseMigrationRunner.saleAdjustmentAlter,
         DatabaseMigrationRunner.packActivityAlter,
         ...DatabaseMigrationRunner.manualDiscountAlters,
+        ...DatabaseSchemaCreator.changeLogStatements,
       ]);
     });
 
@@ -137,6 +139,7 @@ void main() {
         DatabaseMigrationRunner.saleAdjustmentAlter,
         DatabaseMigrationRunner.packActivityAlter,
         ...DatabaseMigrationRunner.manualDiscountAlters,
+        ...DatabaseSchemaCreator.changeLogStatements,
       ]);
     });
 
@@ -152,6 +155,7 @@ void main() {
       expect(statements, [
         DatabaseMigrationRunner.packActivityAlter,
         ...DatabaseMigrationRunner.manualDiscountAlters,
+        ...DatabaseSchemaCreator.changeLogStatements,
       ]);
     });
 
@@ -164,22 +168,41 @@ void main() {
         query: (_) async => [],
       );
 
-      expect(statements, DatabaseMigrationRunner.manualDiscountAlters);
+      expect(statements, [
+        ...DatabaseMigrationRunner.manualDiscountAlters,
+        ...DatabaseSchemaCreator.changeLogStatements,
+      ]);
     });
 
     test('ignores manual discount columns already existing', () async {
       await DatabaseMigrationRunner.upgrade(
         oldVersion: 19,
-        execute: (sql) async => throw StateError('duplicate column name'),
+        execute: (sql) async {
+          if (sql.startsWith('ALTER')) {
+            throw StateError('duplicate column name');
+          }
+        },
         query: (_) async => [],
       );
     });
 
-    test('runs nothing for version 20', () async {
+    test('adds only the change log from version 20', () async {
       final statements = <String>[];
 
       await DatabaseMigrationRunner.upgrade(
         oldVersion: 20,
+        execute: (sql) async => statements.add(sql),
+        query: (_) async => [],
+      );
+
+      expect(statements, DatabaseSchemaCreator.changeLogStatements);
+    });
+
+    test('runs nothing for version 21', () async {
+      final statements = <String>[];
+
+      await DatabaseMigrationRunner.upgrade(
+        oldVersion: 21,
         execute: (sql) async => statements.add(sql),
         query: (_) async => [],
       );

@@ -1,6 +1,8 @@
 import 'package:sqflite/sqflite.dart';
 
 import '../../../../core/database/database_helper.dart';
+import '../../../history/data/history_recorder.dart';
+import '../../../history/domain/change_entry.dart';
 import '../product_model.dart';
 
 class ProductLocalDatasource {
@@ -33,44 +35,112 @@ class ProductLocalDatasource {
 
   Future<int> insertProduct(ProductModel product) async {
     final database = await db;
-    return await database.insert('products', product.toMap());
+    return database.transaction((txn) async {
+      final id = await txn.insert('products', product.toMap());
+      await HistoryRecorder.recordCreated(txn, ChangeEntity.product, id);
+      return id;
+    });
   }
 
   Future<int> updateProduct(ProductModel product) async {
     final database = await db;
-    return await database.update(
-      'products',
-      product.toMap(),
-      where: 'id = ?',
-      whereArgs: [product.id],
-    );
+    final id = product.id;
+    if (id == null) {
+      return database.update(
+        'products',
+        product.toMap(),
+        where: 'id = ?',
+        whereArgs: [product.id],
+      );
+    }
+    return database.transaction((txn) async {
+      final before = await HistoryRecorder.snapshot(
+        txn,
+        ChangeEntity.product,
+        id,
+      );
+      final changed = await txn.update(
+        'products',
+        product.toMap(),
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+      // Solo se registra lo de configuración: el stock no cuenta
+      await HistoryRecorder.recordUpdated(
+        txn,
+        ChangeEntity.product,
+        id,
+        before: before,
+      );
+      return changed;
+    });
   }
 
   /// Actualiza solo las columnas indicadas (no pisa el resto del producto).
   Future<int> updateFields(int id, Map<String, Object?> values) async {
     if (values.isEmpty) return 0;
     final database = await db;
-    return database.update(
-      'products',
-      values,
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    return database.transaction((txn) async {
+      final before = await HistoryRecorder.snapshot(
+        txn,
+        ChangeEntity.product,
+        id,
+      );
+      final changed = await txn.update(
+        'products',
+        values,
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+      await HistoryRecorder.recordUpdated(
+        txn,
+        ChangeEntity.product,
+        id,
+        before: before,
+      );
+      return changed;
+    });
   }
 
   /// Asigna [promotionId] a todos los productos activos de la categoría.
   /// Devuelve cuántos se han cambiado.
   Future<int> setPromotionForCategory(int categoryId, int promotionId) async {
     final database = await db;
-    return database.update(
-      'products',
-      {'promotion_id': promotionId},
-      where: 'category_id = ? AND is_active = 1',
-      whereArgs: [categoryId],
-    );
+    return database.transaction((txn) async {
+      final rows = await txn.query(
+        'products',
+        columns: ['id'],
+        where: 'category_id = ? AND is_active = 1',
+        whereArgs: [categoryId],
+      );
+      final ids = [for (final r in rows) r['id'] as int];
+      final before = {
+        for (final id in ids)
+          id: await HistoryRecorder.snapshot(txn, ChangeEntity.product, id),
+      };
+      final changed = await txn.update(
+        'products',
+        {'promotion_id': promotionId},
+        where: 'category_id = ? AND is_active = 1',
+        whereArgs: [categoryId],
+      );
+      // Una operación, varias entradas: comparten grupo
+      final group = HistoryRecorder.newGroupId();
+      for (final id in ids) {
+        await HistoryRecorder.recordUpdated(
+          txn,
+          ChangeEntity.product,
+          id,
+          before: before[id],
+          groupId: group,
+        );
+      }
+      return changed;
+    });
   }
 
   /// Suma (o resta) unidades en una sola operación, sin bajar de 0.
+  /// El stock no se registra en el historial.
   Future<void> addUnits(int id, int delta) async {
     if (delta == 0) return;
     final database = await db;
@@ -82,12 +152,26 @@ class ProductLocalDatasource {
 
   Future<int> deleteProduct(int id) async {
     final database = await db;
-    // Borrado lógico para no romper el historial de tickets antiguos
-    return await database.update(
-      'products',
-      {'is_active': 0, 'units': 0},
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    return database.transaction((txn) async {
+      final before = await HistoryRecorder.snapshot(
+        txn,
+        ChangeEntity.product,
+        id,
+      );
+      // Borrado lógico para no romper el historial de tickets antiguos
+      final changed = await txn.update(
+        'products',
+        {'is_active': 0, 'units': 0},
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+      await HistoryRecorder.recordDeleted(
+        txn,
+        ChangeEntity.product,
+        id,
+        before: before,
+      );
+      return changed;
+    });
   }
 }

@@ -31,6 +31,19 @@ class DatabaseMigrationRunner {
     await _upgradeSaleAdjustment(oldVersion, execute);
     await _upgradePackActivity(oldVersion, execute);
     await _upgradeManualDiscounts(oldVersion, execute);
+    await _upgradeChangeLog(oldVersion, execute);
+  }
+
+  /// v21: historial de cambios de configuración. Solo se crea la tabla: no se
+  /// escribe nada (el historial empieza vacío en una BD migrada).
+  static Future<void> _upgradeChangeLog(
+    int oldVersion,
+    DatabaseSqlExecutor execute,
+  ) async {
+    if (oldVersion >= 21) return;
+    for (final sql in DatabaseSchemaCreator.changeLogStatements) {
+      await execute(sql);
+    }
   }
 
   /// v20: descuento manual por línea de venta (NULL = sin descuento).
