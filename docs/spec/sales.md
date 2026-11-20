@@ -65,6 +65,7 @@ Pantallas: `SalesScreen` (`/sales`) y `HistoryScreen` (`/history`).
   - La opción está deshabilitada con carrito vacío.
   - El factor se conserva en devoluciones: los importes por línea (`historical_price`) siguen **sin** factor; el factor se aplica al calcular lo pagado y lo que queda (SALES-008).
 - **Datos:** `sales.adjustment_factor` (v18), `sales.total_amount`.
+- **Exclusión con SALES-013:** el total acordado y los descuentos manuales de línea no conviven. Al fijar un total acordado con descuentos de línea se pide confirmación y se quitan (el factor se calcula sobre el total SIN descuentos); al aplicar un descuento de línea con un total acordado activo se pide confirmación y el factor vuelve a 1.
 - **Flujo:** carrito → menú del total → diálogo → guardar.
 - **Casos límite y errores:** total acordado 0 válido (venta gratis).
 - **Código:** `lib/features/sales/presentation/widgets/sales_cart_total_summary.dart`, `lib/features/sales/presentation/sales_screen.dart` (`_cartAdjustmentFactor`, `_cartTotal`), `lib/features/sales/domain/sale_from_cart_factory.dart`.
@@ -191,3 +192,20 @@ Pantallas: `SalesScreen` (`/sales`) y `HistoryScreen` (`/history`).
 - **Casos límite y errores:** ninguno.
 - **Código:** `lib/features/sales/presentation/widgets/sale_history_group_card.dart` (`_SaleTicketCard`), `lib/features/sales/presentation/widgets/sales_ui_utils.dart`.
 - **Tests:** `test/sale_history_group_card_test.dart`.
+
+### SALES-013 · Descuento manual por línea del carrito
+- **Propósito:** rebajar puntualmente el precio de una línea del carrito sin tocar el producto ("lo dejo en 8 €").
+- **Reglas de negocio:**
+  - Solo en líneas de producto suelto **sin promoción efectiva y sin unidades en combo**: si el producto tiene promoción (existente) o va dentro de un combo, manda la promoción/combo y el descuento no se ofrece (`SaleCartPricingCalculator.canDiscount`); el calculador además ignora cualquier descuento de una línea no elegible.
+  - Tipos (`ManualLineDiscount`): porcentaje (0 < x ≤ 100), importe (0 < x ≤ total de línea) y precio final (0 ≤ x < total de línea; se convierte a importe con `fromFinalPrice`). Se aplica al TOTAL de la línea, no por unidad; el resultado nunca baja de 0 y se redondea a céntimos (`roundToCents`) en la lógica pura. Un porcentaje tan pequeño que no descuenta ni un céntimo no cuenta.
+  - Al cambiar la cantidad: el % se mantiene; el importe (y el precio final, ya convertido a importe) se mantiene como importe de línea. Al quitar la línea del carrito, el descuento se borra.
+  - Si una línea con descuento pasa a tener promoción o combo (p. ej. al añadir otro producto del combo), se quita el descuento y se avisa (`SaleCartPricingCalculator.lineDiscountsToDrop`).
+  - Exclusión con el total acordado (SALES-004), con confirmación en ambos sentidos.
+  - Al cobrar, `SaleFromCartFactory` congela en la línea `historicalPrice = total de línea descontado / unidades`, `originalPrice = precio de catálogo` y `manual_discount_type/value` (para el importe se guarda lo realmente descontado). `totalAmount` = suma de líneas.
+  - Devolución parcial (SALES-008/009): reparto proporcional a lo cobrado (`historicalPrice`); `remainingAfterRefund` conserva los campos del descuento (el porcentaje igual, el importe en proporción a las unidades que quedan).
+  - Dashboard: usa `historical_price`, así que el beneficio refleja el descuento sin cambios.
+- **Datos:** `sale_items.manual_discount_type` (`percent`/`amount`), `sale_items.manual_discount_value` (v20); estado del carrito `_lineDiscounts` (por id de producto) en `SalesScreen`.
+- **Flujo:** botón de etiqueta junto al "−" de la línea → hoja/diálogo `LineDiscountSheet` (segmentos %, €, Precio final; chips 5/10/20 % en modo %; vista previa "antes → ahora"; "Quitar descuento" si ya hay uno) → "Aplicar". La línea muestra el precio original tachado, la etiqueta "Descuento −10 %" (tocarla reabre la hoja) y el carrito muestra "Ahorro −X €" bajo el total. En líneas con promoción/combo el botón sale atenuado y al tocarlo explica el motivo. El historial muestra la misma etiqueta y el precio original tachado.
+- **Casos límite y errores:** línea a 0 € permitida con aviso en la vista previa; doble toque en Aplicar/Quitar protegido (un solo pop); cambiar de modo en la hoja convierte el valor en vez de borrarlo.
+- **Código:** `lib/features/sales/domain/manual_line_discount.dart`, `sale_cart_pricing_calculator.dart` (`price(lineDiscounts)`, `canDiscount`, `lineDiscountsToDrop`), `sale_from_cart_factory.dart`, `sale.dart` (`SaleItem.manualDiscount*`), `sale_refund_calculator.dart` (`remainingAfterRefund`), `lib/features/sales/data/datasources/sale_local_datasource.dart`, `lib/features/sales/presentation/sales_screen.dart` (`_setLineDiscount`, `_applyAgreedTotal`, `_pruneLineDiscounts`), `widgets/line_discount_sheet.dart`, `widgets/cart_items_list_widget.dart`, `widgets/sales_cart_total_summary.dart` (ahorro), `widgets/sale_history_group_card.dart`, `widgets/sales_ui_utils.dart` (`lineDiscountLabel`).
+- **Tests:** `test/manual_line_discount_test.dart`, `test/sale_cart_pricing_calculator_test.dart` (grupo "manual line discounts"), `test/sale_refund_calculator_test.dart`, `test/database_migration_runner_test.dart`, `test/sale_history_group_card_test.dart`. Sin tests de widget de `LineDiscountSheet` ni de la capa de datos (insertar/leer `manual_discount_*`).

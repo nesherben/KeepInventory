@@ -5,9 +5,9 @@ Base de datos, preferencias, formato numérico, tema, idioma, arranque, imágene
 ---
 
 ### CORE-001 · Esquema de la base de datos (instalación nueva)
-- **Propósito:** definir las tablas de una instalación limpia; es la verdad del esquema actual (versión **19**).
+- **Propósito:** definir las tablas de una instalación limpia; es la verdad del esquema actual (versión **20**).
 - **Reglas de negocio:**
-  - `DatabaseHelper.schemaVersion = 19`. Archivo `keepinventory.db` en `getDatabasesPath()`.
+  - `DatabaseHelper.schemaVersion = 20`. Archivo `keepinventory.db` en `getDatabasesPath()`.
   - Claves foráneas activas (`PRAGMA foreign_keys = ON` en `onConfigure`).
   - Tablas: `categories`, `promotions`, `products`, `sales`, `sale_items`, `packs`, `pack_items`, `sale_packs`, `combos`, `combo_slots`, `combo_slot_products`, `sale_combos`, `app_meta`, `fairs`, `sale_refunds`.
   - Borrados en cascada relevantes: `products.category_id` → `SET NULL` al borrar categoría; `products.promotion_id` → `SET NULL` al borrar promoción; `sale_items.product_id` → `RESTRICT` (por eso los productos se borran lógicamente, ver INV-004); `pack_items.product_id` → `RESTRICT`; `sale_packs.pack_id` → `CASCADE` (ya no se borran packs físicamente, ver PACK-005); `sale_items/sale_packs/sale_combos/sale_refunds.sale_id` → `CASCADE`; `combo_slots.category_id` → `CASCADE`.
@@ -19,13 +19,13 @@ Base de datos, preferencias, formato numérico, tema, idioma, arranque, imágene
 - **Tests:** `test/database_schema_creator_test.dart`.
 
 ### CORE-002 · Migraciones de esquema
-- **Propósito:** llevar bases de datos antiguas a la versión 19 sin perder datos.
+- **Propósito:** llevar bases de datos antiguas a la versión 20 sin perder datos.
 - **Reglas de negocio:** `DatabaseMigrationRunner.upgrade` ejecuta, en orden y cada una solo si `oldVersion` es menor que su versión:
-  - v2 promociones (+`products.promotion_id`); v3 `products.is_active`; v4 `sales.fair_name`; v5 `packs`/`pack_items`; v6 `sale_packs`; v7 `packs.units`; v8 `sale_items.original_price/promotion_id`; v9–v10 `promo_type/promo_threshold/promo_discount` (reparación idempotente); v11 `image_bytes` en productos y packs; v12 `sales.payment_method` (ventas antiguas quedan NULL = "sin especificar"); v13 tablas de combos + `sale_items.sale_combo_id`; v14 `app_meta`; v15 `fairs` (se rellena con los `fair_name` distintos y no vacíos de `sales`, `TRIM`); v16 `categories` + `products.category_id` + `combo_slots.category_id`; v17 `sale_refunds`; v18 `sales.adjustment_factor REAL NOT NULL DEFAULT 1.0`; v19 `packs.is_active INTEGER NOT NULL DEFAULT 1` (borrado lógico de packs).
-  - Los `ALTER TABLE ADD COLUMN` toleran "columna duplicada" (se ignoran errores) para ser re-ejecutables; en v18 y v19 solo se ignora el error "duplicate column", cualquier otro se relanza.
+  - v2 promociones (+`products.promotion_id`); v3 `products.is_active`; v4 `sales.fair_name`; v5 `packs`/`pack_items`; v6 `sale_packs`; v7 `packs.units`; v8 `sale_items.original_price/promotion_id`; v9–v10 `promo_type/promo_threshold/promo_discount` (reparación idempotente); v11 `image_bytes` en productos y packs; v12 `sales.payment_method` (ventas antiguas quedan NULL = "sin especificar"); v13 tablas de combos + `sale_items.sale_combo_id`; v14 `app_meta`; v15 `fairs` (se rellena con los `fair_name` distintos y no vacíos de `sales`, `TRIM`); v16 `categories` + `products.category_id` + `combo_slots.category_id`; v17 `sale_refunds`; v18 `sales.adjustment_factor REAL NOT NULL DEFAULT 1.0`; v19 `packs.is_active INTEGER NOT NULL DEFAULT 1` (borrado lógico de packs); v20 `sale_items.manual_discount_type TEXT` y `manual_discount_value REAL` (descuento manual por línea, NULL = sin descuento).
+  - Los `ALTER TABLE ADD COLUMN` toleran "columna duplicada" (se ignoran errores) para ser re-ejecutables; de v18 a v20 solo se ignora el error "duplicate column", cualquier otro se relanza.
 - **Datos:** `PRAGMA user_version` (gestionado por sqflite).
 - **Flujo:** `onUpgrade` → `DatabaseMigrationRunner.upgrade`. También se usa para migrar una copia restaurada de un esquema antiguo antes de instalarla (BKP-005).
-- **Casos límite y errores:** una BD con `user_version` mayor que 19 no se migra hacia atrás; el validador de copias la rechaza como "más nueva" (BKP-004).
+- **Casos límite y errores:** una BD con `user_version` mayor que 20 no se migra hacia atrás; el validador de copias la rechaza como "más nueva" (BKP-004).
 - **Código:** `lib/core/database/database_migration_runner.dart`.
 - **Tests:** `test/database_migration_runner_test.dart`.
 

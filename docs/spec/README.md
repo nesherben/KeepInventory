@@ -1,6 +1,6 @@
 # Especificación funcional de KeepInventory
 
-Especificación en español, **bidireccional**: describe lo que hace hoy el código (código → spec) y sirve para pedir cambios (spec → código). Generada a partir del código de la versión 1.18.2 y actualizada con los arreglos posteriores (esquema de BD 19 tras el borrado lógico de packs).
+Especificación en español, **bidireccional**: describe lo que hace hoy el código (código → spec) y sirve para pedir cambios (spec → código). Generada a partir del código de la versión 1.18.2 y actualizada con los arreglos posteriores (esquema de BD 20 tras el borrado lógico de packs y el descuento manual por línea).
 
 ## Índice
 
