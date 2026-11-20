@@ -1,6 +1,8 @@
 import '../../promotions/domain/combo.dart';
+import 'manual_line_discount.dart';
 import 'payment_method.dart';
 
+export 'manual_line_discount.dart' show ManualDiscountType;
 export 'payment_method.dart';
 
 class SaleItem {
@@ -20,6 +22,11 @@ class SaleItem {
   /// Combo de la venta al que pertenece esta línea (null = suelta).
   final int? saleComboId;
 
+  /// Descuento manual de la línea (null = sin descuento). [historicalPrice]
+  /// ya es el precio final por unidad; esto solo documenta de dónde viene.
+  final ManualDiscountType? manualDiscountType;
+  final double? manualDiscountValue;
+
   SaleItem({
     this.id,
     this.saleId,
@@ -33,7 +40,12 @@ class SaleItem {
     this.promoThreshold,
     this.promoDiscount,
     this.saleComboId,
+    this.manualDiscountType,
+    this.manualDiscountValue,
   });
+
+  bool get hasManualDiscount =>
+      manualDiscountType != null && (manualDiscountValue ?? 0) > 0;
 
   double get refundUnitPrice => originalPrice == 0 && historicalPrice > 0
       ? historicalPrice

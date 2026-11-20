@@ -2,6 +2,7 @@ import '../../inventory/domain/product.dart';
 import '../../packs/domain/pack.dart';
 import '../../promotions/domain/combo.dart';
 import '../../promotions/domain/promotion.dart';
+import 'manual_line_discount.dart';
 import 'sale.dart';
 import 'sale_cart_pricing_calculator.dart';
 
@@ -16,12 +17,14 @@ class SaleFromCartFactory {
     List<Combo> combos = const [],
     PaymentMethod paymentMethod = PaymentMethod.defaultMethod,
     double adjustmentFactor = 1.0,
+    Map<int, ManualLineDiscount> lineDiscounts = const {},
   }) {
     final pricing = SaleCartPricingCalculator.price(
       products: products,
       packs: packs,
       promotions: promotions,
       combos: combos,
+      lineDiscounts: lineDiscounts,
     );
     final byId = {
       for (final p in products.keys)
@@ -33,6 +36,8 @@ class SaleFromCartFactory {
       int quantity,
       double subtotal, {
       int? saleComboId,
+      ManualLineDiscount? manual,
+      double manualAmount = 0,
     }) {
       // La promo propia se congela también en las líneas de combo: si una
       // devolución rompe el combo, las unidades que quedan vuelven a su promo.
@@ -51,6 +56,13 @@ class SaleFromCartFactory {
         promoThreshold: promotion?.threshold,
         promoDiscount: promotion?.discountValue,
         saleComboId: saleComboId,
+        manualDiscountType: manual?.type,
+        // Importe: lo realmente descontado (puede quedar recortado al total)
+        manualDiscountValue: manual == null
+            ? null
+            : (manual.type == ManualDiscountType.percent
+                  ? manual.value
+                  : manualAmount),
       );
     }
 
@@ -84,15 +96,20 @@ class SaleFromCartFactory {
     }
 
     for (final e in pricing.loose.entries) {
+      final applied = pricing.appliedDiscounts[e.key.id] ?? 0;
+      final itemTotal = SaleCartPricingCalculator.calculateItemTotal(
+        e.key,
+        pricing.loose,
+        promotions,
+      );
       saleItems.add(
         line(
           e.key,
           e.value,
-          SaleCartPricingCalculator.calculateItemTotal(
-            e.key,
-            pricing.loose,
-            promotions,
-          ),
+          // Con descuento manual, el precio de la línea ya va rebajado
+          applied > 0 ? roundToCents(itemTotal - applied) : itemTotal,
+          manual: applied > 0 ? lineDiscounts[e.key.id] : null,
+          manualAmount: applied,
         ),
       );
     }

@@ -98,6 +98,125 @@ void main() {
       );
     });
 
+    test('a manual line discount is kept for the units that stay', () {
+      // 3 uds. a 10 € con −6 € de línea: se cobraron 24 € (8 € por ud.)
+      final item = SaleItem(
+        productId: 1,
+        quantity: 3,
+        historicalPrice: 8,
+        originalPrice: 10,
+        manualDiscountType: ManualDiscountType.amount,
+        manualDiscountValue: 6,
+      );
+
+      final kept = SaleRefundCalculator.calculateRemainingCartValue(
+        originalItemQuantities: {item: 3},
+        keptItemQuantities: {item: 2},
+        keptPackQuantities: {},
+      );
+
+      // Se queda 2 × 8 (lo realmente cobrado), no 2 × 10
+      expect(kept, 16);
+    });
+
+    test('refunds a fully returned discounted line at the paid price', () {
+      // 3 uds. a 10 € con −10 € de línea: se cobraron 20 € (6,67 € por ud.)
+      final item = SaleItem(
+        productId: 1,
+        quantity: 3,
+        historicalPrice: 20 / 3,
+        originalPrice: 10,
+        manualDiscountType: ManualDiscountType.amount,
+        manualDiscountValue: 10,
+      );
+
+      expect(
+        SaleRefundCalculator.calculateRemainingCartValue(
+          originalItemQuantities: {item: 3},
+          keptItemQuantities: {item: 0},
+          keptPackQuantities: {},
+        ),
+        0,
+      );
+      // Se quedan 2: 2 × 6,67 = 13,33, no 2 × 10
+      expect(
+        SaleRefundCalculator.calculateRemainingCartValue(
+          originalItemQuantities: {item: 3},
+          keptItemQuantities: {item: 2},
+          keptPackQuantities: {},
+        ),
+        closeTo(13.33, 0.005),
+      );
+    });
+
+    test('remainingAfterRefund prorates a 10 € discount over 3 units', () {
+      final item = SaleItem(
+        productId: 1,
+        quantity: 3,
+        historicalPrice: 20 / 3,
+        originalPrice: 10,
+        manualDiscountType: ManualDiscountType.amount,
+        manualDiscountValue: 10,
+      );
+      final sale = Sale(
+        id: 1,
+        date: DateTime(2026),
+        totalAmount: 20,
+        items: [item],
+      );
+
+      final remaining = SaleRefundCalculator.remainingAfterRefund(
+        sale: sale,
+        itemsToRefund: {item: 1},
+      );
+
+      expect(remaining.items.single.quantity, 2);
+      expect(remaining.items.single.manualDiscountValue, 6.67);
+      expect(remaining.items.single.historicalPrice, closeTo(20 / 3, 1e-9));
+    });
+
+    test('remainingAfterRefund keeps the discount fields proportionally', () {
+      final percent = SaleItem(
+        productId: 1,
+        quantity: 4,
+        historicalPrice: 9,
+        originalPrice: 10,
+        manualDiscountType: ManualDiscountType.percent,
+        manualDiscountValue: 10,
+      );
+      final amount = SaleItem(
+        productId: 2,
+        quantity: 4,
+        historicalPrice: 8,
+        originalPrice: 10,
+        manualDiscountType: ManualDiscountType.amount,
+        manualDiscountValue: 8,
+      );
+      final sale = Sale(
+        id: 1,
+        date: DateTime(2026),
+        totalAmount: 68,
+        items: [percent, amount],
+      );
+
+      final remaining = SaleRefundCalculator.remainingAfterRefund(
+        sale: sale,
+        itemsToRefund: {percent: 1, amount: 1},
+      );
+
+      final keptPercent = remaining.items.firstWhere((i) => i.productId == 1);
+      final keptAmount = remaining.items.firstWhere((i) => i.productId == 2);
+      expect(keptPercent.quantity, 3);
+      expect(keptPercent.historicalPrice, 9);
+      expect(keptPercent.manualDiscountType, ManualDiscountType.percent);
+      expect(keptPercent.manualDiscountValue, 10);
+      // −8 € en 4 uds. → −6 € en las 3 que quedan
+      expect(keptAmount.quantity, 3);
+      expect(keptAmount.historicalPrice, 8);
+      expect(keptAmount.manualDiscountType, ManualDiscountType.amount);
+      expect(keptAmount.manualDiscountValue, 6);
+    });
+
     test('keeps paid price of a non-promoted item after a partial return', () {
       final item = SaleItem(
         productId: 1,

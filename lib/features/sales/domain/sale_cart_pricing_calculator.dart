@@ -4,6 +4,7 @@ import '../../promotions/domain/combo.dart';
 import '../../promotions/domain/combo_matcher.dart';
 import '../../promotions/domain/fixed_price_bundle_calculator.dart';
 import '../../promotions/domain/promotion.dart';
+import 'manual_line_discount.dart';
 
 /// Precio completo del carrito: combos detectados + resto con sus promociones.
 class CartPricing {
@@ -16,12 +17,21 @@ class CartPricing {
   final Map<int, double> productTotals;
   final double packTotal;
 
+  /// Importe realmente descontado por descuento manual en cada producto
+  /// (por id). Solo incluye los descuentos que se han aplicado.
+  final Map<int, double> appliedDiscounts;
+
   const CartPricing({
     required this.combos,
     required this.loose,
     required this.productTotals,
     required this.packTotal,
+    this.appliedDiscounts = const {},
   });
+
+  /// Suma de los descuentos manuales aplicados.
+  double get discountTotal =>
+      appliedDiscounts.values.fold(0.0, (t, v) => t + v);
 
   double totalOf(Product product) => productTotals[product.id] ?? 0.0;
 
@@ -85,13 +95,57 @@ class SaleCartPricingCalculator {
     return targetProduct.price * quantity;
   }
 
+  /// ¿Admite [product] un descuento manual? Si tiene promoción o va dentro de
+  /// un combo ([comboUnits] > 0), manda la promoción/combo y no se ofrece.
+  static bool canDiscount(
+    Product product,
+    Map<int, Promotion> promotions, {
+    int comboUnits = 0,
+  }) {
+    if (comboUnits > 0) return false;
+    final promotionId = product.promotionId;
+    return promotionId == null || promotions[promotionId] == null;
+  }
+
+  /// Productos cuyo descuento manual hay que quitar porque pasaron a tener
+  /// promoción o a ir dentro de un combo (manda la promoción/combo).
+  static List<Product> lineDiscountsToDrop({
+    required Map<Product, int> products,
+    required Map<Pack, int> packs,
+    required Map<int, Promotion> promotions,
+    required Set<int> discountedIds,
+    List<Combo> combos = const [],
+  }) {
+    if (discountedIds.isEmpty) return const [];
+    final pricing = price(
+      products: products,
+      packs: packs,
+      promotions: promotions,
+      combos: combos,
+    );
+    return [
+      for (final product in products.keys)
+        if (discountedIds.contains(product.id) &&
+            !canDiscount(
+              product,
+              promotions,
+              comboUnits: pricing.comboUnitsOf(product),
+            ))
+          product,
+    ];
+  }
+
   /// Precio del carrito. Los combos ganan: sus unidades van a precio de
   /// combo y solo las sobrantes cuentan para la promoción propia.
+  ///
+  /// [lineDiscounts] (por id de producto) se aplica al total de la línea
+  /// suelta, solo en productos sin promoción ni combo; el resto se ignora.
   static CartPricing price({
     required Map<Product, int> products,
     required Map<Pack, int> packs,
     required Map<int, Promotion> promotions,
     List<Combo> combos = const [],
+    Map<int, ManualLineDiscount> lineDiscounts = const {},
   }) {
     final byId = {
       for (final p in products.keys)
@@ -124,16 +178,27 @@ class SaleCartPricingCalculator {
         if (e.value - (comboUnits[e.key.id] ?? 0) > 0)
           e.key: e.value - (comboUnits[e.key.id] ?? 0),
     };
+    final applied = <int, double>{};
     for (final product in loose.keys) {
-      totals[product.id ?? -1] =
-          (totals[product.id ?? -1] ?? 0) +
-          calculateItemTotal(product, loose, promotions);
+      final id = product.id ?? -1;
+      var lineTotal = calculateItemTotal(product, loose, promotions);
+      final discount = lineDiscounts[id];
+      if (discount != null &&
+          canDiscount(product, promotions, comboUnits: comboUnits[id] ?? 0)) {
+        final amount = discount.discountOn(lineTotal);
+        if (amount > 0) {
+          applied[id] = amount;
+          lineTotal = roundToCents(lineTotal - amount);
+        }
+      }
+      totals[id] = (totals[id] ?? 0) + lineTotal;
     }
 
     return CartPricing(
       combos: match,
       loose: loose,
       productTotals: totals,
+      appliedDiscounts: applied,
       packTotal: packs.entries.fold<double>(
         0,
         (total, entry) => total + entry.key.price * entry.value,

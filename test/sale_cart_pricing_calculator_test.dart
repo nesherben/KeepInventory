@@ -1,7 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:keepinventory/features/inventory/domain/product.dart';
 import 'package:keepinventory/features/packs/domain/pack.dart';
+import 'package:keepinventory/features/promotions/domain/combo.dart';
 import 'package:keepinventory/features/promotions/domain/promotion.dart';
+import 'package:keepinventory/features/sales/domain/manual_line_discount.dart';
 import 'package:keepinventory/features/sales/domain/sale_cart_pricing_calculator.dart';
 import 'package:keepinventory/features/sales/domain/sale_from_cart_factory.dart';
 
@@ -102,6 +104,228 @@ void main() {
         ),
         5,
       );
+    });
+  });
+
+  group('manual line discounts', () {
+    test('percentage discount lowers the line total and is reported', () {
+      final shirt = _product(1, price: 12);
+
+      final pricing = SaleCartPricingCalculator.price(
+        products: {shirt: 1},
+        packs: {},
+        promotions: {},
+        lineDiscounts: {1: const ManualLineDiscount.percent(10)},
+      );
+
+      expect(pricing.total, 10.8);
+      expect(pricing.totalOf(shirt), 10.8);
+      expect(pricing.appliedDiscounts, {1: 1.2});
+      expect(pricing.discountTotal, 1.2);
+    });
+
+    test('amount discount applies to the whole line, not per unit', () {
+      final mug = _product(1, price: 10);
+
+      final pricing = SaleCartPricingCalculator.price(
+        products: {mug: 3},
+        packs: {},
+        promotions: {},
+        lineDiscounts: {1: const ManualLineDiscount.amount(2)},
+      );
+
+      expect(pricing.total, 28);
+    });
+
+    test('line total is clamped to zero', () {
+      final mug = _product(1, price: 10);
+
+      final pricing = SaleCartPricingCalculator.price(
+        products: {mug: 1},
+        packs: {},
+        promotions: {},
+        lineDiscounts: {1: const ManualLineDiscount.amount(99)},
+      );
+
+      expect(pricing.total, 0);
+      expect(pricing.appliedDiscounts, {1: 10});
+    });
+
+    test('a promoted product ignores the manual discount', () {
+      final promoted = _product(1, price: 10, promotionId: 7);
+
+      final pricing = SaleCartPricingCalculator.price(
+        products: {promoted: 3},
+        packs: {},
+        promotions: {7: _promotion(id: 7, threshold: 3)},
+        lineDiscounts: {1: const ManualLineDiscount.percent(50)},
+      );
+
+      // Manda la promoción (20 % desde 3 uds.): 3 × 8 = 24
+      expect(pricing.total, 24);
+      expect(pricing.appliedDiscounts, isEmpty);
+    });
+
+    test('a product inside a combo ignores the manual discount', () {
+      final a = _product(1, price: 8);
+      final b = _product(2, price: 6);
+      const combo = Combo(
+        id: 1,
+        name: 'A + B',
+        price: 10,
+        slots: [
+          ComboSlot(name: 'a', productIds: [1]),
+          ComboSlot(name: 'b', productIds: [2]),
+        ],
+      );
+
+      final pricing = SaleCartPricingCalculator.price(
+        products: {a: 1, b: 1},
+        packs: {},
+        promotions: {},
+        combos: [combo],
+        lineDiscounts: {1: const ManualLineDiscount.percent(50)},
+      );
+
+      expect(pricing.total, 10);
+      expect(pricing.appliedDiscounts, isEmpty);
+    });
+
+    test('canDiscount blocks promoted products and combo units', () {
+      final plain = _product(1, price: 5);
+      final promoted = _product(2, price: 5, promotionId: 7);
+      final orphanPromo = _product(3, price: 5, promotionId: 99);
+      final promotions = {7: _promotion(id: 7, threshold: 2)};
+
+      expect(SaleCartPricingCalculator.canDiscount(plain, promotions), isTrue);
+      expect(
+        SaleCartPricingCalculator.canDiscount(promoted, promotions),
+        isFalse,
+      );
+      // Promoción borrada: ya no hay nada que mande
+      expect(
+        SaleCartPricingCalculator.canDiscount(orphanPromo, promotions),
+        isTrue,
+      );
+      expect(
+        SaleCartPricingCalculator.canDiscount(plain, promotions, comboUnits: 1),
+        isFalse,
+      );
+    });
+
+    test('lineDiscountsToDrop returns products that gained a combo', () {
+      final a = _product(1, price: 8);
+      final b = _product(2, price: 6);
+      const combo = Combo(
+        id: 1,
+        name: 'A + B',
+        price: 10,
+        slots: [
+          ComboSlot(name: 'a', productIds: [1]),
+          ComboSlot(name: 'b', productIds: [2]),
+        ],
+      );
+
+      // Solo A: sin combo, su descuento sigue valiendo
+      expect(
+        SaleCartPricingCalculator.lineDiscountsToDrop(
+          products: {a: 1},
+          packs: {},
+          promotions: {},
+          combos: [combo],
+          discountedIds: {1},
+        ),
+        isEmpty,
+      );
+      // Al añadir B se forma el combo: manda el combo y el descuento de A cae
+      final dropped = SaleCartPricingCalculator.lineDiscountsToDrop(
+        products: {a: 1, b: 1},
+        packs: {},
+        promotions: {},
+        combos: [combo],
+        discountedIds: {1},
+      );
+      expect(dropped.map((p) => p.id), [1]);
+    });
+
+    test('lineDiscountsToDrop ignores products without a discount', () {
+      final promoted = _product(1, price: 10, promotionId: 7);
+      final plain = _product(2, price: 10);
+
+      final dropped = SaleCartPricingCalculator.lineDiscountsToDrop(
+        products: {promoted: 1, plain: 1},
+        packs: {},
+        promotions: {7: _promotion(id: 7, threshold: 2)},
+        discountedIds: {2},
+      );
+
+      expect(dropped, isEmpty);
+    });
+
+    test('a tiny percentage never discounts below a cent', () {
+      final cheap = _product(1, price: 1);
+
+      final pricing = SaleCartPricingCalculator.price(
+        products: {cheap: 1},
+        packs: {},
+        promotions: {},
+        lineDiscounts: {1: const ManualLineDiscount.percent(0.01)},
+      );
+
+      expect(pricing.total, 1);
+      expect(pricing.appliedDiscounts, isEmpty);
+    });
+
+    test('factory freezes the discounted price and the discount fields', () {
+      final shirt = _product(1, price: 12);
+
+      final sale = SaleFromCartFactory.create(
+        date: DateTime(2026, 11, 1),
+        products: {shirt: 3},
+        packs: {},
+        promotions: {},
+        lineDiscounts: {1: const ManualLineDiscount.percent(10)},
+      );
+
+      final item = sale.items.single;
+      // 3 × 12 = 36 − 10 % = 32,40 en total de línea
+      expect(sale.totalAmount, 32.4);
+      expect(item.historicalPrice * item.quantity, closeTo(32.4, 1e-9));
+      expect(item.originalPrice, 12);
+      expect(item.manualDiscountType, ManualDiscountType.percent);
+      expect(item.manualDiscountValue, 10);
+      expect(item.hasManualDiscount, isTrue);
+    });
+
+    test('factory stores the real amount when it is clamped to the line', () {
+      final mug = _product(1, price: 10);
+
+      final sale = SaleFromCartFactory.create(
+        date: DateTime(2026, 11, 1),
+        products: {mug: 1},
+        packs: {},
+        promotions: {},
+        lineDiscounts: {1: const ManualLineDiscount.amount(99)},
+      );
+
+      expect(sale.totalAmount, 0);
+      expect(sale.items.single.manualDiscountType, ManualDiscountType.amount);
+      expect(sale.items.single.manualDiscountValue, 10);
+    });
+
+    test('lines without a discount keep the discount fields empty', () {
+      final shirt = _product(1, price: 12);
+
+      final sale = SaleFromCartFactory.create(
+        date: DateTime(2026, 11, 1),
+        products: {shirt: 1},
+        packs: {},
+        promotions: {},
+      );
+
+      expect(sale.items.single.manualDiscountType, isNull);
+      expect(sale.items.single.manualDiscountValue, isNull);
+      expect(sale.items.single.hasManualDiscount, isFalse);
     });
   });
 

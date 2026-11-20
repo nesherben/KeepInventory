@@ -1,3 +1,4 @@
+import 'manual_line_discount.dart';
 import 'sale.dart';
 import '../../promotions/domain/combo_matcher.dart';
 import '../../promotions/domain/fixed_price_bundle_calculator.dart';
@@ -84,12 +85,14 @@ class SaleRefundCalculator {
     required Map<SalePackItem, int> keptPackQuantities,
     List<SaleCombo> combos = const [],
     double adjustmentFactor = 1.0,
-  }) => calculateKeptValue(
-    originalItemQuantities: originalItemQuantities,
-    keptItemQuantities: keptItemQuantities,
-    keptPackQuantities: keptPackQuantities,
-    combos: combos,
-  ).total * adjustmentFactor;
+  }) =>
+      calculateKeptValue(
+        originalItemQuantities: originalItemQuantities,
+        keptItemQuantities: keptItemQuantities,
+        keptPackQuantities: keptPackQuantities,
+        combos: combos,
+      ).total *
+      adjustmentFactor;
 
   static KeptSaleValue calculateKeptValue({
     required Map<SaleItem, int> originalItemQuantities,
@@ -340,6 +343,18 @@ class SaleRefundCalculator {
             promoThreshold: d.from.promoThreshold,
             promoDiscount: d.from.promoDiscount,
             saleComboId: d.comboId,
+            // El descuento manual sobrevive a la devolución parcial: el
+            // porcentaje igual; el importe, en proporción a lo que queda
+            manualDiscountType: d.from.manualDiscountType,
+            manualDiscountValue:
+                d.from.manualDiscountType == ManualDiscountType.amount &&
+                    d.from.quantity > 0
+                ? roundToCents(
+                    (d.from.manualDiscountValue ?? 0) *
+                        d.units /
+                        d.from.quantity,
+                  )
+                : d.from.manualDiscountValue,
           ),
       ],
       combos: [
