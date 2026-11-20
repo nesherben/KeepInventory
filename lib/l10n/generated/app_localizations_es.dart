@@ -2335,11 +2335,11 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get lineDiscountBlocked =>
-      'Esta línea ya tiene promoción o combo: manda la promoción y no admite descuento manual.';
+      'Esta línea ya tiene una promoción activa o va en un combo: manda la promoción y no admite descuento manual.';
 
   @override
   String lineDiscountDroppedByPromo(String name) {
-    return '$name ahora tiene promoción o combo: se quita el descuento manual.';
+    return '$name: se ha activado una promoción o un combo y se quita el descuento manual.';
   }
 
   @override

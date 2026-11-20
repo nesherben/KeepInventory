@@ -3845,13 +3845,13 @@ abstract class AppLocalizations {
   /// No description provided for @lineDiscountBlocked.
   ///
   /// In es, this message translates to:
-  /// **'Esta línea ya tiene promoción o combo: manda la promoción y no admite descuento manual.'**
+  /// **'Esta línea ya tiene una promoción activa o va en un combo: manda la promoción y no admite descuento manual.'**
   String get lineDiscountBlocked;
 
   /// No description provided for @lineDiscountDroppedByPromo.
   ///
   /// In es, this message translates to:
-  /// **'{name} ahora tiene promoción o combo: se quita el descuento manual.'**
+  /// **'{name}: se ha activado una promoción o un combo y se quita el descuento manual.'**
   String lineDiscountDroppedByPromo(String name);
 
   /// No description provided for @lineDiscountClearTitle.

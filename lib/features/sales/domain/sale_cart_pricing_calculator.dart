@@ -95,20 +95,41 @@ class SaleCartPricingCalculator {
     return targetProduct.price * quantity;
   }
 
-  /// ¿Admite [product] un descuento manual? Si tiene promoción o va dentro de
-  /// un combo ([comboUnits] > 0), manda la promoción/combo y no se ofrece.
+  /// ¿Está ACTIVA la promoción propia de [product]? Lo está cuando las
+  /// unidades sueltas ([loose]) de los productos que comparten esa promoción
+  /// llegan a su mínimo. Con la promoción asignada pero sin cumplir su
+  /// condición, no está activa.
+  static bool isPromotionActive(
+    Product product,
+    Map<Product, int> loose,
+    Map<int, Promotion> promotions,
+  ) {
+    final promotionId = product.promotionId;
+    final promotion = promotionId == null ? null : promotions[promotionId];
+    if (promotion == null) return false;
+    final combined = loose.entries
+        .where((e) => e.key.promotionId == promotionId)
+        .fold<int>(0, (total, e) => total + e.value);
+    return combined >= promotion.threshold;
+  }
+
+  /// ¿Admite [product] un descuento manual? Siempre, salvo que ya mande otra
+  /// oferta: sus unidades van dentro de un combo ([comboUnits] > 0) o su
+  /// promoción está activa con las unidades sueltas [loose] del carrito.
+  /// Una promoción asignada que aún no cumple su condición NO lo impide; en el
+  /// instante en que se activa, el descuento manual deja de valer.
   static bool canDiscount(
     Product product,
     Map<int, Promotion> promotions, {
     int comboUnits = 0,
+    Map<Product, int> loose = const {},
   }) {
     if (comboUnits > 0) return false;
-    final promotionId = product.promotionId;
-    return promotionId == null || promotions[promotionId] == null;
+    return !isPromotionActive(product, loose, promotions);
   }
 
-  /// Productos cuyo descuento manual hay que quitar porque pasaron a tener
-  /// promoción o a ir dentro de un combo (manda la promoción/combo).
+  /// Productos cuyo descuento manual hay que quitar porque su promoción se
+  /// activó o pasaron a ir dentro de un combo (manda la promoción/combo).
   static List<Product> lineDiscountsToDrop({
     required Map<Product, int> products,
     required Map<Pack, int> packs,
@@ -130,6 +151,7 @@ class SaleCartPricingCalculator {
               product,
               promotions,
               comboUnits: pricing.comboUnitsOf(product),
+              loose: pricing.loose,
             ))
           product,
     ];
@@ -139,7 +161,8 @@ class SaleCartPricingCalculator {
   /// combo y solo las sobrantes cuentan para la promoción propia.
   ///
   /// [lineDiscounts] (por id de producto) se aplica al total de la línea
-  /// suelta, solo en productos sin promoción ni combo; el resto se ignora.
+  /// suelta, salvo que mande un combo o una promoción activa; entonces se
+  /// ignora.
   static CartPricing price({
     required Map<Product, int> products,
     required Map<Pack, int> packs,
@@ -184,7 +207,12 @@ class SaleCartPricingCalculator {
       var lineTotal = calculateItemTotal(product, loose, promotions);
       final discount = lineDiscounts[id];
       if (discount != null &&
-          canDiscount(product, promotions, comboUnits: comboUnits[id] ?? 0)) {
+          canDiscount(
+            product,
+            promotions,
+            comboUnits: comboUnits[id] ?? 0,
+            loose: loose,
+          )) {
         final amount = discount.discountOn(lineTotal);
         if (amount > 0) {
           applied[id] = amount;

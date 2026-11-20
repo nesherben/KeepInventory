@@ -1213,8 +1213,8 @@
       }
     }
   },
-  "lineDiscountBlocked": "Esta línea ya tiene promoción o combo: manda la promoción y no admite descuento manual.",
-  "lineDiscountDroppedByPromo": "{name} ahora tiene promoción o combo: se quita el descuento manual.",
+  "lineDiscountBlocked": "Esta línea ya tiene una promoción activa o va en un combo: manda la promoción y no admite descuento manual.",
+  "lineDiscountDroppedByPromo": "{name}: se ha activado una promoción o un combo y se quita el descuento manual.",
   "@lineDiscountDroppedByPromo": {
     "placeholders": {
       "name": {

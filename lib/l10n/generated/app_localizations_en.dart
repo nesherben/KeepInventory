@@ -2320,11 +2320,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lineDiscountBlocked =>
-      'This line already has a promotion or combo, which takes priority; manual discounts aren\'t allowed.';
+      'This line already has an active promotion or is in a combo, which takes priority; manual discounts aren\'t allowed.';
 
   @override
   String lineDiscountDroppedByPromo(String name) {
-    return '$name now has a promotion or combo: the manual discount was removed.';
+    return '$name: a promotion or combo kicked in, so the manual discount was removed.';
   }
 
   @override

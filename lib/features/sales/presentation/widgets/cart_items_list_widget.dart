@@ -197,12 +197,13 @@ class CartItemsListWidget extends StatelessWidget {
           final promoActive =
               promo != null && qty + otherItemsInPromo >= promo.threshold;
 
-          // Descuento manual: solo en líneas sin promoción ni combo
+          // Descuento manual: siempre, salvo promoción activa o combo
           final applied = pricing.appliedDiscounts[product.id] ?? 0.0;
           final canDiscount = SaleCartPricingCalculator.canDiscount(
             product,
             promotionsMap,
             comboUnits: pricing.comboUnitsOf(product),
+            loose: pricing.loose,
           );
           final lineSubtotal = itemTotal + applied;
           final discount = lineDiscounts[product.id];

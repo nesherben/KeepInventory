@@ -191,20 +191,38 @@ void main() {
       expect(pricing.appliedDiscounts, isEmpty);
     });
 
-    test('canDiscount blocks promoted products and combo units', () {
+    test('canDiscount only blocks an ACTIVE promotion or combo units', () {
       final plain = _product(1, price: 5);
       final promoted = _product(2, price: 5, promotionId: 7);
       final orphanPromo = _product(3, price: 5, promotionId: 99);
       final promotions = {7: _promotion(id: 7, threshold: 2)};
 
       expect(SaleCartPricingCalculator.canDiscount(plain, promotions), isTrue);
+      // Promoción asignada pero sin cumplir su condición (1 de 2): se puede
       expect(
-        SaleCartPricingCalculator.canDiscount(promoted, promotions),
+        SaleCartPricingCalculator.canDiscount(
+          promoted,
+          promotions,
+          loose: {promoted: 1},
+        ),
+        isTrue,
+      );
+      // Condición cumplida (2 de 2): la promoción manda
+      expect(
+        SaleCartPricingCalculator.canDiscount(
+          promoted,
+          promotions,
+          loose: {promoted: 2},
+        ),
         isFalse,
       );
       // Promoción borrada: ya no hay nada que mande
       expect(
-        SaleCartPricingCalculator.canDiscount(orphanPromo, promotions),
+        SaleCartPricingCalculator.canDiscount(
+          orphanPromo,
+          promotions,
+          loose: {orphanPromo: 5},
+        ),
         isTrue,
       );
       expect(
@@ -212,6 +230,95 @@ void main() {
         isFalse,
       );
     });
+
+    test('promotion counts units across products sharing it (mix & match)', () {
+      final a = _product(1, price: 10, promotionId: 7);
+      final b = _product(2, price: 10, promotionId: 7);
+      final promotions = {7: _promotion(id: 7, threshold: 3)};
+
+      expect(
+        SaleCartPricingCalculator.isPromotionActive(a, {a: 2}, promotions),
+        isFalse,
+      );
+      // 2 de A + 1 de B = 3: se activa para los dos
+      expect(
+        SaleCartPricingCalculator.isPromotionActive(a, {
+          a: 2,
+          b: 1,
+        }, promotions),
+        isTrue,
+      );
+      expect(
+        SaleCartPricingCalculator.isPromotionActive(b, {
+          a: 2,
+          b: 1,
+        }, promotions),
+        isTrue,
+      );
+    });
+
+    test('a manual discount applies while the assigned promotion is unmet', () {
+      final promoted = _product(1, price: 10, promotionId: 7);
+      final promotions = {7: _promotion(id: 7, threshold: 3)};
+
+      final pricing = SaleCartPricingCalculator.price(
+        products: {promoted: 2},
+        packs: {},
+        promotions: promotions,
+        lineDiscounts: {1: const ManualLineDiscount.percent(10)},
+      );
+
+      // 2 uds. a 10 € (sin promo, aún) − 10 % = 18 €
+      expect(pricing.total, 18);
+      expect(pricing.appliedDiscounts, {1: 2});
+    });
+
+    test(
+      'the manual discount is cancelled the instant the promotion kicks in',
+      () {
+        final promoted = _product(1, price: 10, promotionId: 7);
+        final promotions = {7: _promotion(id: 7, threshold: 3)};
+        const discounts = {1: ManualLineDiscount.percent(10)};
+
+        // Con 2 uds. se puede; con 3 la promoción (−20 %) manda y el manual se ignora
+        final unmet = SaleCartPricingCalculator.price(
+          products: {promoted: 2},
+          packs: {},
+          promotions: promotions,
+          lineDiscounts: discounts,
+        );
+        final met = SaleCartPricingCalculator.price(
+          products: {promoted: 3},
+          packs: {},
+          promotions: promotions,
+          lineDiscounts: discounts,
+        );
+
+        expect(unmet.appliedDiscounts, isNotEmpty);
+        expect(met.total, 24); // 3 × 10 − 20 % de la promoción
+        expect(met.appliedDiscounts, isEmpty);
+
+        // …y la pantalla lo detecta para quitarlo del carrito
+        expect(
+          SaleCartPricingCalculator.lineDiscountsToDrop(
+            products: {promoted: 2},
+            packs: {},
+            promotions: promotions,
+            discountedIds: {1},
+          ),
+          isEmpty,
+        );
+        expect(
+          SaleCartPricingCalculator.lineDiscountsToDrop(
+            products: {promoted: 3},
+            packs: {},
+            promotions: promotions,
+            discountedIds: {1},
+          ).map((p) => p.id),
+          [1],
+        );
+      },
+    );
 
     test('lineDiscountsToDrop returns products that gained a combo', () {
       final a = _product(1, price: 8);
