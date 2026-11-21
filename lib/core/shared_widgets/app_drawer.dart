@@ -310,37 +310,8 @@ class AppMenu extends StatelessWidget {
             ],
           ),
         ),
-        collapsed ? const _CollapsedFooter() : const _DrawerFooter(),
-      ],
-    );
-  }
-}
-
-/// Pie de la barra plegada: código y donación como iconos.
-class _CollapsedFooter extends StatelessWidget {
-  const _CollapsedFooter();
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    Widget action(IconData icon, String label, Uri url) => IconButton(
-      tooltip: label,
-      icon: Icon(icon, color: colors.onSurfaceVariant),
-      onPressed: () =>
-          AppDrawer.openLink(appNavigatorKey.currentContext ?? context, url),
-    );
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const Divider(height: 1),
-        const SizedBox(height: AppSpacing.xs),
-        action(Icons.code, context.l10n.drawerSourceCode, AppDrawer.repoUrl),
-        action(
-          Icons.coffee_outlined,
-          context.l10n.drawerDonate,
-          AppDrawer.donateUrl,
-        ),
-        const SizedBox(height: AppSpacing.xs),
+        // Plegada no hay pie: código y donación solo en el menú desplegado
+        if (!collapsed) const _DrawerFooter(),
       ],
     );
   }
