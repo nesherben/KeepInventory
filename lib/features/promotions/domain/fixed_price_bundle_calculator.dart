@@ -1,6 +1,32 @@
 class FixedPriceBundleCalculator {
   const FixedPriceBundleCalculator._();
 
+  /// Unidades de cada elemento que quedan FUERA de los lotes completos (las
+  /// más baratas, a precio normal): con 4 uds. y un lote de 3, queda 1.
+  static Map<T, int> uncoveredUnits<T>({
+    required Map<T, int> quantities,
+    required double Function(T item) priceOf,
+    required int bundleSize,
+  }) {
+    if (bundleSize <= 0) {
+      throw ArgumentError.value(bundleSize, 'bundleSize', 'Must be positive');
+    }
+    final units = <T>[];
+    for (final entry in quantities.entries) {
+      for (var i = 0; i < entry.value; i++) {
+        units.add(entry.key);
+      }
+    }
+    // Mismo orden que en calculateItemTotals: los lotes cogen las más caras
+    units.sort((a, b) => priceOf(b).compareTo(priceOf(a)));
+    final covered = (units.length ~/ bundleSize) * bundleSize;
+    final result = {for (final item in quantities.keys) item: 0};
+    for (var index = covered; index < units.length; index++) {
+      result[units[index]] = result[units[index]]! + 1;
+    }
+    return result;
+  }
+
   static Map<T, double> calculateItemTotals<T>({
     required Map<T, int> quantities,
     required double Function(T item) priceOf,

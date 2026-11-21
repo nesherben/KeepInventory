@@ -265,7 +265,11 @@ class _SaleTicketCard extends StatelessWidget {
                         : context.l10n.discountApplied,
                     style: TextStyle(
                       fontSize: 11,
-                      color: Theme.of(context).colorScheme.tertiary,
+                      // Descuento manual en rojo (precio tocado a mano, no
+                      // se puede devolver); el de promoción, como siempre
+                      color: item.hasManualDiscount
+                          ? Theme.of(context).colorScheme.error
+                          : Theme.of(context).colorScheme.tertiary,
                       fontWeight: FontWeight.bold,
                     ),
                   ),

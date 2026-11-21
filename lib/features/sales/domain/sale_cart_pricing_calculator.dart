@@ -113,11 +113,50 @@ class SaleCartPricingCalculator {
     return combined >= promotion.threshold;
   }
 
+  /// Unidades sueltas de [product] que NO cubre su promoción: todas si la
+  /// promoción no existe o no está activa; con un lote de precio fijo ("3 por
+  /// 15 €"), las que no completan lote (con 4 uds., 1); con una promoción de
+  /// porcentaje, ninguna (todas entran al cumplirse el mínimo).
+  static int uncoveredUnits(
+    Product product,
+    Map<Product, int> loose,
+    Map<int, Promotion> promotions,
+  ) {
+    final quantity = loose[product] ?? 0;
+    if (quantity <= 0) return 0;
+    final promotionId = product.promotionId;
+    final promotion = promotionId == null ? null : promotions[promotionId];
+    if (promotion == null) return quantity;
+    final group = {
+      for (final e in loose.entries)
+        if (e.key.promotionId == promotionId) e.key: e.value,
+    };
+    final combined = group.values.fold<int>(0, (t, v) => t + v);
+    if (combined < promotion.threshold) return quantity;
+    if (promotion.type == 'bundle_fixed_price') {
+      return FixedPriceBundleCalculator.uncoveredUnits(
+            quantities: group,
+            priceOf: (p) => p.price,
+            bundleSize: promotion.threshold,
+          )[product] ??
+          0;
+    }
+    return 0;
+  }
+
+  /// Importe sobre el que actúa el descuento manual de [product]: sus unidades
+  /// fuera de promoción a precio normal.
+  static double discountBase(
+    Product product,
+    Map<Product, int> loose,
+    Map<int, Promotion> promotions,
+  ) => uncoveredUnits(product, loose, promotions) * product.price;
+
   /// ¿Admite [product] un descuento manual? Siempre, salvo que ya mande otra
-  /// oferta: sus unidades van dentro de un combo ([comboUnits] > 0) o su
-  /// promoción está activa con las unidades sueltas [loose] del carrito.
-  /// Una promoción asignada que aún no cumple su condición NO lo impide; en el
-  /// instante en que se activa, el descuento manual deja de valer.
+  /// oferta sobre TODAS sus unidades: van dentro de un combo ([comboUnits] > 0)
+  /// o su promoción activa las cubre todas. Si la promoción es de lote y deja
+  /// unidades fuera (la 4.ª de un "3 por 15 €"), esas sí admiten descuento. En
+  /// cuanto la promoción pasa a cubrirlas todas, el descuento manual se cancela.
   static bool canDiscount(
     Product product,
     Map<int, Promotion> promotions, {
@@ -125,7 +164,11 @@ class SaleCartPricingCalculator {
     Map<Product, int> loose = const {},
   }) {
     if (comboUnits > 0) return false;
-    return !isPromotionActive(product, loose, promotions);
+    // Sin datos del carrito: solo cuenta si la promoción está activa
+    if (!loose.containsKey(product)) {
+      return !isPromotionActive(product, loose, promotions);
+    }
+    return uncoveredUnits(product, loose, promotions) > 0;
   }
 
   /// Productos cuyo descuento manual hay que quitar porque su promoción se
@@ -213,7 +256,10 @@ class SaleCartPricingCalculator {
             comboUnits: comboUnits[id] ?? 0,
             loose: loose,
           )) {
-        final amount = discount.discountOn(lineTotal);
+        // Solo actúa sobre las unidades fuera de promoción (a precio normal)
+        final amount = discount.discountOn(
+          discountBase(product, loose, promotions),
+        );
         if (amount > 0) {
           applied[id] = amount;
           lineTotal = roundToCents(lineTotal - amount);

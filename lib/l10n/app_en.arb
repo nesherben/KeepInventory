@@ -669,7 +669,7 @@
   "lineDiscountErrorFinal": "Must be lower than {max} €",
   "lineDiscountFreeLine": "The line will be 0 €",
   "lineDiscountTag": "Discount {value}",
-  "lineDiscountBlocked": "This line already has an active promotion or is in a combo, which takes priority; manual discounts aren't allowed.",
+  "lineDiscountBlocked": "All the units of this line are covered by an active promotion or are in a combo, which takes priority; manual discounts aren't allowed.",
   "lineDiscountDroppedByPromo": "{name}: a promotion or combo kicked in, so the manual discount was removed.",
   "lineDiscountClearTitle": "Remove line discounts?",
   "lineDiscountClearBody": "{count, plural, =1{1 line discount (−{amount} €) will be removed to set the agreed total.} other{{count} line discounts (−{amount} €) will be removed to set the agreed total.}}",
@@ -752,5 +752,7 @@
   "bulkDeleteTitle": "{count, plural, =1{Delete 1 product?} other{Delete {count} products?}}",
   "bulkDeleteBody": "Their stock will be set to 0 and they will disappear from the inventory; past sales are kept.",
   "bulkDeleted": "{count, plural, =1{1 product deleted} other{{count} products deleted}}",
-  "bulkKeepShort": "Same"
+  "bulkKeepShort": "Same",
+  "lineDiscountUncoveredInfo": "{qty, plural, =1{Applied to the unit outside the promotion: {total} €} other{Applied to the {qty} units outside the promotion: {total} €}}",
+  "refundBlockedManualDiscount": "It has a manual discount: it can't be refunded."
 }

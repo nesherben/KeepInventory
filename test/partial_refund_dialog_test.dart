@@ -80,4 +80,63 @@ void main() {
     expect(submittedItems, {item: 1});
     expect(submittedAmount, 3.2);
   });
+
+  testWidgets('a line with a manual discount cannot be refunded', (
+    tester,
+  ) async {
+    const locale = Locale('es');
+    final localizations = await AppLocalizations.delegate.load(locale);
+    final discounted = SaleItem(
+      productId: 1,
+      productName: 'Camiseta',
+      quantity: 2,
+      historicalPrice: 9,
+      originalPrice: 10,
+      manualDiscountType: ManualDiscountType.percent,
+      manualDiscountValue: 10,
+    );
+    final plain = SaleItem(
+      productId: 2,
+      productName: 'Taza',
+      quantity: 1,
+      historicalPrice: 5,
+      originalPrice: 5,
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: locale,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: PartialRefundDialog(
+            sale: Sale(
+              id: 1,
+              date: DateTime(2026, 10, 2),
+              totalAmount: 23,
+              items: [discounted, plain],
+            ),
+            onConfirm: ({
+              required itemsToRefund,
+              required packsToRefund,
+              required restockAsComponents,
+              required customRefundAmount,
+            }) async {},
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Solo la línea con descuento manual lleva el aviso
+    expect(
+      find.textContaining(localizations.refundBlockedManualDiscount),
+      findsOneWidget,
+    );
+    // Sus botones + y − están desactivados; los de la otra línea, no
+    final addButtons = find.widgetWithIcon(IconButton, Icons.add);
+    expect(addButtons, findsNWidgets(2));
+    expect(tester.widget<IconButton>(addButtons.at(0)).onPressed, isNull);
+    expect(tester.widget<IconButton>(addButtons.at(1)).onPressed, isNotNull);
+  });
 }

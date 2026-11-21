@@ -68,6 +68,7 @@ class CartItemsListWidget extends StatelessWidget {
     BuildContext context,
     Product product,
     int qty,
+    int uncovered,
     double lineSubtotal,
     bool canDiscount,
   ) async {
@@ -78,7 +79,8 @@ class CartItemsListWidget extends StatelessWidget {
     final result = await showLineDiscountSheet(
       context,
       productName: product.name,
-      quantity: qty,
+      quantity: uncovered,
+      lineQuantity: qty,
       lineSubtotal: lineSubtotal,
       current: lineDiscounts[product.id],
     );
@@ -205,7 +207,18 @@ class CartItemsListWidget extends StatelessWidget {
             comboUnits: pricing.comboUnitsOf(product),
             loose: pricing.loose,
           );
-          final lineSubtotal = itemTotal + applied;
+          // El descuento actúa solo sobre las unidades que la promoción no cubre
+          // (la 4.ª de un "3 por 15 €"); sin promoción activa, sobre toda la línea
+          final uncovered = SaleCartPricingCalculator.uncoveredUnits(
+            product,
+            pricing.loose,
+            promotionsMap,
+          );
+          final lineSubtotal = SaleCartPricingCalculator.discountBase(
+            product,
+            pricing.loose,
+            promotionsMap,
+          );
           final discount = lineDiscounts[product.id];
           final onDiscountTap = onLineDiscountChanged == null
               ? null
@@ -213,6 +226,7 @@ class CartItemsListWidget extends StatelessWidget {
                   context,
                   product,
                   qty,
+                  uncovered,
                   lineSubtotal,
                   canDiscount,
                 );
@@ -835,7 +849,9 @@ class _DiscountTag extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = Theme.of(context).colorScheme.tertiary;
+    // En rojo: señala que el precio se ha modificado a mano (y que esa línea
+    // no se podrá devolver)
+    final color = Theme.of(context).colorScheme.error;
     return InkWell(
       onTap: onTap,
       child: Row(

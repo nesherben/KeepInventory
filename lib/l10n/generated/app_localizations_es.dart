@@ -2341,7 +2341,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get lineDiscountBlocked =>
-      'Esta línea ya tiene una promoción activa o va en un combo: manda la promoción y no admite descuento manual.';
+      'Todas las unidades de esta línea entran en una promoción activa o van en un combo: manda la oferta y no admite descuento manual.';
 
   @override
   String lineDiscountDroppedByPromo(String name) {
@@ -2665,4 +2665,19 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get bulkKeepShort => 'Igual';
+
+  @override
+  String lineDiscountUncoveredInfo(int qty, String total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      qty,
+      locale: localeName,
+      other: 'Se aplica a las $qty unidades fuera de la promoción: $total €',
+      one: 'Se aplica a la unidad fuera de la promoción: $total €',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get refundBlockedManualDiscount =>
+      'Tiene un descuento manual: no se puede devolver.';
 }

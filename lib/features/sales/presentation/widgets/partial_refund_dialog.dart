@@ -120,13 +120,16 @@ class _PartialRefundDialogState extends State<PartialRefundDialog> {
 
   Widget _buildProductRow(BuildContext context, SaleItem item) {
     final colors = Theme.of(context).colorScheme;
+    // Un descuento manual ("ad hoc") bloquea la devolución de esa línea
+    final blocked = item.hasManualDiscount;
     return _buildRefundLine(
       context,
       title: item.productName ?? context.l10n.unknown,
       summary:
-          '${context.l10n.purchasedItemSummary(item.quantity.toString(), context.amount(item.quantity * item.historicalPrice * widget.sale.adjustmentFactor))}\n${context.l10n.salesRefundOriginalUnitPrice(context.amount(item.refundUnitPrice))}',
+          '${context.l10n.purchasedItemSummary(item.quantity.toString(), context.amount(item.quantity * item.historicalPrice * widget.sale.adjustmentFactor))}\n${context.l10n.salesRefundOriginalUnitPrice(context.amount(item.refundUnitPrice))}'
+          '${blocked ? '\n${context.l10n.refundBlockedManualDiscount}' : ''}',
       value: _refundItemQuantities[item] ?? 0,
-      maxValue: item.quantity,
+      maxValue: blocked ? 0 : item.quantity,
       backgroundColor: colors.surfaceContainerHighest.withValues(alpha: 0.3),
       borderColor: colors.outlineVariant.withValues(alpha: 0.5),
       onChanged: (value) {

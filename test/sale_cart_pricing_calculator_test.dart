@@ -383,6 +383,165 @@ void main() {
       expect(pricing.appliedDiscounts, isEmpty);
     });
 
+    // "3 por 15 €": la 4.ª unidad queda fuera del lote y admite descuento manual
+    test('units outside a fixed-price bundle admit a manual discount', () {
+      final shirt = _product(1, price: 10, promotionId: 7);
+      final promotions = {
+        7: _promotion(
+          id: 7,
+          type: 'bundle_fixed_price',
+          threshold: 3,
+          discount: 15,
+        ),
+      };
+
+      // Con 4 uds. el lote cubre 3 y queda 1 fuera
+      expect(
+        SaleCartPricingCalculator.uncoveredUnits(shirt, {shirt: 4}, promotions),
+        1,
+      );
+      expect(
+        SaleCartPricingCalculator.canDiscount(
+          shirt,
+          promotions,
+          loose: {shirt: 4},
+        ),
+        isTrue,
+      );
+      expect(
+        SaleCartPricingCalculator.discountBase(shirt, {shirt: 4}, promotions),
+        10,
+      );
+      // Con 3 (o 6) uds. el lote las cubre todas: no se ofrece
+      for (final qty in [3, 6]) {
+        expect(
+          SaleCartPricingCalculator.uncoveredUnits(shirt, {
+            shirt: qty,
+          }, promotions),
+          0,
+        );
+        expect(
+          SaleCartPricingCalculator.canDiscount(
+            shirt,
+            promotions,
+            loose: {shirt: qty},
+          ),
+          isFalse,
+        );
+      }
+    });
+
+    test('the manual discount only acts on the units outside the bundle', () {
+      final shirt = _product(1, price: 10, promotionId: 7);
+      final promotions = {
+        7: _promotion(
+          id: 7,
+          type: 'bundle_fixed_price',
+          threshold: 3,
+          discount: 15,
+        ),
+      };
+
+      final pricing = SaleCartPricingCalculator.price(
+        products: {shirt: 4},
+        packs: {},
+        promotions: promotions,
+        // 20 % de la unidad suelta (10 €), no de la línea entera
+        lineDiscounts: {1: const ManualLineDiscount.percent(20)},
+      );
+
+      // Lote de 3 = 15 € + la 4.ª (10 €) − 2 € = 23 €
+      expect(pricing.total, 23);
+      expect(pricing.appliedDiscounts, {1: 2});
+    });
+
+    test('a manual amount cannot exceed the units outside the bundle', () {
+      final shirt = _product(1, price: 10, promotionId: 7);
+      final promotions = {
+        7: _promotion(
+          id: 7,
+          type: 'bundle_fixed_price',
+          threshold: 3,
+          discount: 15,
+        ),
+      };
+
+      final pricing = SaleCartPricingCalculator.price(
+        products: {shirt: 4},
+        packs: {},
+        promotions: promotions,
+        lineDiscounts: {1: const ManualLineDiscount.amount(50)},
+      );
+
+      // Máximo 10 € (la unidad suelta): el lote no se toca
+      expect(pricing.total, 15);
+      expect(pricing.appliedDiscounts, {1: 10});
+    });
+
+    test('a percentage promotion covers every unit: no manual discount', () {
+      final shirt = _product(1, price: 10, promotionId: 7);
+      final promotions = {7: _promotion(id: 7, threshold: 3)};
+
+      expect(
+        SaleCartPricingCalculator.uncoveredUnits(shirt, {shirt: 4}, promotions),
+        0,
+      );
+      final pricing = SaleCartPricingCalculator.price(
+        products: {shirt: 4},
+        packs: {},
+        promotions: promotions,
+        lineDiscounts: {1: const ManualLineDiscount.percent(50)},
+      );
+      expect(pricing.appliedDiscounts, isEmpty);
+    });
+
+    test('mix & match: the leftover goes to the cheapest products', () {
+      final dear = _product(1, price: 10, promotionId: 7);
+      final cheap = _product(2, price: 5, promotionId: 7);
+      final promotions = {
+        7: _promotion(
+          id: 7,
+          type: 'bundle_fixed_price',
+          threshold: 3,
+          discount: 15,
+        ),
+      };
+      final loose = {dear: 2, cheap: 2};
+
+      // Los lotes cogen las unidades más caras: la suelta es una barata
+      expect(
+        SaleCartPricingCalculator.uncoveredUnits(dear, loose, promotions),
+        0,
+      );
+      expect(
+        SaleCartPricingCalculator.uncoveredUnits(cheap, loose, promotions),
+        1,
+      );
+    });
+
+    test('adding or removing units moves the discount in and out of scope', () {
+      final shirt = _product(1, price: 10, promotionId: 7);
+      final promotions = {
+        7: _promotion(
+          id: 7,
+          type: 'bundle_fixed_price',
+          threshold: 3,
+          discount: 15,
+        ),
+      };
+      List<int?> toDrop(int qty) =>
+          SaleCartPricingCalculator.lineDiscountsToDrop(
+            products: {shirt: qty},
+            packs: {},
+            promotions: promotions,
+            discountedIds: {1},
+          ).map((p) => p.id).toList();
+
+      expect(toDrop(2), isEmpty); // sin lote aún
+      expect(toDrop(3), [1]); // el lote cubre todas: se cancela
+      expect(toDrop(4), isEmpty); // la 4.ª queda fuera: vuelve a valer
+    });
+
     test('factory freezes the discounted price and the discount fields', () {
       final shirt = _product(1, price: 12);
 

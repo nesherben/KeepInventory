@@ -298,6 +298,8 @@ class _SalesScreenState extends State<SalesScreen>
       }
     });
     if (agreedDropped) _notifyAgreedTotalDropped();
+    // Con una unidad menos el lote puede pasar a cubrirlas todas
+    _pruneLineDiscounts();
   }
 
   void _removeAllFromCart(Product product) {

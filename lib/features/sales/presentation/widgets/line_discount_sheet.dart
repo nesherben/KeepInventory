@@ -21,6 +21,7 @@ Future<LineDiscountResult?> showLineDiscountSheet(
   required String productName,
   required int quantity,
   required double lineSubtotal,
+  int? lineQuantity,
   ManualLineDiscount? current,
 }) {
   return AdaptiveForm.show<LineDiscountResult>(
@@ -29,6 +30,7 @@ Future<LineDiscountResult?> showLineDiscountSheet(
       productName: productName,
       quantity: quantity,
       lineSubtotal: lineSubtotal,
+      lineQuantity: lineQuantity,
       current: current,
     ),
   );
@@ -44,11 +46,18 @@ class LineDiscountSheet extends StatefulWidget {
     required this.productName,
     required this.quantity,
     required this.lineSubtotal,
+    this.lineQuantity,
     this.current,
   });
 
   final String productName;
+
+  /// Unidades sobre las que actúa el descuento.
   final int quantity;
+
+  /// Unidades de la línea entera (si es más que [quantity], parte de ellas
+  /// entran en una promoción y el descuento solo cubre el resto).
+  final int? lineQuantity;
 
   /// Total de la línea antes del descuento.
   final double lineSubtotal;
@@ -201,10 +210,15 @@ class _LineDiscountSheetState extends State<LineDiscountSheet> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            context.l10n.lineDiscountLineInfo(
-              widget.quantity,
-              context.amount(widget.lineSubtotal),
-            ),
+            (widget.lineQuantity ?? widget.quantity) > widget.quantity
+                ? context.l10n.lineDiscountUncoveredInfo(
+                    widget.quantity,
+                    context.amount(widget.lineSubtotal),
+                  )
+                : context.l10n.lineDiscountLineInfo(
+                    widget.quantity,
+                    context.amount(widget.lineSubtotal),
+                  ),
             style: TextStyle(fontSize: 13, color: colors.onSurfaceVariant),
           ),
           const SizedBox(height: AppSpacing.md),

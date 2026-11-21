@@ -1213,7 +1213,7 @@
       }
     }
   },
-  "lineDiscountBlocked": "Esta línea ya tiene una promoción activa o va en un combo: manda la promoción y no admite descuento manual.",
+  "lineDiscountBlocked": "Todas las unidades de esta línea entran en una promoción activa o van en un combo: manda la oferta y no admite descuento manual.",
   "lineDiscountDroppedByPromo": "{name}: se ha activado una promoción o un combo y se quita el descuento manual.",
   "@lineDiscountDroppedByPromo": {
     "placeholders": {
@@ -1383,5 +1383,17 @@
       }
     }
   },
-  "bulkKeepShort": "Igual"
+  "bulkKeepShort": "Igual",
+  "lineDiscountUncoveredInfo": "{qty, plural, =1{Se aplica a la unidad fuera de la promoción: {total} €} other{Se aplica a las {qty} unidades fuera de la promoción: {total} €}}",
+  "@lineDiscountUncoveredInfo": {
+    "placeholders": {
+      "qty": {
+        "type": "int"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "refundBlockedManualDiscount": "Tiene un descuento manual: no se puede devolver."
 }

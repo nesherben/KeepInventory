@@ -3845,7 +3845,7 @@ abstract class AppLocalizations {
   /// No description provided for @lineDiscountBlocked.
   ///
   /// In es, this message translates to:
-  /// **'Esta línea ya tiene una promoción activa o va en un combo: manda la promoción y no admite descuento manual.'**
+  /// **'Todas las unidades de esta línea entran en una promoción activa o van en un combo: manda la oferta y no admite descuento manual.'**
   String get lineDiscountBlocked;
 
   /// No description provided for @lineDiscountDroppedByPromo.
@@ -4345,6 +4345,18 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Igual'**
   String get bulkKeepShort;
+
+  /// No description provided for @lineDiscountUncoveredInfo.
+  ///
+  /// In es, this message translates to:
+  /// **'{qty, plural, =1{Se aplica a la unidad fuera de la promoción: {total} €} other{Se aplica a las {qty} unidades fuera de la promoción: {total} €}}'**
+  String lineDiscountUncoveredInfo(int qty, String total);
+
+  /// No description provided for @refundBlockedManualDiscount.
+  ///
+  /// In es, this message translates to:
+  /// **'Tiene un descuento manual: no se puede devolver.'**
+  String get refundBlockedManualDiscount;
 }
 
 class _AppLocalizationsDelegate
