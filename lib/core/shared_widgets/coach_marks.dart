@@ -136,14 +136,26 @@ class _CoachOverlayState extends State<CoachOverlay> {
   Widget build(BuildContext context) {
     final rect = _rect;
     if (rect == null) return const SizedBox.shrink();
-    final screen = MediaQuery.sizeOf(context);
+    // Tamaño de esta capa (con la barra lateral de tablet es menor que la
+    // pantalla), no el de la pantalla: así la burbuja nunca se sale
+    final layer = this.context.findRenderObject();
+    final screen = layer is RenderBox && layer.hasSize
+        ? layer.size
+        : MediaQuery.sizeOf(context);
     final padding = MediaQuery.paddingOf(context);
     final hole = rect.inflate(6);
     final step = _steps[_index];
     final last = _index == _steps.length - 1;
 
-    // La burbuja va debajo del elemento si este está en la mitad de arriba
-    final below = hole.center.dy < screen.height * 0.55;
+    // La burbuja va en el lado con más sitio; si ninguno basta (elemento muy
+    // grande) se ancla al borde inferior, encima del elemento
+    const bubbleHeight = 190.0;
+    final spaceBelow = screen.height - hole.bottom - 12 - padding.bottom;
+    final spaceAbove = hole.top - 12 - padding.top;
+    final below = spaceBelow >= bubbleHeight
+        ? (spaceAbove < bubbleHeight || hole.center.dy < screen.height * 0.55)
+        : false;
+    final above = !below && spaceAbove >= bubbleHeight;
     final width = (screen.width - 32).clamp(0.0, 360.0);
     final left = (hole.center.dx - width / 2).clamp(
       16.0,
@@ -179,11 +191,14 @@ class _CoachOverlayState extends State<CoachOverlay> {
           left: left,
           width: width,
           top: below ? hole.bottom + 12 : null,
-          bottom: below ? null : screen.height - hole.top + 12,
+          bottom: below
+              ? null
+              : above
+              ? screen.height - hole.top + 12
+              : padding.bottom + 16,
           child: SafeArea(
             top: false,
             bottom: false,
-            minimum: EdgeInsets.only(top: padding.top > 0 && below ? 0 : 0),
             child: _Bubble(
               step: step,
               index: _index,
