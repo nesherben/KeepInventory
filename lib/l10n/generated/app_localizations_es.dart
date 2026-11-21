@@ -2679,5 +2679,5 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get refundBlockedManualDiscount =>
-      'Tiene un descuento manual: no se puede devolver.';
+      'Con descuento manual · no se pueden devolver';
 }

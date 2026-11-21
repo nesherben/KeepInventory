@@ -754,5 +754,5 @@
   "bulkDeleted": "{count, plural, =1{1 product deleted} other{{count} products deleted}}",
   "bulkKeepShort": "Same",
   "lineDiscountUncoveredInfo": "{qty, plural, =1{Applied to the unit outside the promotion: {total} €} other{Applied to the {qty} units outside the promotion: {total} €}}",
-  "refundBlockedManualDiscount": "It has a manual discount: it can't be refunded."
+  "refundBlockedManualDiscount": "With manual discount · can't be refunded"
 }

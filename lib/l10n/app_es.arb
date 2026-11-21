@@ -1395,5 +1395,5 @@
       }
     }
   },
-  "refundBlockedManualDiscount": "Tiene un descuento manual: no se puede devolver."
+  "refundBlockedManualDiscount": "Con descuento manual · no se pueden devolver"
 }

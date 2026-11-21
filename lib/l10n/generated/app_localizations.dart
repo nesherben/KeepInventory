@@ -4355,7 +4355,7 @@ abstract class AppLocalizations {
   /// No description provided for @refundBlockedManualDiscount.
   ///
   /// In es, this message translates to:
-  /// **'Tiene un descuento manual: no se puede devolver.'**
+  /// **'Con descuento manual · no se pueden devolver'**
   String get refundBlockedManualDiscount;
 }
 

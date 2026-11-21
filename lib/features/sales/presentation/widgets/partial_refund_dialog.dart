@@ -9,6 +9,7 @@ import 'package:keepinventory/l10n/app_localizations_ext.dart';
 import '../../domain/sale.dart';
 import '../../domain/sale_refund_calculator.dart';
 import 'payment_method_widgets.dart';
+import 'sales_ui_utils.dart';
 
 typedef PartialRefundHandler = Future<void> Function({
   required Map<SaleItem, int> itemsToRefund,
@@ -120,16 +121,13 @@ class _PartialRefundDialogState extends State<PartialRefundDialog> {
 
   Widget _buildProductRow(BuildContext context, SaleItem item) {
     final colors = Theme.of(context).colorScheme;
-    // Un descuento manual ("ad hoc") bloquea la devolución de esa línea
-    final blocked = item.hasManualDiscount;
     return _buildRefundLine(
       context,
       title: item.productName ?? context.l10n.unknown,
       summary:
-          '${context.l10n.purchasedItemSummary(item.quantity.toString(), context.amount(item.quantity * item.historicalPrice * widget.sale.adjustmentFactor))}\n${context.l10n.salesRefundOriginalUnitPrice(context.amount(item.refundUnitPrice))}'
-          '${blocked ? '\n${context.l10n.refundBlockedManualDiscount}' : ''}',
+          '${context.l10n.purchasedItemSummary(item.quantity.toString(), context.amount(item.quantity * item.historicalPrice * widget.sale.adjustmentFactor))}\n${context.l10n.salesRefundOriginalUnitPrice(context.amount(item.refundUnitPrice))}',
       value: _refundItemQuantities[item] ?? 0,
-      maxValue: blocked ? 0 : item.quantity,
+      maxValue: item.quantity,
       backgroundColor: colors.surfaceContainerHighest.withValues(alpha: 0.3),
       borderColor: colors.outlineVariant.withValues(alpha: 0.5),
       onChanged: (value) {
@@ -219,9 +217,78 @@ class _PartialRefundDialogState extends State<PartialRefundDialog> {
       widgets.add(const SizedBox(height: 8));
     }
     for (final item in widget.sale.items) {
-      if (!grouped.contains(item)) widgets.add(_buildProductRow(context, item));
+      // Las de descuento manual van aparte, sin selector (no se devuelven)
+      if (!grouped.contains(item) && !item.hasManualDiscount) {
+        widgets.add(_buildProductRow(context, item));
+      }
     }
     return widgets;
+  }
+
+  /// Línea con descuento manual: se ve lo comprado y lo abonado, pero no se
+  /// puede marcar para devolver.
+  Widget _buildBlockedRow(BuildContext context, SaleItem item) {
+    final colors = Theme.of(context).colorScheme;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: colors.surfaceContainerHighest.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: colors.outlineVariant.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item.productName ?? context.l10n.unknown,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    color: colors.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  context.l10n.purchasedItemSummary(
+                    item.quantity.toString(),
+                    context.amount(
+                      item.quantity *
+                          item.historicalPrice *
+                          widget.sale.adjustmentFactor,
+                    ),
+                  ),
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: colors.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                // En rojo, como en el carrito: precio tocado a mano
+                Text(
+                  lineDiscountLabel(
+                    context,
+                    item.manualDiscountType!,
+                    item.manualDiscountValue!,
+                  ),
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: colors.error,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Icon(Icons.lock_outline, size: 18, color: colors.onSurfaceVariant),
+        ],
+      ),
+    );
   }
 
   Widget _buildPackRow(BuildContext context, SalePackItem pack) {
@@ -472,12 +539,21 @@ class _PartialRefundDialogState extends State<PartialRefundDialog> {
             style: TextStyle(fontSize: 14, color: colors.onSurfaceVariant),
           ),
           const SizedBox(height: 16),
-          if (widget.sale.items.isNotEmpty) ...[
+          if (widget.sale.items.any((i) => !i.hasManualDiscount)) ...[
             SectionLabel(
               context.l10n.looseProducts,
               padding: const EdgeInsets.only(bottom: 8),
             ),
             ..._buildProductRows(context),
+            const SizedBox(height: 8),
+          ],
+          if (widget.sale.items.any((i) => i.hasManualDiscount)) ...[
+            SectionLabel(
+              context.l10n.refundBlockedManualDiscount,
+              padding: const EdgeInsets.only(bottom: 8),
+            ),
+            for (final item in widget.sale.items)
+              if (item.hasManualDiscount) _buildBlockedRow(context, item),
             const SizedBox(height: 8),
           ],
           if (widget.sale.packItems.isNotEmpty) ...[

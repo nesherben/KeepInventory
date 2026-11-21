@@ -128,15 +128,16 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // Solo la línea con descuento manual lleva el aviso
+    // Las líneas con descuento manual van en su propio bloque, sin selector
     expect(
-      find.textContaining(localizations.refundBlockedManualDiscount),
+      find.text(localizations.refundBlockedManualDiscount.toUpperCase()),
       findsOneWidget,
     );
-    // Sus botones + y − están desactivados; los de la otra línea, no
+    expect(find.text('Descuento −10 %'), findsOneWidget);
+    expect(find.byIcon(Icons.lock_outline), findsOneWidget);
+    // Solo la línea que sí se puede devolver tiene botones + y −
     final addButtons = find.widgetWithIcon(IconButton, Icons.add);
-    expect(addButtons, findsNWidgets(2));
-    expect(tester.widget<IconButton>(addButtons.at(0)).onPressed, isNull);
-    expect(tester.widget<IconButton>(addButtons.at(1)).onPressed, isNotNull);
+    expect(addButtons, findsOneWidget);
+    expect(tester.widget<IconButton>(addButtons).onPressed, isNotNull);
   });
 }
