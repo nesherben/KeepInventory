@@ -2761,4 +2761,37 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get coachTicketsSearch =>
       'Search your sales. Tap a ticket to see its detail, refund items or assign it to a fair.';
+
+  @override
+  String get coachHistoryFilters =>
+      'Search and filter by type or date to find a specific change.';
+
+  @override
+  String get coachHistoryEntry =>
+      'Every change you make to products, categories, offers and packs is kept here. Tap one to see what it was before and what it is now.';
+
+  @override
+  String get coachDataSync =>
+      'Move your data to another phone over Wi‑Fi or a hotspot, no cables: scan a QR and the other phone approves it.';
+
+  @override
+  String get coachDataBackup =>
+      'Your daily backup runs by itself. Here you see the latest one and can restore from the phone, Drive or a file.';
+
+  @override
+  String get tutorialGuidesTitle => 'Every screen guides you';
+
+  @override
+  String get tutorialGuidesBody =>
+      'The first time you open each screen you\'ll see a short guide highlighting what matters. Create your own test products to practice. You can replay any guide with the ? icon in the top bar.';
+
+  @override
+  String get navGuides => 'Screen guides';
+
+  @override
+  String get navGuidesSubtitle => 'See the mini tutorials again';
+
+  @override
+  String get navGuidesReset =>
+      'The guides will show again when you open each screen.';
 }

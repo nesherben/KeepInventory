@@ -2775,4 +2775,37 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get coachTicketsSearch =>
       'Busca entre tus ventas. Toca un ticket para ver su detalle, devolver artículos o asignarlo a una feria.';
+
+  @override
+  String get coachHistoryFilters =>
+      'Busca y filtra por tipo o fecha para encontrar un cambio concreto.';
+
+  @override
+  String get coachHistoryEntry =>
+      'Aquí queda cada cambio que haces en productos, categorías, ofertas y packs. Toca uno para ver qué había antes y qué hay ahora.';
+
+  @override
+  String get coachDataSync =>
+      'Pasa tus datos a otro móvil por Wi‑Fi o punto de acceso, sin cables: escanea un QR y el otro móvil lo aprueba.';
+
+  @override
+  String get coachDataBackup =>
+      'Tu copia de seguridad diaria se hace sola. Aquí ves la última y puedes restaurar una desde el móvil, Drive o un archivo.';
+
+  @override
+  String get tutorialGuidesTitle => 'Cada pantalla te guía';
+
+  @override
+  String get tutorialGuidesBody =>
+      'La primera vez que abras cada pantalla verás una pequeña guía que ilumina lo importante. Crea tus propios productos de prueba para practicar. Puedes repetir cualquier guía con el icono ? de la barra superior.';
+
+  @override
+  String get navGuides => 'Guías de cada pantalla';
+
+  @override
+  String get navGuidesSubtitle => 'Volver a ver los mini tutoriales';
+
+  @override
+  String get navGuidesReset =>
+      'Las guías volverán a salir al abrir cada pantalla.';
 }

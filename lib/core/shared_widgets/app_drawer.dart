@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'package:keepinventory/l10n/app_localizations_ext.dart';
 
+import '../services/app_preferences.dart';
 import 'app_alerts.dart';
 import 'app_ui.dart';
 
@@ -205,6 +206,21 @@ class AppDrawer extends StatelessWidget {
                       final navigator = Navigator.of(context);
                       navigator.pop();
                       navigator.pushNamed('/tutorial');
+                    },
+                  ),
+                  _NavItem(
+                    icon: Icons.lightbulb_outline,
+                    selectedIcon: Icons.lightbulb,
+                    label: context.l10n.navGuides,
+                    subtitle: context.l10n.navGuidesSubtitle,
+                    selected: false,
+                    onTap: () async {
+                      final message = context.l10n.navGuidesReset;
+                      final navigator = Navigator.of(context);
+                      await AppPreferences.resetCoachGuides();
+                      if (!context.mounted) return;
+                      AppAlerts.showInfo(context, message);
+                      navigator.pop();
                     },
                   ),
                 ],

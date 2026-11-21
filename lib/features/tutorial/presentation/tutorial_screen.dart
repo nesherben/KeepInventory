@@ -55,34 +55,9 @@ class _TutorialScreenState extends State<TutorialScreen> {
         l10n.tutorialWelcomeBody,
       ),
       _TutorialStep(
-        Icons.inventory_2_outlined,
-        l10n.tutorialInventoryTitle,
-        l10n.tutorialInventoryBody,
-      ),
-      _TutorialStep(
-        Icons.local_offer_outlined,
-        l10n.tutorialOffersTitle,
-        l10n.tutorialOffersBody,
-      ),
-      _TutorialStep(
-        Icons.point_of_sale_outlined,
-        l10n.tutorialSalesTitle,
-        l10n.tutorialSalesBody,
-      ),
-      _TutorialStep(
-        Icons.receipt_long_outlined,
-        l10n.tutorialHistoryTitle,
-        l10n.tutorialHistoryBody,
-      ),
-      _TutorialStep(
-        Icons.home_outlined,
-        l10n.tutorialDashboardTitle,
-        l10n.tutorialDashboardBody,
-      ),
-      _TutorialStep(
-        Icons.storage_outlined,
-        l10n.tutorialDataTitle,
-        l10n.tutorialDataBody,
+        Icons.lightbulb_outline,
+        l10n.tutorialGuidesTitle,
+        l10n.tutorialGuidesBody,
       ),
       _TutorialStep(
         Icons.backup_outlined,

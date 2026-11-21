@@ -1,3 +1,5 @@
+import '../../../core/shared_widgets/coach_marks.dart';
+
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -36,6 +38,23 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
 
   bool _isImporting = false;
   bool _isDeleting = false;
+
+  // Guía de la pantalla (mini tutorial): elementos que se iluminan
+  final _syncKey = GlobalKey();
+  final _backupKey = GlobalKey();
+
+  List<CoachStep> _guideSteps() => [
+    CoachStep(target: _syncKey, text: context.l10n.coachDataSync),
+    CoachStep(target: _backupKey, text: context.l10n.coachDataBackup),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) CoachGuide.showOnce(context, 'data', _guideSteps);
+    });
+  }
 
   /// "Hacer una copia antes" de borrar: copia en la carpeta de siempre.
   Future<void> _copyBeforeDelete() async {
@@ -271,19 +290,22 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
     final side = math.max(page, (width - (twoColumns ? 1100 : 720)) / 2);
     final bottom = page + MediaQuery.paddingOf(context).bottom;
 
-    final syncSection = Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        DataSectionLabel(context.l10n.dataSyncSection, first: true),
-        _SyncCard(
-          onTap: busy
-              ? null
-              : () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const SyncScreen()),
-                ),
-        ),
-      ],
+    final syncSection = KeyedSubtree(
+      key: _syncKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          DataSectionLabel(context.l10n.dataSyncSection, first: true),
+          _SyncCard(
+            onTap: busy
+                ? null
+                : () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const SyncScreen()),
+                  ),
+          ),
+        ],
+      ),
     );
     final backupSection = AutoBackupSection(
       enabled: !busy,
@@ -333,7 +355,12 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(child: backupStatusSection),
+                Expanded(
+                  child: KeyedSubtree(
+                    key: _backupKey,
+                    child: backupStatusSection,
+                  ),
+                ),
                 const SizedBox(width: AppSpacing.xl),
                 Expanded(
                   child: Column(
@@ -347,7 +374,7 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
               ],
             ),
           ] else ...[
-            backupSection,
+            KeyedSubtree(key: _backupKey, child: backupSection),
             DriveBackupSection(enabled: !busy),
           ],
           dangerSection,
@@ -377,7 +404,16 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
       },
       child: Scaffold(
         key: _scaffoldKey,
-        appBar: AppBar(title: Text(context.l10n.dataManagementTitle)),
+        appBar: AppBar(
+          title: Text(context.l10n.dataManagementTitle),
+          actions: [
+            IconButton(
+              tooltip: context.l10n.coachHelpTooltip,
+              icon: const Icon(Icons.help_outline),
+              onPressed: () => CoachGuide.replay(context, 'data', _guideSteps),
+            ),
+          ],
+        ),
         drawer: const AppDrawer(),
         body: body,
       ),

@@ -4513,6 +4513,60 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Busca entre tus ventas. Toca un ticket para ver su detalle, devolver artículos o asignarlo a una feria.'**
   String get coachTicketsSearch;
+
+  /// No description provided for @coachHistoryFilters.
+  ///
+  /// In es, this message translates to:
+  /// **'Busca y filtra por tipo o fecha para encontrar un cambio concreto.'**
+  String get coachHistoryFilters;
+
+  /// No description provided for @coachHistoryEntry.
+  ///
+  /// In es, this message translates to:
+  /// **'Aquí queda cada cambio que haces en productos, categorías, ofertas y packs. Toca uno para ver qué había antes y qué hay ahora.'**
+  String get coachHistoryEntry;
+
+  /// No description provided for @coachDataSync.
+  ///
+  /// In es, this message translates to:
+  /// **'Pasa tus datos a otro móvil por Wi‑Fi o punto de acceso, sin cables: escanea un QR y el otro móvil lo aprueba.'**
+  String get coachDataSync;
+
+  /// No description provided for @coachDataBackup.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu copia de seguridad diaria se hace sola. Aquí ves la última y puedes restaurar una desde el móvil, Drive o un archivo.'**
+  String get coachDataBackup;
+
+  /// No description provided for @tutorialGuidesTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Cada pantalla te guía'**
+  String get tutorialGuidesTitle;
+
+  /// No description provided for @tutorialGuidesBody.
+  ///
+  /// In es, this message translates to:
+  /// **'La primera vez que abras cada pantalla verás una pequeña guía que ilumina lo importante. Crea tus propios productos de prueba para practicar. Puedes repetir cualquier guía con el icono ? de la barra superior.'**
+  String get tutorialGuidesBody;
+
+  /// No description provided for @navGuides.
+  ///
+  /// In es, this message translates to:
+  /// **'Guías de cada pantalla'**
+  String get navGuides;
+
+  /// No description provided for @navGuidesSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Volver a ver los mini tutoriales'**
+  String get navGuidesSubtitle;
+
+  /// No description provided for @navGuidesReset.
+  ///
+  /// In es, this message translates to:
+  /// **'Las guías volverán a salir al abrir cada pantalla.'**
+  String get navGuidesReset;
 }
 
 class _AppLocalizationsDelegate
