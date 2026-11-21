@@ -2814,4 +2814,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get railCollapse => 'Plegar el menú a iconos';
+
+  @override
+  String get ticketSelectPrompt => 'Elige un ticket para ver su detalle';
 }

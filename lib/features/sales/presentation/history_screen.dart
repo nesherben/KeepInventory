@@ -2,6 +2,7 @@ import '../../../core/shared_widgets/adaptive_form.dart';
 import '../../../core/shared_widgets/name_picker_sheet.dart';
 
 import 'package:flutter/material.dart';
+import 'package:keepinventory/core/utils/app_numbers.dart';
 
 import '../../../core/shared_widgets/coach_marks.dart';
 
@@ -40,6 +41,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
   bool _isLoading = true;
   List<Sale> _sales = [];
   String _searchQuery = '';
+
+  /// Tablet: ticket cuyo detalle se ve en el panel de la derecha.
+  int? _selectedSaleId;
+
+  /// Ancho mínimo (del contenido) para mostrar lista y detalle a la vez.
+  static const _twoPaneMinWidth = 900.0;
 
   // Guía de la pantalla (mini tutorial): elementos que se iluminan
   final _targetKey = GlobalKey();
@@ -186,6 +193,62 @@ class _HistoryScreenState extends State<HistoryScreen> {
     return true;
   }
 
+  /// Tablet: lista de tickets a la izquierda y detalle del seleccionado a la
+  /// derecha (devolver sin perder de vista la lista).
+  Widget _buildTwoPanes(List<SaleHistoryGroup> groups) {
+    final visible = [for (final g in groups) ...g.sales];
+    final selected = visible.firstWhere(
+      (s) => s.id == _selectedSaleId,
+      orElse: () => visible.first,
+    );
+    return Row(
+      children: [
+        Expanded(
+          flex: 5,
+          child: ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: groups.length,
+            itemBuilder: (context, index) => SaleHistoryGroupCard(
+              group: groups[index],
+              onAssignFair: _showAssignFairDialog,
+              onRefund: _showPartialRefundDialog,
+              selectedSaleId: selected.id,
+              onSelectSale: (sale) => setState(() => _selectedSaleId = sale.id),
+            ),
+          ),
+        ),
+        const VerticalDivider(width: 1),
+        Expanded(
+          flex: 6,
+          child: ListView(
+            padding: const EdgeInsets.all(AppSpacing.xl),
+            children: [
+              Text(
+                context.l10n.ticketTitle(selected.id.toString()),
+                style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 22,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                '${MaterialLocalizations.of(context).formatMediumDate(selected.date)}'
+                ' · ${context.money(selected.totalAmount)}',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+              SaleTicketDetail(
+                sale: selected,
+                onRefund: () => _showPartialRefundDialog(selected),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final groups = filterAndGroupSales(_sales, _searchQuery);
@@ -263,6 +326,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                 ? context.l10n.salesHistoryEmpty
                                 : context.l10n.historyNoResults,
                           )
+                        : MediaQuery.sizeOf(context).width >= _twoPaneMinWidth
+                        ? _buildTwoPanes(groups)
                         : ListView.builder(
                             padding: const EdgeInsets.all(16),
                             itemCount: groups.length,

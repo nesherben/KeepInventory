@@ -16,7 +16,13 @@ class SaleHistoryGroupCard extends StatelessWidget {
     required this.group,
     required this.onAssignFair,
     required this.onRefund,
+    this.selectedSaleId,
+    this.onSelectSale,
   });
+
+  /// Modo tablet: los tickets son filas seleccionables (el detalle va aparte).
+  final int? selectedSaleId;
+  final ValueChanged<Sale>? onSelectSale;
 
   final SaleHistoryGroup group;
   final void Function(String datePrefix, String currentFairName) onAssignFair;
@@ -140,12 +146,18 @@ class SaleHistoryGroupCard extends StatelessWidget {
             child: Column(
               children: group.sales
                   .map(
-                    (sale) => _SaleTicketCard(
-                      sale: sale,
-                      headerColor: headerColor,
-                      headerTextColor: baseColor,
-                      onRefund: () => onRefund(sale),
-                    ),
+                    (sale) => onSelectSale != null
+                        ? SaleTicketRow(
+                            sale: sale,
+                            selected: sale.id == selectedSaleId,
+                            onTap: () => onSelectSale!(sale),
+                          )
+                        : _SaleTicketCard(
+                            sale: sale,
+                            headerColor: headerColor,
+                            headerTextColor: baseColor,
+                            onRefund: () => onRefund(sale),
+                          ),
                   )
                   .toList(),
             ),
@@ -523,36 +535,161 @@ class _SaleTicketCard extends StatelessWidget {
                 ),
               ),
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Divider(height: 16),
-                  ..._buildItems(context),
-                  ..._buildRefunds(context),
-                  if (sale.packItems.isNotEmpty && sale.items.isNotEmpty)
-                    const SizedBox(height: 8),
-                  ...sale.packItems.map(
-                    (packItem) => _buildPackItem(context, packItem),
-                  ),
-                  if (!isFullyRefunded) ...[
-                    const SizedBox(height: 16),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: FilledButton.tonalIcon(
-                        style: FilledButton.styleFrom(
-                          backgroundColor: theme.colorScheme.errorContainer,
-                          foregroundColor: theme.colorScheme.onErrorContainer,
-                        ),
-                        icon: const Icon(Icons.undo, size: 18),
-                        label: Text(context.l10n.refund),
-                        onPressed: onRefund,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
+              child: buildDetailBody(context),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  /// Líneas, devoluciones, packs y botón Devolver del ticket.
+  Widget buildDetailBody(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Divider(height: 16),
+        ..._buildItems(context),
+        ..._buildRefunds(context),
+        if (sale.packItems.isNotEmpty && sale.items.isNotEmpty)
+          const SizedBox(height: 8),
+        ...sale.packItems.map((packItem) => _buildPackItem(context, packItem)),
+        if (!isFullyRefunded) ...[
+          const SizedBox(height: 16),
+          Align(
+            alignment: Alignment.centerRight,
+            child: FilledButton.tonalIcon(
+              style: FilledButton.styleFrom(
+                backgroundColor: theme.colorScheme.errorContainer,
+                foregroundColor: theme.colorScheme.onErrorContainer,
+              ),
+              icon: const Icon(Icons.undo, size: 18),
+              label: Text(context.l10n.refund),
+              onPressed: onRefund,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// Detalle de un ticket (líneas, devoluciones y botón Devolver) para el panel
+/// de la derecha en tablet.
+class SaleTicketDetail extends StatelessWidget {
+  const SaleTicketDetail({
+    super.key,
+    required this.sale,
+    required this.onRefund,
+  });
+
+  final Sale sale;
+  final VoidCallback onRefund;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return _SaleTicketCard(
+      sale: sale,
+      headerColor: Colors.transparent,
+      headerTextColor: theme.colorScheme.primary,
+      onRefund: onRefund,
+    ).buildDetailBody(context);
+  }
+}
+
+/// Fila compacta de un ticket para la lista de tablet: se selecciona y su
+/// detalle se ve en el panel de la derecha.
+class SaleTicketRow extends StatelessWidget {
+  const SaleTicketRow({
+    super.key,
+    required this.sale,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final Sale sale;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final refunded =
+        sale.items.isEmpty && sale.packItems.isEmpty && sale.refunds.isNotEmpty;
+    final time =
+        '${sale.date.hour.toString().padLeft(2, '0')}:'
+        '${sale.date.minute.toString().padLeft(2, '0')}';
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Material(
+        color: selected
+            ? colors.primary.withValues(alpha: 0.08)
+            : colors.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+          side: BorderSide(
+            color: selected ? colors.primary : theme.dividerColor,
+            width: selected ? 1.5 : 1,
+          ),
+        ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            child: Row(
+              children: [
+                IconBadge(Icons.receipt_long, color: colors.primary),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        context.l10n.ticketTitle(sale.id.toString()),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 4,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          Text(
+                            time,
+                            style: TextStyle(color: colors.onSurfaceVariant),
+                          ),
+                          PaymentMethodBadge(method: sale.paymentMethod),
+                          if (refunded)
+                            Text(
+                              context.l10n.ticketFullyRefunded,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: colors.onSurfaceVariant,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                Text(
+                  context.money(sale.totalAmount),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 16,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

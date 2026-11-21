@@ -1442,5 +1442,6 @@
   "navGuidesSubtitle": "Volver a ver los mini tutoriales",
   "navGuidesReset": "Las guías volverán a salir al abrir cada pantalla.",
   "railExpand": "Mostrar nombres del menú",
-  "railCollapse": "Plegar el menú a iconos"
+  "railCollapse": "Plegar el menú a iconos",
+  "ticketSelectPrompt": "Elige un ticket para ver su detalle"
 }

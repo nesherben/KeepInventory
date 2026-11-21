@@ -2800,4 +2800,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get railCollapse => 'Collapse menu to icons';
+
+  @override
+  String get ticketSelectPrompt => 'Pick a ticket to see its details';
 }

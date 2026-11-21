@@ -791,5 +791,6 @@
   "navGuidesSubtitle": "See the mini tutorials again",
   "navGuidesReset": "The guides will show again when you open each screen.",
   "railExpand": "Show menu names",
-  "railCollapse": "Collapse menu to icons"
+  "railCollapse": "Collapse menu to icons",
+  "ticketSelectPrompt": "Pick a ticket to see its details"
 }

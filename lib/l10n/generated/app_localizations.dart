@@ -4579,6 +4579,12 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Plegar el menú a iconos'**
   String get railCollapse;
+
+  /// No description provided for @ticketSelectPrompt.
+  ///
+  /// In es, this message translates to:
+  /// **'Elige un ticket para ver su detalle'**
+  String get ticketSelectPrompt;
 }
 
 class _AppLocalizationsDelegate
