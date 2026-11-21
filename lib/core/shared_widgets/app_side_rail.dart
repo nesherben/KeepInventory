@@ -3,6 +3,7 @@ import 'package:keepinventory/l10n/app_localizations_ext.dart';
 
 import '../services/app_preferences.dart';
 import 'app_ui.dart';
+import 'coach_marks.dart';
 
 /// Navegador global: la barra lateral vive fuera del `Navigator` y navega con él.
 final appNavigatorKey = GlobalKey<NavigatorState>();
@@ -23,16 +24,20 @@ class _RouteObserver extends NavigatorObserver {
   }
 
   @override
-  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) =>
-      _set(route);
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    CoachMarks.dismissAll();
+    _set(route);
+  }
 
   @override
   void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) =>
       _set(newRoute);
 
   @override
-  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) =>
-      _set(previousRoute);
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    CoachMarks.dismissAll();
+    _set(previousRoute);
+  }
 }
 
 /// Secciones de la barra, en el mismo orden que el menú lateral.

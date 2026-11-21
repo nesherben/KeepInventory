@@ -20,6 +20,16 @@ class CoachStep {
 /// elemento y lo explica en una burbuja corta. El hueco iluminado deja pasar
 /// los toques, así que se puede probar el elemento en el momento.
 abstract final class CoachMarks {
+  static final List<VoidCallback> _closers = [];
+
+  /// Cierra las guías abiertas (al navegar a otra pantalla o abrir un
+  /// formulario no deben quedarse encima).
+  static void dismissAll() {
+    for (final close in List.of(_closers)) {
+      close();
+    }
+  }
+
   /// Muestra los [steps] uno a uno. Los que no estén en pantalla se saltan.
   /// Devuelve cuando se termina o se salta.
   static Future<void> show(
@@ -30,17 +40,18 @@ abstract final class CoachMarks {
     if (overlay == null || steps.isEmpty) return Future.value();
     final completer = Completer<void>();
     late final OverlayEntry entry;
+    void closeEntry() {
+      if (completer.isCompleted) return;
+      _closers.remove(closeEntry);
+      entry.remove();
+      completer.complete();
+    }
+
     entry = OverlayEntry(
-      builder: (_) => CoachOverlay(
-        steps: steps,
-        onClose: () {
-          if (completer.isCompleted) return;
-          entry.remove();
-          completer.complete();
-        },
-      ),
+      builder: (_) => CoachOverlay(steps: steps, onClose: () => closeEntry()),
     );
     overlay.insert(entry);
+    _closers.add(closeEntry);
     return completer.future;
   }
 }

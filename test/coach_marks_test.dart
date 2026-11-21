@@ -186,6 +186,30 @@ void main() {
     expect(pressed, 1);
   });
 
+  testWidgets('dismissAll closes an open guide', (tester) async {
+    var finished = false;
+    await tester.pumpWidget(
+      host(
+        (context) => targets(context, () async {
+          await CoachMarks.show(
+            context,
+            steps: [CoachStep(target: first, text: 'Primer paso')],
+          );
+          finished = true;
+        }),
+      ),
+    );
+    await tester.tap(find.text('Empezar'));
+    await settle(tester);
+    expect(find.text('Primer paso'), findsOneWidget);
+
+    CoachMarks.dismissAll();
+    await settle(tester);
+
+    expect(find.text('Primer paso'), findsNothing);
+    expect(finished, isTrue);
+  });
+
   group('CoachGuide', () {
     testWidgets('shows once, remembers it, and can be replayed', (
       tester,
