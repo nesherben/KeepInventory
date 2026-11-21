@@ -653,6 +653,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                       child: _buildMainCard(true),
                                     ),
                                   ),
+                                  // El desglose por método se abre pegado al hero
+                                  _buildPaymentBreakdownPanel(),
                                   const SizedBox(height: 12),
                                   _buildChartButton(),
                                 ],
@@ -668,7 +670,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ],
                         ),
                       ),
-                      _buildPaymentBreakdownPanel(),
                       const SizedBox(height: 20),
                       _buildOverviewPanels(),
                     ] else ...[
