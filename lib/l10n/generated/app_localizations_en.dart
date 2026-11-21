@@ -2715,7 +2715,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get coachSalesEmptyText =>
-      'To sell, first create your products in Inventory (☰ menu). Start with a test one: a name and a price are enough.';
+      'To sell, first create your products in Inventory. Start with a test one: a name and a price are enough.';
 
   @override
   String get coachSalesTabs =>

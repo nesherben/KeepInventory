@@ -4439,7 +4439,7 @@ abstract class AppLocalizations {
   /// No description provided for @coachSalesEmptyText.
   ///
   /// In es, this message translates to:
-  /// **'Para vender, primero crea tus productos en Inventario (menú ☰). Empieza con uno de prueba: con nombre y precio basta.'**
+  /// **'Para vender, primero crea tus productos en Inventario. Empieza con uno de prueba: con nombre y precio basta.'**
   String get coachSalesEmptyText;
 
   /// No description provided for @coachSalesTabs.

@@ -1419,7 +1419,7 @@
   "coachInventoryFilters": "Filtra para ver qué está bajo de stock, agotado, con promoción o de una categoría.",
   "coachInventorySelect": "Marca varios productos para cambiarles la categoría, la promoción, el precio o el coste de una vez.",
   "coachSalesEmptyTitle": "Aún no tienes productos",
-  "coachSalesEmptyText": "Para vender, primero crea tus productos en Inventario (menú ☰). Empieza con uno de prueba: con nombre y precio basta.",
+  "coachSalesEmptyText": "Para vender, primero crea tus productos en Inventario. Empieza con uno de prueba: con nombre y precio basta.",
   "coachSalesTabs": "Aquí eliges qué vender: productos sueltos o packs. Toca uno para añadirlo al carrito.",
   "coachSalesCatalog": "Busca por nombre o filtra por categoría para encontrar rápido lo que pide el cliente.",
   "coachSalesTotal": "Aquí ves el total. Despliega el carrito para ajustar el descuento de una línea o pactar un total, y pulsa Cobrar.",

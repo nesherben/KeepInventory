@@ -2729,7 +2729,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get coachSalesEmptyText =>
-      'Para vender, primero crea tus productos en Inventario (menú ☰). Empieza con uno de prueba: con nombre y precio basta.';
+      'Para vender, primero crea tus productos en Inventario. Empieza con uno de prueba: con nombre y precio basta.';
 
   @override
   String get coachSalesTabs =>
