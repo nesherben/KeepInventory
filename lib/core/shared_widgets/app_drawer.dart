@@ -7,6 +7,7 @@ import 'package:keepinventory/l10n/app_localizations_ext.dart';
 
 import '../services/app_preferences.dart';
 import 'app_alerts.dart';
+import 'app_side_rail.dart';
 import 'app_ui.dart';
 
 class AppDrawer extends StatelessWidget {
@@ -60,7 +61,7 @@ class AppDrawer extends StatelessWidget {
     }
   }
 
-  void _cycleTheme(BuildContext context) async {
+  static void cycleTheme(BuildContext context) async {
     _currentColorIndex = (_currentColorIndex + 1) % _themeColors.length;
     final selectedTheme = _themeColors[_currentColorIndex];
 
@@ -92,10 +93,56 @@ class AppDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final currentRoute = ModalRoute.of(context)?.settings.name;
+    return const Drawer(
+      child: SafeArea(
+        // El menú hace scroll y el pie (autoría y donación) queda fijo debajo,
+        // por encima de la barra de navegación del sistema
+        child: AppMenu(),
+      ),
+    );
+  }
+}
 
+/// Contenido del menú (cabecera, secciones y pie). Lo usan el menú lateral del
+/// móvil y la barra fija de la tablet, que es este mismo menú plegado a solo
+/// iconos: mismas secciones, mismas píldoras, mismo orden.
+class AppMenu extends StatelessWidget {
+  const AppMenu({
+    super.key,
+    this.inRail = false,
+    this.collapsed = false,
+    this.toggle,
+  });
+
+  /// Dentro de la barra lateral (navega con el navegador global, sin cerrar
+  /// ningún menú).
+  final bool inRail;
+
+  /// Solo iconos (con tooltip) y separadores en lugar de títulos de sección.
+  final bool collapsed;
+
+  /// Botón de plegar/desplegar de la barra (junto a la cabecera).
+  final Widget? toggle;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!inRail) return _build(context, ModalRoute.of(context)?.settings.name);
+    return ValueListenableBuilder<String?>(
+      valueListenable: appCurrentRoute,
+      builder: (context, route, _) => _build(context, route),
+    );
+  }
+
+  Widget _build(BuildContext context, String? currentRoute) {
     void go(String route) {
-      if (currentRoute == route) {
+      if (inRail) {
+        if (currentRoute != route) {
+          appNavigatorKey.currentState?.pushNamedAndRemoveUntil(
+            route,
+            (_) => false,
+          );
+        }
+      } else if (currentRoute == route) {
         Navigator.pop(context);
       } else {
         Navigator.pushNamedAndRemoveUntil(context, route, (_) => false);
@@ -114,138 +161,187 @@ class AppDrawer extends StatelessWidget {
       label: label,
       subtitle: subtitle,
       selected: currentRoute == route,
+      collapsed: collapsed,
       onTap: () => go(route),
     );
 
-    Widget section(String text) =>
-        SectionLabel(text, padding: const EdgeInsets.fromLTRB(28, 20, 16, 8));
+    Widget section(String text) => collapsed
+        ? const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            child: Divider(height: 1),
+          )
+        : SectionLabel(text, padding: const EdgeInsets.fromLTRB(28, 20, 16, 8));
 
-    return Drawer(
-      child: SafeArea(
-        // El menú hace scroll y el pie (autoría y donación) queda fijo debajo,
-        // por encima de la barra de navegación del sistema
-        child: Column(
-          children: [
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                children: [
-                  _DrawerHeader(onTap: () => _cycleTheme(context)),
-                  const Padding(
-                    padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
-                    child: Divider(),
+    return Column(
+      children: [
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.only(bottom: AppSpacing.md),
+            children: [
+              if (collapsed) ...[
+                if (toggle != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Center(child: toggle),
                   ),
-                  // Inicio va suelto arriba: es lo primero que se ve
-                  const SizedBox(height: AppSpacing.sm),
-                  item(
-                    '/',
-                    Icons.home_outlined,
-                    Icons.home,
-                    context.l10n.navDashboard,
-                  ),
-                  section(context.l10n.navSectionSell),
-                  item(
-                    '/sales',
-                    Icons.point_of_sale_outlined,
-                    Icons.point_of_sale,
-                    context.l10n.navSales,
-                  ),
-                  item(
-                    '/history',
-                    Icons.receipt_long_outlined,
-                    Icons.receipt_long,
-                    context.l10n.navHistory,
-                    subtitle: context.l10n.navHistorySubtitle,
-                  ),
-                  section(context.l10n.navSectionCatalog),
-                  ValueListenableBuilder<bool>(
-                    valueListenable: catalogEmpty,
-                    builder: (context, empty, _) {
-                      if (!empty) {
-                        return item(
-                          '/inventory',
-                          Icons.inventory_2_outlined,
-                          Icons.inventory_2,
-                          context.l10n.navInventory,
-                          subtitle: context.l10n.navInventorySubtitle,
-                        );
-                      }
-                      return _PulsingHint(
-                        child: _NavItem(
-                          icon: Icons.inventory_2_outlined,
-                          selectedIcon: Icons.inventory_2,
-                          label: context.l10n.navInventory,
-                          subtitle: context.l10n.drawerStartHint,
-                          selected: currentRoute == '/inventory',
-                          padded: false,
-                          onTap: () => go('/inventory'),
-                        ),
-                      );
-                    },
-                  ),
-                  item(
-                    '/promotions',
-                    Icons.local_offer_outlined,
-                    Icons.local_offer,
-                    context.l10n.navPromotions,
-                    subtitle: context.l10n.navPromotionsSubtitle,
-                  ),
-                  item(
-                    '/packs',
-                    Icons.card_giftcard_outlined,
-                    Icons.card_giftcard,
-                    context.l10n.navPacks,
-                  ),
-                  section(context.l10n.navSectionData),
-                  item(
-                    '/changes',
-                    Icons.history,
-                    Icons.history,
-                    context.l10n.navHistoryChanges,
-                    subtitle: context.l10n.navHistoryChangesSubtitle,
-                  ),
-                  item(
-                    '/data-management',
-                    Icons.storage_outlined,
-                    Icons.storage,
-                    context.l10n.navDataManagement,
-                  ),
-                  section(context.l10n.navSectionHelp),
-                  // El tutorial se abre encima de la pantalla actual (push, no replace)
-                  _NavItem(
-                    icon: Icons.school_outlined,
-                    selectedIcon: Icons.school,
-                    label: context.l10n.navTutorial,
-                    subtitle: context.l10n.navTutorialSubtitle,
-                    selected: false,
-                    onTap: () {
-                      final navigator = Navigator.of(context);
-                      navigator.pop();
-                      navigator.pushNamed('/tutorial');
-                    },
-                  ),
-                  _NavItem(
-                    icon: Icons.lightbulb_outline,
-                    selectedIcon: Icons.lightbulb,
-                    label: context.l10n.navGuides,
-                    subtitle: context.l10n.navGuidesSubtitle,
-                    selected: false,
-                    onTap: () async {
-                      final message = context.l10n.navGuidesReset;
-                      final navigator = Navigator.of(context);
-                      await AppPreferences.resetCoachGuides();
-                      if (!context.mounted) return;
-                      AppAlerts.showInfo(context, message);
-                      navigator.pop();
-                    },
-                  ),
-                ],
+              ] else
+                _DrawerHeader(
+                  onTap: () => AppDrawer.cycleTheme(context),
+                  trailing: toggle,
+                ),
+              const Padding(
+                padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
+                child: Divider(),
               ),
-            ),
-            const _DrawerFooter(),
-          ],
+              // Inicio va suelto arriba: es lo primero que se ve
+              const SizedBox(height: AppSpacing.sm),
+              item(
+                '/',
+                Icons.home_outlined,
+                Icons.home,
+                context.l10n.navDashboard,
+              ),
+              section(context.l10n.navSectionSell),
+              item(
+                '/sales',
+                Icons.point_of_sale_outlined,
+                Icons.point_of_sale,
+                context.l10n.navSales,
+              ),
+              item(
+                '/history',
+                Icons.receipt_long_outlined,
+                Icons.receipt_long,
+                context.l10n.navHistory,
+                subtitle: context.l10n.navHistorySubtitle,
+              ),
+              section(context.l10n.navSectionCatalog),
+              ValueListenableBuilder<bool>(
+                valueListenable: AppDrawer.catalogEmpty,
+                builder: (context, empty, _) {
+                  if (!empty) {
+                    return item(
+                      '/inventory',
+                      Icons.inventory_2_outlined,
+                      Icons.inventory_2,
+                      context.l10n.navInventory,
+                      subtitle: context.l10n.navInventorySubtitle,
+                    );
+                  }
+                  return _PulsingHint(
+                    child: _NavItem(
+                      icon: Icons.inventory_2_outlined,
+                      selectedIcon: Icons.inventory_2,
+                      label: context.l10n.navInventory,
+                      subtitle: context.l10n.drawerStartHint,
+                      selected: currentRoute == '/inventory',
+                      padded: false,
+                      collapsed: collapsed,
+                      onTap: () => go('/inventory'),
+                    ),
+                  );
+                },
+              ),
+              item(
+                '/promotions',
+                Icons.local_offer_outlined,
+                Icons.local_offer,
+                context.l10n.navPromotions,
+                subtitle: context.l10n.navPromotionsSubtitle,
+              ),
+              item(
+                '/packs',
+                Icons.card_giftcard_outlined,
+                Icons.card_giftcard,
+                context.l10n.navPacks,
+              ),
+              section(context.l10n.navSectionData),
+              item(
+                '/changes',
+                Icons.history,
+                Icons.history,
+                context.l10n.navHistoryChanges,
+                subtitle: context.l10n.navHistoryChangesSubtitle,
+              ),
+              item(
+                '/data-management',
+                Icons.storage_outlined,
+                Icons.storage,
+                context.l10n.navDataManagement,
+              ),
+              section(context.l10n.navSectionHelp),
+              // El tutorial se abre encima de la pantalla actual (push, no replace)
+              _NavItem(
+                icon: Icons.school_outlined,
+                selectedIcon: Icons.school,
+                label: context.l10n.navTutorial,
+                subtitle: context.l10n.navTutorialSubtitle,
+                selected: false,
+                collapsed: collapsed,
+                onTap: () {
+                  if (inRail) {
+                    appNavigatorKey.currentState?.pushNamed('/tutorial');
+                    return;
+                  }
+                  final navigator = Navigator.of(context);
+                  navigator.pop();
+                  navigator.pushNamed('/tutorial');
+                },
+              ),
+              _NavItem(
+                icon: Icons.lightbulb_outline,
+                selectedIcon: Icons.lightbulb,
+                label: context.l10n.navGuides,
+                subtitle: context.l10n.navGuidesSubtitle,
+                selected: false,
+                collapsed: collapsed,
+                onTap: () async {
+                  final message = context.l10n.navGuidesReset;
+                  final navigator = inRail ? null : Navigator.of(context);
+                  await AppPreferences.resetCoachGuides();
+                  final target = inRail
+                      ? appNavigatorKey.currentContext
+                      : context;
+                  if (target == null || !target.mounted) return;
+                  AppAlerts.showInfo(target, message);
+                  navigator?.pop();
+                },
+              ),
+            ],
+          ),
         ),
-      ),
+        collapsed ? const _CollapsedFooter() : const _DrawerFooter(),
+      ],
+    );
+  }
+}
+
+/// Pie de la barra plegada: código y donación como iconos.
+class _CollapsedFooter extends StatelessWidget {
+  const _CollapsedFooter();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    Widget action(IconData icon, String label, Uri url) => IconButton(
+      tooltip: label,
+      icon: Icon(icon, color: colors.onSurfaceVariant),
+      onPressed: () =>
+          AppDrawer.openLink(appNavigatorKey.currentContext ?? context, url),
+    );
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Divider(height: 1),
+        const SizedBox(height: AppSpacing.xs),
+        action(Icons.code, context.l10n.drawerSourceCode, AppDrawer.repoUrl),
+        action(
+          Icons.coffee_outlined,
+          context.l10n.drawerDonate,
+          AppDrawer.donateUrl,
+        ),
+        const SizedBox(height: AppSpacing.xs),
+      ],
     );
   }
 }
@@ -314,9 +410,38 @@ class _DrawerFooter extends StatelessWidget {
 /// Cabecera: icono de la app, nombre, versión y subtítulo.
 /// 💡 Huevo de pascua: tocarla cambia el color del tema.
 class _DrawerHeader extends StatelessWidget {
-  const _DrawerHeader({required this.onTap});
+  const _DrawerHeader({required this.onTap, this.trailing});
 
   final VoidCallback onTap;
+
+  /// Botón de plegar la barra lateral (solo en tablet).
+  final Widget? trailing;
+
+  /// Etiqueta con la versión de la app.
+  Widget _version(ColorScheme colors) => FutureBuilder<PackageInfo>(
+    future: PackageInfo.fromPlatform(),
+    builder: (context, snapshot) {
+      final version = snapshot.data?.version;
+      if (version == null || version.isEmpty) {
+        return const SizedBox.shrink();
+      }
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        decoration: BoxDecoration(
+          color: colors.primary.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Text(
+          'v$version',
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+            color: colors.primary,
+          ),
+        ),
+      );
+    },
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -359,47 +484,36 @@ class _DrawerHeader extends StatelessWidget {
                             ),
                           ),
                         ),
-                        const SizedBox(width: AppSpacing.sm),
-                        FutureBuilder<PackageInfo>(
-                          future: PackageInfo.fromPlatform(),
-                          builder: (context, snapshot) {
-                            final version = snapshot.data?.version;
-                            if (version == null || version.isEmpty) {
-                              return const SizedBox.shrink();
-                            }
-                            return Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: colors.primary.withValues(alpha: 0.12),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                'v$version',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
-                                  color: colors.primary,
-                                ),
-                              ),
-                            );
-                          },
-                        ),
+                        // Con el botón de plegar (barra) la versión va en el subtítulo
+                        if (trailing == null) ...[
+                          const SizedBox(width: AppSpacing.sm),
+                          _version(colors),
+                        ],
                       ],
                     ),
                     const SizedBox(height: 2),
-                    Text(
-                      context.l10n.drawerSubtitle,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: colors.onSurfaceVariant,
-                      ),
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            context.l10n.drawerSubtitle,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: colors.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                        if (trailing != null) ...[
+                          const SizedBox(width: AppSpacing.sm),
+                          _version(colors),
+                        ],
+                      ],
                     ),
                   ],
                 ),
               ),
+              ?trailing,
             ],
           ),
         ),
@@ -418,7 +532,11 @@ class _NavItem extends StatelessWidget {
     required this.onTap,
     this.subtitle,
     this.padded = true,
+    this.collapsed = false,
   });
+
+  /// Solo el icono (con tooltip), para la barra plegada.
+  final bool collapsed;
 
   /// Margen lateral propio (false si ya lo pone un envoltorio).
   final bool padded;
@@ -432,6 +550,33 @@ class _NavItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    if (collapsed) {
+      return Padding(
+        padding: EdgeInsets.symmetric(horizontal: padded ? 12 : 0, vertical: 2),
+        child: Tooltip(
+          message: label,
+          child: Material(
+            color: selected
+                ? colors.primary.withValues(alpha: 0.12)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(AppRadius.md),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(AppRadius.md),
+              onTap: onTap,
+              child: SizedBox(
+                height: 48,
+                child: Center(
+                  child: Icon(
+                    selected ? selectedIcon : icon,
+                    color: selected ? colors.primary : colors.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: padded ? 12 : 0, vertical: 2),
       child: Material(
