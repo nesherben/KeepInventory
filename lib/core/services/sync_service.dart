@@ -10,7 +10,9 @@ import 'package:http/http.dart' as http;
 import 'package:keepinventory/l10n/generated/app_localizations.dart';
 
 import '../database/database_helper.dart';
+import 'backup_validator.dart';
 import 'database_file_installer.dart';
+import 'local_backup_service.dart';
 import 'app_version.dart';
 import 'sync_approval.dart';
 import 'sync_invite.dart';
@@ -395,10 +397,29 @@ class SyncService {
             }
           }
 
+          // La BD recibida se comprueba igual que una copia de seguridad: si
+          // está dañada o es de otra versión, no se toca la de este móvil
+          final received = await BackupValidator.inspect(tempFile);
+          if (!received.isValid) {
+            if (await tempFile.exists()) await tempFile.delete();
+            onProgress(l10n.syncApplyFailed, -1.0);
+            return false;
+          }
+
           // --- INSTALACIÓN SEGURA ---
           onProgress(l10n.syncInstalling, 1.0);
 
           await DatabaseHelper.instance.resetDatabase();
+
+          // Copia persistente de los datos actuales (como al restaurar una
+          // copia): si la sincronización no era lo que se quería, se recuperan
+          try {
+            await LocalBackupService.saveBeforeRestore();
+          } catch (_) {
+            if (await tempFile.exists()) await tempFile.delete();
+            onProgress(l10n.syncApplyFailed, -1.0);
+            return false;
+          }
 
           final realFile = File(realPath);
           final backupPath = '$dbPath/keepinventory_failsafe.db';
