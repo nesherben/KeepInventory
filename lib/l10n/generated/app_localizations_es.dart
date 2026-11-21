@@ -2849,7 +2849,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get coachDashMetrics =>
-      'Coste almacén: lo que te costó el stock que tienes. Junto a él, lo que valdría vendiéndolo todo y, debajo, tu beneficio neto real.';
+      'Arriba, lo de hoy: ventas y tickets. Debajo, el coste de tu stock, lo que valdría vendiéndolo todo, tu beneficio neto real acumulado y lo que toca reponer. Toca una tarjeta para ver qué significa.';
 
   @override
   String get coachDashChart =>
@@ -2973,4 +2973,62 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get backupNowShort => 'Copiar ahora';
+
+  @override
+  String get dashTodaySection => 'Hoy';
+
+  @override
+  String get dashStockSection => 'Almacén y balance';
+
+  @override
+  String get dashSalesToday => 'Ventas hoy';
+
+  @override
+  String get dashTicketsToday => 'Tickets hoy';
+
+  @override
+  String get dashNoSalesToday => 'Sin ventas hoy';
+
+  @override
+  String get dashInventoryCost => 'Coste almacén';
+
+  @override
+  String get dashSalesValue => 'Valor de venta';
+
+  @override
+  String get dashNetProfit => 'Beneficio neto real';
+
+  @override
+  String get dashRestock => 'Por reponer';
+
+  @override
+  String dashOutCount(int count) {
+    return '$count agotados';
+  }
+
+  @override
+  String get dashAllInStock => 'Todo en stock';
+
+  @override
+  String dashLastTicketAt(String time, String amount) {
+    return 'Último $time · $amount';
+  }
+
+  @override
+  String get dashSalesTodayInfo =>
+      'Lo cobrado hoy en todos los tickets, con las devoluciones ya descontadas.';
+
+  @override
+  String get dashTicketsTodayInfo =>
+      'Tickets cobrados hoy, del más reciente al más antiguo.';
+
+  @override
+  String get dashNetProfitInfo =>
+      'Es el total acumulado de todas las ventas, no solo de hoy: lo cobrado menos lo que costó lo vendido, con las devoluciones descontadas.';
+
+  @override
+  String get dashNoTicketsToday => 'Aún no hay tickets hoy';
+
+  @override
+  String get dashByMethodToday => 'Hoy por método de pago';
 }

@@ -2835,7 +2835,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get coachDashMetrics =>
-      'Inventory cost: what the stock you hold cost you. Next to it, what it would be worth if you sold it all and, below, your real net profit.';
+      'Above, today\'s figures: sales and tickets. Below, what your stock cost, what it would be worth if you sold it all, your accumulated real net profit and what needs restocking. Tap a card to see what it means.';
 
   @override
   String get coachDashChart =>
@@ -2959,4 +2959,61 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get backupNowShort => 'Back up';
+
+  @override
+  String get dashTodaySection => 'Today';
+
+  @override
+  String get dashStockSection => 'Stock and balance';
+
+  @override
+  String get dashSalesToday => 'Sales today';
+
+  @override
+  String get dashTicketsToday => 'Tickets today';
+
+  @override
+  String get dashNoSalesToday => 'No sales today';
+
+  @override
+  String get dashInventoryCost => 'Stock cost';
+
+  @override
+  String get dashSalesValue => 'Sales value';
+
+  @override
+  String get dashNetProfit => 'Real net profit';
+
+  @override
+  String get dashRestock => 'To restock';
+
+  @override
+  String dashOutCount(int count) {
+    return '$count out of stock';
+  }
+
+  @override
+  String get dashAllInStock => 'All in stock';
+
+  @override
+  String dashLastTicketAt(String time, String amount) {
+    return 'Last $time · $amount';
+  }
+
+  @override
+  String get dashSalesTodayInfo =>
+      'What you took today across all tickets, with refunds already deducted.';
+
+  @override
+  String get dashTicketsTodayInfo => 'Tickets sold today, newest first.';
+
+  @override
+  String get dashNetProfitInfo =>
+      'It is the running total of all sales, not just today: what you took minus the cost of what you sold, with refunds deducted.';
+
+  @override
+  String get dashNoTicketsToday => 'No tickets yet today';
+
+  @override
+  String get dashByMethodToday => 'Today by payment method';
 }

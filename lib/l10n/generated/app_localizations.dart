@@ -4637,7 +4637,7 @@ abstract class AppLocalizations {
   /// No description provided for @coachDashMetrics.
   ///
   /// In es, this message translates to:
-  /// **'Coste almacén: lo que te costó el stock que tienes. Junto a él, lo que valdría vendiéndolo todo y, debajo, tu beneficio neto real.'**
+  /// **'Arriba, lo de hoy: ventas y tickets. Debajo, el coste de tu stock, lo que valdría vendiéndolo todo, tu beneficio neto real acumulado y lo que toca reponer. Toca una tarjeta para ver qué significa.'**
   String get coachDashMetrics;
 
   /// No description provided for @coachDashChart.
@@ -4849,6 +4849,108 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Copiar ahora'**
   String get backupNowShort;
+
+  /// No description provided for @dashTodaySection.
+  ///
+  /// In es, this message translates to:
+  /// **'Hoy'**
+  String get dashTodaySection;
+
+  /// No description provided for @dashStockSection.
+  ///
+  /// In es, this message translates to:
+  /// **'Almacén y balance'**
+  String get dashStockSection;
+
+  /// No description provided for @dashSalesToday.
+  ///
+  /// In es, this message translates to:
+  /// **'Ventas hoy'**
+  String get dashSalesToday;
+
+  /// No description provided for @dashTicketsToday.
+  ///
+  /// In es, this message translates to:
+  /// **'Tickets hoy'**
+  String get dashTicketsToday;
+
+  /// No description provided for @dashNoSalesToday.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin ventas hoy'**
+  String get dashNoSalesToday;
+
+  /// No description provided for @dashInventoryCost.
+  ///
+  /// In es, this message translates to:
+  /// **'Coste almacén'**
+  String get dashInventoryCost;
+
+  /// No description provided for @dashSalesValue.
+  ///
+  /// In es, this message translates to:
+  /// **'Valor de venta'**
+  String get dashSalesValue;
+
+  /// No description provided for @dashNetProfit.
+  ///
+  /// In es, this message translates to:
+  /// **'Beneficio neto real'**
+  String get dashNetProfit;
+
+  /// No description provided for @dashRestock.
+  ///
+  /// In es, this message translates to:
+  /// **'Por reponer'**
+  String get dashRestock;
+
+  /// No description provided for @dashOutCount.
+  ///
+  /// In es, this message translates to:
+  /// **'{count} agotados'**
+  String dashOutCount(int count);
+
+  /// No description provided for @dashAllInStock.
+  ///
+  /// In es, this message translates to:
+  /// **'Todo en stock'**
+  String get dashAllInStock;
+
+  /// No description provided for @dashLastTicketAt.
+  ///
+  /// In es, this message translates to:
+  /// **'Último {time} · {amount}'**
+  String dashLastTicketAt(String time, String amount);
+
+  /// No description provided for @dashSalesTodayInfo.
+  ///
+  /// In es, this message translates to:
+  /// **'Lo cobrado hoy en todos los tickets, con las devoluciones ya descontadas.'**
+  String get dashSalesTodayInfo;
+
+  /// No description provided for @dashTicketsTodayInfo.
+  ///
+  /// In es, this message translates to:
+  /// **'Tickets cobrados hoy, del más reciente al más antiguo.'**
+  String get dashTicketsTodayInfo;
+
+  /// No description provided for @dashNetProfitInfo.
+  ///
+  /// In es, this message translates to:
+  /// **'Es el total acumulado de todas las ventas, no solo de hoy: lo cobrado menos lo que costó lo vendido, con las devoluciones descontadas.'**
+  String get dashNetProfitInfo;
+
+  /// No description provided for @dashNoTicketsToday.
+  ///
+  /// In es, this message translates to:
+  /// **'Aún no hay tickets hoy'**
+  String get dashNoTicketsToday;
+
+  /// No description provided for @dashByMethodToday.
+  ///
+  /// In es, this message translates to:
+  /// **'Hoy por método de pago'**
+  String get dashByMethodToday;
 }
 
 class _AppLocalizationsDelegate

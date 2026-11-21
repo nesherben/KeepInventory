@@ -5,128 +5,60 @@ import 'package:keepinventory/l10n/app_localizations_ext.dart';
 import '../../../../core/shared_widgets/app_ui.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../inventory/domain/inventory_view.dart';
-import '../../../inventory/domain/product.dart';
 import '../../../sales/domain/sale.dart';
+import '../../../sales/presentation/widgets/payment_method_widgets.dart';
+import '../../domain/dashboard_today_summary.dart';
+import 'dashboard_summary_sheets.dart';
 
-/// Resumen del Inicio en móvil: tarjetas compactas con icono, de dos en dos.
-/// Al tocar una sale una ficha con qué significa la cifra (y, en stock y
-/// tickets, el detalle con un acceso a la pantalla completa).
+/// Resumen del Inicio en móvil: la sección "Hoy" (ventas y tickets) y la de
+/// "Almacén y balance", con tarjetas compactas de dos en dos. Al tocar una
+/// sale una ficha con qué significa la cifra y, a veces, su detalle.
 class DashboardSummaryGrid extends StatelessWidget {
   const DashboardSummaryGrid({
     super.key,
+    required this.today,
     required this.inventoryCost,
     required this.expectedRevenue,
     required this.netProfit,
-    required this.lowStock,
-    required this.lowStockCount,
-    required this.recentSales,
     required this.onOpenTickets,
     required this.onOpenInventory,
     this.hideAmounts = false,
     this.firstTileKey,
   });
 
+  final DashboardTodaySummary today;
   final double inventoryCost;
   final double expectedRevenue;
-  final double netProfit;
 
-  /// Los productos con menos stock (para el detalle) y cuántos hay en total.
-  final List<Product> lowStock;
-  final int lowStockCount;
-  final List<Sale> recentSales;
+  /// Beneficio acumulado de siempre (no es el de hoy).
+  final double netProfit;
   final VoidCallback onOpenTickets;
   final VoidCallback onOpenInventory;
 
-  /// Modo privacidad: los importes se ocultan.
+  /// Modo privacidad: los importes y el nº de tickets se ocultan.
   final bool hideAmounts;
 
-  /// Clave de la primera fila (la usa la guía de la pantalla).
+  /// Clave de todo el resumen (la usa la guía de la pantalla).
   final Key? firstTileKey;
 
   String _money(BuildContext context, double value) =>
       hideAmounts ? '•••••• €' : context.money(value);
 
-  /// Ficha con la explicación de una cifra, y opcionalmente su detalle.
-  void _showInfo(
-    BuildContext context, {
-    required IconData icon,
-    required Color color,
-    required String title,
-    required String value,
-    required String info,
-    List<Widget> details = const [],
-    String? actionLabel,
-    VoidCallback? onAction,
-  }) {
-    showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      useSafeArea: true,
-      isScrollControlled: true,
-      builder: (sheetContext) => Padding(
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                IconBadge(icon, color: color, size: 22),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: Text(
-                    title,
-                    style: Theme.of(sheetContext).textTheme.titleMedium,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Text(
-              value,
-              style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              info,
-              style: TextStyle(
-                fontSize: 14,
-                height: 1.35,
-                color: Theme.of(sheetContext).colorScheme.onSurfaceVariant,
-              ),
-            ),
-            if (details.isNotEmpty) ...[
-              const SizedBox(height: AppSpacing.md),
-              ...details,
-            ],
-            if (actionLabel != null && onAction != null) ...[
-              const SizedBox(height: AppSpacing.lg),
-              FilledButton.tonal(
-                onPressed: () {
-                  Navigator.pop(sheetContext);
-                  onAction();
-                },
-                child: Text(actionLabel),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
+  String _time(BuildContext context, DateTime date) => MaterialLocalizations.of(
+    context,
+  ).formatTimeOfDay(TimeOfDay.fromDateTime(date), alwaysUse24HourFormat: true);
 
-  Widget _detailRow(String left, String right, {Color? rightColor}) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 5),
-    child: Row(
-      children: [
-        Expanded(
-          child: Text(left, maxLines: 1, overflow: TextOverflow.ellipsis),
-        ),
-        Text(
-          right,
-          style: TextStyle(fontWeight: FontWeight.w700, color: rightColor),
-        ),
-      ],
+  Widget _row(List<Widget> pair, {Key? key}) => KeyedSubtree(
+    key: key,
+    child: IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(child: pair[0]),
+          const SizedBox(width: 8),
+          Expanded(child: pair[1]),
+        ],
+      ),
     ),
   );
 
@@ -134,146 +66,183 @@ class DashboardSummaryGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final colors = Theme.of(context).colorScheme;
-    final lastSale = recentSales.isEmpty ? null : recentSales.first;
-    final hasOut = lowStock.any(
-      (p) => StockLevel.of(p.units) == StockLevel.out,
+    final last = today.lastTicket;
+    final restockCount = today.restock.length;
+    final hasOut = today.outCount > 0;
+    final neutral = colors.onSurfaceVariant;
+    final stockColor = restockCount == 0
+        ? neutral
+        : (hasOut ? colors.error : AppColors.warning);
+    final stockIcon = restockCount == 0
+        ? Icons.check_circle_outline
+        : Icons.warning_amber_rounded;
+    final salesValue = _money(context, today.total);
+    final ticketsValue = hideAmounts ? '••' : '${today.ticketCount}';
+
+    final salesTile = _SummaryTile(
+      icon: Icons.point_of_sale,
+      color: colors.primary,
+      label: l10n.dashSalesToday,
+      value: salesValue,
+      subtitle: today.ticketCount == 0 ? l10n.dashNoSalesToday : null,
+      onTap: () => showSummarySheet(
+        context,
+        icon: Icons.point_of_sale,
+        color: colors.primary,
+        title: l10n.dashSalesToday,
+        value: salesValue,
+        info: l10n.dashSalesTodayInfo,
+        details: [
+          SectionLabel(l10n.dashByMethodToday),
+          for (final method in PaymentMethod.values)
+            // "Sin especificar" solo si hoy hay algo con ese método
+            if (method != PaymentMethod.unspecified ||
+                (today.byMethod[method] ?? 0).abs() >= 0.005)
+              summaryDetailRow(
+                method.label(context),
+                _money(context, today.byMethod[method] ?? 0),
+                leading: Icon(
+                  method.icon,
+                  size: 20,
+                  color: method.colorOf(context),
+                ),
+              ),
+        ],
+        actionLabel: l10n.summaryOpenTickets,
+        onAction: onOpenTickets,
+      ),
     );
 
-    final tiles = <_SummaryTile>[
-      _SummaryTile(
+    final ticketsTile = _SummaryTile(
+      icon: Icons.receipt_long,
+      color: colors.primary,
+      label: l10n.dashTicketsToday,
+      value: ticketsValue,
+      subtitle: last == null
+          ? null
+          : l10n.dashLastTicketAt(
+              _time(context, last.date),
+              _money(context, last.amount),
+            ),
+      onTap: () => showSummarySheet(
+        context,
+        icon: Icons.receipt_long,
+        color: colors.primary,
+        title: l10n.dashTicketsToday,
+        value: ticketsValue,
+        info: today.ticketCount == 0
+            ? l10n.dashNoTicketsToday
+            : l10n.dashTicketsTodayInfo,
+        details: [
+          for (final t in today.latestTickets)
+            summaryDetailRow(_time(context, t.date), _money(context, t.amount)),
+        ],
+        actionLabel: l10n.summaryOpenTickets,
+        onAction: onOpenTickets,
+      ),
+    );
+
+    final costValue = _money(context, inventoryCost);
+    final costTile = _SummaryTile(
+      icon: Icons.inventory_2_outlined,
+      color: neutral,
+      label: l10n.dashInventoryCost,
+      value: costValue,
+      onTap: () => showSummarySheet(
+        context,
         icon: Icons.inventory_2_outlined,
-        color: AppColors.warning,
-        label: l10n.metricInventoryCost,
-        value: _money(context, inventoryCost),
-        onTap: () => _showInfo(
-          context,
-          icon: Icons.inventory_2_outlined,
-          color: AppColors.warning,
-          title: l10n.metricInventoryCost,
-          value: _money(context, inventoryCost),
-          info: l10n.summaryCostInfo,
-        ),
+        color: neutral,
+        title: l10n.dashInventoryCost,
+        value: costValue,
+        info: l10n.summaryCostInfo,
       ),
-      _SummaryTile(
+    );
+
+    final worthValue = _money(context, expectedRevenue);
+    final worthTile = _SummaryTile(
+      icon: Icons.trending_up,
+      color: neutral,
+      label: l10n.dashSalesValue,
+      value: worthValue,
+      onTap: () => showSummarySheet(
+        context,
         icon: Icons.trending_up,
-        color: AppColors.info,
-        label: l10n.metricSalesValue,
-        value: _money(context, expectedRevenue),
-        onTap: () => _showInfo(
-          context,
-          icon: Icons.trending_up,
-          color: AppColors.info,
-          title: l10n.metricSalesValue,
-          value: _money(context, expectedRevenue),
-          info: l10n.summaryValueInfo,
-        ),
+        color: neutral,
+        title: l10n.dashSalesValue,
+        value: worthValue,
+        info: l10n.summaryValueInfo,
       ),
-      _SummaryTile(
+    );
+
+    final profitValue = _money(context, netProfit);
+    final profitTile = _SummaryTile(
+      icon: Icons.savings_outlined,
+      color: AppColors.success,
+      label: l10n.dashNetProfit,
+      value: profitValue,
+      onTap: () => showSummarySheet(
+        context,
         icon: Icons.savings_outlined,
         color: AppColors.success,
-        label: l10n.metricNetProfit,
-        value: _money(context, netProfit),
-        onTap: () => _showInfo(
-          context,
-          icon: Icons.savings_outlined,
-          color: AppColors.success,
-          title: l10n.metricNetProfit,
-          value: _money(context, netProfit),
-          info: l10n.summaryProfitInfo,
-        ),
+        title: l10n.dashNetProfit,
+        value: profitValue,
+        info: l10n.dashNetProfitInfo,
       ),
-      _SummaryTile(
-        icon: lowStockCount == 0
-            ? Icons.check_circle_outline
-            : Icons.warning_amber_rounded,
-        color: lowStockCount == 0
-            ? AppColors.success
-            : (hasOut ? colors.error : AppColors.warning),
-        label: l10n.dashboardLowStock,
-        value: l10n.summaryLowStockValue(lowStockCount),
-        onTap: () => _showInfo(
-          context,
-          icon: Icons.warning_amber_rounded,
-          color: hasOut ? colors.error : AppColors.warning,
-          title: l10n.dashboardLowStock,
-          value: l10n.summaryLowStockValue(lowStockCount),
-          info: lowStockCount == 0
-              ? l10n.dashboardAllStocked
-              : l10n.summaryLowStockInfo,
-          details: [
-            for (final p in lowStock)
-              _detailRow(
-                p.name,
-                StockLevel.of(p.units) == StockLevel.out
-                    ? l10n.outOfStock
-                    : l10n.dashboardUnitsLeft(p.units),
-                rightColor: StockLevel.of(p.units) == StockLevel.out
-                    ? colors.error
-                    : null,
-              ),
-          ],
-          actionLabel: l10n.summaryOpenInventory,
-          onAction: onOpenInventory,
-        ),
-      ),
-      _SummaryTile(
-        icon: Icons.receipt_long_outlined,
-        color: colors.primary,
-        label: l10n.summaryLastTicket,
-        value: lastSale == null
-            ? l10n.summaryNoTickets
-            : _money(context, lastSale.totalAmount),
-        onTap: () => _showInfo(
-          context,
-          icon: Icons.receipt_long_outlined,
-          color: colors.primary,
-          title: l10n.dashboardRecentTickets,
-          value: lastSale == null
-              ? l10n.summaryNoTickets
-              : _money(context, lastSale.totalAmount),
-          info: l10n.summaryLastTicketInfo,
-          details: [
-            for (final sale in recentSales.take(5))
-              _detailRow(
-                '${l10n.ticketTitle(sale.id.toString())} · '
-                '${MaterialLocalizations.of(context).formatShortDate(sale.date)}',
-                _money(context, sale.totalAmount),
-              ),
-          ],
-          actionLabel: l10n.summaryOpenTickets,
-          onAction: onOpenTickets,
-        ),
-      ),
-    ];
+    );
 
-    // De dos en dos; el último, si queda solo, a todo el ancho
-    final rows = <Widget>[];
-    for (var i = 0; i < tiles.length; i += 2) {
-      final pair = tiles.skip(i).take(2).toList();
-      rows.add(
-        KeyedSubtree(
-          key: i == 0 ? firstTileKey : null,
-          child: IntrinsicHeight(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(child: pair[0]),
-                if (pair.length > 1) ...[
-                  const SizedBox(width: 8),
-                  Expanded(child: pair[1]),
-                ],
-              ],
+    final restockTile = _SummaryTile(
+      icon: stockIcon,
+      color: stockColor,
+      label: l10n.dashRestock,
+      value: '$restockCount',
+      subtitle: restockCount == 0
+          ? l10n.dashAllInStock
+          : (hasOut ? l10n.dashOutCount(today.outCount) : null),
+      onTap: () => showSummarySheet(
+        context,
+        icon: stockIcon,
+        color: stockColor,
+        title: l10n.dashRestock,
+        value: '$restockCount',
+        info: restockCount == 0
+            ? l10n.dashboardAllStocked
+            : l10n.summaryLowStockInfo,
+        details: [
+          for (final p in today.restock)
+            summaryDetailRow(
+              p.name,
+              StockLevel.of(p.units) == StockLevel.out
+                  ? l10n.outOfStock
+                  : l10n.dashboardUnitsLeft(p.units),
+              rightColor: StockLevel.of(p.units) == StockLevel.out
+                  ? colors.error
+                  : null,
             ),
-          ),
-        ),
-      );
-      if (i + 2 < tiles.length) rows.add(const SizedBox(height: 8));
-    }
-    return Column(children: rows);
+        ],
+        actionLabel: l10n.summaryOpenInventory,
+        onAction: onOpenInventory,
+      ),
+    );
+
+    return KeyedSubtree(
+      key: firstTileKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SectionLabel(l10n.dashTodaySection),
+          _row([salesTile, ticketsTile]),
+          const SizedBox(height: AppSpacing.md),
+          SectionLabel(l10n.dashStockSection),
+          _row([costTile, worthTile]),
+          const SizedBox(height: 8),
+          _row([profitTile, restockTile]),
+        ],
+      ),
+    );
   }
 }
 
-/// Tarjeta compacta: icono a la izquierda; etiqueta y cifra a la derecha.
+/// Tarjeta compacta: icono a la izquierda; etiqueta, cifra y subtítulo opcional.
 class _SummaryTile extends StatelessWidget {
   const _SummaryTile({
     required this.icon,
@@ -281,12 +250,14 @@ class _SummaryTile extends StatelessWidget {
     required this.label,
     required this.value,
     required this.onTap,
+    this.subtitle,
   });
 
   final IconData icon;
   final Color color;
   final String label;
   final String value;
+  final String? subtitle;
   final VoidCallback onTap;
 
   @override
@@ -305,14 +276,12 @@ class _SummaryTile extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  label.toUpperCase(),
-                  maxLines: 2,
+                  label,
+                  maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.4,
-                    height: 1.15,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
                     color: colors.onSurfaceVariant,
                   ),
                 ),
@@ -323,11 +292,21 @@ class _SummaryTile extends StatelessWidget {
                   child: Text(
                     value,
                     style: const TextStyle(
-                      fontSize: 16,
+                      fontSize: 17,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
                 ),
+                if (subtitle != null)
+                  Text(
+                    subtitle!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: colors.onSurfaceVariant,
+                    ),
+                  ),
               ],
             ),
           ),

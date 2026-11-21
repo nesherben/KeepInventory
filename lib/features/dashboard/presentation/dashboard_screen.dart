@@ -3,6 +3,7 @@ import 'widgets/backup_reminder_banner.dart';
 import '../../../core/shared_widgets/app_side_rail.dart';
 import 'widgets/dashboard_overview_panels.dart';
 import 'widgets/dashboard_summary_grid.dart';
+import '../domain/dashboard_today_summary.dart';
 import '../../inventory/domain/inventory_view.dart';
 import '../../inventory/domain/product.dart';
 import '../../sales/data/datasources/sale_local_datasource.dart';
@@ -27,7 +28,6 @@ import '../data/repositories/dashboard_repository_impl.dart';
 import '../../../../core/services/github_update_service.dart';
 
 // Importa tu paleta de colores
-import '../../../core/theme/app_colors.dart';
 import 'widgets/dashboard_chart.dart'; // Ajusta esta ruta si es distinta
 import 'widgets/update_available_dialog.dart';
 import '../../sales/presentation/widgets/payment_method_widgets.dart';
@@ -73,7 +73,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   List<Product> _lowStock = [];
-  int _lowStockCount = 0;
+  // Cifras de hoy y stock por reponer (móvil)
+  DashboardTodaySummary _today = DashboardTodaySummary.from(
+    const [],
+    const [],
+    DateTime.now(),
+  );
 
   bool get _isPrivacyModeEnabled => AppPreferences.privacyModeEnabled.value;
 
@@ -213,7 +218,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _revenueByMethodPerGroup = revenueByMethodPerGroup;
         _recentSales = sales.take(5).toList();
         _lowStock = low.take(5).toList();
-        _lowStockCount = low.length;
+        _today = DashboardTodaySummary.from(sales, products, DateTime.now());
         _isLoading = false;
       });
       _checkFirstSteps();
@@ -280,20 +285,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
     return context.money(amount);
   }
-
-  Widget _buildMetricCard({
-    Key? key,
-    required String title,
-    required String value,
-    required IconData icon,
-    required Color color,
-  }) => StatTile(
-    key: key,
-    label: title,
-    value: value,
-    icon: icon,
-    iconColor: color,
-  );
 
   Widget _buildChartButton() {
     final colors = Theme.of(context).colorScheme;
@@ -415,6 +406,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildOverviewPanels() => DashboardOverviewPanels(
     recentSales: _recentSales,
     lowStock: _lowStock,
+    hideAmounts: _isPrivacyModeEnabled,
+    onOpenTickets: () =>
+        Navigator.pushNamedAndRemoveUntil(context, '/history', (_) => false),
+    onOpenInventory: () =>
+        Navigator.pushNamedAndRemoveUntil(context, '/inventory', (_) => false),
+  );
+
+  /// Resumen "Hoy" y "Almacén y balance": el mismo en móvil y tablet.
+  Widget _buildSummaryGrid() => DashboardSummaryGrid(
+    firstTileKey: _metricsKey,
+    today: _today,
+    inventoryCost: _inventoryCost,
+    expectedRevenue: _expectedRevenue,
+    netProfit: _actualNetProfit,
     hideAmounts: _isPrivacyModeEnabled,
     onOpenTickets: () =>
         Navigator.pushNamedAndRemoveUntil(context, '/history', (_) => false),
@@ -657,35 +662,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  Expanded(
-                                    child: _buildMetricCard(
-                                      key: _metricsKey,
-                                      title: context.l10n.metricInventoryCost,
-                                      value: _formatCurrency(_inventoryCost),
-                                      icon: Icons.inventory_2_outlined,
-                                      color: AppColors.warning,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 10),
-                                  Expanded(
-                                    child: _buildMetricCard(
-                                      title: context.l10n.metricSalesValue,
-                                      value: _formatCurrency(_expectedRevenue),
-                                      icon: Icons.trending_up,
-                                      color: AppColors.info,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 10),
-                                  Expanded(
-                                    child: _buildMetricCard(
-                                      title: context.l10n.metricNetProfit,
-                                      value: _formatCurrency(_actualNetProfit),
-                                      icon: Icons.savings_outlined,
-                                      color: AppColors.success,
-                                    ),
-                                  ),
-                                ],
+                                children: [_buildSummaryGrid()],
                               ),
                             ),
                           ],
@@ -700,29 +677,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       const SizedBox(height: 16),
                       _buildChartButton(),
                       const SizedBox(height: 12),
-                      // Móvil: resúmenes compactos con icono; al tocarlos sale
-                      // una ficha que explica la cifra
-                      DashboardSummaryGrid(
-                        firstTileKey: _metricsKey,
-                        inventoryCost: _inventoryCost,
-                        expectedRevenue: _expectedRevenue,
-                        netProfit: _actualNetProfit,
-                        lowStock: _lowStock,
-                        lowStockCount: _lowStockCount,
-                        recentSales: _recentSales,
-                        hideAmounts: _isPrivacyModeEnabled,
-                        onOpenTickets: () => Navigator.pushNamedAndRemoveUntil(
-                          context,
-                          '/history',
-                          (_) => false,
-                        ),
-                        onOpenInventory: () =>
-                            Navigator.pushNamedAndRemoveUntil(
-                              context,
-                              '/inventory',
-                              (_) => false,
-                            ),
-                      ),
+                      // Resúmenes compactos con icono; al tocarlos sale una
+                      // ficha que explica la cifra
+                      _buildSummaryGrid(),
                     ],
                   ],
                 ),

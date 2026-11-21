@@ -1466,7 +1466,7 @@
     }
   },
   "coachDashMain": "Tu caja general: lo cobrado en todas las ferias y ventas directas, con las devoluciones ya descontadas.",
-  "coachDashMetrics": "Coste almacén: lo que te costó el stock que tienes. Junto a él, lo que valdría vendiéndolo todo y, debajo, tu beneficio neto real.",
+  "coachDashMetrics": "Arriba, lo de hoy: ventas y tickets. Debajo, el coste de tu stock, lo que valdría vendiéndolo todo, tu beneficio neto real acumulado y lo que toca reponer. Toca una tarjeta para ver qué significa.",
   "coachDashChart": "Toca aquí para ver el balance por ferias y días en un gráfico de barras.",
   "coachDashPrivacy": "Con el ojo ocultas los importes por si hay clientes mirando. Vuelve a tocarlo para verlos.",
   "coachCatEmptyTitle": "Crea tu primera categoría",
@@ -1515,5 +1515,39 @@
   "summaryOpenInventory": "Ver inventario",
   "summaryOpenTickets": "Ver tickets",
   "backupReminderShort": "Cambios sin copiar",
-  "backupNowShort": "Copiar ahora"
+  "backupNowShort": "Copiar ahora",
+  "dashTodaySection": "Hoy",
+  "dashStockSection": "Almacén y balance",
+  "dashSalesToday": "Ventas hoy",
+  "dashTicketsToday": "Tickets hoy",
+  "dashNoSalesToday": "Sin ventas hoy",
+  "dashInventoryCost": "Coste almacén",
+  "dashSalesValue": "Valor de venta",
+  "dashNetProfit": "Beneficio neto real",
+  "dashRestock": "Por reponer",
+  "dashOutCount": "{count} agotados",
+  "@dashOutCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dashAllInStock": "Todo en stock",
+  "dashLastTicketAt": "Último {time} · {amount}",
+  "@dashLastTicketAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "dashSalesTodayInfo": "Lo cobrado hoy en todos los tickets, con las devoluciones ya descontadas.",
+  "dashTicketsTodayInfo": "Tickets cobrados hoy, del más reciente al más antiguo.",
+  "dashNetProfitInfo": "Es el total acumulado de todas las ventas, no solo de hoy: lo cobrado menos lo que costó lo vendido, con las devoluciones descontadas.",
+  "dashNoTicketsToday": "Aún no hay tickets hoy",
+  "dashByMethodToday": "Hoy por método de pago"
 }
