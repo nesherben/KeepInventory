@@ -270,6 +270,7 @@ class _Bubble extends StatelessWidget {
                 // Wrap: en un ancho estrecho los botones pasan a otra línea
                 Flexible(
                   flex: 3,
+                  fit: FlexFit.tight,
                   child: Wrap(
                     alignment: WrapAlignment.end,
                     crossAxisAlignment: WrapCrossAlignment.center,

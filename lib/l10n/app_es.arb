@@ -1422,5 +1422,14 @@
   "coachSalesEmptyText": "Para vender, primero crea tus productos en Inventario (menú ☰). Empieza con uno de prueba: con nombre y precio basta.",
   "coachSalesTabs": "Aquí eliges qué vender: productos sueltos o packs. Toca uno para añadirlo al carrito.",
   "coachSalesCatalog": "Busca por nombre o filtra por categoría para encontrar rápido lo que pide el cliente.",
-  "coachSalesTotal": "Aquí ves el total. Despliega el carrito para ajustar el descuento de una línea o pactar un total, y pulsa Cobrar."
+  "coachSalesTotal": "Aquí ves el total. Despliega el carrito para ajustar el descuento de una línea o pactar un total, y pulsa Cobrar.",
+  "coachPromosEmptyTitle": "Crea tu primera oferta",
+  "coachPromosEmptyText": "Con ＋ creas una promoción (por ejemplo «3 por 15 €» o «−10 % desde 2 unidades») o un combo. Prueba con una tuya y luego aplícala a un producto.",
+  "coachPromosAdd": "Con ＋ creas promociones (descuento por unidades o por porcentaje) y combos. Después las aplicas a productos o categorías desde cada oferta.",
+  "coachPacksEmptyTitle": "Crea tu primer pack",
+  "coachPacksEmptyText": "Un pack junta varios productos a un precio único. Con ＋ crea uno tuyo: elige los productos y ponle precio.",
+  "coachPacksAdd": "Con ＋ creas un pack: varios productos a un precio único. Su stock se calcula solo a partir de los productos.",
+  "coachTicketsEmptyTitle": "Aún no hay tickets",
+  "coachTicketsEmptyText": "Cada venta que cobres en Caja quedará aquí. Haz una venta de prueba para verla.",
+  "coachTicketsSearch": "Busca entre tus ventas. Toca un ticket para ver su detalle, devolver artículos o asignarlo a una feria."
 }

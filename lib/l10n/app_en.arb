@@ -771,5 +771,14 @@
   "coachSalesEmptyText": "To sell, first create your products in Inventory (☰ menu). Start with a test one: a name and a price are enough.",
   "coachSalesTabs": "Pick what to sell here: single products or packs. Tap one to add it to the cart.",
   "coachSalesCatalog": "Search by name or filter by category to quickly find what the customer asks for.",
-  "coachSalesTotal": "This is the total. Pull up the cart to adjust a line's discount or agree on a total, then tap Checkout."
+  "coachSalesTotal": "This is the total. Pull up the cart to adjust a line's discount or agree on a total, then tap Checkout.",
+  "coachPromosEmptyTitle": "Create your first offer",
+  "coachPromosEmptyText": "Use ＋ to create a promotion (for example “3 for €15” or “10% off from 2 units”) or a combo. Try one of your own, then apply it to a product.",
+  "coachPromosAdd": "Use ＋ to create promotions (by units or percentage) and combos. Then apply them to products or categories from each offer.",
+  "coachPacksEmptyTitle": "Create your first pack",
+  "coachPacksEmptyText": "A pack bundles several products at one price. Use ＋ to create your own: pick the products and set a price.",
+  "coachPacksAdd": "Use ＋ to create a pack: several products at one price. Its stock is worked out from the products.",
+  "coachTicketsEmptyTitle": "No tickets yet",
+  "coachTicketsEmptyText": "Every sale you check out in the POS will show up here. Make a test sale to see it.",
+  "coachTicketsSearch": "Search your sales. Tap a ticket to see its detail, refund items or assign it to a fair."
 }

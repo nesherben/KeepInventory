@@ -2,6 +2,8 @@ import '../../../core/shared_widgets/adaptive_form.dart';
 
 import 'package:flutter/material.dart';
 
+import '../../../core/shared_widgets/coach_marks.dart';
+
 import '../../../core/shared_widgets/app_ui.dart';
 
 import 'package:keepinventory/l10n/app_localizations_ext.dart';
@@ -49,6 +51,22 @@ class _PacksScreenState extends State<PacksScreen> {
   // 💡 Variable para el texto de búsqueda
   String _searchQuery = '';
 
+  // Guía de la pantalla (mini tutorial): elementos que se iluminan
+  final _targetKey = GlobalKey();
+  bool _guideTried = false;
+
+  /// Pasos de la guía: sin datos invita a crear el primero.
+  List<CoachStep> _guideSteps() {
+    final l10n = context.l10n;
+    return [
+      CoachStep(
+        target: _targetKey,
+        title: _packs.isEmpty ? l10n.coachPacksEmptyTitle : null,
+        text: _packs.isEmpty ? l10n.coachPacksEmptyText : l10n.coachPacksAdd,
+      ),
+    ];
+  }
+
   @override
   void initState() {
     super.initState();
@@ -73,6 +91,10 @@ class _PacksScreenState extends State<PacksScreen> {
       _availableProducts = products;
       _isLoading = false;
     });
+    if (!_guideTried) {
+      _guideTried = true;
+      CoachGuide.showOnce(context, 'packs', _guideSteps);
+    }
   }
 
   // --- AJUSTE RÁPIDO DE UNIDADES (+1 / -1) DIRECTO EN LA TARJETA ---
@@ -248,7 +270,16 @@ class _PacksScreenState extends State<PacksScreen> {
       },
       child: Scaffold(
         key: _scaffoldKey,
-        appBar: AppBar(title: Text(context.l10n.packsTitle)),
+        appBar: AppBar(
+          title: Text(context.l10n.packsTitle),
+          actions: [
+            IconButton(
+              tooltip: context.l10n.coachHelpTooltip,
+              icon: const Icon(Icons.help_outline),
+              onPressed: () => CoachGuide.replay(context, 'packs', _guideSteps),
+            ),
+          ],
+        ),
         drawer: const AppDrawer(),
         body: _isLoading
             ? const Center(child: CircularProgressIndicator())
@@ -312,6 +343,7 @@ class _PacksScreenState extends State<PacksScreen> {
                 ],
               ),
         floatingActionButton: FloatingActionButton(
+          key: _targetKey,
           onPressed: () => _showPackDialog(),
           child: const Icon(Icons.add),
         ),

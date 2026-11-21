@@ -2742,4 +2742,37 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get coachSalesTotal =>
       'Aquí ves el total. Despliega el carrito para ajustar el descuento de una línea o pactar un total, y pulsa Cobrar.';
+
+  @override
+  String get coachPromosEmptyTitle => 'Crea tu primera oferta';
+
+  @override
+  String get coachPromosEmptyText =>
+      'Con ＋ creas una promoción (por ejemplo «3 por 15 €» o «−10 % desde 2 unidades») o un combo. Prueba con una tuya y luego aplícala a un producto.';
+
+  @override
+  String get coachPromosAdd =>
+      'Con ＋ creas promociones (descuento por unidades o por porcentaje) y combos. Después las aplicas a productos o categorías desde cada oferta.';
+
+  @override
+  String get coachPacksEmptyTitle => 'Crea tu primer pack';
+
+  @override
+  String get coachPacksEmptyText =>
+      'Un pack junta varios productos a un precio único. Con ＋ crea uno tuyo: elige los productos y ponle precio.';
+
+  @override
+  String get coachPacksAdd =>
+      'Con ＋ creas un pack: varios productos a un precio único. Su stock se calcula solo a partir de los productos.';
+
+  @override
+  String get coachTicketsEmptyTitle => 'Aún no hay tickets';
+
+  @override
+  String get coachTicketsEmptyText =>
+      'Cada venta que cobres en Caja quedará aquí. Haz una venta de prueba para verla.';
+
+  @override
+  String get coachTicketsSearch =>
+      'Busca entre tus ventas. Toca un ticket para ver su detalle, devolver artículos o asignarlo a una feria.';
 }

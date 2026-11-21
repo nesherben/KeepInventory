@@ -2728,4 +2728,37 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get coachSalesTotal =>
       'This is the total. Pull up the cart to adjust a line\'s discount or agree on a total, then tap Checkout.';
+
+  @override
+  String get coachPromosEmptyTitle => 'Create your first offer';
+
+  @override
+  String get coachPromosEmptyText =>
+      'Use ＋ to create a promotion (for example “3 for €15” or “10% off from 2 units”) or a combo. Try one of your own, then apply it to a product.';
+
+  @override
+  String get coachPromosAdd =>
+      'Use ＋ to create promotions (by units or percentage) and combos. Then apply them to products or categories from each offer.';
+
+  @override
+  String get coachPacksEmptyTitle => 'Create your first pack';
+
+  @override
+  String get coachPacksEmptyText =>
+      'A pack bundles several products at one price. Use ＋ to create your own: pick the products and set a price.';
+
+  @override
+  String get coachPacksAdd =>
+      'Use ＋ to create a pack: several products at one price. Its stock is worked out from the products.';
+
+  @override
+  String get coachTicketsEmptyTitle => 'No tickets yet';
+
+  @override
+  String get coachTicketsEmptyText =>
+      'Every sale you check out in the POS will show up here. Make a test sale to see it.';
+
+  @override
+  String get coachTicketsSearch =>
+      'Search your sales. Tap a ticket to see its detail, refund items or assign it to a fair.';
 }

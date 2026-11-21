@@ -4459,6 +4459,60 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Aquí ves el total. Despliega el carrito para ajustar el descuento de una línea o pactar un total, y pulsa Cobrar.'**
   String get coachSalesTotal;
+
+  /// No description provided for @coachPromosEmptyTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Crea tu primera oferta'**
+  String get coachPromosEmptyTitle;
+
+  /// No description provided for @coachPromosEmptyText.
+  ///
+  /// In es, this message translates to:
+  /// **'Con ＋ creas una promoción (por ejemplo «3 por 15 €» o «−10 % desde 2 unidades») o un combo. Prueba con una tuya y luego aplícala a un producto.'**
+  String get coachPromosEmptyText;
+
+  /// No description provided for @coachPromosAdd.
+  ///
+  /// In es, this message translates to:
+  /// **'Con ＋ creas promociones (descuento por unidades o por porcentaje) y combos. Después las aplicas a productos o categorías desde cada oferta.'**
+  String get coachPromosAdd;
+
+  /// No description provided for @coachPacksEmptyTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Crea tu primer pack'**
+  String get coachPacksEmptyTitle;
+
+  /// No description provided for @coachPacksEmptyText.
+  ///
+  /// In es, this message translates to:
+  /// **'Un pack junta varios productos a un precio único. Con ＋ crea uno tuyo: elige los productos y ponle precio.'**
+  String get coachPacksEmptyText;
+
+  /// No description provided for @coachPacksAdd.
+  ///
+  /// In es, this message translates to:
+  /// **'Con ＋ creas un pack: varios productos a un precio único. Su stock se calcula solo a partir de los productos.'**
+  String get coachPacksAdd;
+
+  /// No description provided for @coachTicketsEmptyTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Aún no hay tickets'**
+  String get coachTicketsEmptyTitle;
+
+  /// No description provided for @coachTicketsEmptyText.
+  ///
+  /// In es, this message translates to:
+  /// **'Cada venta que cobres en Caja quedará aquí. Haz una venta de prueba para verla.'**
+  String get coachTicketsEmptyText;
+
+  /// No description provided for @coachTicketsSearch.
+  ///
+  /// In es, this message translates to:
+  /// **'Busca entre tus ventas. Toca un ticket para ver su detalle, devolver artículos o asignarlo a una feria.'**
+  String get coachTicketsSearch;
 }
 
 class _AppLocalizationsDelegate

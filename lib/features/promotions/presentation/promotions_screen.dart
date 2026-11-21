@@ -1,3 +1,4 @@
+import '../../../core/shared_widgets/coach_marks.dart';
 import '../../inventory/presentation/widgets/product_picker_sheet.dart';
 import '../../../core/shared_widgets/adaptive_form.dart';
 import 'widgets/offer_card.dart';
@@ -58,6 +59,26 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
   List<Product> _products = [];
   List<ProductCategory> _categories = [];
 
+  // Guía de la pantalla (mini tutorial): elementos que se iluminan
+  final _targetKey = GlobalKey();
+  bool _guideTried = false;
+
+  /// Pasos de la guía: sin datos invita a crear el primero.
+  List<CoachStep> _guideSteps() {
+    final l10n = context.l10n;
+    return [
+      CoachStep(
+        target: _targetKey,
+        title: (_promotions.isEmpty && _combos.isEmpty)
+            ? l10n.coachPromosEmptyTitle
+            : null,
+        text: (_promotions.isEmpty && _combos.isEmpty)
+            ? l10n.coachPromosEmptyText
+            : l10n.coachPromosAdd,
+      ),
+    ];
+  }
+
   @override
   void initState() {
     super.initState();
@@ -85,6 +106,10 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
       _categories = categories;
       _isLoading = false;
     });
+    if (!_guideTried) {
+      _guideTried = true;
+      CoachGuide.showOnce(context, 'promos', _guideSteps);
+    }
   }
 
   // --- Combos ---
@@ -405,7 +430,17 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
       },
       child: Scaffold(
         key: _scaffoldKey,
-        appBar: AppBar(title: Text(context.l10n.navPromotions)),
+        appBar: AppBar(
+          title: Text(context.l10n.navPromotions),
+          actions: [
+            IconButton(
+              tooltip: context.l10n.coachHelpTooltip,
+              icon: const Icon(Icons.help_outline),
+              onPressed: () =>
+                  CoachGuide.replay(context, 'promos', _guideSteps),
+            ),
+          ],
+        ),
         drawer: const AppDrawer(),
         body: _isLoading
             ? const Center(child: CircularProgressIndicator())
@@ -545,6 +580,7 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
                 ],
               ),
         floatingActionButton: FloatingActionButton(
+          key: _targetKey,
           onPressed: () =>
               _tab == 1 ? _openComboForm() : _showPromotionFormDialog(),
           child: const Icon(Icons.add),

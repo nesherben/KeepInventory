@@ -3,6 +3,8 @@ import '../../../core/shared_widgets/name_picker_sheet.dart';
 
 import 'package:flutter/material.dart';
 
+import '../../../core/shared_widgets/coach_marks.dart';
+
 import '../../../core/shared_widgets/app_ui.dart';
 
 import 'package:keepinventory/l10n/app_localizations_ext.dart';
@@ -39,6 +41,24 @@ class _HistoryScreenState extends State<HistoryScreen> {
   List<Sale> _sales = [];
   String _searchQuery = '';
 
+  // Guía de la pantalla (mini tutorial): elementos que se iluminan
+  final _targetKey = GlobalKey();
+  bool _guideTried = false;
+
+  /// Pasos de la guía: sin datos invita a crear el primero.
+  List<CoachStep> _guideSteps() {
+    final l10n = context.l10n;
+    return [
+      CoachStep(
+        target: _targetKey,
+        title: _sales.isEmpty ? l10n.coachTicketsEmptyTitle : null,
+        text: _sales.isEmpty
+            ? l10n.coachTicketsEmptyText
+            : l10n.coachTicketsSearch,
+      ),
+    ];
+  }
+
   @override
   void initState() {
     super.initState();
@@ -61,6 +81,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
       _sales = sales;
       _isLoading = false;
     });
+    if (!_guideTried) {
+      _guideTried = true;
+      CoachGuide.showOnce(context, 'tickets', _guideSteps);
+    }
   }
 
   void _showPartialRefundDialog(Sale sale) {
@@ -191,6 +215,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
         appBar: AppBar(
           title: Text(context.l10n.refundTitleHistory),
           actions: [
+            IconButton(
+              tooltip: context.l10n.coachHelpTooltip,
+              icon: const Icon(Icons.help_outline),
+              onPressed: () =>
+                  CoachGuide.replay(context, 'tickets', _guideSteps),
+            ),
             IconButton(icon: const Icon(Icons.refresh), onPressed: _loadSales),
           ],
         ),
@@ -203,6 +233,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
                     child: TextField(
+                      key: _targetKey,
                       controller: _searchController,
                       onChanged: (value) =>
                           setState(() => _searchQuery = value),
