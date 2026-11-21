@@ -1489,5 +1489,11 @@
       }
     }
   },
-  "cashExact": "Justo"
+  "cashExact": "Justo",
+  "cashCalculatorTitle": "Calcular vueltas",
+  "cashTotal": "Total",
+  "cashBills": "Billetes",
+  "cashCoins": "Monedas",
+  "cashUndo": "Deshacer",
+  "cashClear": "Borrar"
 }

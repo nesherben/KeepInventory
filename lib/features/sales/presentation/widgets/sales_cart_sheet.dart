@@ -13,7 +13,6 @@ class SalesCartSheet extends StatelessWidget {
     required this.cartItems,
     required this.paymentMethodSelector,
     required this.checkoutButton,
-    this.extraBottomHeight = 0,
   });
 
   final DraggableScrollableController controller;
@@ -28,9 +27,6 @@ class SalesCartSheet extends StatelessWidget {
   final Widget cartItems;
   final Widget paymentMethodSelector;
   final Widget checkoutButton;
-
-  /// Alto extra de la barra de cobro (p. ej. la calculadora de vueltas).
-  final double extraBottomHeight;
 
   @override
   Widget build(BuildContext context) {
@@ -66,9 +62,7 @@ class SalesCartSheet extends StatelessWidget {
                     padding: EdgeInsets.only(
                       // Con línea extra bajo el total el encabezado es más alto
                       top: hasExtraLine ? 89 : 75,
-                      bottom: isExpanded && hasItems
-                          ? 170 + extraBottomHeight + bottomInset
-                          : 20,
+                      bottom: isExpanded && hasItems ? 170 + bottomInset : 20,
                     ),
                     children: [if (isExpanded) cartItems],
                   ),

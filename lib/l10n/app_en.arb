@@ -817,5 +817,11 @@
   "cashGiven": "Given",
   "cashChangeLabel": "Change",
   "cashMissing": "{amount} € short",
-  "cashExact": "Exact"
+  "cashExact": "Exact",
+  "cashCalculatorTitle": "Calculate change",
+  "cashTotal": "Total",
+  "cashBills": "Bills",
+  "cashCoins": "Coins",
+  "cashUndo": "Undo",
+  "cashClear": "Clear"
 }

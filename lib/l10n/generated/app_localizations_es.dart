@@ -2910,4 +2910,22 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get cashExact => 'Justo';
+
+  @override
+  String get cashCalculatorTitle => 'Calcular vueltas';
+
+  @override
+  String get cashTotal => 'Total';
+
+  @override
+  String get cashBills => 'Billetes';
+
+  @override
+  String get cashCoins => 'Monedas';
+
+  @override
+  String get cashUndo => 'Deshacer';
+
+  @override
+  String get cashClear => 'Borrar';
 }

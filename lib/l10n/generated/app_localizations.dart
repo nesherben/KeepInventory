@@ -4735,6 +4735,42 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Justo'**
   String get cashExact;
+
+  /// No description provided for @cashCalculatorTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Calcular vueltas'**
+  String get cashCalculatorTitle;
+
+  /// No description provided for @cashTotal.
+  ///
+  /// In es, this message translates to:
+  /// **'Total'**
+  String get cashTotal;
+
+  /// No description provided for @cashBills.
+  ///
+  /// In es, this message translates to:
+  /// **'Billetes'**
+  String get cashBills;
+
+  /// No description provided for @cashCoins.
+  ///
+  /// In es, this message translates to:
+  /// **'Monedas'**
+  String get cashCoins;
+
+  /// No description provided for @cashUndo.
+  ///
+  /// In es, this message translates to:
+  /// **'Deshacer'**
+  String get cashUndo;
+
+  /// No description provided for @cashClear.
+  ///
+  /// In es, this message translates to:
+  /// **'Borrar'**
+  String get cashClear;
 }
 
 class _AppLocalizationsDelegate

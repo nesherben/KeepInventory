@@ -48,7 +48,7 @@ import 'widgets/packs_grid_widget.dart';
 import 'widgets/cart_items_list_widget.dart';
 import 'widgets/payment_method_widgets.dart';
 import '../../../core/shared_widgets/coach_marks.dart';
-import 'widgets/cash_change_calculator.dart';
+import 'widgets/cash_change_sheet.dart';
 import 'widgets/sales_cart_sheet.dart';
 import 'widgets/sales_cart_total_summary.dart';
 import 'widgets/sales_catalog_header.dart';
@@ -585,25 +585,9 @@ class _SalesScreenState extends State<SalesScreen>
   int get _cartItemCount =>
       SaleCartPricingCalculator.countItems(products: _cart, packs: _cartPacks);
 
-  /// En efectivo se muestra la calculadora de vueltas (solo con algo que cobrar).
-  bool get _showCashChange =>
-      _paymentMethod == PaymentMethod.cash &&
-      _cartTotal > 0 &&
-      (_cart.isNotEmpty || _cartPacks.isNotEmpty);
-
-  Widget _buildPaymentMethodSelector() => Column(
-    mainAxisSize: MainAxisSize.min,
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: [
-      PaymentMethodSelector(
-        selected: _paymentMethod,
-        onChanged: (method) => setState(() => _paymentMethod = method),
-      ),
-      if (_showCashChange) ...[
-        const SizedBox(height: 12),
-        CashChangeCalculator(total: _cartTotal),
-      ],
-    ],
+  Widget _buildPaymentMethodSelector() => PaymentMethodSelector(
+    selected: _paymentMethod,
+    onChanged: (method) => setState(() => _paymentMethod = method),
   );
 
   /// Evita que un doble toque en "Cobrar" registre la venta dos veces.
@@ -703,7 +687,7 @@ class _SalesScreenState extends State<SalesScreen>
   /// Botón de cobrar con el total visible (confirma el importe de un vistazo).
   Widget _buildCheckoutButton({required bool large}) {
     final isEmpty = _cart.isEmpty && _cartPacks.isEmpty;
-    return FilledButton.icon(
+    final button = FilledButton.icon(
       style: FilledButton.styleFrom(
         padding: EdgeInsets.symmetric(vertical: large ? 18 : 16),
         shape: RoundedRectangleBorder(
@@ -722,6 +706,31 @@ class _SalesScreenState extends State<SalesScreen>
         ),
       ),
     );
+    // En efectivo, junto a COBRAR: calculadora de vueltas (no con Bizum/PayPal)
+    if (_paymentMethod != PaymentMethod.cash || isEmpty) return button;
+    return Row(
+      children: [
+        Expanded(child: button),
+        const SizedBox(width: 8),
+        IconButton.filledTonal(
+          tooltip: context.l10n.cashCalculatorTitle,
+          style: IconButton.styleFrom(
+            minimumSize: Size(large ? 60 : 56, large ? 60 : 56),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppRadius.lg),
+            ),
+          ),
+          onPressed: _processing ? null : _openCashChange,
+          icon: const Icon(Icons.calculate_outlined),
+        ),
+      ],
+    );
+  }
+
+  /// Calculadora de vueltas; si se pulsa COBRAR dentro, cobra directamente.
+  Future<void> _openCashChange() async {
+    final checkout = await showCashChangeSheet(context, total: _cartTotal);
+    if (checkout && mounted) await _processSale();
   }
 
   /// Columnas del catálogo según el ancho disponible: tarjetas de ~150 dp (en
@@ -972,9 +981,6 @@ class _SalesScreenState extends State<SalesScreen>
                             onLineDiscountChanged: _setLineDiscount,
                           ),
                           paymentMethodSelector: _buildPaymentMethodSelector(),
-                          extraBottomHeight: _showCashChange
-                              ? CashChangeCalculator.height + 12
-                              : 0,
                           checkoutButton: _buildCheckoutButton(large: true),
                         ),
                       ],

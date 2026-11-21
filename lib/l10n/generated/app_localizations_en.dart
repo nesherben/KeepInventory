@@ -2896,4 +2896,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cashExact => 'Exact';
+
+  @override
+  String get cashCalculatorTitle => 'Calculate change';
+
+  @override
+  String get cashTotal => 'Total';
+
+  @override
+  String get cashBills => 'Bills';
+
+  @override
+  String get cashCoins => 'Coins';
+
+  @override
+  String get cashUndo => 'Undo';
+
+  @override
+  String get cashClear => 'Clear';
 }
