@@ -127,9 +127,9 @@ class _CashChangeSheetState extends State<CashChangeSheet> {
 
   Widget _buttons(List<int> values, {required bool filled}) {
     final style = ButtonStyle(
-      minimumSize: const WidgetStatePropertyAll(Size(76, 52)),
+      minimumSize: const WidgetStatePropertyAll(Size(0, 52)),
       padding: const WidgetStatePropertyAll(
-        EdgeInsets.symmetric(horizontal: 12),
+        EdgeInsets.symmetric(horizontal: 8),
       ),
       shape: WidgetStatePropertyAll(
         RoundedRectangleBorder(
@@ -137,23 +137,34 @@ class _CashChangeSheetState extends State<CashChangeSheet> {
         ),
       ),
     );
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: [
-        for (final cents in values)
-          filled
-              ? FilledButton.tonal(
-                  style: style,
-                  onPressed: () => _add(cents),
-                  child: Text(context.money(cents / 100)),
-                )
-              : OutlinedButton(
-                  style: style,
-                  onPressed: () => _add(cents),
-                  child: Text(context.money(cents / 100)),
-                ),
-      ],
+    // Rejilla regular: 3 por fila en el móvil, 6 si hay sitio (tablet)
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const gap = 8.0;
+        final columns = constraints.maxWidth >= 520 ? 6 : 3;
+        final width = (constraints.maxWidth - gap * (columns - 1)) / columns;
+        return Wrap(
+          spacing: gap,
+          runSpacing: gap,
+          children: [
+            for (final cents in values)
+              SizedBox(
+                width: width,
+                child: filled
+                    ? FilledButton.tonal(
+                        style: style,
+                        onPressed: () => _add(cents),
+                        child: Text(context.money(cents / 100)),
+                      )
+                    : OutlinedButton(
+                        style: style,
+                        onPressed: () => _add(cents),
+                        child: Text(context.money(cents / 100)),
+                      ),
+              ),
+          ],
+        );
+      },
     );
   }
 
@@ -179,13 +190,15 @@ class _CashChangeSheetState extends State<CashChangeSheet> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // Dos columnas: lo entregado y las vueltas a devolver
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(child: _givenCard()),
-              const SizedBox(width: 12),
-              Expanded(child: _changeCard(diff)),
-            ],
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(child: _givenCard()),
+                const SizedBox(width: 12),
+                Expanded(child: _changeCard(diff)),
+              ],
+            ),
           ),
           const SizedBox(height: AppSpacing.lg),
           // Abajo, solo botones: billetes (rellenos) y monedas (con borde)
