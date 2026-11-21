@@ -26,6 +26,26 @@ void main() {
       expect(CashChange.differenceCents(19.99, 2000), 1);
     });
 
+    test('breaks the change down into the fewest bills and coins', () {
+      expect(CashChange.breakdown(740), {500: 1, 200: 1, 20: 2});
+      expect(CashChange.breakdown(2750), {2000: 1, 500: 1, 200: 1, 50: 1});
+      // Incluye céntimos sueltos: 0,03 = 0,02 + 0,01
+      expect(CashChange.breakdown(3), {2: 1, 1: 1});
+      expect(CashChange.breakdown(0), isEmpty);
+      expect(CashChange.breakdown(-50), isEmpty);
+    });
+
+    test('the breakdown always adds up to the change', () {
+      for (final cents in [1, 7, 99, 740, 1234, 29999]) {
+        final pieces = CashChange.breakdown(cents);
+        final total = pieces.entries.fold<int>(
+          0,
+          (sum, e) => sum + e.key * e.value,
+        );
+        expect(total, cents);
+      }
+    });
+
     test('offers the euro bills and coins', () {
       expect(CashChange.billCents.first, 500);
       expect(CashChange.billCents.last, 20000);
@@ -76,12 +96,22 @@ void main() {
 
       await tester.tap(find.text('20,00 €'));
       await tester.pump();
-      expect(find.text('Vueltas'), findsOneWidget);
       expect(find.text('7,40 €'), findsOneWidget);
 
       await tester.tap(find.text('0,50 €'));
       await tester.pump();
       expect(find.text('7,90 €'), findsOneWidget);
+    });
+
+    testWidgets('says which bills and coins to give back', (tester) async {
+      await open(tester);
+      await tester.tap(find.text('20,00 €'));
+      await tester.pump();
+
+      // 7,40 € = 1 billete de 5 + 1 moneda de 2 + 2 monedas de 0,20
+      expect(find.text('1 × 5,00 €'), findsOneWidget);
+      expect(find.text('1 × 2,00 €'), findsOneWidget);
+      expect(find.text('2 × 0,20 €'), findsOneWidget);
     });
 
     testWidgets('several small ones can add up to the total', (tester) async {
@@ -94,8 +124,9 @@ void main() {
       await tester.tap(find.text('0,50 €'));
       await tester.tap(find.text('0,10 €'));
       await tester.pump();
-      expect(find.text('Faltan 0,00 €'), findsNothing);
-      expect(find.text('Vueltas'), findsOneWidget);
+      // 10 + 2 + 0,50 + 0,10 = 12,60: justo, sin nada que devolver
+      expect(find.textContaining('Faltan'), findsNothing);
+      expect(find.text('0,00 €'), findsOneWidget);
     });
 
     testWidgets('undo removes the last one and clear removes all', (
@@ -107,11 +138,11 @@ void main() {
       await tester.pump();
       expect(find.text('12,40 €'), findsOneWidget);
 
-      await tester.tap(find.text('Deshacer'));
+      await tester.tap(find.byTooltip('Deshacer'));
       await tester.pump();
       expect(find.text('7,40 €'), findsOneWidget);
 
-      await tester.tap(find.text('Borrar'));
+      await tester.tap(find.byTooltip('Borrar'));
       await tester.pump();
       expect(find.text('Faltan 12,60 €'), findsOneWidget);
     });
@@ -120,8 +151,8 @@ void main() {
       await open(tester);
       await tester.tap(find.text('Justo'));
       await tester.pump();
-      expect(find.text('Vueltas'), findsOneWidget);
       expect(find.text('0,00 €'), findsOneWidget);
+      expect(find.textContaining('×'), findsNothing);
     });
 
     testWidgets('COBRAR inside the calculator reports a checkout', (

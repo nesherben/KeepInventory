@@ -19,9 +19,10 @@ Future<bool> showCashChangeSheet(
   return result ?? false;
 }
 
-/// Calculadora de vueltas para cobrar en efectivo: se tocan los billetes y
-/// monedas que entrega el cliente, se van sumando y se ve al momento lo que hay
-/// que devolver. Es solo una ayuda: no se guarda en la venta ni en el ticket.
+/// Calculadora de vueltas para cobrar en efectivo. Arriba, dos columnas: lo que
+/// entrega el cliente y las vueltas con los billetes y monedas a devolver.
+/// Abajo, los botones de billetes y monedas que se van sumando (sin escribir
+/// nada). Es solo una ayuda: no se guarda en la venta ni en el ticket.
 class CashChangeSheet extends StatefulWidget {
   const CashChangeSheet({super.key, required this.total});
 
@@ -39,80 +40,126 @@ class _CashChangeSheetState extends State<CashChangeSheet> {
 
   void _add(int cents) => setState(() => _entries.add(cents));
 
-  Widget _figure(
-    String label,
-    String value, {
-    Color? color,
-    double size = 20,
-  }) => Expanded(
+  Widget _caption(String text) => Text(
+    text,
+    style: TextStyle(
+      fontSize: 12,
+      fontWeight: FontWeight.w600,
+      color: Theme.of(context).colorScheme.onSurfaceVariant,
+    ),
+  );
+
+  /// Tarjeta de la izquierda: total a cobrar y lo entregado.
+  Widget _givenCard() => AppCard(
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        _caption(context.l10n.cashTotal),
         Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
+          context.money(widget.total),
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
         ),
-        const SizedBox(height: 2),
+        const SizedBox(height: AppSpacing.md),
+        _caption(context.l10n.cashGiven),
         Text(
-          value,
-          style: TextStyle(
-            fontSize: size,
-            fontWeight: FontWeight.w800,
-            color: color,
-          ),
+          context.money(_given / 100),
+          style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800),
         ),
       ],
     ),
   );
 
-  Widget _denominations(
-    String title,
-    List<int> values, {
-    required bool filled,
-  }) {
+  /// Tarjeta de la derecha: vueltas y con qué piezas devolverlas.
+  Widget _changeCard(int diff) {
+    final colors = Theme.of(context).colorScheme;
+    if (diff < 0) {
+      return AppCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _caption(context.l10n.cashChangeLabel),
+            const SizedBox(height: 2),
+            Text(
+              context.l10n.cashMissing(context.amount(-diff / 100)),
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                color: AppColors.warning,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    final pieces = CashChange.breakdown(diff);
+    return AppCard(
+      borderColor: diff > 0 ? colors.primary : null,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _caption(context.l10n.cashChangeLabel),
+          Text(
+            context.money(diff / 100),
+            style: TextStyle(
+              fontSize: 26,
+              fontWeight: FontWeight.w800,
+              color: colors.primary,
+            ),
+          ),
+          if (pieces.isNotEmpty) ...[
+            const Divider(height: 20),
+            for (final entry in pieces.entries)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 2),
+                child: Text(
+                  '${entry.value} × ${context.money(entry.key / 100)}',
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buttons(List<int> values, {required bool filled}) {
     final style = ButtonStyle(
-      minimumSize: const WidgetStatePropertyAll(Size(80, 52)),
+      minimumSize: const WidgetStatePropertyAll(Size(76, 52)),
+      padding: const WidgetStatePropertyAll(
+        EdgeInsets.symmetric(horizontal: 12),
+      ),
       shape: WidgetStatePropertyAll(
         RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.md),
         ),
       ),
     );
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
       children: [
-        SectionLabel(title, padding: const EdgeInsets.only(bottom: 8)),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            for (final cents in values)
-              filled
-                  ? FilledButton.tonal(
-                      style: style,
-                      onPressed: () => _add(cents),
-                      child: Text(context.money(cents / 100)),
-                    )
-                  : OutlinedButton(
-                      style: style,
-                      onPressed: () => _add(cents),
-                      child: Text(context.money(cents / 100)),
-                    ),
-          ],
-        ),
+        for (final cents in values)
+          filled
+              ? FilledButton.tonal(
+                  style: style,
+                  onPressed: () => _add(cents),
+                  child: Text(context.money(cents / 100)),
+                )
+              : OutlinedButton(
+                  style: style,
+                  onPressed: () => _add(cents),
+                  child: Text(context.money(cents / 100)),
+                ),
       ],
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
     final diff = CashChange.differenceCents(widget.total, _given);
-    final missing = diff < 0;
 
     return AdaptiveFormScaffold(
       title: context.l10n.cashCalculatorTitle,
@@ -131,62 +178,22 @@ class _CashChangeSheetState extends State<CashChangeSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          AppCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
-                  children: [
-                    _figure(
-                      context.l10n.cashTotal,
-                      context.money(widget.total),
-                    ),
-                    _figure(
-                      context.l10n.cashGiven,
-                      context.money(_given / 100),
-                    ),
-                  ],
-                ),
-                const Divider(height: 24),
-                // El dato que importa: lo que hay que devolver
-                if (missing)
-                  Text(
-                    context.l10n.cashMissing(context.amount(-diff / 100)),
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.warning,
-                    ),
-                  )
-                else
-                  Row(
-                    children: [
-                      _figure(
-                        context.l10n.cashChangeLabel,
-                        context.money(diff / 100),
-                        color: colors.primary,
-                        size: 32,
-                      ),
-                    ],
-                  ),
-              ],
-            ),
+          // Dos columnas: lo entregado y las vueltas a devolver
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: _givenCard()),
+              const SizedBox(width: 12),
+              Expanded(child: _changeCard(diff)),
+            ],
           ),
           const SizedBox(height: AppSpacing.lg),
-          _denominations(
-            context.l10n.cashBills,
-            CashChange.billCents,
-            filled: true,
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          _denominations(
-            context.l10n.cashCoins,
-            CashChange.coinCents,
-            filled: false,
-          ),
+          // Abajo, solo botones: billetes (rellenos) y monedas (con borde)
+          _buttons(CashChange.billCents, filled: true),
+          const SizedBox(height: 8),
+          _buttons(CashChange.coinCents, filled: false),
           const SizedBox(height: AppSpacing.md),
-          Wrap(
-            spacing: 8,
+          Row(
             children: [
               ActionChip(
                 avatar: const Icon(Icons.check, size: 16),
@@ -197,19 +204,20 @@ class _CashChangeSheetState extends State<CashChangeSheet> {
                     ..add(CashChange.cents(widget.total));
                 }),
               ),
-              TextButton.icon(
+              const Spacer(),
+              IconButton(
+                tooltip: context.l10n.cashUndo,
                 onPressed: _entries.isEmpty
                     ? null
                     : () => setState(_entries.removeLast),
-                icon: const Icon(Icons.undo, size: 18),
-                label: Text(context.l10n.cashUndo),
+                icon: const Icon(Icons.undo),
               ),
-              TextButton.icon(
+              IconButton(
+                tooltip: context.l10n.cashClear,
                 onPressed: _entries.isEmpty
                     ? null
                     : () => setState(_entries.clear),
-                icon: const Icon(Icons.clear_all, size: 18),
-                label: Text(context.l10n.cashClear),
+                icon: const Icon(Icons.clear_all),
               ),
             ],
           ),
