@@ -233,6 +233,7 @@ class _LineDiscountSheetState extends State<LineDiscountSheet> {
             autofocus: true,
             keyboardType: AppNumbers.decimalKeyboard,
             inputFormatters: AppNumbers.decimalInputFormatters,
+            selectAllOnFocus: true,
             textInputAction: TextInputAction.done,
             decoration: InputDecoration(
               labelText: switch (_mode) {

@@ -569,6 +569,7 @@ class _PackFormDialogState extends State<PackFormDialog> {
       ),
       keyboardType: AppNumbers.decimalKeyboard,
       inputFormatters: AppNumbers.decimalInputFormatters,
+      selectAllOnFocus: true,
       validator: (value) {
         if (value == null || value.trim().isEmpty) return context.l10n.required;
         final price = AppNumbers.parseDecimal(value);
@@ -589,6 +590,7 @@ class _PackFormDialogState extends State<PackFormDialog> {
       ),
       keyboardType: TextInputType.number,
       inputFormatters: AppNumbers.integerInputFormatters,
+      selectAllOnFocus: true,
       validator: (value) {
         if (value == null || value.trim().isEmpty) return context.l10n.required;
         return AppNumbers.parseInt(value) == null

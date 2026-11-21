@@ -140,63 +140,68 @@ class AdaptiveFormScaffold extends StatelessWidget {
         ? MediaQuery.viewInsetsOf(context).bottom
         : bottomSafeInset(context);
     return LayoutBuilder(
-      builder: (context, constraints) => Padding(
-        padding: EdgeInsets.only(bottom: bottom),
-        child: SizedBox(
-          // Toda la altura disponible (sin pasarse de la pantalla)
-          height:
-              (constraints.maxHeight.isFinite
-                  ? constraints.maxHeight
-                  : MediaQuery.sizeOf(context).height) -
-              bottom,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Padding(
-                padding: EdgeInsets.fromLTRB(
-                  20,
-                  side ? 12 : 0,
-                  8,
-                  AppSpacing.md,
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(title, style: theme.textTheme.titleLarge),
+      builder: (context, constraints) {
+        final available =
+            (constraints.maxHeight.isFinite
+                ? constraints.maxHeight
+                : MediaQuery.sizeOf(context).height) -
+            bottom;
+        final body = Column(
+          // Panel inferior: se ajusta al contenido (un formulario corto no
+          // ocupa toda la pantalla) y solo crece, con scroll, si es largo.
+          // El lateral sí ocupa toda la altura.
+          mainAxisSize: side ? MainAxisSize.max : MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: EdgeInsets.fromLTRB(20, side ? 12 : 0, 8, AppSpacing.md),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(title, style: theme.textTheme.titleLarge),
+                  ),
+                  // El lateral no tiene píldora: botón de cerrar
+                  if (side)
+                    IconButton(
+                      tooltip: context.l10n.cancel,
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.pop(context),
                     ),
-                    // El lateral no tiene píldora: botón de cerrar
-                    if (side)
-                      IconButton(
-                        tooltip: context.l10n.cancel,
-                        icon: const Icon(Icons.close),
-                        onPressed: () => Navigator.pop(context),
-                      ),
+                ],
+              ),
+            ),
+            Flexible(
+              fit: side ? FlexFit.tight : FlexFit.loose,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 4, 20, AppSpacing.lg),
+                child: child,
+              ),
+            ),
+            const Divider(height: 1),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  for (var i = 0; i < actions.length; i++) ...[
+                    if (i > 0) const SizedBox(width: AppSpacing.sm),
+                    actions[i],
                   ],
-                ),
+                ],
               ),
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(20, 4, 20, AppSpacing.lg),
-                  child: child,
+            ),
+          ],
+        );
+        return Padding(
+          padding: EdgeInsets.only(bottom: bottom),
+          child: side
+              ? SizedBox(height: available, child: body)
+              : ConstrainedBox(
+                  constraints: BoxConstraints(maxHeight: available),
+                  child: body,
                 ),
-              ),
-              const Divider(height: 1),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    for (var i = 0; i < actions.length; i++) ...[
-                      if (i > 0) const SizedBox(width: AppSpacing.sm),
-                      actions[i],
-                    ],
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+        );
+      },
     );
   }
 

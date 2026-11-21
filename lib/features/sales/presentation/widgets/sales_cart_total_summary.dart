@@ -71,6 +71,7 @@ class SalesCartTotalSummary extends StatelessWidget {
                     autofocus: true,
                     keyboardType: AppNumbers.decimalKeyboard,
                     inputFormatters: AppNumbers.decimalInputFormatters,
+                    selectAllOnFocus: true,
                     decoration: InputDecoration(
                       labelText: context.l10n.salesAgreedTotal,
                       errorText: errorText,
