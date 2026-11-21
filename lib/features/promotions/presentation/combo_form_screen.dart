@@ -219,7 +219,10 @@ class _ComboFormScreenState extends State<ComboFormScreen> {
     if (withPromo.isNotEmpty &&
         !await _confirm(
           context.l10n.comboOwnPromoTitle,
-          context.l10n.comboOwnPromoWarning(withPromo.join(', ')),
+          context.l10n.comboOwnPromoWarning(
+            withPromo.join(', '),
+            withPromo.length,
+          ),
         )) {
       return;
     }

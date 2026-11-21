@@ -1,11 +1,10 @@
 import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
 
-/// Fecha y hora de una copia, en el idioma de la app ("13/11/2026 00:02").
-String formatBackupDate(BuildContext context, DateTime date) {
-  final locale = Localizations.localeOf(context).toString();
-  return DateFormat.yMd(locale).add_Hm().format(date);
-}
+/// Fecha y hora de una copia ("13/11/2026 00:02"). Siempre día/mes/año, como
+/// los tickets del historial, para que la app no mezcle formatos por idioma.
+String formatBackupDate(BuildContext context, DateTime date) =>
+    DateFormat('dd/MM/yyyy HH:mm').format(date);
 
 /// Tamaño legible de un archivo ("1,8 MB").
 String formatBackupSize(BuildContext context, int bytes) {

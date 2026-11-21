@@ -120,8 +120,13 @@ class _Banner extends StatelessWidget {
           AppSpacing.md,
         ),
         child: Row(
+          // El icono va alineado con el título, no centrado en todo el aviso
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, color: color),
+            Padding(
+              padding: const EdgeInsets.only(top: 1),
+              child: Icon(icon, color: color),
+            ),
             const SizedBox(width: AppSpacing.md),
             Expanded(
               child: Column(
