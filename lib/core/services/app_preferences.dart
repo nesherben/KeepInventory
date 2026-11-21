@@ -7,6 +7,7 @@ class AppPreferences {
   static const _privacyModeKey = 'privacy_mode_enabled';
   static const _tutorialSeenKey = 'tutorial_seen';
   static const _menuHintKey = 'menu_hint_shown';
+  static const _coachSeenKey = 'coach_guides_seen';
   static const _autoBackupKey = 'auto_backup_enabled';
   static const _backupRiskKey = 'backup_risk_accepted';
   static const _lastLocalBackupKey = 'last_local_backup_at';
@@ -25,6 +26,12 @@ class AppPreferences {
 
   /// Si ya se abrió solo el menú lateral para enseñar dónde empezar.
   static bool menuHintShown = false;
+
+  /// Guías por pantalla (mini tutoriales) que ya se han visto. Van en las
+  /// preferencias, nunca en la BD, para no entrar en las copias de seguridad.
+  static final Set<String> coachSeen = {};
+
+  static bool isCoachSeen(String id) => coachSeen.contains(id);
 
   /// Copia local automática diaria activada.
   static bool autoBackupEnabled = false;
@@ -75,6 +82,9 @@ class AppPreferences {
     privacyModeEnabled.value = preferences.getBool(_privacyModeKey) ?? false;
     tutorialSeen = preferences.getBool(_tutorialSeenKey) ?? false;
     menuHintShown = preferences.getBool(_menuHintKey) ?? false;
+    coachSeen
+      ..clear()
+      ..addAll(preferences.getStringList(_coachSeenKey) ?? const []);
   }
 
   static Future<void> setPrivacyModeEnabled(bool enabled) async {
@@ -87,6 +97,19 @@ class AppPreferences {
     menuHintShown = true;
     final preferences = await SharedPreferences.getInstance();
     await preferences.setBool(_menuHintKey, true);
+  }
+
+  static Future<void> markCoachSeen(String id) async {
+    if (!coachSeen.add(id)) return;
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.setStringList(_coachSeenKey, coachSeen.toList());
+  }
+
+  /// Vuelve a mostrar todas las guías la próxima vez que se abra cada pantalla.
+  static Future<void> resetCoachGuides() async {
+    coachSeen.clear();
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.remove(_coachSeenKey);
   }
 
   static Future<void> markTutorialSeen() async {

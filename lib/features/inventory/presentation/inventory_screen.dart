@@ -6,6 +6,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../../../core/shared_widgets/coach_marks.dart';
 import 'widgets/bulk_edit_sheet.dart';
 import 'widgets/inventory_product_widgets.dart';
 import 'widgets/inventory_filters_bar.dart';
@@ -72,6 +73,12 @@ class _InventoryScreenState extends State<InventoryScreen> {
   Map<int, String> _categoryNames = {};
   int? _categoryFilter;
   bool _isLoading = true;
+
+  // Guía de la pantalla (mini tutorial): elementos que se iluminan
+  final _fabKey = GlobalKey();
+  final _filtersKey = GlobalKey();
+  final _selectKey = GlobalKey();
+  bool _guideTried = false;
 
   String _searchQuery = '';
   InventoryFilter _filter = InventoryFilter.all;
@@ -169,6 +176,29 @@ class _InventoryScreenState extends State<InventoryScreen> {
       _selected.retainAll({for (final p in products) p.id});
       _isLoading = false;
     });
+    if (!_guideTried) {
+      _guideTried = true;
+      CoachGuide.showOnce(context, 'inventory', _guideSteps);
+    }
+  }
+
+  /// Pasos de la guía: con el inventario vacío invita a crear el primero.
+  List<CoachStep> _guideSteps() {
+    final l10n = context.l10n;
+    if (_products.isEmpty) {
+      return [
+        CoachStep(
+          target: _fabKey,
+          title: l10n.coachInventoryEmptyTitle,
+          text: l10n.coachInventoryEmptyText,
+        ),
+      ];
+    }
+    return [
+      CoachStep(target: _fabKey, text: l10n.coachInventoryAdd),
+      CoachStep(target: _filtersKey, text: l10n.coachInventoryFilters),
+      CoachStep(target: _selectKey, text: l10n.coachInventorySelect),
+    ];
   }
 
   // ------------------------------------------------------------------
@@ -491,10 +521,17 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   actions: [
                     if (_products.isNotEmpty)
                       IconButton(
+                        key: _selectKey,
                         tooltip: context.l10n.inventorySelectTooltip,
                         icon: const Icon(Icons.checklist),
                         onPressed: _startSelecting,
                       ),
+                    IconButton(
+                      tooltip: context.l10n.coachHelpTooltip,
+                      icon: const Icon(Icons.help_outline),
+                      onPressed: () =>
+                          CoachGuide.replay(context, 'inventory', _guideSteps),
+                    ),
                     IconButton(
                       tooltip: context.l10n.categoriesTitle,
                       icon: const Icon(Icons.sell_outlined),
@@ -539,21 +576,24 @@ class _InventoryScreenState extends State<InventoryScreen> {
                       ),
                     ),
                     if (_products.isNotEmpty)
-                      InventoryFiltersBar(
-                        summary: summary,
-                        filter: _filter,
-                        onFilterChanged: (filter) =>
-                            setState(() => _filter = filter),
-                        categoryNames: _categoryNames,
-                        categoryFilter: _categoryFilter,
-                        onCategoryChanged: (categoryId) =>
-                            setState(() => _categoryFilter = categoryId),
-                        sort: _sort,
-                        ascending: _sortAscending,
-                        onSort: _onSort,
-                        onResetSort: _resetSort,
-                        isNarrow:
-                            MediaQuery.sizeOf(context).width < _tableMinWidth,
+                      KeyedSubtree(
+                        key: _filtersKey,
+                        child: InventoryFiltersBar(
+                          summary: summary,
+                          filter: _filter,
+                          onFilterChanged: (filter) =>
+                              setState(() => _filter = filter),
+                          categoryNames: _categoryNames,
+                          categoryFilter: _categoryFilter,
+                          onCategoryChanged: (categoryId) =>
+                              setState(() => _categoryFilter = categoryId),
+                          sort: _sort,
+                          ascending: _sortAscending,
+                          onSort: _onSort,
+                          onResetSort: _resetSort,
+                          isNarrow:
+                              MediaQuery.sizeOf(context).width < _tableMinWidth,
+                        ),
                       ),
                     Expanded(
                       child: filteredProducts.isEmpty
@@ -588,6 +628,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
           floatingActionButton: _selecting
               ? null
               : FloatingActionButton(
+                  key: _fabKey,
                   onPressed: () =>
                       _productEditor.showProductFormDialog(context),
                   child: const Icon(Icons.add),

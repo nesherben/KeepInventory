@@ -1196,7 +1196,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get tutorialInventoryBody =>
-      'En Inventario pulsa + y pon nombre, precio, coste y unidades; verás tu margen al momento. Si quieres, agrúpalos por categorías (opcional, botón 🏷️ arriba). Para retocar, toca − / + o directamente el dato.';
+      'En Inventario pulsa + y pon nombre, precio, coste y unidades; verás tu margen al momento. Si quieres, agrúpalos por categorías (opcional, botón 🏷️ arriba). Para retocar, toca − / + o directamente el dato. Para cambiar varios a la vez, mantén pulsado un producto y elige Editar.';
 
   @override
   String get tutorialOffersTitle => '2. Ofertas y packs';
@@ -1210,14 +1210,14 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get tutorialSalesBody =>
-      'En Caja toca los productos para añadirlos al carrito, pulsa COBRAR y elige cómo paga el cliente. Si falta algo para completar un combo, el carrito te avisa: toca el aviso para ir al producto o ＋ Añadir para meterlo.';
+      'En Caja toca los productos para añadirlos al carrito, pulsa COBRAR y elige cómo paga el cliente. Con la etiqueta 🏷️ de cada línea haces un descuento puntual (%, € o precio final). Si falta algo para completar un combo, el carrito te avisa: toca el aviso para ir al producto o ＋ Añadir para meterlo. Si sales de la caja, el carrito se conserva.';
 
   @override
   String get tutorialHistoryTitle => '4. Tickets y ferias';
 
   @override
   String get tutorialHistoryBody =>
-      'En Tickets y ferias tienes el ticket de cada venta. Agrupa los días de una feria con el botón de feria (las ferias quedan guardadas para la próxima). Desde un ticket puedes devolver unidades y el importe se recalcula con las ofertas.';
+      'En Tickets y ferias tienes el ticket de cada venta. Agrupa los días de una feria con el botón de feria (las ferias quedan guardadas para la próxima). Desde un ticket puedes devolver unidades y el importe se recalcula con las ofertas; las líneas con descuento manual no se devuelven. Un ticket devuelto entero queda como Reembolsado.';
 
   @override
   String get tutorialDashboardTitle => '5. Cuadra la caja';
@@ -1227,7 +1227,7 @@ class AppLocalizationsEs extends AppLocalizations {
       'En Inicio ves ingresos, beneficio y lo cobrado por cada método de pago. Ideal para cuadrar la caja al final del día.';
 
   @override
-  String get tutorialDataTitle => '6. Tus datos, a salvo';
+  String get tutorialDataTitle => '7. Tus datos, a salvo';
 
   @override
   String get tutorialDataBody =>
@@ -2680,4 +2680,47 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get refundBlockedManualDiscount =>
       'Con descuento manual · no se pueden devolver';
+
+  @override
+  String get tutorialChangesTitle => '6. Qué has cambiado';
+
+  @override
+  String get tutorialChangesBody =>
+      'En Datos → Historial de cambios ves lo que has modificado en productos, categorías, packs, promociones y combos, con su antes y después. Busca y filtra por tipo, acción o fecha. Por ahora es solo para consultar: el stock y las ventas no aparecen.';
+
+  @override
+  String get coachSkip => 'Saltar';
+
+  @override
+  String get coachNext => 'Siguiente';
+
+  @override
+  String get coachDone => 'Entendido';
+
+  @override
+  String coachStepCount(int current, int total) {
+    return '$current de $total';
+  }
+
+  @override
+  String get coachHelpTooltip => 'Guía de esta pantalla';
+
+  @override
+  String get coachInventoryEmptyTitle => 'Crea tu primer producto';
+
+  @override
+  String get coachInventoryEmptyText =>
+      'Pulsa ＋ y añade el que más vendes, por ejemplo: nombre, precio, coste y unidades. Verás tu margen al momento.';
+
+  @override
+  String get coachInventoryAdd =>
+      'Añade productos nuevos con ＋: nombre, precio, coste y unidades. Verás tu margen al momento.';
+
+  @override
+  String get coachInventoryFilters =>
+      'Filtra para ver qué está bajo de stock, agotado, con promoción o de una categoría.';
+
+  @override
+  String get coachInventorySelect =>
+      'Marca varios productos para cambiarles la categoría, la promoción, el precio o el coste de una vez.';
 }

@@ -2081,7 +2081,7 @@ abstract class AppLocalizations {
   /// No description provided for @tutorialInventoryBody.
   ///
   /// In es, this message translates to:
-  /// **'En Inventario pulsa + y pon nombre, precio, coste y unidades; verás tu margen al momento. Si quieres, agrúpalos por categorías (opcional, botón 🏷️ arriba). Para retocar, toca − / + o directamente el dato.'**
+  /// **'En Inventario pulsa + y pon nombre, precio, coste y unidades; verás tu margen al momento. Si quieres, agrúpalos por categorías (opcional, botón 🏷️ arriba). Para retocar, toca − / + o directamente el dato. Para cambiar varios a la vez, mantén pulsado un producto y elige Editar.'**
   String get tutorialInventoryBody;
 
   /// No description provided for @tutorialOffersTitle.
@@ -2105,7 +2105,7 @@ abstract class AppLocalizations {
   /// No description provided for @tutorialSalesBody.
   ///
   /// In es, this message translates to:
-  /// **'En Caja toca los productos para añadirlos al carrito, pulsa COBRAR y elige cómo paga el cliente. Si falta algo para completar un combo, el carrito te avisa: toca el aviso para ir al producto o ＋ Añadir para meterlo.'**
+  /// **'En Caja toca los productos para añadirlos al carrito, pulsa COBRAR y elige cómo paga el cliente. Con la etiqueta 🏷️ de cada línea haces un descuento puntual (%, € o precio final). Si falta algo para completar un combo, el carrito te avisa: toca el aviso para ir al producto o ＋ Añadir para meterlo. Si sales de la caja, el carrito se conserva.'**
   String get tutorialSalesBody;
 
   /// No description provided for @tutorialHistoryTitle.
@@ -2117,7 +2117,7 @@ abstract class AppLocalizations {
   /// No description provided for @tutorialHistoryBody.
   ///
   /// In es, this message translates to:
-  /// **'En Tickets y ferias tienes el ticket de cada venta. Agrupa los días de una feria con el botón de feria (las ferias quedan guardadas para la próxima). Desde un ticket puedes devolver unidades y el importe se recalcula con las ofertas.'**
+  /// **'En Tickets y ferias tienes el ticket de cada venta. Agrupa los días de una feria con el botón de feria (las ferias quedan guardadas para la próxima). Desde un ticket puedes devolver unidades y el importe se recalcula con las ofertas; las líneas con descuento manual no se devuelven. Un ticket devuelto entero queda como Reembolsado.'**
   String get tutorialHistoryBody;
 
   /// No description provided for @tutorialDashboardTitle.
@@ -2135,7 +2135,7 @@ abstract class AppLocalizations {
   /// No description provided for @tutorialDataTitle.
   ///
   /// In es, this message translates to:
-  /// **'6. Tus datos, a salvo'**
+  /// **'7. Tus datos, a salvo'**
   String get tutorialDataTitle;
 
   /// No description provided for @tutorialDataBody.
@@ -4357,6 +4357,78 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Con descuento manual · no se pueden devolver'**
   String get refundBlockedManualDiscount;
+
+  /// No description provided for @tutorialChangesTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'6. Qué has cambiado'**
+  String get tutorialChangesTitle;
+
+  /// No description provided for @tutorialChangesBody.
+  ///
+  /// In es, this message translates to:
+  /// **'En Datos → Historial de cambios ves lo que has modificado en productos, categorías, packs, promociones y combos, con su antes y después. Busca y filtra por tipo, acción o fecha. Por ahora es solo para consultar: el stock y las ventas no aparecen.'**
+  String get tutorialChangesBody;
+
+  /// No description provided for @coachSkip.
+  ///
+  /// In es, this message translates to:
+  /// **'Saltar'**
+  String get coachSkip;
+
+  /// No description provided for @coachNext.
+  ///
+  /// In es, this message translates to:
+  /// **'Siguiente'**
+  String get coachNext;
+
+  /// No description provided for @coachDone.
+  ///
+  /// In es, this message translates to:
+  /// **'Entendido'**
+  String get coachDone;
+
+  /// No description provided for @coachStepCount.
+  ///
+  /// In es, this message translates to:
+  /// **'{current} de {total}'**
+  String coachStepCount(int current, int total);
+
+  /// No description provided for @coachHelpTooltip.
+  ///
+  /// In es, this message translates to:
+  /// **'Guía de esta pantalla'**
+  String get coachHelpTooltip;
+
+  /// No description provided for @coachInventoryEmptyTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Crea tu primer producto'**
+  String get coachInventoryEmptyTitle;
+
+  /// No description provided for @coachInventoryEmptyText.
+  ///
+  /// In es, this message translates to:
+  /// **'Pulsa ＋ y añade el que más vendes, por ejemplo: nombre, precio, coste y unidades. Verás tu margen al momento.'**
+  String get coachInventoryEmptyText;
+
+  /// No description provided for @coachInventoryAdd.
+  ///
+  /// In es, this message translates to:
+  /// **'Añade productos nuevos con ＋: nombre, precio, coste y unidades. Verás tu margen al momento.'**
+  String get coachInventoryAdd;
+
+  /// No description provided for @coachInventoryFilters.
+  ///
+  /// In es, this message translates to:
+  /// **'Filtra para ver qué está bajo de stock, agotado, con promoción o de una categoría.'**
+  String get coachInventoryFilters;
+
+  /// No description provided for @coachInventorySelect.
+  ///
+  /// In es, this message translates to:
+  /// **'Marca varios productos para cambiarles la categoría, la promoción, el precio o el coste de una vez.'**
+  String get coachInventorySelect;
 }
 
 class _AppLocalizationsDelegate

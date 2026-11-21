@@ -1186,7 +1186,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tutorialInventoryBody =>
-      'In Inventory tap + and enter name, price, cost and units; you\'ll see your margin right away. Optionally group them into categories (🏷️ button at the top). To adjust, tap − / + or the value itself.';
+      'In Inventory tap + and enter name, price, cost and units; you\'ll see your margin right away. Optionally group products by category (🏷️ button at the top). To tweak, tap − / + or the value itself. To change several at once, long-press a product and choose Edit.';
 
   @override
   String get tutorialOffersTitle => '2. Offers and packs';
@@ -1200,14 +1200,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tutorialSalesBody =>
-      'In Checkout tap products to add them to the cart, press CHECK OUT and choose how the customer pays. If something is missing to complete a combo, the cart tells you: tap the hint to go to the product or ＋ Add to put it in.';
+      'In Checkout tap products to add them to the cart, press CHARGE and choose how the customer pays. The 🏷️ tag on each line gives a one-off discount (%, € or final price). If something is missing to complete a combo, the cart tells you: tap the notice to go to the product or ＋ Add to put it in. If you leave the checkout, the cart is kept.';
 
   @override
   String get tutorialHistoryTitle => '4. Tickets and fairs';
 
   @override
   String get tutorialHistoryBody =>
-      'In Tickets and fairs you have every sale\'s ticket. Group a fair\'s days with the fair button (fairs are saved for next time). From a ticket you can refund units and the amount is recalculated with offers.';
+      'In Tickets and fairs you have the ticket of every sale. Group a fair\'s days with the fair button (fairs are kept for next time). From a ticket you can refund units and the amount is recalculated with the offers; lines with a manual discount can\'t be refunded. A fully refunded ticket stays as Refunded.';
 
   @override
   String get tutorialDashboardTitle => '5. Balance the till';
@@ -1217,7 +1217,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Home shows revenue, profit and what was paid with each method. Perfect for balancing the till at the end of the day.';
 
   @override
-  String get tutorialDataTitle => '6. Keep your data safe';
+  String get tutorialDataTitle => '7. Your data, safe';
 
   @override
   String get tutorialDataBody =>
@@ -2666,4 +2666,47 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get refundBlockedManualDiscount =>
       'With manual discount · can\'t be refunded';
+
+  @override
+  String get tutorialChangesTitle => '6. What you\'ve changed';
+
+  @override
+  String get tutorialChangesBody =>
+      'In Data → Change history you see what you\'ve modified in products, categories, packs, promotions and combos, with their before and after. Search and filter by type, action or date. For now it\'s read-only: stock and sales don\'t appear.';
+
+  @override
+  String get coachSkip => 'Skip';
+
+  @override
+  String get coachNext => 'Next';
+
+  @override
+  String get coachDone => 'Got it';
+
+  @override
+  String coachStepCount(int current, int total) {
+    return '$current of $total';
+  }
+
+  @override
+  String get coachHelpTooltip => 'Guide for this screen';
+
+  @override
+  String get coachInventoryEmptyTitle => 'Create your first product';
+
+  @override
+  String get coachInventoryEmptyText =>
+      'Tap ＋ and add your best seller, for example: name, price, cost and units. You\'ll see your margin right away.';
+
+  @override
+  String get coachInventoryAdd =>
+      'Add new products with ＋: name, price, cost and units. You\'ll see your margin right away.';
+
+  @override
+  String get coachInventoryFilters =>
+      'Filter to see what is low on stock, sold out, on promotion or in a category.';
+
+  @override
+  String get coachInventorySelect =>
+      'Select several products to change their category, promotion, price or cost at once.';
 }
