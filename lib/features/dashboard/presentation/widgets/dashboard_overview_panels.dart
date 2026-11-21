@@ -7,9 +7,8 @@ import '../../../inventory/domain/inventory_view.dart';
 import '../../../inventory/domain/product.dart';
 import '../../../sales/domain/sale.dart';
 
-/// Relleno útil del Inicio: los últimos tickets y lo que se está acabando, con
-/// un toque para ir a la pantalla correspondiente. En tablet van en dos
-/// columnas; en móvil ([compact]) apilados, con el stock primero y pocas filas.
+/// Relleno útil del Inicio en tablet: los últimos tickets y lo que se está
+/// acabando, con un toque para ir a la pantalla correspondiente.
 class DashboardOverviewPanels extends StatelessWidget {
   const DashboardOverviewPanels({
     super.key,
@@ -18,7 +17,6 @@ class DashboardOverviewPanels extends StatelessWidget {
     required this.onOpenTickets,
     required this.onOpenInventory,
     this.hideAmounts = false,
-    this.compact = false,
   });
 
   final List<Sale> recentSales;
@@ -28,9 +26,6 @@ class DashboardOverviewPanels extends StatelessWidget {
 
   /// Modo privacidad: los importes se ocultan.
   final bool hideAmounts;
-
-  /// Móvil: apilados y con menos filas.
-  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -101,7 +96,7 @@ class DashboardOverviewPanels extends StatelessWidget {
       onTap: onOpenTickets,
       emptyText: l10n.dashboardNoTicketsYet,
       rows: [
-        for (final sale in recentSales.take(compact ? 3 : recentSales.length))
+        for (final sale in recentSales)
           row(
             '${l10n.ticketTitle(sale.id.toString())} · '
             '${MaterialLocalizations.of(context).formatShortDate(sale.date)}',
@@ -115,7 +110,7 @@ class DashboardOverviewPanels extends StatelessWidget {
       onTap: onOpenInventory,
       emptyText: l10n.dashboardAllStocked,
       rows: [
-        for (final p in lowStock.take(compact ? 3 : lowStock.length))
+        for (final p in lowStock)
           row(
             p.name,
             StockLevel.of(p.units) == StockLevel.out
@@ -127,14 +122,6 @@ class DashboardOverviewPanels extends StatelessWidget {
           ),
       ],
     );
-
-    // Móvil: el stock que se acaba es lo accionable, va primero
-    if (compact) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [stock, const SizedBox(height: 12), tickets],
-      );
-    }
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,

@@ -824,5 +824,17 @@
   "cashCoins": "Coins",
   "cashUndo": "Undo",
   "cashClear": "Clear",
-  "cashRemoveOne": "Remove one"
+  "cashRemoveOne": "Remove one",
+  "summaryCostInfo": "What the stock you have now cost you, including the products assembled inside packs.",
+  "summaryValueInfo": "What you would take in if you sold all the current stock (products and packs) at its selling price.",
+  "summaryProfitInfo": "What you have already earned from the sales made: what you charged minus the cost of what was sold, with refunds deducted.",
+  "summaryLowStockValue": "{count} to restock",
+  "summaryLowStockInfo": "Products with 3 units or fewer, or out of stock.",
+  "summaryLastTicket": "Last ticket",
+  "summaryLastTicketInfo": "The most recent sales.",
+  "summaryNoTickets": "No tickets yet",
+  "summaryOpenInventory": "Open inventory",
+  "summaryOpenTickets": "Open tickets",
+  "backupReminderShort": "Unsaved changes",
+  "backupNowShort": "Back up"
 }

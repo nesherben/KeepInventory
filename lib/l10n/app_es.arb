@@ -1496,5 +1496,24 @@
   "cashCoins": "Monedas",
   "cashUndo": "Deshacer",
   "cashClear": "Borrar",
-  "cashRemoveOne": "Quitar uno"
+  "cashRemoveOne": "Quitar uno",
+  "summaryCostInfo": "Lo que te costó el stock que tienes ahora, incluidos los productos que hay montados dentro de packs.",
+  "summaryValueInfo": "Lo que ingresarías si vendieras todo el stock actual (productos y packs) a su precio de venta.",
+  "summaryProfitInfo": "Lo que ya has ganado con las ventas hechas: lo cobrado menos lo que costó lo vendido, con las devoluciones descontadas.",
+  "summaryLowStockValue": "{count} por reponer",
+  "@summaryLowStockValue": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "summaryLowStockInfo": "Productos con 3 unidades o menos, o agotados.",
+  "summaryLastTicket": "Último ticket",
+  "summaryLastTicketInfo": "Las ventas más recientes.",
+  "summaryNoTickets": "Aún sin tickets",
+  "summaryOpenInventory": "Ver inventario",
+  "summaryOpenTickets": "Ver tickets",
+  "backupReminderShort": "Cambios sin copiar",
+  "backupNowShort": "Copiar ahora"
 }

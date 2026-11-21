@@ -2931,4 +2931,46 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get cashRemoveOne => 'Quitar uno';
+
+  @override
+  String get summaryCostInfo =>
+      'Lo que te costó el stock que tienes ahora, incluidos los productos que hay montados dentro de packs.';
+
+  @override
+  String get summaryValueInfo =>
+      'Lo que ingresarías si vendieras todo el stock actual (productos y packs) a su precio de venta.';
+
+  @override
+  String get summaryProfitInfo =>
+      'Lo que ya has ganado con las ventas hechas: lo cobrado menos lo que costó lo vendido, con las devoluciones descontadas.';
+
+  @override
+  String summaryLowStockValue(int count) {
+    return '$count por reponer';
+  }
+
+  @override
+  String get summaryLowStockInfo =>
+      'Productos con 3 unidades o menos, o agotados.';
+
+  @override
+  String get summaryLastTicket => 'Último ticket';
+
+  @override
+  String get summaryLastTicketInfo => 'Las ventas más recientes.';
+
+  @override
+  String get summaryNoTickets => 'Aún sin tickets';
+
+  @override
+  String get summaryOpenInventory => 'Ver inventario';
+
+  @override
+  String get summaryOpenTickets => 'Ver tickets';
+
+  @override
+  String get backupReminderShort => 'Cambios sin copiar';
+
+  @override
+  String get backupNowShort => 'Copiar ahora';
 }

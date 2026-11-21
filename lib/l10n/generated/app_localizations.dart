@@ -4777,6 +4777,78 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Quitar uno'**
   String get cashRemoveOne;
+
+  /// No description provided for @summaryCostInfo.
+  ///
+  /// In es, this message translates to:
+  /// **'Lo que te costó el stock que tienes ahora, incluidos los productos que hay montados dentro de packs.'**
+  String get summaryCostInfo;
+
+  /// No description provided for @summaryValueInfo.
+  ///
+  /// In es, this message translates to:
+  /// **'Lo que ingresarías si vendieras todo el stock actual (productos y packs) a su precio de venta.'**
+  String get summaryValueInfo;
+
+  /// No description provided for @summaryProfitInfo.
+  ///
+  /// In es, this message translates to:
+  /// **'Lo que ya has ganado con las ventas hechas: lo cobrado menos lo que costó lo vendido, con las devoluciones descontadas.'**
+  String get summaryProfitInfo;
+
+  /// No description provided for @summaryLowStockValue.
+  ///
+  /// In es, this message translates to:
+  /// **'{count} por reponer'**
+  String summaryLowStockValue(int count);
+
+  /// No description provided for @summaryLowStockInfo.
+  ///
+  /// In es, this message translates to:
+  /// **'Productos con 3 unidades o menos, o agotados.'**
+  String get summaryLowStockInfo;
+
+  /// No description provided for @summaryLastTicket.
+  ///
+  /// In es, this message translates to:
+  /// **'Último ticket'**
+  String get summaryLastTicket;
+
+  /// No description provided for @summaryLastTicketInfo.
+  ///
+  /// In es, this message translates to:
+  /// **'Las ventas más recientes.'**
+  String get summaryLastTicketInfo;
+
+  /// No description provided for @summaryNoTickets.
+  ///
+  /// In es, this message translates to:
+  /// **'Aún sin tickets'**
+  String get summaryNoTickets;
+
+  /// No description provided for @summaryOpenInventory.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver inventario'**
+  String get summaryOpenInventory;
+
+  /// No description provided for @summaryOpenTickets.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver tickets'**
+  String get summaryOpenTickets;
+
+  /// No description provided for @backupReminderShort.
+  ///
+  /// In es, this message translates to:
+  /// **'Cambios sin copiar'**
+  String get backupReminderShort;
+
+  /// No description provided for @backupNowShort.
+  ///
+  /// In es, this message translates to:
+  /// **'Copiar ahora'**
+  String get backupNowShort;
 }
 
 class _AppLocalizationsDelegate

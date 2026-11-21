@@ -2,6 +2,7 @@ import '../../../core/shared_widgets/coach_marks.dart';
 import 'widgets/backup_reminder_banner.dart';
 import '../../../core/shared_widgets/app_side_rail.dart';
 import 'widgets/dashboard_overview_panels.dart';
+import 'widgets/dashboard_summary_grid.dart';
 import '../../inventory/domain/inventory_view.dart';
 import '../../inventory/domain/product.dart';
 import '../../sales/data/datasources/sale_local_datasource.dart';
@@ -72,6 +73,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   List<Product> _lowStock = [];
+  int _lowStockCount = 0;
 
   bool get _isPrivacyModeEnabled => AppPreferences.privacyModeEnabled.value;
 
@@ -211,6 +213,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _revenueByMethodPerGroup = revenueByMethodPerGroup;
         _recentSales = sales.take(5).toList();
         _lowStock = low.take(5).toList();
+        _lowStockCount = low.length;
         _isLoading = false;
       });
       _checkFirstSteps();
@@ -408,12 +411,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  /// Últimos tickets y stock bajo: en dos columnas en tablet, apilados en móvil.
-  Widget _buildOverviewPanels(bool compact) => DashboardOverviewPanels(
+  /// Últimos tickets y stock bajo, en dos columnas (tablet).
+  Widget _buildOverviewPanels() => DashboardOverviewPanels(
     recentSales: _recentSales,
     lowStock: _lowStock,
     hideAmounts: _isPrivacyModeEnabled,
-    compact: compact,
     onOpenTickets: () =>
         Navigator.pushNamedAndRemoveUntil(context, '/history', (_) => false),
     onOpenInventory: () =>
@@ -691,50 +693,36 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                       _buildPaymentBreakdownPanel(),
                       const SizedBox(height: 20),
-                      _buildOverviewPanels(false),
+                      _buildOverviewPanels(),
                     ] else ...[
                       KeyedSubtree(key: _mainKey, child: _buildMainCard(false)),
                       _buildPaymentBreakdownPanel(),
                       const SizedBox(height: 16),
                       _buildChartButton(),
-                      const SizedBox(height: 20),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildMetricCard(
-                              key: _metricsKey,
-                              title: context.l10n.metricInventoryCost,
-                              value: _formatCurrency(_inventoryCost),
-                              icon: Icons.inventory_2_outlined,
-                              color: AppColors.warning,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _buildMetricCard(
-                              title: context.l10n.metricSalesValue,
-                              value: _formatCurrency(_expectedRevenue),
-                              icon: Icons.trending_up,
-                              color: AppColors.info,
-                            ),
-                          ),
-                        ],
-                      ),
                       const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildMetricCard(
-                              title: context.l10n.metricNetProfit,
-                              value: _formatCurrency(_actualNetProfit),
-                              icon: Icons.savings_outlined,
-                              color: AppColors.success,
+                      // Móvil: resúmenes compactos con icono; al tocarlos sale
+                      // una ficha que explica la cifra
+                      DashboardSummaryGrid(
+                        firstTileKey: _metricsKey,
+                        inventoryCost: _inventoryCost,
+                        expectedRevenue: _expectedRevenue,
+                        netProfit: _actualNetProfit,
+                        lowStock: _lowStock,
+                        lowStockCount: _lowStockCount,
+                        recentSales: _recentSales,
+                        hideAmounts: _isPrivacyModeEnabled,
+                        onOpenTickets: () => Navigator.pushNamedAndRemoveUntil(
+                          context,
+                          '/history',
+                          (_) => false,
+                        ),
+                        onOpenInventory: () =>
+                            Navigator.pushNamedAndRemoveUntil(
+                              context,
+                              '/inventory',
+                              (_) => false,
                             ),
-                          ),
-                        ],
                       ),
-                      const SizedBox(height: 12),
-                      _buildOverviewPanels(true),
                     ],
                   ],
                 ),
