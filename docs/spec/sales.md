@@ -222,3 +222,9 @@ Pantallas: `SalesScreen` (`/sales`) y `HistoryScreen` (`/history`).
 - **Reglas de negocio:** si cambia el CONTENIDO del carrito (añadir o quitar unidades de un producto o pack) con un total acordado activo (SALES-004), el total acordado se quita (factor 1) y se avisa ("Se quitó el total acordado porque cambió el carrito"). Si el carrito queda vacío se quita en silencio. También se quita si al recuperar el carrito (CartSession) las cantidades se recortan por el stock. Esto sustituye al comportamiento anterior (el factor proporcional se conservaba al cambiar el carrito).
 - **Código:** `lib/features/sales/presentation/sales_screen.dart` (`_dropAgreedTotal`, `_notifyAgreedTotalDropped`, `_remapCart`), `lib/features/sales/presentation/cart_session.dart`.
 - **Tests:** sin tests de widget (probado en el emulador).
+
+### SALES-016 · Calculadora de vueltas en efectivo
+- **Propósito:** saber cuánto devolver al cliente antes de cobrar, sin hacer la cuenta de cabeza.
+- **Reglas de negocio:** con el método **Efectivo** y algo que cobrar, bajo el selector de pago aparece «Entregado» (campo decimal) con atajos **Justo** y los cuatro billetes más pequeños que cubren el total (5, 10, 20, 50, 100, 200, 500). Muestra al instante **Vueltas** (entregado − total) o **Faltan X €** si no llega. Es solo una ayuda: no bloquea el cobro, no se guarda en la venta ni en el ticket, y se borra al cambiar de método, vaciar el carrito o cobrar. El cálculo va en céntimos enteros (`CashChange`) para evitar errores de coma flotante.
+- **Código:** `lib/features/sales/domain/cash_change.dart`, `lib/features/sales/presentation/widgets/cash_change_calculator.dart`, `sales_screen.dart` (`_showCashChange`, `_buildPaymentMethodSelector`), `widgets/sales_cart_sheet.dart` (`extraBottomHeight`).
+- **Tests:** `test/cash_change_test.dart`.

@@ -48,6 +48,7 @@ import 'widgets/packs_grid_widget.dart';
 import 'widgets/cart_items_list_widget.dart';
 import 'widgets/payment_method_widgets.dart';
 import '../../../core/shared_widgets/coach_marks.dart';
+import 'widgets/cash_change_calculator.dart';
 import 'widgets/sales_cart_sheet.dart';
 import 'widgets/sales_cart_total_summary.dart';
 import 'widgets/sales_catalog_header.dart';
@@ -584,9 +585,25 @@ class _SalesScreenState extends State<SalesScreen>
   int get _cartItemCount =>
       SaleCartPricingCalculator.countItems(products: _cart, packs: _cartPacks);
 
-  Widget _buildPaymentMethodSelector() => PaymentMethodSelector(
-    selected: _paymentMethod,
-    onChanged: (method) => setState(() => _paymentMethod = method),
+  /// En efectivo se muestra la calculadora de vueltas (solo con algo que cobrar).
+  bool get _showCashChange =>
+      _paymentMethod == PaymentMethod.cash &&
+      _cartTotal > 0 &&
+      (_cart.isNotEmpty || _cartPacks.isNotEmpty);
+
+  Widget _buildPaymentMethodSelector() => Column(
+    mainAxisSize: MainAxisSize.min,
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      PaymentMethodSelector(
+        selected: _paymentMethod,
+        onChanged: (method) => setState(() => _paymentMethod = method),
+      ),
+      if (_showCashChange) ...[
+        const SizedBox(height: 12),
+        CashChangeCalculator(total: _cartTotal),
+      ],
+    ],
   );
 
   /// Evita que un doble toque en "Cobrar" registre la venta dos veces.
@@ -955,6 +972,9 @@ class _SalesScreenState extends State<SalesScreen>
                             onLineDiscountChanged: _setLineDiscount,
                           ),
                           paymentMethodSelector: _buildPaymentMethodSelector(),
+                          extraBottomHeight: _showCashChange
+                              ? CashChangeCalculator.height + 12
+                              : 0,
                           checkoutButton: _buildCheckoutButton(large: true),
                         ),
                       ],

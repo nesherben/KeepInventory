@@ -813,5 +813,9 @@
   "coachSyncWifi": "If both phones are on the same Wi‑Fi, you can use it instead of the hotspot.",
   "coachChartFilter": "Filter the balance by fairs or single days, or see it all together.",
   "coachChartBars": "Each bar is a fair or a day. Tap one to see its details below.",
-  "coachChartDetail": "Here you see what was sold, what it cost and your profit for the selection, broken down by payment method."
+  "coachChartDetail": "Here you see what was sold, what it cost and your profit for the selection, broken down by payment method.",
+  "cashGiven": "Given",
+  "cashChangeLabel": "Change",
+  "cashMissing": "{amount} € short",
+  "cashExact": "Exact"
 }

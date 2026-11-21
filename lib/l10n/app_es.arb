@@ -1478,5 +1478,16 @@
   "coachSyncWifi": "Si los dos móviles están en la misma Wi‑Fi, puedes usarla en lugar del punto de acceso.",
   "coachChartFilter": "Filtra el balance por ferias o por días sueltos, o míralo todo junto.",
   "coachChartBars": "Cada barra es una feria o un día. Toca una para ver su detalle abajo.",
-  "coachChartDetail": "Aquí tienes lo vendido, lo que costó y tu beneficio de lo seleccionado, con el desglose por método de pago."
+  "coachChartDetail": "Aquí tienes lo vendido, lo que costó y tu beneficio de lo seleccionado, con el desglose por método de pago.",
+  "cashGiven": "Entregado",
+  "cashChangeLabel": "Vueltas",
+  "cashMissing": "Faltan {amount} €",
+  "@cashMissing": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "cashExact": "Justo"
 }

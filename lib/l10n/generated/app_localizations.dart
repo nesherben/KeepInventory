@@ -4711,6 +4711,30 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Aquí tienes lo vendido, lo que costó y tu beneficio de lo seleccionado, con el desglose por método de pago.'**
   String get coachChartDetail;
+
+  /// No description provided for @cashGiven.
+  ///
+  /// In es, this message translates to:
+  /// **'Entregado'**
+  String get cashGiven;
+
+  /// No description provided for @cashChangeLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Vueltas'**
+  String get cashChangeLabel;
+
+  /// No description provided for @cashMissing.
+  ///
+  /// In es, this message translates to:
+  /// **'Faltan {amount} €'**
+  String cashMissing(String amount);
+
+  /// No description provided for @cashExact.
+  ///
+  /// In es, this message translates to:
+  /// **'Justo'**
+  String get cashExact;
 }
 
 class _AppLocalizationsDelegate

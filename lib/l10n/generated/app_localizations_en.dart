@@ -2882,4 +2882,18 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get coachChartDetail =>
       'Here you see what was sold, what it cost and your profit for the selection, broken down by payment method.';
+
+  @override
+  String get cashGiven => 'Given';
+
+  @override
+  String get cashChangeLabel => 'Change';
+
+  @override
+  String cashMissing(String amount) {
+    return '$amount € short';
+  }
+
+  @override
+  String get cashExact => 'Exact';
 }
