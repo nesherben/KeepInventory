@@ -16,6 +16,7 @@ import 'features/inventory/presentation/inventory_screen.dart';
 import 'features/packs/presentation/packs_screen.dart';
 import 'features/promotions/presentation/promotions_screen.dart';
 import 'features/sales/presentation/history_screen.dart';
+import 'features/history/presentation/history_screen.dart';
 import 'features/sales/presentation/sales_screen.dart';
 
 // 💡 Importamos el Drawer para acceder a su ValueNotifier del tema
@@ -117,6 +118,7 @@ class _KeepInventoryAppState extends State<KeepInventoryApp>
                 '/inventory': (context) => const InventoryScreen(),
                 '/sales': (context) => const SalesScreen(),
                 '/history': (context) => const HistoryScreen(),
+                '/changes': (context) => const HistoryChangesScreen(),
                 '/promotions': (context) => const PromotionsScreen(),
                 '/packs': (context) => const PacksScreen(),
                 '/data-management': (context) => const DataManagementScreen(),

@@ -181,6 +181,13 @@ class AppDrawer extends StatelessWidget {
                   ),
                   section(context.l10n.navSectionData),
                   item(
+                    '/changes',
+                    Icons.history,
+                    Icons.history,
+                    context.l10n.navHistoryChanges,
+                    subtitle: context.l10n.navHistoryChangesSubtitle,
+                  ),
+                  item(
                     '/data-management',
                     Icons.storage_outlined,
                     Icons.storage,

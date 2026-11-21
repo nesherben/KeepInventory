@@ -2393,4 +2393,170 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get agreedTotalResetByChange =>
       'Se quitó el total acordado porque cambió el carrito.';
+
+  @override
+  String get navHistoryChanges => 'Historial de cambios';
+
+  @override
+  String get navHistoryChangesSubtitle => 'Qué cambiaste y cuándo';
+
+  @override
+  String get historyTitle => 'Historial de cambios';
+
+  @override
+  String get historyEmptyTitle => 'Aún no hay cambios';
+
+  @override
+  String get historyEmptyMessage =>
+      'Aquí verás los cambios que hagas en productos, categorías, packs, promociones y combos.';
+
+  @override
+  String get changesNoResults => 'Ningún cambio coincide con los filtros';
+
+  @override
+  String get changesClearFilters => 'Quitar filtros';
+
+  @override
+  String get changesSearchHint => 'Buscar en el historial';
+
+  @override
+  String get historyEntityAll => 'Todo';
+
+  @override
+  String get historyEntityProducts => 'Productos';
+
+  @override
+  String get historyEntityCategories => 'Categorías';
+
+  @override
+  String get historyEntityPacks => 'Packs';
+
+  @override
+  String get historyEntityPromotions => 'Promociones';
+
+  @override
+  String get historyEntityCombos => 'Combos';
+
+  @override
+  String get historyKindProduct => 'Producto';
+
+  @override
+  String get historyKindCategory => 'Categoría';
+
+  @override
+  String get historyKindPack => 'Pack';
+
+  @override
+  String get historyKindPromotion => 'Promoción';
+
+  @override
+  String get historyKindCombo => 'Combo';
+
+  @override
+  String get historyActionAll => 'Todas';
+
+  @override
+  String get historyActionCreated => 'Creado';
+
+  @override
+  String get historyActionEdited => 'Editado';
+
+  @override
+  String get historyActionDeleted => 'Eliminado';
+
+  @override
+  String get historyDateAny => 'Cualquier fecha';
+
+  @override
+  String get historyDateToday => 'Hoy';
+
+  @override
+  String get historyDateYesterday => 'Ayer';
+
+  @override
+  String get historyDateWeek => 'Últimos 7 días';
+
+  @override
+  String get historyDateMonth => 'Últimos 30 días';
+
+  @override
+  String get historyFieldName => 'Nombre';
+
+  @override
+  String get historyFieldPrice => 'Precio';
+
+  @override
+  String get historyFieldCost => 'Coste';
+
+  @override
+  String get historyFieldCategory => 'Categoría';
+
+  @override
+  String get historyFieldPromotion => 'Promoción';
+
+  @override
+  String get historyFieldImage => 'Imagen';
+
+  @override
+  String get historyFieldItems => 'Componentes';
+
+  @override
+  String get historyFieldSlots => 'Huecos';
+
+  @override
+  String get historyFieldType => 'Tipo';
+
+  @override
+  String get historyFieldThreshold => 'Unidades mínimas';
+
+  @override
+  String get historyFieldDiscount => 'Descuento';
+
+  @override
+  String get historyImageYes => 'Con imagen';
+
+  @override
+  String get historyImageNo => 'Sin imagen';
+
+  @override
+  String get historyNone => 'Ninguna';
+
+  @override
+  String get historyPromoTypePercent => 'Porcentaje';
+
+  @override
+  String get historyPromoTypeBundle => 'Precio fijo por lote';
+
+  @override
+  String historyMoreChanges(int count) {
+    return '+$count más';
+  }
+
+  @override
+  String historyChangeCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count cambios',
+      one: '1 cambio',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get historyBefore => 'Antes';
+
+  @override
+  String get historyAfter => 'Después';
+
+  @override
+  String historyOperation(int count) {
+    return 'Parte de una operación con $count cambios';
+  }
+
+  @override
+  String get historyUndone => 'Deshecho';
+
+  @override
+  String get close => 'Cerrar';
 }

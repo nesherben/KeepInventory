@@ -1255,5 +1255,77 @@
     }
   },
   "ticketFullyRefunded": "Reembolsado",
-  "agreedTotalResetByChange": "Se quitó el total acordado porque cambió el carrito."
+  "agreedTotalResetByChange": "Se quitó el total acordado porque cambió el carrito.",
+  "navHistoryChanges": "Historial de cambios",
+  "navHistoryChangesSubtitle": "Qué cambiaste y cuándo",
+  "historyTitle": "Historial de cambios",
+  "historyEmptyTitle": "Aún no hay cambios",
+  "historyEmptyMessage": "Aquí verás los cambios que hagas en productos, categorías, packs, promociones y combos.",
+  "changesNoResults": "Ningún cambio coincide con los filtros",
+  "changesClearFilters": "Quitar filtros",
+  "changesSearchHint": "Buscar en el historial",
+  "historyEntityAll": "Todo",
+  "historyEntityProducts": "Productos",
+  "historyEntityCategories": "Categorías",
+  "historyEntityPacks": "Packs",
+  "historyEntityPromotions": "Promociones",
+  "historyEntityCombos": "Combos",
+  "historyKindProduct": "Producto",
+  "historyKindCategory": "Categoría",
+  "historyKindPack": "Pack",
+  "historyKindPromotion": "Promoción",
+  "historyKindCombo": "Combo",
+  "historyActionAll": "Todas",
+  "historyActionCreated": "Creado",
+  "historyActionEdited": "Editado",
+  "historyActionDeleted": "Eliminado",
+  "historyDateAny": "Cualquier fecha",
+  "historyDateToday": "Hoy",
+  "historyDateYesterday": "Ayer",
+  "historyDateWeek": "Últimos 7 días",
+  "historyDateMonth": "Últimos 30 días",
+  "historyFieldName": "Nombre",
+  "historyFieldPrice": "Precio",
+  "historyFieldCost": "Coste",
+  "historyFieldCategory": "Categoría",
+  "historyFieldPromotion": "Promoción",
+  "historyFieldImage": "Imagen",
+  "historyFieldItems": "Componentes",
+  "historyFieldSlots": "Huecos",
+  "historyFieldType": "Tipo",
+  "historyFieldThreshold": "Unidades mínimas",
+  "historyFieldDiscount": "Descuento",
+  "historyImageYes": "Con imagen",
+  "historyImageNo": "Sin imagen",
+  "historyNone": "Ninguna",
+  "historyPromoTypePercent": "Porcentaje",
+  "historyPromoTypeBundle": "Precio fijo por lote",
+  "historyMoreChanges": "+{count} más",
+  "@historyMoreChanges": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "historyChangeCount": "{count, plural, =1{1 cambio} other{{count} cambios}}",
+  "@historyChangeCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "historyBefore": "Antes",
+  "historyAfter": "Después",
+  "historyOperation": "Parte de una operación con {count} cambios",
+  "@historyOperation": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "historyUndone": "Deshecho",
+  "close": "Cerrar"
 }

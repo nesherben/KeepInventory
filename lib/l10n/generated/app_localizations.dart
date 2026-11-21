@@ -3913,6 +3913,312 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Se quitó el total acordado porque cambió el carrito.'**
   String get agreedTotalResetByChange;
+
+  /// No description provided for @navHistoryChanges.
+  ///
+  /// In es, this message translates to:
+  /// **'Historial de cambios'**
+  String get navHistoryChanges;
+
+  /// No description provided for @navHistoryChangesSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Qué cambiaste y cuándo'**
+  String get navHistoryChangesSubtitle;
+
+  /// No description provided for @historyTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Historial de cambios'**
+  String get historyTitle;
+
+  /// No description provided for @historyEmptyTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Aún no hay cambios'**
+  String get historyEmptyTitle;
+
+  /// No description provided for @historyEmptyMessage.
+  ///
+  /// In es, this message translates to:
+  /// **'Aquí verás los cambios que hagas en productos, categorías, packs, promociones y combos.'**
+  String get historyEmptyMessage;
+
+  /// No description provided for @changesNoResults.
+  ///
+  /// In es, this message translates to:
+  /// **'Ningún cambio coincide con los filtros'**
+  String get changesNoResults;
+
+  /// No description provided for @changesClearFilters.
+  ///
+  /// In es, this message translates to:
+  /// **'Quitar filtros'**
+  String get changesClearFilters;
+
+  /// No description provided for @changesSearchHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Buscar en el historial'**
+  String get changesSearchHint;
+
+  /// No description provided for @historyEntityAll.
+  ///
+  /// In es, this message translates to:
+  /// **'Todo'**
+  String get historyEntityAll;
+
+  /// No description provided for @historyEntityProducts.
+  ///
+  /// In es, this message translates to:
+  /// **'Productos'**
+  String get historyEntityProducts;
+
+  /// No description provided for @historyEntityCategories.
+  ///
+  /// In es, this message translates to:
+  /// **'Categorías'**
+  String get historyEntityCategories;
+
+  /// No description provided for @historyEntityPacks.
+  ///
+  /// In es, this message translates to:
+  /// **'Packs'**
+  String get historyEntityPacks;
+
+  /// No description provided for @historyEntityPromotions.
+  ///
+  /// In es, this message translates to:
+  /// **'Promociones'**
+  String get historyEntityPromotions;
+
+  /// No description provided for @historyEntityCombos.
+  ///
+  /// In es, this message translates to:
+  /// **'Combos'**
+  String get historyEntityCombos;
+
+  /// No description provided for @historyKindProduct.
+  ///
+  /// In es, this message translates to:
+  /// **'Producto'**
+  String get historyKindProduct;
+
+  /// No description provided for @historyKindCategory.
+  ///
+  /// In es, this message translates to:
+  /// **'Categoría'**
+  String get historyKindCategory;
+
+  /// No description provided for @historyKindPack.
+  ///
+  /// In es, this message translates to:
+  /// **'Pack'**
+  String get historyKindPack;
+
+  /// No description provided for @historyKindPromotion.
+  ///
+  /// In es, this message translates to:
+  /// **'Promoción'**
+  String get historyKindPromotion;
+
+  /// No description provided for @historyKindCombo.
+  ///
+  /// In es, this message translates to:
+  /// **'Combo'**
+  String get historyKindCombo;
+
+  /// No description provided for @historyActionAll.
+  ///
+  /// In es, this message translates to:
+  /// **'Todas'**
+  String get historyActionAll;
+
+  /// No description provided for @historyActionCreated.
+  ///
+  /// In es, this message translates to:
+  /// **'Creado'**
+  String get historyActionCreated;
+
+  /// No description provided for @historyActionEdited.
+  ///
+  /// In es, this message translates to:
+  /// **'Editado'**
+  String get historyActionEdited;
+
+  /// No description provided for @historyActionDeleted.
+  ///
+  /// In es, this message translates to:
+  /// **'Eliminado'**
+  String get historyActionDeleted;
+
+  /// No description provided for @historyDateAny.
+  ///
+  /// In es, this message translates to:
+  /// **'Cualquier fecha'**
+  String get historyDateAny;
+
+  /// No description provided for @historyDateToday.
+  ///
+  /// In es, this message translates to:
+  /// **'Hoy'**
+  String get historyDateToday;
+
+  /// No description provided for @historyDateYesterday.
+  ///
+  /// In es, this message translates to:
+  /// **'Ayer'**
+  String get historyDateYesterday;
+
+  /// No description provided for @historyDateWeek.
+  ///
+  /// In es, this message translates to:
+  /// **'Últimos 7 días'**
+  String get historyDateWeek;
+
+  /// No description provided for @historyDateMonth.
+  ///
+  /// In es, this message translates to:
+  /// **'Últimos 30 días'**
+  String get historyDateMonth;
+
+  /// No description provided for @historyFieldName.
+  ///
+  /// In es, this message translates to:
+  /// **'Nombre'**
+  String get historyFieldName;
+
+  /// No description provided for @historyFieldPrice.
+  ///
+  /// In es, this message translates to:
+  /// **'Precio'**
+  String get historyFieldPrice;
+
+  /// No description provided for @historyFieldCost.
+  ///
+  /// In es, this message translates to:
+  /// **'Coste'**
+  String get historyFieldCost;
+
+  /// No description provided for @historyFieldCategory.
+  ///
+  /// In es, this message translates to:
+  /// **'Categoría'**
+  String get historyFieldCategory;
+
+  /// No description provided for @historyFieldPromotion.
+  ///
+  /// In es, this message translates to:
+  /// **'Promoción'**
+  String get historyFieldPromotion;
+
+  /// No description provided for @historyFieldImage.
+  ///
+  /// In es, this message translates to:
+  /// **'Imagen'**
+  String get historyFieldImage;
+
+  /// No description provided for @historyFieldItems.
+  ///
+  /// In es, this message translates to:
+  /// **'Componentes'**
+  String get historyFieldItems;
+
+  /// No description provided for @historyFieldSlots.
+  ///
+  /// In es, this message translates to:
+  /// **'Huecos'**
+  String get historyFieldSlots;
+
+  /// No description provided for @historyFieldType.
+  ///
+  /// In es, this message translates to:
+  /// **'Tipo'**
+  String get historyFieldType;
+
+  /// No description provided for @historyFieldThreshold.
+  ///
+  /// In es, this message translates to:
+  /// **'Unidades mínimas'**
+  String get historyFieldThreshold;
+
+  /// No description provided for @historyFieldDiscount.
+  ///
+  /// In es, this message translates to:
+  /// **'Descuento'**
+  String get historyFieldDiscount;
+
+  /// No description provided for @historyImageYes.
+  ///
+  /// In es, this message translates to:
+  /// **'Con imagen'**
+  String get historyImageYes;
+
+  /// No description provided for @historyImageNo.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin imagen'**
+  String get historyImageNo;
+
+  /// No description provided for @historyNone.
+  ///
+  /// In es, this message translates to:
+  /// **'Ninguna'**
+  String get historyNone;
+
+  /// No description provided for @historyPromoTypePercent.
+  ///
+  /// In es, this message translates to:
+  /// **'Porcentaje'**
+  String get historyPromoTypePercent;
+
+  /// No description provided for @historyPromoTypeBundle.
+  ///
+  /// In es, this message translates to:
+  /// **'Precio fijo por lote'**
+  String get historyPromoTypeBundle;
+
+  /// No description provided for @historyMoreChanges.
+  ///
+  /// In es, this message translates to:
+  /// **'+{count} más'**
+  String historyMoreChanges(int count);
+
+  /// No description provided for @historyChangeCount.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =1{1 cambio} other{{count} cambios}}'**
+  String historyChangeCount(int count);
+
+  /// No description provided for @historyBefore.
+  ///
+  /// In es, this message translates to:
+  /// **'Antes'**
+  String get historyBefore;
+
+  /// No description provided for @historyAfter.
+  ///
+  /// In es, this message translates to:
+  /// **'Después'**
+  String get historyAfter;
+
+  /// No description provided for @historyOperation.
+  ///
+  /// In es, this message translates to:
+  /// **'Parte de una operación con {count} cambios'**
+  String historyOperation(int count);
+
+  /// No description provided for @historyUndone.
+  ///
+  /// In es, this message translates to:
+  /// **'Deshecho'**
+  String get historyUndone;
+
+  /// No description provided for @close.
+  ///
+  /// In es, this message translates to:
+  /// **'Cerrar'**
+  String get close;
 }
 
 class _AppLocalizationsDelegate
