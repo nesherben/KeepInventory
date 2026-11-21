@@ -7,6 +7,9 @@ import '../../../inventory/domain/inventory_view.dart';
 import '../../../inventory/domain/product.dart';
 import '../../../sales/domain/sale.dart';
 
+/// Qué paneles pinta [DashboardOverviewPanels].
+enum OverviewPart { both, tickets, stock }
+
 /// Relleno útil del Inicio en tablet: los últimos tickets y lo que se está
 /// acabando, con un toque para ir a la pantalla correspondiente.
 class DashboardOverviewPanels extends StatelessWidget {
@@ -17,6 +20,7 @@ class DashboardOverviewPanels extends StatelessWidget {
     required this.onOpenTickets,
     required this.onOpenInventory,
     this.hideAmounts = false,
+    this.part = OverviewPart.both,
   });
 
   final List<Sale> recentSales;
@@ -26,6 +30,9 @@ class DashboardOverviewPanels extends StatelessWidget {
 
   /// Modo privacidad: los importes se ocultan.
   final bool hideAmounts;
+
+  /// Pintar solo un panel (columnas independientes) o los dos lado a lado.
+  final OverviewPart part;
 
   @override
   Widget build(BuildContext context) {
@@ -122,6 +129,9 @@ class DashboardOverviewPanels extends StatelessWidget {
           ),
       ],
     );
+
+    if (part == OverviewPart.tickets) return tickets;
+    if (part == OverviewPart.stock) return stock;
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,

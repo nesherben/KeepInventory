@@ -403,7 +403,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   /// Últimos tickets y stock bajo, en dos columnas (tablet).
-  Widget _buildOverviewPanels() => DashboardOverviewPanels(
+  Widget _buildOverviewPanels(OverviewPart part) => DashboardOverviewPanels(
+    part: part,
     recentSales: _recentSales,
     lowStock: _lowStock,
     hideAmounts: _isPrivacyModeEnabled,
@@ -639,39 +640,41 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   children: [
                     const BackupReminderBanner(),
                     if (isWideScreen) ...[
-                      IntrinsicHeight(
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  Expanded(
-                                    child: KeyedSubtree(
-                                      key: _mainKey,
-                                      child: _buildMainCard(true),
-                                    ),
-                                  ),
-                                  // El desglose por método se abre pegado al hero
-                                  _buildPaymentBreakdownPanel(),
-                                  const SizedBox(height: 12),
-                                  _buildChartButton(),
-                                ],
-                              ),
+                      // Dos columnas independientes, cada una con su flujo (sin
+                      // IntrinsicHeight, que rompería la animación del desglose)
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                KeyedSubtree(
+                                  key: _mainKey,
+                                  child: _buildMainCard(true),
+                                ),
+                                // El desglose por método se abre pegado al hero
+                                _buildPaymentBreakdownPanel(),
+                                const SizedBox(height: 12),
+                                _buildChartButton(),
+                                const SizedBox(height: 20),
+                                _buildOverviewPanels(OverviewPart.tickets),
+                              ],
                             ),
-                            const SizedBox(width: 20),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [_buildSummaryGrid()],
-                              ),
+                          ),
+                          const SizedBox(width: 20),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                _buildSummaryGrid(),
+                                const SizedBox(height: 20),
+                                _buildOverviewPanels(OverviewPart.stock),
+                              ],
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 20),
-                      _buildOverviewPanels(),
                     ] else ...[
                       KeyedSubtree(key: _mainKey, child: _buildMainCard(false)),
                       _buildPaymentBreakdownPanel(),
