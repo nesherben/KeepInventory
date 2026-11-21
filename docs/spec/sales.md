@@ -34,7 +34,7 @@ Pantallas: `SalesScreen` (`/sales`) y `HistoryScreen` (`/history`).
   - Una pista de combo a medias se muestra en el carrito (PROMO-007).
 - **Datos:** estado en memoria; no se persiste.
 - **Flujo:** ver SALES-001.
-- **Casos límite y errores:** el carrito no se guarda si se sale de la pantalla. Con el carrito lleno, el botón atrás pide confirmación ("¿Salir sin cobrar?"); salir por el menú lateral no avisa.
+- **Casos límite y errores:** el carrito vive en memoria (`CartSession`: ids y cantidades, descuentos, factor y método de pago) y se recupera al volver a la caja desde el menú, recortando cantidades al stock actual y descartando lo que ya no exista; se pierde al cerrar la app. "Atrás" solo pide confirmación ("¿Salir sin cobrar?") si cierra la app (única pantalla); con pantalla debajo, el carrito se conserva.
 - **Código:** `lib/features/sales/presentation/sales_screen.dart` (`_addToCart`, `_removeFromCart`, `_removeAllFromCart`, `_addPackToCart`, `_removePackFromCart`, `_removeAllPackFromCart`), `lib/features/sales/presentation/widgets/cart_items_list_widget.dart`, `sales_cart_sheet.dart`, `sales_landscape_cart_panel.dart`.
 - **Tests:** sin tests de la pantalla (lógica de conteo en `test/sale_cart_pricing_calculator_test.dart`).
 
@@ -93,7 +93,7 @@ Pantallas: `SalesScreen` (`/sales`) y `HistoryScreen` (`/history`).
   - `processSale` (una transacción): inserta `sales`; inserta `sale_combos` (traduciendo ids provisionales por los reales) ; por cada línea inserta `sale_items` y hace `products.units -= cantidad`; por cada pack inserta `sale_packs` y `packs.units -= cantidad`. Todo-o-nada.
   - Tras vender: se vacían carrito, packs y ajuste, el método vuelve a efectivo, se recargan datos, aviso de éxito con nº de ticket, importe y método, y el carrito se pliega.
   - `fair_name` queda NULL al vender (la feria se asigna después desde el historial, SALES-011).
-  - Las ventas **no** validan stock en BD (solo en el carrito, SALES-002): el stock podría quedar negativo si cambia entre medias (POR CONFIRMAR).
+  - El stock se valida TAMBIÉN en la BD: `processSale` descuenta con `WHERE units >= cantidad` y, si una línea ya no alcanza, lanza `InsufficientStockException` y la transacción se deshace entera (ni venta ni stock cambian). La pantalla avisa ("El stock de «X» ha cambiado…") y recarga el catálogo, ajustando el carrito a las existencias reales.
 - **Datos:** `sales`, `sale_items`, `sale_packs`, `sale_combos`, `products.units`, `packs.units`.
 - **Flujo:** botón de cobro (grande en horizontal) → registro → aviso.
 - **Casos límite y errores:** el botón se bloquea mientras se registra (evita el doble toque) y, si la transacción falla, se muestra "No se pudo registrar la venta" y el carrito se conserva.
@@ -144,9 +144,9 @@ Pantallas: `SalesScreen` (`/sales`) y `HistoryScreen` (`/history`).
     3. Repone packs según el interruptor.
     4. Reescribe `sale_items` y `sale_combos` con lo que queda (`remainingAfterRefund`): precios recalculados de modo que la suma de líneas = valor de lo conservado; combos con cantidad 0 desaparecen y sus líneas pasan a sueltas.
     5. Packs devueltos por completo se borran de `sale_packs`; parciales restan cantidad.
-    6. Si no queda ninguna línea ni pack → se borra la venta (y sus combos); si no, `total_amount = max(0, total − reembolso)` y `adjustment_factor = nuevo total ÷ Σ(historical_price × cantidad restantes)` (si esa suma es 0 se conserva el factor).
+    6. Si no queda ninguna línea ni pack → la venta se CONSERVA con `total_amount = 0` (sin combos) y con su historial de devoluciones (el ticket aparece como "Reembolsado", sin botón de devolver y sin contar en ingresos ni beneficio); si no, `total_amount = max(0, total − reembolso)` y `adjustment_factor = nuevo total ÷ Σ(historical_price × cantidad restantes)` (si esa suma es 0 se conserva el factor).
   - Una devolución parcial **no** reactiva productos borrados lógicamente.
-  - Existen `SaleRepository.refundSale` / `SaleLocalDatasource.refundSale` (devolución total: repone todo el stock, reactiva productos `is_active = 1`, borra venta y líneas) pero **ninguna pantalla los llama** (POR CONFIRMAR si es código en desuso o se usará).
+  - Existen `SaleRepository.refundSale` / `SaleLocalDatasource.refundSale` (devolución total antigua: repone todo el stock, reactiva productos `is_active = 1`, borra venta y líneas; a diferencia de `processPartialRefund`, no conserva el ticket) pero **ninguna pantalla los llama** (POR CONFIRMAR si es código en desuso o se usará).
   - Las devoluciones pueden encadenarse en varios pasos; el ticket muestra el historial de devoluciones.
 - **Datos:** `sales`, `sale_items`, `sale_packs`, `sale_combos`, `sale_refunds`, `products.units`, `packs.units`, `pack_items`.
 - **Flujo:** historial → ticket → botón "Devolver" → diálogo → confirmar → recarga y aviso de éxito.
@@ -209,3 +209,9 @@ Pantallas: `SalesScreen` (`/sales`) y `HistoryScreen` (`/history`).
 - **Casos límite y errores:** línea a 0 € permitida con aviso en la vista previa; doble toque en Aplicar/Quitar protegido (un solo pop); cambiar de modo en la hoja convierte el valor en vez de borrarlo.
 - **Código:** `lib/features/sales/domain/manual_line_discount.dart`, `sale_cart_pricing_calculator.dart` (`price(lineDiscounts)`, `canDiscount`, `lineDiscountsToDrop`), `sale_from_cart_factory.dart`, `sale.dart` (`SaleItem.manualDiscount*`), `sale_refund_calculator.dart` (`remainingAfterRefund`), `lib/features/sales/data/datasources/sale_local_datasource.dart`, `lib/features/sales/presentation/sales_screen.dart` (`_setLineDiscount`, `_applyAgreedTotal`, `_pruneLineDiscounts`), `widgets/line_discount_sheet.dart`, `widgets/cart_items_list_widget.dart`, `widgets/sales_cart_total_summary.dart` (ahorro), `widgets/sale_history_group_card.dart`, `widgets/sales_ui_utils.dart` (`lineDiscountLabel`).
 - **Tests:** `test/manual_line_discount_test.dart`, `test/sale_cart_pricing_calculator_test.dart` (grupo "manual line discounts"), `test/sale_refund_calculator_test.dart`, `test/database_migration_runner_test.dart`, `test/sale_history_group_card_test.dart`. Sin tests de widget de `LineDiscountSheet` ni de la capa de datos (insertar/leer `manual_discount_*`).
+
+### SALES-014 · Total acordado y cambios en el carrito
+- **Propósito:** que un total pactado no se aplique por error a un carrito distinto.
+- **Reglas de negocio:** si cambia el CONTENIDO del carrito (añadir o quitar unidades de un producto o pack) con un total acordado activo (SALES-004), el total acordado se quita (factor 1) y se avisa ("Se quitó el total acordado porque cambió el carrito"). Si el carrito queda vacío se quita en silencio. También se quita si al recuperar el carrito (CartSession) las cantidades se recortan por el stock. Esto sustituye al comportamiento anterior (el factor proporcional se conservaba al cambiar el carrito).
+- **Código:** `lib/features/sales/presentation/sales_screen.dart` (`_dropAgreedTotal`, `_notifyAgreedTotalDropped`, `_remapCart`), `lib/features/sales/presentation/cart_session.dart`.
+- **Tests:** sin tests de widget (probado en el emulador).

@@ -113,3 +113,15 @@ Productos, stock, categorías y su pantalla. Los precios por promoción están e
 - **Casos límite y errores:** catálogo vacío → estado vacío y `AppDrawer.catalogEmpty = true`.
 - **Código:** `lib/features/inventory/presentation/inventory_screen.dart`, `widgets/inventory_products_table.dart`, `widgets/inventory_table_cell.dart`, `widgets/inventory_product_widgets.dart`.
 - **Tests:** `test/inventory_products_table_test.dart`.
+
+### INV-010 · Edición múltiple
+- **Propósito:** cambiar o borrar varios productos de una vez.
+- **Reglas de negocio:**
+  - Se entra con el botón "Seleccionar varios" de la barra o con pulsación larga en una tarjeta; en la tabla (tablet) aparecen casillas. En selección, tocar una tarjeta la marca (no abre las ediciones de campo), "atrás" sale de la selección y se oculta el botón ＋. La barra muestra el nº de seleccionados, "Seleccionar todo" (lo filtrado), "Editar" y "Eliminar" (rojo).
+  - La hoja de edición (`BulkEditSheet`) cambia, a elección y sin tocar lo demás: categoría, promoción, precio y coste. Precio y coste admiten "Igual", "Fijar" (mismo valor), "± %" (sube o baja un porcentaje) o "± €" (suma o resta); nunca bajan de 0 y van a céntimos (`BulkNumberEdit.apply`). El stock NO se toca.
+  - `updateMany` y `deleteMany` (datasource) lo aplican en UNA transacción (todo o nada); cada producto genera su entrada de historial (HIST-001) y todas comparten `group_id`. Si no cambia nada, no se registra nada. Borrar es lógico, igual que INV-004.
+- **Datos:** `products` (`category_id`, `promotion_id`, `price`, `cost`, `is_active`); `change_log`.
+- **Flujo:** seleccionar → editar → elegir cambios → Aplicar → aviso "N productos actualizados" y se sale de la selección. Eliminar pide confirmación con el nº.
+- **Casos límite y errores:** los marcados que desaparecen al recargar se desmarcan; con la selección activa, los +/− de stock siguen funcionando por separado.
+- **Código:** `lib/features/inventory/domain/bulk_product_edit.dart`, `lib/features/inventory/presentation/widgets/bulk_edit_sheet.dart`, `lib/features/inventory/presentation/inventory_screen.dart`, `widgets/inventory_product_widgets.dart` (`InventoryProductCard`), `widgets/inventory_products_table.dart`, `product_local_datasource.dart` / `product_repository_impl.dart` (`updateMany`, `deleteMany`).
+- **Tests:** `test/bulk_product_edit_test.dart`, `test/product_bulk_datasource_test.dart`.

@@ -161,3 +161,9 @@ Base de datos, preferencias, formato numérico, tema, idioma, arranque, imágene
 - **Casos límite y errores:** el hint espera hasta ~2 min (240×500 ms) a que Inicio esté visible.
 - **Código:** `lib/core/shared_widgets/app_drawer.dart`, `lib/core/shared_widgets/main_scaffold.dart`, `lib/features/tutorial/presentation/tutorial_screen.dart`, `lib/features/dashboard/presentation/dashboard_screen.dart` (`_checkFirstSteps`).
 - **Tests:** `test/app_drawer_test.dart`.
+
+### CORE-013 · Formularios adaptados al dispositivo (`AdaptiveForm`)
+- **Propósito:** una misma ficha de formulario que se ve bien en móvil y tablet.
+- **Reglas de negocio:** móvil (<600 px) → panel inferior; tablet horizontal (≥900 px) → panel lateral; tablet vertical → diálogo. El panel inferior **se ajusta al contenido** (un formulario corto no ocupa toda la pantalla) y solo crece, con scroll, si es largo; el lateral ocupa toda la altura. Los botones quedan fijos abajo, por encima del teclado o de la barra de navegación. Los campos numéricos usan `selectAllOnFocus` (al tocarlos se selecciona el valor, para escribir encima sin borrar). Botones de confirmación siempre `FilledButton` (rojo solo para borrar); sin sombras en tarjetas, hojas ni botones; radios de la escala 8/12/16/20.
+- **Código:** `lib/core/shared_widgets/adaptive_form.dart`, `lib/core/shared_widgets/app_ui.dart` (`AppRadius`).
+- **Tests:** sin tests propios.

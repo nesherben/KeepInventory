@@ -70,7 +70,7 @@ Copia de **todos los datos** de un móvil (emisor) a otro (receptor) por red loc
   3. Aprobación (no aplica al QR antiguo): genera id de 16 caracteres, `GET /request` (timeout 5 s); 409 → versión distinta; otro código ≠ 200 → denegado; luego consulta `/status` cada 1 s hasta **2 min** o hasta `approved`/`denied`; `denied` → "denegado por el emisor"; agotado el tiempo → "sin respuesta".
   4. Descarga con **hasta 3 intentos** (2 s entre ellos, timeout de conexión 15 s): escribe en `keepinventory_temp.db` con progreso (% si hay `Content-Length`, MB si no).
   5. **Integridad:** si hubo error de stream o `recibidos < esperados` → borra el temporal y reintenta; tras el 3º → "descarga inestable".
-  6. **Instalación segura:** cierra la BD, copia la actual a `keepinventory_failsafe.db`, copia el temporal sobre `keepinventory.db`, borra temporal y failsafe y devuelve éxito; si falla, restaura desde el failsafe y devuelve error.
+  6. **Validación y copia previa** (ver nota abajo) y **instalación segura:** cierra la BD, copia la actual a `keepinventory_failsafe.db`, copia el temporal sobre `keepinventory.db`, borra temporal y failsafe y devuelve éxito; si falla, restaura desde el failsafe y devuelve error.
   - Siempre al final: `HotspotService.disconnect()` (vuelve a la red normal).
   - Éxito → diálogo para **reiniciar** la app (`restart_app`).
 - **Datos:** `keepinventory.db`, `keepinventory_temp.db`, `keepinventory_failsafe.db`.
@@ -78,7 +78,7 @@ Copia de **todos los datos** de un móvil (emisor) a otro (receptor) por red loc
 - **Casos límite y errores:** respuesta HTTP ≠ 200 en la descarga → reintenta y, al fallar, "servidor rechazó".
 - **Código:** `lib/core/services/sync_service.dart` (`importDatabase`, `requestApproval`, `findReachableHost`), `lib/core/services/database_file_installer.dart` (`DatabaseFileInstaller.installDownloadedFile`), `lib/features/sync/presentation/sync_screen.dart`.
 - **Tests:** `test/sync_server_test.dart` (end-to-end con servidor real), `test/database_file_installer_test.dart`.
-- **POR CONFIRMAR:** la BD descargada **no se valida** con `BackupValidator` antes de instalarla (solo integridad de tamaño y misma versión de app); tampoco guarda copia persistente previa (`saveBeforeRestore`) como sí hace la restauración de copias (BKP-005).
+- **Nota:** la BD descargada se valida con `BackupValidator.inspect` antes de instalarla (dañada o de una versión más nueva → "no se pudo aplicar", sin tocar la BD actual) y, tras cerrar la BD, se guarda una copia persistente previa con `LocalBackupService.saveBeforeRestore` (igual que la restauración de copias, BKP-005); si esa copia falla, se aborta. No se ha podido probar con dos móviles reales.
 
 ### SYNC-006 · Punto de acceso local (hotspot) y conexión automática
 - **Propósito:** sincronizar sin Wi‑Fi compartida: el emisor crea una red local y el receptor se une.
