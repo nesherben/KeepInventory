@@ -1,3 +1,4 @@
+import '../../../core/shared_widgets/coach_marks.dart';
 import 'widgets/backup_reminder_banner.dart';
 import '../../../core/shared_widgets/app_side_rail.dart';
 import 'widgets/dashboard_overview_panels.dart';
@@ -52,6 +53,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
   // Desglose de la tarjeta de ingresos totales, plegado por defecto
   bool _showPaymentBreakdown = false;
   List<Sale> _recentSales = [];
+
+  // Guía de la pantalla (mini tutorial): elementos que se iluminan
+  final _mainKey = GlobalKey();
+  final _metricsKey = GlobalKey();
+  final _chartKey = GlobalKey();
+  final _privacyKey = GlobalKey();
+  bool _guideTried = false;
+
+  List<CoachStep> _guideSteps() {
+    final l10n = context.l10n;
+    return [
+      CoachStep(target: _mainKey, text: l10n.coachDashMain),
+      CoachStep(target: _metricsKey, text: l10n.coachDashMetrics),
+      CoachStep(target: _chartKey, text: l10n.coachDashChart),
+      CoachStep(target: _privacyKey, text: l10n.coachDashPrivacy),
+    ];
+  }
+
   List<Product> _lowStock = [];
 
   bool get _isPrivacyModeEnabled => AppPreferences.privacyModeEnabled.value;
@@ -208,7 +227,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
         .getProducts();
     final empty = products.isEmpty;
     AppDrawer.catalogEmpty.value = empty;
-    if (!empty || AppPreferences.menuHintShown) return;
+    if (!empty || AppPreferences.menuHintShown) {
+      // Con el inventario vacío la primera vez, el menú que se abre solo
+      // ocupa ese momento: la guía sale en otra visita
+      if (mounted && !_guideTried) {
+        _guideTried = true;
+        CoachGuide.showOnce(context, 'dashboard', _guideSteps);
+      }
+      return;
+    }
     // Esperar a que Inicio esté a la vista (p. ej. tras cerrar el tutorial)
     for (var i = 0; i < 240; i++) {
       await Future.delayed(const Duration(milliseconds: 500));
@@ -245,15 +272,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildMetricCard({
+    Key? key,
     required String title,
     required String value,
     required IconData icon,
     required Color color,
-  }) => StatTile(label: title, value: value, icon: icon, iconColor: color);
+  }) => StatTile(
+    key: key,
+    label: title,
+    value: value,
+    icon: icon,
+    iconColor: color,
+  );
 
   Widget _buildChartButton() {
     final colors = Theme.of(context).colorScheme;
     return AppCard(
+      key: _chartKey,
       onTap: _openFullScreenChart,
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.lg,
@@ -541,6 +576,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
           elevation: 0,
           actions: [
             IconButton(
+              tooltip: context.l10n.coachHelpTooltip,
+              icon: const Icon(Icons.help_outline),
+              onPressed: () =>
+                  CoachGuide.replay(context, 'dashboard', _guideSteps),
+            ),
+            IconButton(
+              key: _privacyKey,
               icon: Icon(
                 _isPrivacyModeEnabled ? Icons.visibility_off : Icons.visibility,
                 color: _isPrivacyModeEnabled
@@ -579,7 +621,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
-                                  Expanded(child: _buildMainCard(true)),
+                                  Expanded(
+                                    child: KeyedSubtree(
+                                      key: _mainKey,
+                                      child: _buildMainCard(true),
+                                    ),
+                                  ),
                                   const SizedBox(height: 12),
                                   _buildChartButton(),
                                 ],
@@ -592,6 +639,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 children: [
                                   Expanded(
                                     child: _buildMetricCard(
+                                      key: _metricsKey,
                                       title: context.l10n.metricInventoryCost,
                                       value: _formatCurrency(_inventoryCost),
                                       icon: Icons.inventory_2_outlined,
@@ -641,7 +689,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             ),
                       ),
                     ] else ...[
-                      _buildMainCard(false),
+                      KeyedSubtree(key: _mainKey, child: _buildMainCard(false)),
                       _buildPaymentBreakdownPanel(),
                       const SizedBox(height: 16),
                       _buildChartButton(),
@@ -650,6 +698,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         children: [
                           Expanded(
                             child: _buildMetricCard(
+                              key: _metricsKey,
                               title: context.l10n.metricInventoryCost,
                               value: _formatCurrency(_inventoryCost),
                               icon: Icons.inventory_2_outlined,

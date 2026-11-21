@@ -1,3 +1,4 @@
+import '../../../core/shared_widgets/coach_marks.dart';
 import '../../../core/shared_widgets/adaptive_form.dart';
 
 import 'package:flutter/material.dart';
@@ -35,6 +36,29 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     _load();
   }
 
+  // Guía de la pantalla (mini tutorial): elementos que se iluminan
+  final _fabKey = GlobalKey();
+  final _cardKey = GlobalKey();
+  bool _guideTried = false;
+
+  /// Sin categorías invita a crear la primera.
+  List<CoachStep> _guideSteps() {
+    final l10n = context.l10n;
+    if (_categories.isEmpty) {
+      return [
+        CoachStep(
+          target: _fabKey,
+          title: l10n.coachCatEmptyTitle,
+          text: l10n.coachCatEmptyText,
+        ),
+      ];
+    }
+    return [
+      CoachStep(target: _fabKey, text: l10n.coachCatAdd),
+      CoachStep(target: _cardKey, text: l10n.coachCatCard),
+    ];
+  }
+
   Future<void> _load() async {
     final categories = await _repository.getCategories();
     final counts = await _repository.countAll();
@@ -44,6 +68,10 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
       _counts = counts;
       _loading = false;
     });
+    if (!_guideTried) {
+      _guideTried = true;
+      CoachGuide.showOnce(context, 'categories', _guideSteps);
+    }
   }
 
   /// Pide un nombre (nuevo o renombrar). Null si se cancela.
@@ -229,7 +257,17 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: AppBar(title: Text(context.l10n.categoriesTitle)),
+      appBar: AppBar(
+        title: Text(context.l10n.categoriesTitle),
+        actions: [
+          IconButton(
+            tooltip: context.l10n.coachHelpTooltip,
+            icon: const Icon(Icons.help_outline),
+            onPressed: () =>
+                CoachGuide.replay(context, 'categories', _guideSteps),
+          ),
+        ],
+      ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _categories.isEmpty
@@ -243,6 +281,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
               itemBuilder: (context, index) {
                 final category = _categories[index];
                 return AppCard(
+                  key: index == 0 ? _cardKey : null,
                   margin: const EdgeInsets.only(bottom: AppSpacing.sm),
                   padding: const EdgeInsets.fromLTRB(12, 4, 4, 4),
                   onTap: () => _editProducts(category),
@@ -291,6 +330,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
               },
             ),
       floatingActionButton: FloatingActionButton.extended(
+        key: _fabKey,
         onPressed: _create,
         icon: const Icon(Icons.add),
         label: Text(context.l10n.categoryNew),

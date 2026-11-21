@@ -74,7 +74,7 @@ El menú lateral (desliza desde el borde izquierdo o pulsa ☰) da acceso a toda
 >
 > 🎓 La primera vez que abres la app aparece un **tutorial** de tres páginas y, si aún no tienes productos, el menú se abre solo con **Inventario** resaltado para que sepas por dónde empezar. Puedes volver a verlo cuando quieras desde **menú → Tutorial**.
 >
-> 💡 Además, cada pantalla (Inventario, Caja, Ofertas, Packs, Tickets, Historial de cambios y Copias) te enseña lo esencial **la primera vez que la abres**: oscurece la pantalla, ilumina un elemento y lo explica en una burbuja corta. Si aún no tienes datos, te invita a crear los tuyos propios (un producto, una oferta…) para practicar. Repite la guía de la pantalla con el icono **?** de la barra superior, o todas a la vez desde **menú → Guías de cada pantalla**.
+> 💡 Además, cada pantalla (Inicio, Inventario, Categorías, Caja, Ofertas, Packs, Tickets, Historial de cambios, Copias, Sincronización por QR y Balance detallado) te enseña lo esencial **la primera vez que la abres**: oscurece la pantalla, ilumina un elemento y lo explica en una burbuja corta. Si aún no tienes datos, te invita a crear los tuyos propios (un producto, una oferta…) para practicar. Repite la guía de la pantalla con el icono **?** de la barra superior, o todas a la vez desde **menú → Guías de cada pantalla**.
 
 ### 1. Da de alta tu inventario
 1. Abre **Inventario** y pulsa **＋**.

@@ -2828,4 +2828,58 @@ class AppLocalizationsEn extends AppLocalizations {
   String deleteProductUsedIn(String names) {
     return 'This product is part of: $names. Deleting it removes it from there, and those packs or combos may end up incomplete.';
   }
+
+  @override
+  String get coachDashMain =>
+      'Your total register: everything collected at all fairs and direct sales, with refunds already deducted.';
+
+  @override
+  String get coachDashMetrics =>
+      'Inventory cost: what the stock you hold cost you. Next to it, what it would be worth if you sold it all and, below, your real net profit.';
+
+  @override
+  String get coachDashChart =>
+      'Tap here to see the balance by fairs and days in a bar chart.';
+
+  @override
+  String get coachDashPrivacy =>
+      'The eye hides the amounts in case customers are looking. Tap it again to show them.';
+
+  @override
+  String get coachCatEmptyTitle => 'Create your first category';
+
+  @override
+  String get coachCatEmptyText =>
+      'Categories group your products (for example “T-shirts” or “Mugs”) and help you filter and apply offers. Create your own with this button.';
+
+  @override
+  String get coachCatAdd => 'Use this button to create more categories.';
+
+  @override
+  String get coachCatCard =>
+      'Tap a category to choose which products it holds; use the pencil to rename it and the bin to delete it.';
+
+  @override
+  String get coachSyncSend =>
+      'Sending phone: tap here and a QR code appears. No cables or shared Wi‑Fi needed.';
+
+  @override
+  String get coachSyncReceive =>
+      'Receiving phone: scan that QR code. The other phone has to approve the transfer, and this phone\'s data is replaced.';
+
+  @override
+  String get coachSyncWifi =>
+      'If both phones are on the same Wi‑Fi, you can use it instead of the hotspot.';
+
+  @override
+  String get coachChartFilter =>
+      'Filter the balance by fairs or single days, or see it all together.';
+
+  @override
+  String get coachChartBars =>
+      'Each bar is a fair or a day. Tap one to see its details below.';
+
+  @override
+  String get coachChartDetail =>
+      'Here you see what was sold, what it cost and your profit for the selection, broken down by payment method.';
 }

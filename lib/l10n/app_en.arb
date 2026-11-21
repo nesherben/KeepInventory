@@ -799,5 +799,19 @@
   "dashboardAllStocked": "All stock levels are fine",
   "dashboardUnitsLeft": "{count} units",
   "refundAll": "Refund everything",
-  "deleteProductUsedIn": "This product is part of: {names}. Deleting it removes it from there, and those packs or combos may end up incomplete."
+  "deleteProductUsedIn": "This product is part of: {names}. Deleting it removes it from there, and those packs or combos may end up incomplete.",
+  "coachDashMain": "Your total register: everything collected at all fairs and direct sales, with refunds already deducted.",
+  "coachDashMetrics": "Inventory cost: what the stock you hold cost you. Next to it, what it would be worth if you sold it all and, below, your real net profit.",
+  "coachDashChart": "Tap here to see the balance by fairs and days in a bar chart.",
+  "coachDashPrivacy": "The eye hides the amounts in case customers are looking. Tap it again to show them.",
+  "coachCatEmptyTitle": "Create your first category",
+  "coachCatEmptyText": "Categories group your products (for example “T-shirts” or “Mugs”) and help you filter and apply offers. Create your own with this button.",
+  "coachCatAdd": "Use this button to create more categories.",
+  "coachCatCard": "Tap a category to choose which products it holds; use the pencil to rename it and the bin to delete it.",
+  "coachSyncSend": "Sending phone: tap here and a QR code appears. No cables or shared Wi‑Fi needed.",
+  "coachSyncReceive": "Receiving phone: scan that QR code. The other phone has to approve the transfer, and this phone's data is replaced.",
+  "coachSyncWifi": "If both phones are on the same Wi‑Fi, you can use it instead of the hotspot.",
+  "coachChartFilter": "Filter the balance by fairs or single days, or see it all together.",
+  "coachChartBars": "Each bar is a fair or a day. Tap one to see its details below.",
+  "coachChartDetail": "Here you see what was sold, what it cost and your profit for the selection, broken down by payment method."
 }

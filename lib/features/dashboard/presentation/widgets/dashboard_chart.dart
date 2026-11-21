@@ -8,6 +8,7 @@ import 'package:keepinventory/l10n/app_localizations_ext.dart';
 
 import '../../../../core/services/app_preferences.dart';
 import '../../../../core/shared_widgets/app_ui.dart';
+import '../../../../core/shared_widgets/coach_marks.dart';
 import '../../../sales/domain/payment_method.dart';
 import '../../../sales/presentation/widgets/payment_method_widgets.dart';
 
@@ -81,6 +82,20 @@ class _FullScreenChartScreenState extends State<FullScreenChartScreen> {
   _GroupFilter _filter = _GroupFilter.all;
   String? _selectedKey;
 
+  // Guía de la pantalla (mini tutorial): elementos que se iluminan
+  final _filterKey = GlobalKey();
+  final _barsKey = GlobalKey();
+  final _detailKey = GlobalKey();
+
+  List<CoachStep> _guideSteps() {
+    final l10n = context.l10n;
+    return [
+      CoachStep(target: _filterKey, text: l10n.coachChartFilter),
+      CoachStep(target: _barsKey, text: l10n.coachChartBars),
+      CoachStep(target: _detailKey, text: l10n.coachChartDetail),
+    ];
+  }
+
   @override
   void initState() {
     super.initState();
@@ -89,6 +104,12 @@ class _FullScreenChartScreenState extends State<FullScreenChartScreen> {
     _groups = _buildGroups();
     _selectedKey = _groups.isEmpty ? null : _groups.last.key;
     _scrollChartToEnd();
+    // Sin datos no hay nada que iluminar: la guía espera a tener alguno
+    if (_groups.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) CoachGuide.showOnce(context, 'chart', _guideSteps);
+      });
+    }
   }
 
   @override
@@ -759,14 +780,14 @@ class _FullScreenChartScreenState extends State<FullScreenChartScreen> {
     final history = visible.reversed.toList(); // más reciente primero
 
     final overview = <Widget>[
-      _buildFilter(),
+      KeyedSubtree(key: _filterKey, child: _buildFilter()),
       const SizedBox(height: 16),
       _buildSummary(visible),
       const SizedBox(height: 16),
-      _buildChartCard(visible),
+      KeyedSubtree(key: _barsKey, child: _buildChartCard(visible)),
       if (selected != null) ...[
         const SizedBox(height: 16),
-        _buildDetailCard(selected),
+        KeyedSubtree(key: _detailKey, child: _buildDetailCard(selected)),
       ],
     ];
     final historyItems = <Widget>[
@@ -778,6 +799,11 @@ class _FullScreenChartScreenState extends State<FullScreenChartScreen> {
       appBar: AppBar(
         title: Text(context.l10n.chartDetailsTitle),
         actions: [
+          IconButton(
+            tooltip: context.l10n.coachHelpTooltip,
+            icon: const Icon(Icons.help_outline),
+            onPressed: () => CoachGuide.replay(context, 'chart', _guideSteps),
+          ),
           IconButton(
             icon: Icon(
               _privacyActive ? Icons.visibility_off : Icons.visibility,

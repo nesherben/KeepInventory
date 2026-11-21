@@ -1,3 +1,4 @@
+import '../../../core/shared_widgets/coach_marks.dart';
 import '../../../core/shared_widgets/app_side_rail.dart';
 import '../../../core/services/app_version.dart';
 
@@ -46,6 +47,28 @@ class _SyncScreenState extends State<SyncScreen> {
   double _progressValue = 0.0;
 
   bool get _isServerRunning => _invite != null;
+
+  // Guía de la pantalla (mini tutorial): elementos que se iluminan
+  final _sendKey = GlobalKey();
+  final _receiveKey = GlobalKey();
+  final _wifiKey = GlobalKey();
+
+  List<CoachStep> _guideSteps() {
+    final l10n = context.l10n;
+    return [
+      CoachStep(target: _sendKey, text: l10n.coachSyncSend),
+      CoachStep(target: _receiveKey, text: l10n.coachSyncReceive),
+      CoachStep(target: _wifiKey, text: l10n.coachSyncWifi),
+    ];
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) CoachGuide.showOnce(context, 'sync', _guideSteps);
+    });
+  }
 
   @override
   void dispose() {
@@ -375,7 +398,16 @@ class _SyncScreenState extends State<SyncScreen> {
       },
       child: Scaffold(
         key: _scaffoldKey,
-        appBar: AppBar(title: Text(context.l10n.syncTitle)),
+        appBar: AppBar(
+          title: Text(context.l10n.syncTitle),
+          actions: [
+            IconButton(
+              tooltip: context.l10n.coachHelpTooltip,
+              icon: const Icon(Icons.help_outline),
+              onPressed: () => CoachGuide.replay(context, 'sync', _guideSteps),
+            ),
+          ],
+        ),
         drawer: appDrawer(context),
         body: Center(
           child: SingleChildScrollView(
@@ -456,6 +488,7 @@ class _SyncScreenState extends State<SyncScreen> {
     SizedBox(
       width: double.infinity,
       child: FilledButton.icon(
+        key: _sendKey,
         icon: const Icon(Icons.wifi_tethering),
         label: Text(context.l10n.syncEmitHotspot),
         onPressed: () => _startHosting(useHotspot: true),
@@ -474,6 +507,7 @@ class _SyncScreenState extends State<SyncScreen> {
     SizedBox(
       width: double.infinity,
       child: OutlinedButton.icon(
+        key: _receiveKey,
         icon: const Icon(Icons.qr_code_scanner),
         label: Text(context.l10n.syncReceiveData),
         onPressed: _openScanner,
@@ -481,6 +515,7 @@ class _SyncScreenState extends State<SyncScreen> {
     ),
     const SizedBox(height: AppSpacing.sm),
     TextButton.icon(
+      key: _wifiKey,
       icon: const Icon(Icons.wifi, size: 18),
       label: Text(context.l10n.syncEmitSameWifi),
       onPressed: () => _startHosting(useHotspot: false),

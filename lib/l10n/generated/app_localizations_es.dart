@@ -2842,4 +2842,58 @@ class AppLocalizationsEs extends AppLocalizations {
   String deleteProductUsedIn(String names) {
     return 'Este producto está en: $names. Al borrarlo se quitará de ahí y esos packs o combos podrían quedar incompletos.';
   }
+
+  @override
+  String get coachDashMain =>
+      'Tu caja general: lo cobrado en todas las ferias y ventas directas, con las devoluciones ya descontadas.';
+
+  @override
+  String get coachDashMetrics =>
+      'Coste almacén: lo que te costó el stock que tienes. Junto a él, lo que valdría vendiéndolo todo y, debajo, tu beneficio neto real.';
+
+  @override
+  String get coachDashChart =>
+      'Toca aquí para ver el balance por ferias y días en un gráfico de barras.';
+
+  @override
+  String get coachDashPrivacy =>
+      'Con el ojo ocultas los importes por si hay clientes mirando. Vuelve a tocarlo para verlos.';
+
+  @override
+  String get coachCatEmptyTitle => 'Crea tu primera categoría';
+
+  @override
+  String get coachCatEmptyText =>
+      'Las categorías agrupan tus productos (por ejemplo «Camisetas» o «Tazas») y sirven para filtrar y aplicar ofertas. Crea una tuya con este botón.';
+
+  @override
+  String get coachCatAdd => 'Con este botón creas más categorías.';
+
+  @override
+  String get coachCatCard =>
+      'Toca una categoría para elegir qué productos lleva; con el lápiz la renombras y con la papelera la borras.';
+
+  @override
+  String get coachSyncSend =>
+      'Móvil que envía: pulsa aquí y aparece un QR. No hacen falta cables ni una Wi‑Fi compartida.';
+
+  @override
+  String get coachSyncReceive =>
+      'Móvil que recibe: escanea ese QR. El otro móvil tiene que aprobar el envío, y los datos de este se sustituyen.';
+
+  @override
+  String get coachSyncWifi =>
+      'Si los dos móviles están en la misma Wi‑Fi, puedes usarla en lugar del punto de acceso.';
+
+  @override
+  String get coachChartFilter =>
+      'Filtra el balance por ferias o por días sueltos, o míralo todo junto.';
+
+  @override
+  String get coachChartBars =>
+      'Cada barra es una feria o un día. Toca una para ver su detalle abajo.';
+
+  @override
+  String get coachChartDetail =>
+      'Aquí tienes lo vendido, lo que costó y tu beneficio de lo seleccionado, con el desglose por método de pago.';
 }

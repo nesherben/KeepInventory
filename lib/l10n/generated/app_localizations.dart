@@ -4627,6 +4627,90 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Este producto está en: {names}. Al borrarlo se quitará de ahí y esos packs o combos podrían quedar incompletos.'**
   String deleteProductUsedIn(String names);
+
+  /// No description provided for @coachDashMain.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu caja general: lo cobrado en todas las ferias y ventas directas, con las devoluciones ya descontadas.'**
+  String get coachDashMain;
+
+  /// No description provided for @coachDashMetrics.
+  ///
+  /// In es, this message translates to:
+  /// **'Coste almacén: lo que te costó el stock que tienes. Junto a él, lo que valdría vendiéndolo todo y, debajo, tu beneficio neto real.'**
+  String get coachDashMetrics;
+
+  /// No description provided for @coachDashChart.
+  ///
+  /// In es, this message translates to:
+  /// **'Toca aquí para ver el balance por ferias y días en un gráfico de barras.'**
+  String get coachDashChart;
+
+  /// No description provided for @coachDashPrivacy.
+  ///
+  /// In es, this message translates to:
+  /// **'Con el ojo ocultas los importes por si hay clientes mirando. Vuelve a tocarlo para verlos.'**
+  String get coachDashPrivacy;
+
+  /// No description provided for @coachCatEmptyTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Crea tu primera categoría'**
+  String get coachCatEmptyTitle;
+
+  /// No description provided for @coachCatEmptyText.
+  ///
+  /// In es, this message translates to:
+  /// **'Las categorías agrupan tus productos (por ejemplo «Camisetas» o «Tazas») y sirven para filtrar y aplicar ofertas. Crea una tuya con este botón.'**
+  String get coachCatEmptyText;
+
+  /// No description provided for @coachCatAdd.
+  ///
+  /// In es, this message translates to:
+  /// **'Con este botón creas más categorías.'**
+  String get coachCatAdd;
+
+  /// No description provided for @coachCatCard.
+  ///
+  /// In es, this message translates to:
+  /// **'Toca una categoría para elegir qué productos lleva; con el lápiz la renombras y con la papelera la borras.'**
+  String get coachCatCard;
+
+  /// No description provided for @coachSyncSend.
+  ///
+  /// In es, this message translates to:
+  /// **'Móvil que envía: pulsa aquí y aparece un QR. No hacen falta cables ni una Wi‑Fi compartida.'**
+  String get coachSyncSend;
+
+  /// No description provided for @coachSyncReceive.
+  ///
+  /// In es, this message translates to:
+  /// **'Móvil que recibe: escanea ese QR. El otro móvil tiene que aprobar el envío, y los datos de este se sustituyen.'**
+  String get coachSyncReceive;
+
+  /// No description provided for @coachSyncWifi.
+  ///
+  /// In es, this message translates to:
+  /// **'Si los dos móviles están en la misma Wi‑Fi, puedes usarla en lugar del punto de acceso.'**
+  String get coachSyncWifi;
+
+  /// No description provided for @coachChartFilter.
+  ///
+  /// In es, this message translates to:
+  /// **'Filtra el balance por ferias o por días sueltos, o míralo todo junto.'**
+  String get coachChartFilter;
+
+  /// No description provided for @coachChartBars.
+  ///
+  /// In es, this message translates to:
+  /// **'Cada barra es una feria o un día. Toca una para ver su detalle abajo.'**
+  String get coachChartBars;
+
+  /// No description provided for @coachChartDetail.
+  ///
+  /// In es, this message translates to:
+  /// **'Aquí tienes lo vendido, lo que costó y tu beneficio de lo seleccionado, con el desglose por método de pago.'**
+  String get coachChartDetail;
 }
 
 class _AppLocalizationsDelegate
