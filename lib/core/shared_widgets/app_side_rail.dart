@@ -81,6 +81,9 @@ class AppShell extends StatelessWidget {
 
   static const _hiddenOn = {'/tutorial', '/first-run'};
 
+  /// ¿Se está mostrando ahora la barra lateral?
+  static bool railVisible = false;
+
   @override
   Widget build(BuildContext context) {
     final media = MediaQuery.of(context);
@@ -89,6 +92,7 @@ class AppShell extends StatelessWidget {
       valueListenable: appCurrentRoute,
       builder: (context, route, _) {
         final show = fits && route != null && !_hiddenOn.contains(route);
+        railVisible = show;
         return ValueListenableBuilder<bool>(
           valueListenable: AppPreferences.railExpanded,
           builder: (context, expanded, _) {

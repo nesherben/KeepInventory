@@ -1,4 +1,5 @@
 import 'widgets/backup_reminder_banner.dart';
+import '../../../core/shared_widgets/app_side_rail.dart';
 import 'widgets/dashboard_overview_panels.dart';
 import '../../inventory/domain/inventory_view.dart';
 import '../../inventory/domain/product.dart';
@@ -218,6 +219,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     await Future.delayed(const Duration(milliseconds: 600));
     if (!mounted) return;
     await AppPreferences.markMenuHintShown();
+    // Con la barra lateral de tablet no hace falta abrir el menú
+    if (AppShell.railVisible) return;
     _scaffoldKey.currentState?.openDrawer();
   }
 
@@ -624,6 +627,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       DashboardOverviewPanels(
                         recentSales: _recentSales,
                         lowStock: _lowStock,
+                        hideAmounts: _isPrivacyModeEnabled,
                         onOpenTickets: () => Navigator.pushNamedAndRemoveUntil(
                           context,
                           '/history',

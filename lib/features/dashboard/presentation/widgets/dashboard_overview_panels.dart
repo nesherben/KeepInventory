@@ -16,12 +16,16 @@ class DashboardOverviewPanels extends StatelessWidget {
     required this.lowStock,
     required this.onOpenTickets,
     required this.onOpenInventory,
+    this.hideAmounts = false,
   });
 
   final List<Sale> recentSales;
   final List<Product> lowStock;
   final VoidCallback onOpenTickets;
   final VoidCallback onOpenInventory;
+
+  /// Modo privacidad: los importes se ocultan.
+  final bool hideAmounts;
 
   @override
   Widget build(BuildContext context) {
@@ -96,7 +100,7 @@ class DashboardOverviewPanels extends StatelessWidget {
           row(
             '${l10n.ticketTitle(sale.id.toString())} · '
             '${MaterialLocalizations.of(context).formatShortDate(sale.date)}',
-            context.money(sale.totalAmount),
+            hideAmounts ? '•••••• €' : context.money(sale.totalAmount),
           ),
       ],
     );

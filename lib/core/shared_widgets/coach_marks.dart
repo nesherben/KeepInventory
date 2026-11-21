@@ -85,7 +85,13 @@ class _CoachOverlayState extends State<CoachOverlay> {
     final box = context?.findRenderObject();
     if (context == null || box is! RenderBox || !box.attached) return null;
     if (!box.hasSize) return null;
-    return box.localToGlobal(Offset.zero) & box.size;
+    // Relativo a esta capa: con la barra lateral de tablet la capa no empieza
+    // en x = 0 de la pantalla
+    final layer = this.context.findRenderObject();
+    final origin = layer is RenderBox && layer.attached
+        ? layer.globalToLocal(box.localToGlobal(Offset.zero))
+        : box.localToGlobal(Offset.zero);
+    return origin & box.size;
   }
 
   /// Va al paso [index]: lo trae a la vista, lo mide y salta los que no existan.
