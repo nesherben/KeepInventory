@@ -193,7 +193,6 @@ class _ItemPreviewInfoState extends State<ItemPreviewInfo> {
     final foregroundColor = isOutOfStock
         ? theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6)
         : (_justAdded ? Colors.white : theme.colorScheme.onPrimary);
-    final elevation = isOutOfStock ? 0.0 : (_justAdded ? 1.0 : 3.0);
     final label = isOutOfStock
         ? context.l10n.outOfStock
         : (_justAdded
@@ -216,13 +215,6 @@ class _ItemPreviewInfoState extends State<ItemPreviewInfo> {
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: backgroundColor.withValues(alpha: 0.25),
-            blurRadius: elevation * 2.5,
-            offset: Offset(0, elevation * 0.8),
-          ),
-        ],
       ),
       child: Material(
         type: MaterialType.transparency,

@@ -250,7 +250,7 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
         title: Text(context.l10n.databaseDeletedTitle),
         content: Text(context.l10n.databaseDeletedMessage),
         actions: [
-          ElevatedButton(
+          FilledButton(
             onPressed: Restart.restartApp,
             child: Text(context.l10n.restartNow),
           ),

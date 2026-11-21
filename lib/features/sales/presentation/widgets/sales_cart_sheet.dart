@@ -46,14 +46,10 @@ class SalesCartSheet extends StatelessWidget {
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(24),
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.2),
-                  blurRadius: 10,
-                  spreadRadius: 2,
-                  offset: const Offset(0, -2),
-                ),
-              ],
+              // Sin sombra: un filo de 1px separa la hoja del catálogo
+              border: Border(
+                top: BorderSide(color: Theme.of(context).dividerColor),
+              ),
             ),
             child: ClipRRect(
               borderRadius: const BorderRadius.vertical(

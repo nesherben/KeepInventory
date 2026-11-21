@@ -113,8 +113,8 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
             onPressed: () => Navigator.pop(context),
             child: Text(context.l10n.cancel),
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
+          FilledButton(
+            style: FilledButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.error,
               foregroundColor: Theme.of(context).colorScheme.onError,
             ),
@@ -354,8 +354,8 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
             onPressed: () => Navigator.pop(context),
             child: Text(context.l10n.cancel),
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
+          FilledButton(
+            style: FilledButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.error,
               foregroundColor: Theme.of(context).colorScheme.onError,
             ),

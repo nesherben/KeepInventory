@@ -78,8 +78,8 @@ class InventoryProductEditor {
             onPressed: () => Navigator.pop(dialogContext),
             child: Text(dialogContext.l10n.cancel),
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
+          FilledButton(
+            style: FilledButton.styleFrom(
               backgroundColor: Theme.of(dialogContext).colorScheme.error,
               foregroundColor: Theme.of(dialogContext).colorScheme.onError,
             ),
@@ -140,7 +140,7 @@ class InventoryProductEditor {
             onPressed: () => Navigator.pop(dialogContext),
             child: Text(dialogContext.l10n.cancel),
           ),
-          ElevatedButton(onPressed: save, child: Text(dialogContext.l10n.save)),
+          FilledButton(onPressed: save, child: Text(dialogContext.l10n.save)),
         ],
       ),
     );

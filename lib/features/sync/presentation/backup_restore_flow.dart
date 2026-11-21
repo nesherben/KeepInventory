@@ -62,8 +62,8 @@ Future<void> showRestoredDialog(BuildContext context) {
       title: Text(context.l10n.databaseRestoredTitle),
       content: Text(context.l10n.databaseRestoredMessage),
       actions: [
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(
+        FilledButton(
+          style: FilledButton.styleFrom(
             backgroundColor: Theme.of(context).colorScheme.primary,
             foregroundColor: Theme.of(context).colorScheme.onPrimary,
           ),

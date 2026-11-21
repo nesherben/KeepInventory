@@ -440,7 +440,7 @@ class _SaleTicketCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
         side: BorderSide(color: theme.dividerColor),
       ),
       child: Theme(
@@ -515,7 +515,7 @@ class _SaleTicketCard extends StatelessWidget {
                   alpha: 0.3,
                 ),
                 borderRadius: const BorderRadius.vertical(
-                  bottom: Radius.circular(14),
+                  bottom: Radius.circular(16),
                 ),
               ),
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
