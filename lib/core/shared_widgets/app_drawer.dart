@@ -5,7 +5,6 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'package:keepinventory/l10n/app_localizations_ext.dart';
 
-import '../services/app_preferences.dart';
 import 'app_alerts.dart';
 import 'app_side_rail.dart';
 import 'app_ui.dart';
@@ -288,25 +287,6 @@ class AppMenu extends StatelessWidget {
                   final navigator = Navigator.of(context);
                   navigator.pop();
                   navigator.pushNamed('/tutorial');
-                },
-              ),
-              _NavItem(
-                icon: Icons.lightbulb_outline,
-                selectedIcon: Icons.lightbulb,
-                label: context.l10n.navGuides,
-                subtitle: context.l10n.navGuidesSubtitle,
-                selected: false,
-                collapsed: collapsed,
-                onTap: () async {
-                  final message = context.l10n.navGuidesReset;
-                  final navigator = inRail ? null : Navigator.of(context);
-                  await AppPreferences.resetCoachGuides();
-                  final target = inRail
-                      ? appNavigatorKey.currentContext
-                      : context;
-                  if (target == null || !target.mounted) return;
-                  AppAlerts.showInfo(target, message);
-                  navigator?.pop();
                 },
               ),
             ],

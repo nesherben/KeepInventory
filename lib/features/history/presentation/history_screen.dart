@@ -36,6 +36,11 @@ class _HistoryChangesScreenState extends State<HistoryChangesScreen> {
   HistoryDateRange _dateRange = HistoryDateRange.any;
   bool _isLoading = true;
 
+  // Gesto de deslizar hacia la derecha para abrir el menú lateral
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
+  double? _startX;
+  double? _startY;
+
   // Guía de la pantalla (mini tutorial): elementos que se iluminan
   final _filtersKey = GlobalKey();
   final _entryKey = GlobalKey();
@@ -102,85 +107,107 @@ class _HistoryChangesScreenState extends State<HistoryChangesScreen> {
     final visible = _filter.apply(_entries);
     final groups = groupChangesByDay(visible);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(context.l10n.historyTitle),
-        actions: [
-          IconButton(
-            tooltip: context.l10n.coachHelpTooltip,
-            icon: const Icon(Icons.help_outline),
-            onPressed: () => CoachGuide.replay(context, 'history', _guideSteps),
-          ),
-          IconButton(icon: const Icon(Icons.refresh), onPressed: _load),
-        ],
-      ),
-      drawer: appDrawer(context),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _entries.isEmpty
-          ? EmptyState(
-              icon: Icons.history,
-              title: context.l10n.historyEmptyTitle,
-              message: context.l10n.historyEmptyMessage,
-            )
-          : Column(
-              children: [
-                KeyedSubtree(
-                  key: _filtersKey,
-                  child: HistoryFiltersBar(
-                    controller: _searchController,
-                    filter: _filter,
-                    dateRange: _dateRange,
-                    onFilterChanged: (filter) =>
-                        setState(() => _filter = filter),
-                    onDateRangeChanged: _setDateRange,
+    return Listener(
+      onPointerDown: (event) {
+        _startX = event.position.dx;
+        _startY = event.position.dy;
+      },
+      onPointerMove: (event) {
+        if (_startX == null || _startY == null) return;
+        final dx = event.position.dx - _startX!;
+        final dy = event.position.dy - _startY!;
+        if (dx > 50 && dy.abs() < 30) {
+          _startX = null;
+          _startY = null;
+          _scaffoldKey.currentState?.openDrawer();
+        }
+      },
+      onPointerUp: (_) {
+        _startX = null;
+        _startY = null;
+      },
+      child: Scaffold(
+        key: _scaffoldKey,
+        appBar: AppBar(
+          title: Text(context.l10n.historyTitle),
+          actions: [
+            IconButton(
+              tooltip: context.l10n.coachHelpTooltip,
+              icon: const Icon(Icons.help_outline),
+              onPressed: () =>
+                  CoachGuide.replay(context, 'history', _guideSteps),
+            ),
+            IconButton(icon: const Icon(Icons.refresh), onPressed: _load),
+          ],
+        ),
+        drawer: appDrawer(context),
+        body: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _entries.isEmpty
+            ? EmptyState(
+                icon: Icons.history,
+                title: context.l10n.historyEmptyTitle,
+                message: context.l10n.historyEmptyMessage,
+              )
+            : Column(
+                children: [
+                  KeyedSubtree(
+                    key: _filtersKey,
+                    child: HistoryFiltersBar(
+                      controller: _searchController,
+                      filter: _filter,
+                      dateRange: _dateRange,
+                      onFilterChanged: (filter) =>
+                          setState(() => _filter = filter),
+                      onDateRangeChanged: _setDateRange,
+                    ),
                   ),
-                ),
-                Expanded(
-                  child: groups.isEmpty
-                      ? EmptyState(
-                          icon: Icons.search_off,
-                          title: context.l10n.changesNoResults,
-                          action: TextButton(
-                            onPressed: _clearFilters,
-                            child: Text(context.l10n.changesClearFilters),
-                          ),
-                        )
-                      : ListView(
-                          padding: EdgeInsets.fromLTRB(
-                            AppSpacing.lg,
-                            AppSpacing.sm,
-                            AppSpacing.lg,
-                            AppSpacing.xl +
-                                MediaQuery.viewPaddingOf(context).bottom,
-                          ),
-                          children: [
-                            for (final group in groups) ...[
-                              SectionLabel(
-                                context.historyDayLabel(group.day),
-                                padding: const EdgeInsets.only(
-                                  top: AppSpacing.md,
-                                  bottom: AppSpacing.sm,
-                                ),
-                              ),
-                              for (final entry in group.entries)
-                                HistoryEntryTile(
-                                  key: entry == groups.first.entries.first
-                                      ? _entryKey
-                                      : null,
-                                  entry: entry,
-                                  onTap: () => showHistoryEntrySheet(
-                                    context,
-                                    entry: entry,
-                                    all: _entries,
+                  Expanded(
+                    child: groups.isEmpty
+                        ? EmptyState(
+                            icon: Icons.search_off,
+                            title: context.l10n.changesNoResults,
+                            action: TextButton(
+                              onPressed: _clearFilters,
+                              child: Text(context.l10n.changesClearFilters),
+                            ),
+                          )
+                        : ListView(
+                            padding: EdgeInsets.fromLTRB(
+                              AppSpacing.lg,
+                              AppSpacing.sm,
+                              AppSpacing.lg,
+                              AppSpacing.xl +
+                                  MediaQuery.viewPaddingOf(context).bottom,
+                            ),
+                            children: [
+                              for (final group in groups) ...[
+                                SectionLabel(
+                                  context.historyDayLabel(group.day),
+                                  padding: const EdgeInsets.only(
+                                    top: AppSpacing.md,
+                                    bottom: AppSpacing.sm,
                                   ),
                                 ),
+                                for (final entry in group.entries)
+                                  HistoryEntryTile(
+                                    key: entry == groups.first.entries.first
+                                        ? _entryKey
+                                        : null,
+                                    entry: entry,
+                                    onTap: () => showHistoryEntrySheet(
+                                      context,
+                                      entry: entry,
+                                      all: _entries,
+                                    ),
+                                  ),
+                              ],
                             ],
-                          ],
-                        ),
-                ),
-              ],
-            ),
+                          ),
+                  ),
+                ],
+              ),
+      ),
     );
   }
 }
