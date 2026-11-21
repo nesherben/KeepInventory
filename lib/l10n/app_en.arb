@@ -823,5 +823,6 @@
   "cashBills": "Bills",
   "cashCoins": "Coins",
   "cashUndo": "Undo",
-  "cashClear": "Clear"
+  "cashClear": "Clear",
+  "cashRemoveOne": "Remove one"
 }

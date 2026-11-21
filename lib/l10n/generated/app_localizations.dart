@@ -4771,6 +4771,12 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Borrar'**
   String get cashClear;
+
+  /// No description provided for @cashRemoveOne.
+  ///
+  /// In es, this message translates to:
+  /// **'Quitar uno'**
+  String get cashRemoveOne;
 }
 
 class _AppLocalizationsDelegate

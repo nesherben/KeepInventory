@@ -1495,5 +1495,6 @@
   "cashBills": "Billetes",
   "cashCoins": "Monedas",
   "cashUndo": "Deshacer",
-  "cashClear": "Borrar"
+  "cashClear": "Borrar",
+  "cashRemoveOne": "Quitar uno"
 }

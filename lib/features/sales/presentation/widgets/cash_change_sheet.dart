@@ -65,9 +65,39 @@ class _CashChangeSheetState extends State<CashChangeSheet> {
           context.money(_given / 100),
           style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800),
         ),
+        // Lo marcado, agrupado: cada chip se puede quitar de uno en uno por si
+        // se marcó una pieza equivocada
+        if (_entries.isNotEmpty) ...[
+          const SizedBox(height: AppSpacing.sm),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              for (final entry in _groupedEntries().entries)
+                InputChip(
+                  label: Text(
+                    '${entry.value} × ${context.money(entry.key / 100)}',
+                  ),
+                  visualDensity: VisualDensity.compact,
+                  deleteButtonTooltipMessage: context.l10n.cashRemoveOne,
+                  onDeleted: () => setState(() => _entries.remove(entry.key)),
+                ),
+            ],
+          ),
+        ],
       ],
     ),
   );
+
+  /// Lo marcado agrupado por pieza (de mayor a menor): pieza → cuántas.
+  Map<int, int> _groupedEntries() {
+    final counts = <int, int>{};
+    for (final cents in _entries) {
+      counts[cents] = (counts[cents] ?? 0) + 1;
+    }
+    final keys = counts.keys.toList()..sort((a, b) => b.compareTo(a));
+    return {for (final key in keys) key: counts[key]!};
+  }
 
   /// Tarjeta de la derecha: vueltas y con qué piezas devolverlas.
   Widget _changeCard(int diff) {

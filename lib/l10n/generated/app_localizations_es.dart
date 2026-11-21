@@ -2928,4 +2928,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get cashClear => 'Borrar';
+
+  @override
+  String get cashRemoveOne => 'Quitar uno';
 }

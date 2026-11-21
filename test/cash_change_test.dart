@@ -129,6 +129,25 @@ void main() {
       expect(find.text('0,00 €'), findsOneWidget);
     });
 
+    testWidgets('a wrong piece can be removed one by one', (tester) async {
+      await open(tester);
+      await tester.tap(find.text('20,00 €'));
+      await tester.tap(find.text('20,00 €'));
+      await tester.tap(find.text('5,00 €'));
+      await tester.pump();
+      // Lo marcado sale agrupado
+      expect(find.text('2 × 20,00 €'), findsOneWidget);
+      expect(find.text('1 × 5,00 €'), findsWidgets);
+
+      // Quitar solo uno de los billetes de 20
+      await tester.tap(find.byTooltip('Quitar uno').first);
+      await tester.pump();
+      expect(find.text('1 × 20,00 €'), findsOneWidget);
+      expect(find.text('2 × 20,00 €'), findsNothing);
+      // 20 + 5 = 25 → 12,40 € de vueltas
+      expect(find.text('12,40 €'), findsOneWidget);
+    });
+
     testWidgets('undo removes the last one and clear removes all', (
       tester,
     ) async {
@@ -152,7 +171,9 @@ void main() {
       await tester.tap(find.text('Justo'));
       await tester.pump();
       expect(find.text('0,00 €'), findsOneWidget);
-      expect(find.textContaining('×'), findsNothing);
+      // Solo el chip de lo entregado; sin piezas que devolver
+      expect(find.textContaining('×'), findsOneWidget);
+      expect(find.text('1 × 12,60 €'), findsOneWidget);
     });
 
     testWidgets('COBRAR inside the calculator reports a checkout', (
