@@ -408,6 +408,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  /// Últimos tickets y stock bajo: en dos columnas en tablet, apilados en móvil.
+  Widget _buildOverviewPanels(bool compact) => DashboardOverviewPanels(
+    recentSales: _recentSales,
+    lowStock: _lowStock,
+    hideAmounts: _isPrivacyModeEnabled,
+    compact: compact,
+    onOpenTickets: () =>
+        Navigator.pushNamedAndRemoveUntil(context, '/history', (_) => false),
+    onOpenInventory: () =>
+        Navigator.pushNamedAndRemoveUntil(context, '/inventory', (_) => false),
+  );
+
   Widget _buildMainCard(bool isWideScreen) {
     // 💡 Obtenemos el color primario actual dinámicamente desde el tema aplicado
     final primaryColor = Theme.of(context).colorScheme.primary;
@@ -679,22 +691,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                       _buildPaymentBreakdownPanel(),
                       const SizedBox(height: 20),
-                      DashboardOverviewPanels(
-                        recentSales: _recentSales,
-                        lowStock: _lowStock,
-                        hideAmounts: _isPrivacyModeEnabled,
-                        onOpenTickets: () => Navigator.pushNamedAndRemoveUntil(
-                          context,
-                          '/history',
-                          (_) => false,
-                        ),
-                        onOpenInventory: () =>
-                            Navigator.pushNamedAndRemoveUntil(
-                              context,
-                              '/inventory',
-                              (_) => false,
-                            ),
-                      ),
+                      _buildOverviewPanels(false),
                     ] else ...[
                       KeyedSubtree(key: _mainKey, child: _buildMainCard(false)),
                       _buildPaymentBreakdownPanel(),
@@ -736,6 +733,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ),
                         ],
                       ),
+                      const SizedBox(height: 12),
+                      _buildOverviewPanels(true),
                     ],
                   ],
                 ),
