@@ -2269,7 +2269,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get refundFullTicketNote =>
-      'Al devolver todo el ticket se elimina del historial y deja de contar en los totales de ese día.';
+      'Al devolver todo el ticket queda en el historial como reembolsado, con total 0 €, y deja de contar en los totales.';
 
   @override
   String lineDiscountTitle(String name) {
@@ -2375,4 +2375,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String cartSavings(String amount) {
     return 'Ahorro −$amount €';
   }
+
+  @override
+  String saleStockChanged(String name) {
+    return 'El stock de «$name» ha cambiado y ya no alcanza. Revisa el carrito.';
+  }
+
+  @override
+  String get ticketFullyRefunded => 'Reembolsado';
 }

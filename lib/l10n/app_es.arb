@@ -1157,7 +1157,7 @@
   "discardChangesBody": "Has escrito datos que se perderán si sales ahora.",
   "discardChangesStay": "Seguir editando",
   "discardChangesLeave": "Descartar",
-  "refundFullTicketNote": "Al devolver todo el ticket se elimina del historial y deja de contar en los totales de ese día.",
+  "refundFullTicketNote": "Al devolver todo el ticket queda en el historial como reembolsado, con total 0 €, y deja de contar en los totales.",
   "lineDiscountTitle": "Descuento · {name}",
   "@lineDiscountTitle": {
     "placeholders": {
@@ -1245,5 +1245,14 @@
         "type": "String"
       }
     }
-  }
+  },
+  "saleStockChanged": "El stock de «{name}» ha cambiado y ya no alcanza. Revisa el carrito.",
+  "@saleStockChanged": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "ticketFullyRefunded": "Reembolsado"
 }

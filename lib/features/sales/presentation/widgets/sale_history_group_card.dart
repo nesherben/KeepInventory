@@ -429,6 +429,10 @@ class _SaleTicketCard extends StatelessWidget {
     );
   }
 
+  /// Ticket devuelto por completo: ya no quedan líneas, solo sus devoluciones.
+  bool get isFullyRefunded =>
+      sale.items.isEmpty && sale.packItems.isEmpty && sale.refunds.isNotEmpty;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -488,6 +492,15 @@ class _SaleTicketCard extends StatelessWidget {
                   ],
                 ),
                 PaymentMethodBadge(method: sale.paymentMethod),
+                if (isFullyRefunded)
+                  Text(
+                    context.l10n.ticketFullyRefunded,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
               ],
             ),
           ),
@@ -517,19 +530,21 @@ class _SaleTicketCard extends StatelessWidget {
                   ...sale.packItems.map(
                     (packItem) => _buildPackItem(context, packItem),
                   ),
-                  const SizedBox(height: 16),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: FilledButton.tonalIcon(
-                      style: FilledButton.styleFrom(
-                        backgroundColor: theme.colorScheme.errorContainer,
-                        foregroundColor: theme.colorScheme.onErrorContainer,
+                  if (!isFullyRefunded) ...[
+                    const SizedBox(height: 16),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: FilledButton.tonalIcon(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: theme.colorScheme.errorContainer,
+                          foregroundColor: theme.colorScheme.onErrorContainer,
+                        ),
+                        icon: const Icon(Icons.undo, size: 18),
+                        label: Text(context.l10n.refund),
+                        onPressed: onRefund,
                       ),
-                      icon: const Icon(Icons.undo, size: 18),
-                      label: Text(context.l10n.refund),
-                      onPressed: onRefund,
                     ),
-                  ),
+                  ],
                 ],
               ),
             ),

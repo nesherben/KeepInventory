@@ -3737,7 +3737,7 @@ abstract class AppLocalizations {
   /// No description provided for @refundFullTicketNote.
   ///
   /// In es, this message translates to:
-  /// **'Al devolver todo el ticket se elimina del historial y deja de contar en los totales de ese día.'**
+  /// **'Al devolver todo el ticket queda en el historial como reembolsado, con total 0 €, y deja de contar en los totales.'**
   String get refundFullTicketNote;
 
   /// No description provided for @lineDiscountTitle.
@@ -3895,6 +3895,18 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Ahorro −{amount} €'**
   String cartSavings(String amount);
+
+  /// No description provided for @saleStockChanged.
+  ///
+  /// In es, this message translates to:
+  /// **'El stock de «{name}» ha cambiado y ya no alcanza. Revisa el carrito.'**
+  String saleStockChanged(String name);
+
+  /// No description provided for @ticketFullyRefunded.
+  ///
+  /// In es, this message translates to:
+  /// **'Reembolsado'**
+  String get ticketFullyRefunded;
 }
 
 class _AppLocalizationsDelegate

@@ -2,6 +2,7 @@ import 'package:sqflite/sqflite.dart';
 
 import '../../../../core/database/database_helper.dart';
 import '../../../promotions/domain/combo.dart';
+import '../../domain/insufficient_stock_exception.dart';
 import '../../domain/sale.dart';
 import '../../domain/sale_refund_calculator.dart';
 
@@ -85,10 +86,18 @@ class SaleLocalDatasource {
           'manual_discount_value': item.manualDiscountValue,
         });
 
-        await txn.rawUpdate(
-          'UPDATE products SET units = units - ? WHERE id = ?',
-          [item.quantity, item.productId],
+        // El stock no puede quedar negativo: si ya no alcanza, se deshace la venta
+        final updated = await txn.rawUpdate(
+          'UPDATE products SET units = units - ? WHERE id = ? AND units >= ?',
+          [item.quantity, item.productId, item.quantity],
         );
+        if (updated == 0) {
+          throw InsufficientStockException(
+            await _nameOf(txn, 'products', item.productId) ??
+                item.productName ??
+                '',
+          );
+        }
       }
 
       for (var packItem in sale.packItems) {
@@ -99,13 +108,31 @@ class SaleLocalDatasource {
           'historical_price': packItem.historicalPrice,
         });
 
-        await txn.rawUpdate('UPDATE packs SET units = units - ? WHERE id = ?', [
-          packItem.quantity,
-          packItem.packId,
-        ]);
+        final updated = await txn.rawUpdate(
+          'UPDATE packs SET units = units - ? WHERE id = ? AND units >= ?',
+          [packItem.quantity, packItem.packId, packItem.quantity],
+        );
+        if (updated == 0) {
+          throw InsufficientStockException(
+            await _nameOf(txn, 'packs', packItem.packId) ??
+                packItem.packName ??
+                '',
+          );
+        }
       }
       return saleId;
     });
+  }
+
+  Future<String?> _nameOf(Transaction txn, String table, int id) async {
+    final rows = await txn.query(
+      table,
+      columns: ['name'],
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
+    return rows.isEmpty ? null : rows.first['name'] as String?;
   }
 
   Future<List<Sale>> getSales() async {
@@ -386,7 +413,8 @@ class SaleLocalDatasource {
         }
       }
 
-      // 5. CONTABILIDAD: venta vacía => se borra; si no, nuevo total
+      // 5. CONTABILIDAD: venta vacía => se conserva con total 0 (y su
+      // historial de devoluciones); si no, nuevo total
       final remainingItemRows = await txn.query(
         'sale_items',
         where: 'sale_id = ?',
@@ -404,8 +432,12 @@ class SaleLocalDatasource {
           where: 'sale_id = ?',
           whereArgs: [originalSale.id],
         );
-        await txn.delete(
+        // El ticket no desaparece: queda como "reembolsado" con total 0, para
+        // que se vea que hubo una venta y su devolución. Con total 0 no cuenta
+        // en los ingresos ni en el beneficio.
+        await txn.update(
           'sales',
+          {'total_amount': 0.0},
           where: 'id = ?',
           whereArgs: [originalSale.id],
         );

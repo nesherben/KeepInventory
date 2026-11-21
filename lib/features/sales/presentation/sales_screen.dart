@@ -15,6 +15,7 @@ import '../../inventory/data/repositories/product_repository_impl.dart';
 import '../../packs/data/repositories/pack_repository_impl.dart';
 import '../../promotions/data/repositories/promotion_repository_impl.dart';
 import '../data/repositories/sale_repository_imp.dart';
+import '../domain/insufficient_stock_exception.dart';
 import '../domain/manual_line_discount.dart';
 import '../domain/sale_catalog_filter.dart';
 import '../domain/sale_cart_pricing_calculator.dart';
@@ -463,6 +464,14 @@ class _SalesScreenState extends State<SalesScreen>
     final int saleId;
     try {
       saleId = await _saleRepository.processSale(sale);
+    } on InsufficientStockException catch (e) {
+      // Otro cambio (sync, copia restaurada…) bajó el stock: se recarga el
+      // catálogo para que el carrito se corrija con las existencias reales
+      if (mounted) {
+        AppAlerts.showError(context, context.l10n.saleStockChanged(e.name));
+        await _loadData();
+      }
+      return;
     } catch (_) {
       // La transacción se deshace entera: el carrito se conserva
       if (mounted) AppAlerts.showError(context, context.l10n.saleFailed);

@@ -651,7 +651,7 @@
   "discardChangesBody": "You have entered data that will be lost if you leave now.",
   "discardChangesStay": "Keep editing",
   "discardChangesLeave": "Discard",
-  "refundFullTicketNote": "Refunding the whole ticket removes it from the history and from that day's totals.",
+  "refundFullTicketNote": "Refunding the whole ticket keeps it in the history as refunded, with a total of 0 €, and it stops counting in the totals.",
   "lineDiscountTitle": "Discount · {name}",
   "lineDiscountModePercent": "%",
   "lineDiscountModeAmount": "€",
@@ -677,5 +677,7 @@
   "agreedTotalClearTitle": "Remove the agreed total?",
   "agreedTotalClearBody": "The cart has an agreed total. Applying a line discount will remove it.",
   "agreedTotalClearConfirm": "Remove and apply",
-  "cartSavings": "Savings −{amount} €"
+  "cartSavings": "Savings −{amount} €",
+  "saleStockChanged": "The stock of “{name}” has changed and is no longer enough. Check the cart.",
+  "ticketFullyRefunded": "Refunded"
 }
