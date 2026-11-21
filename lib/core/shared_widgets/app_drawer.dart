@@ -219,7 +219,9 @@ class AppMenu extends StatelessWidget {
               ValueListenableBuilder<bool>(
                 valueListenable: AppDrawer.catalogEmpty,
                 builder: (context, empty, _) {
-                  if (!empty) {
+                  // En la barra de tablet no late: el aviso de «empieza aquí» sale
+                  // con el menú que se abre junto al tutorial (móvil)
+                  if (!empty || inRail) {
                     return item(
                       '/inventory',
                       Icons.inventory_2_outlined,
