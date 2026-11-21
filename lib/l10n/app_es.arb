@@ -933,7 +933,7 @@
   "databaseExportFirst": "Hacer una copia antes",
   "salesAdjustTotal": "Ajustar total",
   "salesAgreedTotal": "Total acordado (€)",
-  "salesCartAdjustmentHint": "El ajuste se repartirá entre todos los artículos y se mantendrá proporcionalmente si cambia el carrito.",
+  "salesCartAdjustmentHint": "El ajuste se reparte entre todos los artículos. Si cambias lo que hay en el carrito, el total acordado se quita.",
   "salesResetTotalAdjustment": "Quitar ajuste",
   "salesInvalidAgreedTotal": "Introduce un total válido igual o superior a cero.",
   "salesRefundOriginalUnitPrice": "Precio original: {amount} €/ud",

@@ -1804,7 +1804,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get salesCartAdjustmentHint =>
-      'El ajuste se repartirá entre todos los artículos y se mantendrá proporcionalmente si cambia el carrito.';
+      'El ajuste se reparte entre todos los artículos. Si cambias lo que hay en el carrito, el total acordado se quita.';
 
   @override
   String get salesResetTotalAdjustment => 'Quitar ajuste';

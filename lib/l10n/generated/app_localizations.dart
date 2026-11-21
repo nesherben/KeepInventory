@@ -2969,7 +2969,7 @@ abstract class AppLocalizations {
   /// No description provided for @salesCartAdjustmentHint.
   ///
   /// In es, this message translates to:
-  /// **'El ajuste se repartirá entre todos los artículos y se mantendrá proporcionalmente si cambia el carrito.'**
+  /// **'El ajuste se reparte entre todos los artículos. Si cambias lo que hay en el carrito, el total acordado se quita.'**
   String get salesCartAdjustmentHint;
 
   /// No description provided for @salesResetTotalAdjustment.

@@ -304,7 +304,6 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
                 ),
                 keyboardType: AppNumbers.decimalKeyboard,
                 inputFormatters: AppNumbers.decimalInputFormatters,
-                selectAllOnFocus: true,
                 validator: _validateNumber,
                 onChanged: (v) =>
                     setState(() => _livePrice = AppNumbers.parseDecimal(v)),
@@ -326,7 +325,6 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
                     ),
                     keyboardType: AppNumbers.decimalKeyboard,
                     inputFormatters: AppNumbers.decimalInputFormatters,
-                    selectAllOnFocus: true,
                     validator: _validateNumber,
                     onChanged: (v) =>
                         setState(() => _liveCost = AppNumbers.parseDecimal(v)),
@@ -346,7 +344,6 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
                 ),
                 keyboardType: TextInputType.number,
                 inputFormatters: AppNumbers.integerInputFormatters,
-                selectAllOnFocus: true,
                 validator: (v) => _validateNumber(v, integer: true),
                 onSaved: (v) => _units = AppNumbers.parseInt(v)!,
                 onFieldSubmitted: (_) => _saveProduct(),

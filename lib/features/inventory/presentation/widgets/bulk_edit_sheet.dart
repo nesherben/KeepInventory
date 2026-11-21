@@ -284,7 +284,6 @@ class _NumberEditor extends StatelessWidget {
           TextField(
             controller: controller,
             autofocus: true,
-            selectAllOnFocus: true,
             keyboardType: signed
                 ? AppNumbers.signedDecimalKeyboard
                 : AppNumbers.decimalKeyboard,

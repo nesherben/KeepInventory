@@ -667,6 +667,11 @@ class _SalesScreenState extends State<SalesScreen>
     );
   }
 
+  /// Columnas del catálogo según el ancho disponible: tarjetas de ~150 dp (en
+  /// una tablet caben muchas más que en un móvil), con un mínimo por diseño.
+  static int _catalogColumns(double width, {required int min}) =>
+      (width / 150).floor().clamp(min, 8);
+
   Widget _buildCatalogTabs({
     required List<Product> filteredProducts,
     required List<Pack> filteredPacks,
@@ -807,7 +812,10 @@ class _SalesScreenState extends State<SalesScreen>
                             child: _buildCatalogTabs(
                               filteredProducts: filteredProducts,
                               filteredPacks: filteredPacks,
-                              crossAxisCount: 4,
+                              crossAxisCount: _catalogColumns(
+                                screenSize.width * 3 / 5,
+                                min: 4,
+                              ),
                               bottomPadding: 16,
                             ),
                           ),
@@ -856,7 +864,10 @@ class _SalesScreenState extends State<SalesScreen>
                               child: _buildCatalogTabs(
                                 filteredProducts: filteredProducts,
                                 filteredPacks: filteredPacks,
-                                crossAxisCount: 3,
+                                crossAxisCount: _catalogColumns(
+                                  screenSize.width,
+                                  min: 3,
+                                ),
                                 // Que el carrito plegado no tape la última fila
                                 bottomPadding:
                                     _cartMinSize * bodyConstraints.maxHeight +

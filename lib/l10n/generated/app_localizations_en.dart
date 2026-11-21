@@ -1793,7 +1793,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get salesCartAdjustmentHint =>
-      'The adjustment is shared across the whole sale and stays proportional if the cart changes.';
+      'The adjustment is shared across the whole sale. If you change what is in the cart, the agreed total is removed.';
 
   @override
   String get salesResetTotalAdjustment => 'Remove adjustment';

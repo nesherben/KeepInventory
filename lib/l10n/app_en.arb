@@ -523,7 +523,7 @@
   "databaseExportFirst": "Make a copy first",
   "salesAdjustTotal": "Adjust total",
   "salesAgreedTotal": "Agreed total (€)",
-  "salesCartAdjustmentHint": "The adjustment is shared across the whole sale and stays proportional if the cart changes.",
+  "salesCartAdjustmentHint": "The adjustment is shared across the whole sale. If you change what is in the cart, the agreed total is removed.",
   "salesResetTotalAdjustment": "Remove adjustment",
   "salesInvalidAgreedTotal": "Enter a valid total of zero or more.",
   "salesRefundOriginalUnitPrice": "Original price: {amount} €/unit",

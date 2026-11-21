@@ -399,7 +399,6 @@ class _ComboFormScreenState extends State<ComboFormScreen> {
               controller: _price,
               keyboardType: AppNumbers.decimalKeyboard,
               inputFormatters: AppNumbers.decimalInputFormatters,
-              selectAllOnFocus: true,
               onChanged: (_) => setState(() {}),
               decoration: InputDecoration(
                 labelText: context.l10n.comboPriceLabel,

@@ -233,7 +233,6 @@ class _LineDiscountSheetState extends State<LineDiscountSheet> {
             autofocus: true,
             keyboardType: AppNumbers.decimalKeyboard,
             inputFormatters: AppNumbers.decimalInputFormatters,
-            selectAllOnFocus: true,
             textInputAction: TextInputAction.done,
             decoration: InputDecoration(
               labelText: switch (_mode) {
@@ -253,9 +252,11 @@ class _LineDiscountSheetState extends State<LineDiscountSheet> {
               spacing: AppSpacing.sm,
               children: [
                 for (final percent in _quickPercents)
-                  ActionChip(
+                  ChoiceChip(
                     label: Text(context.percent(percent.toDouble())),
-                    onPressed: () => _setPercent(percent),
+                    selected: _value == percent.toDouble(),
+                    showCheckmark: false,
+                    onSelected: (_) => _setPercent(percent),
                   ),
               ],
             ),

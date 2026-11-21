@@ -273,8 +273,11 @@ class InventoryProductsTable extends StatelessWidget {
       sortAscending: ascending,
       dataRowMinHeight: 64,
       dataRowMaxHeight: 68,
-      horizontalMargin: 16,
-      columnSpacing: 20,
+      // En selección la casilla añade una columna: se aprieta el resto para que
+      // la tabla siga cabiendo (tablet en vertical)
+      horizontalMargin: selectionMode ? 8 : 16,
+      columnSpacing: selectionMode ? 8 : 20,
+      checkboxHorizontalMargin: 8,
       columns: [
         DataColumn(
           label: Text(context.l10n.tablePhoto.toUpperCase()),

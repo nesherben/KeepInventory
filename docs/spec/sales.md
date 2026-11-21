@@ -210,6 +210,12 @@ Pantallas: `SalesScreen` (`/sales`) y `HistoryScreen` (`/history`).
 - **Código:** `lib/features/sales/domain/manual_line_discount.dart`, `sale_cart_pricing_calculator.dart` (`price(lineDiscounts)`, `canDiscount`, `lineDiscountsToDrop`), `sale_from_cart_factory.dart`, `sale.dart` (`SaleItem.manualDiscount*`), `sale_refund_calculator.dart` (`remainingAfterRefund`), `lib/features/sales/data/datasources/sale_local_datasource.dart`, `lib/features/sales/presentation/sales_screen.dart` (`_setLineDiscount`, `_applyAgreedTotal`, `_pruneLineDiscounts`), `widgets/line_discount_sheet.dart`, `widgets/cart_items_list_widget.dart`, `widgets/sales_cart_total_summary.dart` (ahorro), `widgets/sale_history_group_card.dart`, `widgets/sales_ui_utils.dart` (`lineDiscountLabel`).
 - **Tests:** `test/manual_line_discount_test.dart`, `test/sale_cart_pricing_calculator_test.dart` (grupo "manual line discounts"), `test/sale_refund_calculator_test.dart`, `test/database_migration_runner_test.dart`, `test/sale_history_group_card_test.dart`. Sin tests de widget de `LineDiscountSheet` ni de la capa de datos (insertar/leer `manual_discount_*`).
 
+### SALES-015 · Catálogo de la caja en pantallas anchas
+- **Propósito:** aprovechar el ancho de una tablet.
+- **Reglas de negocio:** las columnas del catálogo salen del ancho disponible (`SalesScreen._catalogColumns`: tarjetas de ~150 dp, entre un mínimo de 3 en vertical / 4 en horizontal y 8). En una tablet caben muchas más que en un móvil. El encabezado de la hoja del carrito reserva más alto (`hasExtraLine`) cuando hay "Ahorro" o total tachado, para no pisar el aviso de combo.
+- **Código:** `lib/features/sales/presentation/sales_screen.dart`, `widgets/sales_cart_sheet.dart`, `widgets/product_grid_widget.dart`, `widgets/packs_grid_widget.dart`.
+- **Tests:** probado en emulador de tablet (sin tests de widget).
+
 ### SALES-014 · Total acordado y cambios en el carrito
 - **Propósito:** que un total pactado no se aplique por error a un carrito distinto.
 - **Reglas de negocio:** si cambia el CONTENIDO del carrito (añadir o quitar unidades de un producto o pack) con un total acordado activo (SALES-004), el total acordado se quita (factor 1) y se avisa ("Se quitó el total acordado porque cambió el carrito"). Si el carrito queda vacío se quita en silencio. También se quita si al recuperar el carrito (CartSession) las cantidades se recortan por el stock. Esto sustituye al comportamiento anterior (el factor proporcional se conservaba al cambiar el carrito).

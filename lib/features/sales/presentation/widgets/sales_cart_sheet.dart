@@ -60,7 +60,8 @@ class SalesCartSheet extends StatelessWidget {
                   ListView(
                     controller: scrollController,
                     padding: EdgeInsets.only(
-                      top: 75,
+                      // Con línea extra bajo el total el encabezado es más alto
+                      top: hasExtraLine ? 89 : 75,
                       bottom: isExpanded && hasItems ? 170 + bottomInset : 20,
                     ),
                     children: [if (isExpanded) cartItems],

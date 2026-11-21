@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:keepinventory/l10n/app_localizations_ext.dart';
 
 import 'app_ui.dart';
+import 'select_all_on_focus.dart';
 
 /// Margen inferior para lo que se pinta pegado al borde de abajo: lo que
 /// ocupe más, el teclado o la barra de navegación de Android (con la app
@@ -124,11 +125,15 @@ class AdaptiveFormScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return switch (AdaptiveForm.modeOf(context)) {
-      AdaptiveFormMode.sheet => _buildPanel(context, side: false),
-      AdaptiveFormMode.side => _buildPanel(context, side: true),
-      AdaptiveFormMode.dialog => _buildDialog(context),
-    };
+    // Los campos numéricos de cualquier formulario seleccionan su valor al
+    // ganar el foco (escribir encima sin borrar)
+    return SelectAllOnFocus(
+      child: switch (AdaptiveForm.modeOf(context)) {
+        AdaptiveFormMode.sheet => _buildPanel(context, side: false),
+        AdaptiveFormMode.side => _buildPanel(context, side: true),
+        AdaptiveFormMode.dialog => _buildDialog(context),
+      },
+    );
   }
 
   /// Panel (inferior o lateral): título arriba, contenido con scroll y

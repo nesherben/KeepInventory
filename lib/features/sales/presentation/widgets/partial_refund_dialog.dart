@@ -399,7 +399,6 @@ class _PartialRefundDialogState extends State<PartialRefundDialog> {
           focusNode: _refundAmountFocusNode,
           keyboardType: AppNumbers.decimalKeyboard,
           inputFormatters: AppNumbers.decimalInputFormatters,
-          selectAllOnFocus: true,
           onEditingComplete: _formatRefundAmount,
           onSubmitted: (_) => _refundAmountFocusNode.unfocus(),
           style: TextStyle(

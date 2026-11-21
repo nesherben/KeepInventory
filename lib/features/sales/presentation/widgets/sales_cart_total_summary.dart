@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:keepinventory/core/utils/app_numbers.dart';
 import 'package:keepinventory/l10n/app_localizations_ext.dart';
 
+import '../../../../core/shared_widgets/select_all_on_focus.dart';
+
 enum _CartTotalAction { adjust, reset }
 
 class SalesCartTotalSummary extends StatelessWidget {
@@ -60,30 +62,31 @@ class SalesCartTotalSummary extends StatelessWidget {
 
             return AlertDialog(
               title: Text(context.l10n.salesAdjustTotal),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(context.l10n.salesCartAdjustmentHint),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: controller,
-                    autofocus: true,
-                    keyboardType: AppNumbers.decimalKeyboard,
-                    inputFormatters: AppNumbers.decimalInputFormatters,
-                    selectAllOnFocus: true,
-                    decoration: InputDecoration(
-                      labelText: context.l10n.salesAgreedTotal,
-                      errorText: errorText,
+              content: SelectAllOnFocus(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(context.l10n.salesCartAdjustmentHint),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: controller,
+                      autofocus: true,
+                      keyboardType: AppNumbers.decimalKeyboard,
+                      inputFormatters: AppNumbers.decimalInputFormatters,
+                      decoration: InputDecoration(
+                        labelText: context.l10n.salesAgreedTotal,
+                        errorText: errorText,
+                      ),
+                      onChanged: (_) {
+                        if (errorText != null) {
+                          setDialogState(() => errorText = null);
+                        }
+                      },
+                      onSubmitted: (_) => submit(),
                     ),
-                    onChanged: (_) {
-                      if (errorText != null) {
-                        setDialogState(() => errorText = null);
-                      }
-                    },
-                    onSubmitted: (_) => submit(),
-                  ),
-                ],
+                  ],
+                ),
               ),
               actions: [
                 TextButton(
