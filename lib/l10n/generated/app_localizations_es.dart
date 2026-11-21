@@ -1308,8 +1308,14 @@ class AppLocalizationsEs extends AppLocalizations {
   String get comboErrorEmptySlot => 'Elige un producto en cada hueco';
 
   @override
-  String comboOwnPromoWarning(String products) {
-    return '$products ya tiene(n) promoción propia. Dentro del combo se cobra el precio del combo y las unidades sueltas mantienen su promoción. Si prefieres que no se mezclen, quita la promoción del producto en Inventario.';
+  String comboOwnPromoWarning(String products, num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$products ya tienen promoción propia.',
+      one: '$products ya tiene promoción propia.',
+    );
+    return '$_temp0 Dentro del combo se cobra el precio del combo y las unidades sueltas mantienen su promoción. Si prefieres que no se mezclen, quita la promoción del producto en Inventario.';
   }
 
   @override
@@ -2383,4 +2389,8 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get ticketFullyRefunded => 'Reembolsado';
+
+  @override
+  String get agreedTotalResetByChange =>
+      'Se quitó el total acordado porque cambió el carrito.';
 }

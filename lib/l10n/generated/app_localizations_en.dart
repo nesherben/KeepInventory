@@ -1276,12 +1276,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String comboSeparateTotal(String amount) {
-    return 'Separately €$amount';
+    return 'Separately $amount €';
   }
 
   @override
   String comboSaving(String amount) {
-    return 'You save €$amount';
+    return 'You save $amount €';
   }
 
   @override
@@ -1298,8 +1298,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get comboErrorEmptySlot => 'Choose a product for each slot';
 
   @override
-  String comboOwnPromoWarning(String products) {
-    return '$products already have their own promotion. Inside the combo the combo price applies and loose units keep their promotion. If you\'d rather not mix them, remove the product\'s promotion in Inventory.';
+  String comboOwnPromoWarning(String products, num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$products already have their own promotion.',
+      one: '$products already has its own promotion.',
+    );
+    return '$_temp0 Inside the combo the combo price applies and loose units keep their promotion. If you\'d rather not mix them, remove the product\'s promotion in Inventory.';
   }
 
   @override
@@ -1357,12 +1363,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String productFormMargin(String amount, String percent) {
-    return 'Margin per unit: €$amount ($percent)';
+    return 'Margin per unit: $amount € ($percent)';
   }
 
   @override
   String productFormLoss(String amount) {
-    return 'Selling at a loss: €$amount per unit';
+    return 'Selling at a loss: $amount € per unit';
   }
 
   @override
@@ -1373,7 +1379,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String promotionPreviewBundle(int count, String price) {
-    return 'Buying $count units, they pay €$price in total';
+    return 'Buying $count units, they pay $price € in total';
   }
 
   @override
@@ -1383,7 +1389,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String promotionAutoNameBundle(int count, String price) {
-    return '$count for €$price';
+    return '$count for $price €';
   }
 
   @override
@@ -1393,7 +1399,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String packSeparatePrice(String amount) {
-    return 'Separately €$amount';
+    return 'Separately $amount €';
   }
 
   @override
@@ -1703,7 +1709,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String saleRegistered(String id, String amount, String method) {
-    return 'Sale #$id saved · €$amount · $method';
+    return 'Sale #$id saved · $amount € · $method';
   }
 
   @override
@@ -1762,7 +1768,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String ticketRefundLine(String amount, String when) {
-    return 'Refunded €$amount · $when';
+    return 'Refunded $amount € · $when';
   }
 
   @override
@@ -1770,7 +1776,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String comboSavingUpTo(String amount) {
-    return 'Save up to €$amount';
+    return 'Save up to $amount €';
   }
 
   @override
@@ -1797,7 +1803,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String salesRefundOriginalUnitPrice(String amount) {
-    return 'Original price: €$amount/unit';
+    return 'Original price: $amount €/unit';
   }
 
   @override
@@ -2368,4 +2374,8 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ticketFullyRefunded => 'Refunded';
+
+  @override
+  String get agreedTotalResetByChange =>
+      'The agreed total was removed because the cart changed.';
 }

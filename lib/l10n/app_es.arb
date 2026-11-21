@@ -487,7 +487,7 @@
   "comboErrorName": "Pon un nombre al combo",
   "comboErrorMinSlots": "Añade al menos 2 productos",
   "comboErrorEmptySlot": "Elige un producto en cada hueco",
-  "comboOwnPromoWarning": "{products} ya tiene(n) promoción propia. Dentro del combo se cobra el precio del combo y las unidades sueltas mantienen su promoción. Si prefieres que no se mezclen, quita la promoción del producto en Inventario.",
+  "comboOwnPromoWarning": "{count, plural, =1{{products} ya tiene promoción propia.} other{{products} ya tienen promoción propia.}} Dentro del combo se cobra el precio del combo y las unidades sueltas mantienen su promoción. Si prefieres que no se mezclen, quita la promoción del producto en Inventario.",
   "@comboOwnPromoWarning": {
     "placeholders": {
       "products": {
@@ -1254,5 +1254,6 @@
       }
     }
   },
-  "ticketFullyRefunded": "Reembolsado"
+  "ticketFullyRefunded": "Reembolsado",
+  "agreedTotalResetByChange": "Se quitó el total acordado porque cambió el carrito."
 }

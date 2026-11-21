@@ -2285,8 +2285,8 @@ abstract class AppLocalizations {
   /// No description provided for @comboOwnPromoWarning.
   ///
   /// In es, this message translates to:
-  /// **'{products} ya tiene(n) promoción propia. Dentro del combo se cobra el precio del combo y las unidades sueltas mantienen su promoción. Si prefieres que no se mezclen, quita la promoción del producto en Inventario.'**
-  String comboOwnPromoWarning(String products);
+  /// **'{count, plural, =1{{products} ya tiene promoción propia.} other{{products} ya tienen promoción propia.}} Dentro del combo se cobra el precio del combo y las unidades sueltas mantienen su promoción. Si prefieres que no se mezclen, quita la promoción del producto en Inventario.'**
+  String comboOwnPromoWarning(String products, num count);
 
   /// No description provided for @comboOwnPromoTitle.
   ///
@@ -3907,6 +3907,12 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Reembolsado'**
   String get ticketFullyRefunded;
+
+  /// No description provided for @agreedTotalResetByChange.
+  ///
+  /// In es, this message translates to:
+  /// **'Se quitó el total acordado porque cambió el carrito.'**
+  String get agreedTotalResetByChange;
 }
 
 class _AppLocalizationsDelegate

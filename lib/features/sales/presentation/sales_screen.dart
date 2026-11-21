@@ -15,6 +15,7 @@ import '../../inventory/data/repositories/product_repository_impl.dart';
 import '../../packs/data/repositories/pack_repository_impl.dart';
 import '../../promotions/data/repositories/promotion_repository_impl.dart';
 import '../data/repositories/sale_repository_imp.dart';
+import 'cart_session.dart';
 import '../domain/insufficient_stock_exception.dart';
 import '../domain/manual_line_discount.dart';
 import '../domain/sale_catalog_filter.dart';
@@ -114,6 +115,10 @@ class _SalesScreenState extends State<SalesScreen>
   // Método de pago del cliente (solo informativo). Vuelve a efectivo tras cada venta.
   PaymentMethod _paymentMethod = PaymentMethod.defaultMethod;
 
+  /// Ya se recuperó el carrito de la sesión (hasta entonces no se guarda nada,
+  /// para no pisarlo con el carrito vacío del primer build).
+  bool _cartRestored = false;
+
   @override
   void initState() {
     super.initState();
@@ -160,8 +165,94 @@ class _SalesScreenState extends State<SalesScreen>
       if (!_categories.any((c) => c.id == _categoryFilter)) {
         _categoryFilter = null;
       }
+      _remapCart();
       _isLoading = false;
     });
+  }
+
+  /// Reconstruye el carrito con los productos y packs recién cargados: la
+  /// primera vez desde la sesión (volver a la caja tras abrir otra pantalla) y
+  /// las siguientes desde el propio carrito (para que apunte a los objetos
+  /// nuevos). Las cantidades se recortan al stock actual y lo que ya no
+  /// exista se descarta.
+  void _remapCart() {
+    final session = CartSession.instance;
+    final productQty = _cartRestored
+        ? {
+            for (final e in _cart.entries)
+              if (e.key.id != null) e.key.id!: e.value,
+          }
+        : Map<int, int>.of(session.products);
+    final packQty = _cartRestored
+        ? {
+            for (final e in _cartPacks.entries)
+              if (e.key.id != null) e.key.id!: e.value,
+          }
+        : Map<int, int>.of(session.packs);
+    if (!_cartRestored) {
+      _lineDiscounts
+        ..clear()
+        ..addAll(session.lineDiscounts);
+      _cartAdjustmentFactor = session.adjustmentFactor;
+      _paymentMethod = session.paymentMethod;
+    }
+
+    var clamped = false;
+    _cart.clear();
+    for (final product in _products) {
+      final wanted = productQty[product.id];
+      if (wanted == null) continue;
+      final qty = wanted < product.units ? wanted : product.units;
+      if (qty != wanted) clamped = true;
+      if (qty > 0) _cart[product] = qty;
+    }
+    _cartPacks.clear();
+    for (final pack in _packs) {
+      final wanted = packQty[pack.id];
+      if (wanted == null) continue;
+      final qty = wanted < pack.units ? wanted : pack.units;
+      if (qty != wanted) clamped = true;
+      if (qty > 0) _cartPacks[pack] = qty;
+    }
+
+    final present = {for (final p in _cart.keys) p.id};
+    _lineDiscounts.removeWhere((id, _) => !present.contains(id));
+    // Un total acordado no vale si el carrito cambió por el stock
+    if (clamped || (_cart.isEmpty && _cartPacks.isEmpty)) {
+      _cartAdjustmentFactor = 1.0;
+    }
+    _cartRestored = true;
+  }
+
+  /// Guarda el carrito en la sesión (en memoria) para recuperarlo al volver.
+  void _saveCartSession() {
+    if (!_cartRestored) return;
+    final session = CartSession.instance;
+    session.products = {
+      for (final e in _cart.entries)
+        if (e.key.id != null) e.key.id!: e.value,
+    };
+    session.packs = {
+      for (final e in _cartPacks.entries)
+        if (e.key.id != null) e.key.id!: e.value,
+    };
+    session.lineDiscounts = Map.of(_lineDiscounts);
+    session.adjustmentFactor = _cartAdjustmentFactor;
+    session.paymentMethod = _paymentMethod;
+  }
+
+  /// El total acordado se calculó para un carrito concreto: si cambia lo que
+  /// hay dentro, deja de valer y se quita (true si había uno).
+  bool _dropAgreedTotal() {
+    if (!_hasAdjustment) return false;
+    _cartAdjustmentFactor = 1.0;
+    return true;
+  }
+
+  void _notifyAgreedTotalDropped() {
+    if (mounted) {
+      AppAlerts.showInfo(context, context.l10n.agreedTotalResetByChange);
+    }
   }
 
   void _addToCart(Product product) {
@@ -172,9 +263,12 @@ class _SalesScreenState extends State<SalesScreen>
       return;
     }
 
+    var agreedDropped = false;
     setState(() {
       _cart[product] = currentQtyInCart + 1;
+      agreedDropped = _dropAgreedTotal();
     });
+    if (agreedDropped) _notifyAgreedTotalDropped();
     _pruneLineDiscounts();
     // Aviso al meter la última unidad que queda
     if (currentQtyInCart + 1 == product.units) {
@@ -189,6 +283,7 @@ class _SalesScreenState extends State<SalesScreen>
   void _removeFromCart(Product product) {
     if (!_cart.containsKey(product)) return;
 
+    var agreedDropped = false;
     setState(() {
       if (_cart[product]! > 1) {
         _cart[product] = _cart[product]! - 1;
@@ -198,23 +293,32 @@ class _SalesScreenState extends State<SalesScreen>
       }
       if (_cart.isEmpty && _cartPacks.isEmpty) {
         _cartAdjustmentFactor = 1.0;
+      } else {
+        agreedDropped = _dropAgreedTotal();
       }
     });
+    if (agreedDropped) _notifyAgreedTotalDropped();
   }
 
   void _removeAllFromCart(Product product) {
     if (!_cart.containsKey(product)) return;
 
+    var agreedDropped = false;
     setState(() {
       _cart.remove(product);
       _lineDiscounts.remove(product.id);
-      if (_cartPacks.isEmpty) _cartAdjustmentFactor = 1.0;
+      if (_cart.isEmpty && _cartPacks.isEmpty) {
+        _cartAdjustmentFactor = 1.0;
+      } else {
+        agreedDropped = _dropAgreedTotal();
+      }
     });
 
     AppAlerts.showInfo(
       context,
       context.l10n.productRemovedFromCart(product.name),
     );
+    if (agreedDropped) _notifyAgreedTotalDropped();
   }
 
   void _addPackToCart(Pack pack) {
@@ -225,14 +329,18 @@ class _SalesScreenState extends State<SalesScreen>
       return;
     }
 
+    var agreedDropped = false;
     setState(() {
       _cartPacks[pack] = currentQtyInCart + 1;
+      agreedDropped = _dropAgreedTotal();
     });
+    if (agreedDropped) _notifyAgreedTotalDropped();
   }
 
   void _removePackFromCart(Pack pack) {
     if (!_cartPacks.containsKey(pack)) return;
 
+    var agreedDropped = false;
     setState(() {
       if (_cartPacks[pack]! > 1) {
         _cartPacks[pack] = _cartPacks[pack]! - 1;
@@ -241,19 +349,28 @@ class _SalesScreenState extends State<SalesScreen>
       }
       if (_cart.isEmpty && _cartPacks.isEmpty) {
         _cartAdjustmentFactor = 1.0;
+      } else {
+        agreedDropped = _dropAgreedTotal();
       }
     });
+    if (agreedDropped) _notifyAgreedTotalDropped();
   }
 
   void _removeAllPackFromCart(Pack pack) {
     if (!_cartPacks.containsKey(pack)) return;
 
+    var agreedDropped = false;
     setState(() {
       _cartPacks.remove(pack);
-      if (_cart.isEmpty) _cartAdjustmentFactor = 1.0;
+      if (_cart.isEmpty && _cartPacks.isEmpty) {
+        _cartAdjustmentFactor = 1.0;
+      } else {
+        agreedDropped = _dropAgreedTotal();
+      }
     });
 
     AppAlerts.showInfo(context, context.l10n.packRemovedFromCart(pack.name));
+    if (agreedDropped) _notifyAgreedTotalDropped();
   }
 
   CartPricing _priceCart({bool withDiscounts = true}) =>
@@ -613,10 +730,13 @@ class _SalesScreenState extends State<SalesScreen>
       _packSearchQuery,
     );
 
+    // El carrito vive en memoria (CartSession): se recupera al volver a la caja
+    _saveCartSession();
     final hasCart = _cart.isNotEmpty || _cartPacks.isNotEmpty;
     return PopScope(
-      // Con el carrito lleno, "atrás" pide confirmar antes de perderlo
-      canPop: !hasCart,
+      // "Atrás" solo pide confirmar si cierra la app (única pantalla): si hay
+      // pantalla debajo, el carrito se conserva al volver
+      canPop: !hasCart || Navigator.of(context).canPop(),
       onPopInvokedWithResult: (didPop, _) async {
         if (didPop) return;
         final navigator = Navigator.of(context);
