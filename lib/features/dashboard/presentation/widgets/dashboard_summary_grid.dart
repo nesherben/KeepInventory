@@ -14,6 +14,9 @@ import 'dashboard_summary_sheets.dart';
 /// "Almacén y balance", con tarjetas compactas de dos en dos. Al tocar una
 /// sale una ficha con qué significa la cifra y, a veces, su detalle.
 class DashboardSummaryGrid extends StatelessWidget {
+  /// Título de sección: más cerca de sus tarjetas (8) que de lo anterior.
+  static const _labelPadding = EdgeInsets.fromLTRB(2, 0, 0, 8);
+
   const DashboardSummaryGrid({
     super.key,
     required this.today,
@@ -93,7 +96,10 @@ class DashboardSummaryGrid extends StatelessWidget {
         value: salesValue,
         info: l10n.dashSalesTodayInfo,
         details: [
-          SectionLabel(l10n.dashByMethodToday),
+          SectionLabel(
+            l10n.dashByMethodToday,
+            padding: const EdgeInsets.only(top: 4, bottom: 4),
+          ),
           for (final method in PaymentMethod.values)
             // "Sin especificar" solo si hoy hay algo con ese método
             if (method != PaymentMethod.unspecified ||
@@ -229,10 +235,13 @@ class DashboardSummaryGrid extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          SectionLabel(l10n.dashTodaySection),
+          SectionLabel(
+            l10n.dashTodaySection,
+            padding: _labelPadding.copyWith(top: 4),
+          ),
           _row([salesTile, ticketsTile]),
-          const SizedBox(height: AppSpacing.md),
-          SectionLabel(l10n.dashStockSection),
+          const SizedBox(height: AppSpacing.lg),
+          SectionLabel(l10n.dashStockSection, padding: _labelPadding),
           _row([costTile, worthTile]),
           const SizedBox(height: 8),
           _row([profitTile, restockTile]),

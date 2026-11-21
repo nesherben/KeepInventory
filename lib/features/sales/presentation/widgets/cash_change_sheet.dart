@@ -192,28 +192,32 @@ class _CashChangeSheetState extends State<CashChangeSheet> {
     ],
   );
 
-  /// Contador de piezas marcadas (como el de los productos del carrito). Solo
-  /// informa: para quitar piezas está Deshacer.
+  /// Contador de piezas marcadas, como una burbuja de notificación: asoma por
+  /// fuera de la esquina superior derecha del botón. Solo informa: para quitar
+  /// piezas está Deshacer.
   Widget _badge(int count) {
     final colors = Theme.of(context).colorScheme;
     return Positioned(
-      top: 2,
-      right: 2,
+      top: -_badgeOverhang,
+      right: -_badgeOverhang,
       child: IgnorePointer(
         child: Container(
           constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
           alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(horizontal: 5),
           decoration: BoxDecoration(
             color: colors.primary,
             borderRadius: BorderRadius.circular(10),
+            // Borde del color del fondo: la burbuja se separa del botón
+            border: Border.all(color: colors.surface, width: 1.5),
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 5),
           child: Text(
             '$count',
             style: TextStyle(
               color: colors.onPrimary,
               fontSize: 11,
               fontWeight: FontWeight.w800,
+              height: 1.1,
             ),
           ),
         ),
@@ -221,17 +225,22 @@ class _CashChangeSheetState extends State<CashChangeSheet> {
     );
   }
 
+  /// Cuánto sobresale la burbuja por arriba y por la derecha del botón.
+  static const double _badgeOverhang = 7;
+
   /// Rejilla regular de billetes (rellenos) o monedas (con borde): 4 por fila
   /// en el móvil, 6 en tablet (una fila de billetes y otra de monedas).
   Widget _grid(List<int> values, {required bool filled}) {
     final wide = _wide;
     final style = ButtonStyle(
-      minimumSize: WidgetStatePropertyAll(Size(0, wide ? 60 : 48)),
+      // Sin la zona táctil de 48 que añade Material: ocupan lo que se ve
+      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      minimumSize: WidgetStatePropertyAll(Size(0, wide ? 44 : 40)),
       padding: const WidgetStatePropertyAll(
         EdgeInsets.symmetric(horizontal: 4),
       ),
       textStyle: WidgetStatePropertyAll(
-        TextStyle(fontSize: wide ? 16 : 14, fontWeight: FontWeight.w600),
+        TextStyle(fontSize: wide ? 15 : 13, fontWeight: FontWeight.w600),
       ),
       shape: WidgetStatePropertyAll(
         RoundedRectangleBorder(
@@ -246,15 +255,12 @@ class _CashChangeSheetState extends State<CashChangeSheet> {
         final width = (constraints.maxWidth - gap * (columns - 1)) / columns;
         Widget button(int cents) {
           final count = _count(cents);
-          // El texto baja un poco para dejar sitio al contador, en la esquina
-          final label = Padding(
-            padding: EdgeInsets.only(top: wide ? 10 : 12),
-            child: FittedBox(child: Text(context.money(cents / 100))),
-          );
+          final label = FittedBox(child: Text(context.money(cents / 100)));
           return SizedBox(
             width: width,
             child: Stack(
               fit: StackFit.passthrough,
+              clipBehavior: Clip.none,
               children: [
                 filled
                     ? FilledButton.tonal(
@@ -273,10 +279,15 @@ class _CashChangeSheetState extends State<CashChangeSheet> {
           );
         }
 
-        return Wrap(
-          spacing: gap,
-          runSpacing: gap,
-          children: [for (final cents in values) button(cents)],
+        // Margen arriba para que las burbujas de la primera fila no pisen lo
+        // que hay encima; más separación entre filas por el mismo motivo
+        return Padding(
+          padding: const EdgeInsets.only(top: _badgeOverhang),
+          child: Wrap(
+            spacing: gap,
+            runSpacing: gap + 2,
+            children: [for (final cents in values) button(cents)],
+          ),
         );
       },
     );
@@ -288,7 +299,7 @@ class _CashChangeSheetState extends State<CashChangeSheet> {
     if (!_wide) {
       return [
         _grid(CashChange.billCents, filled: true),
-        const SizedBox(height: 8),
+        const SizedBox(height: 4),
         _grid(CashChange.coinCents, filled: false),
       ];
     }
