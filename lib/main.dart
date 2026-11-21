@@ -21,6 +21,7 @@ import 'features/sales/presentation/sales_screen.dart';
 
 // 💡 Importamos el Drawer para acceder a su ValueNotifier del tema
 import 'core/shared_widgets/app_drawer.dart';
+import 'core/shared_widgets/app_side_rail.dart';
 import 'features/sync/presentation/data_management_screen.dart';
 import 'features/sync/presentation/first_run_restore_screen.dart';
 import 'features/tutorial/presentation/tutorial_screen.dart';
@@ -107,6 +108,10 @@ class _KeepInventoryAppState extends State<KeepInventoryApp>
               theme: AppTheme.light(dynamicPrimary: effectiveLightPrimary),
               darkTheme: AppTheme.dark(dynamicPrimary: effectiveDarkPrimary),
               themeMode: ThemeMode.system,
+              navigatorKey: appNavigatorKey,
+              navigatorObservers: [appRouteObserver],
+              // En tablet, barra lateral fija con los iconos de las secciones
+              builder: (context, child) => AppShell(child: child!),
               // El primer arranque abre el tutorial de bienvenida
               initialRoute: widget.firstRun
                   ? '/first-run'

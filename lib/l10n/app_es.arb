@@ -1440,5 +1440,7 @@
   "tutorialGuidesBody": "La primera vez que abras cada pantalla verás una pequeña guía que ilumina lo importante. Crea tus propios productos de prueba para practicar. Puedes repetir cualquier guía con el icono ? de la barra superior.",
   "navGuides": "Guías de cada pantalla",
   "navGuidesSubtitle": "Volver a ver los mini tutoriales",
-  "navGuidesReset": "Las guías volverán a salir al abrir cada pantalla."
+  "navGuidesReset": "Las guías volverán a salir al abrir cada pantalla.",
+  "railExpand": "Mostrar nombres del menú",
+  "railCollapse": "Plegar el menú a iconos"
 }

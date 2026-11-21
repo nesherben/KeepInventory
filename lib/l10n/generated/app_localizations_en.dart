@@ -2794,4 +2794,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get navGuidesReset =>
       'The guides will show again when you open each screen.';
+
+  @override
+  String get railExpand => 'Show menu names';
+
+  @override
+  String get railCollapse => 'Collapse menu to icons';
 }

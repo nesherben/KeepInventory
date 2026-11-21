@@ -4567,6 +4567,18 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Las guías volverán a salir al abrir cada pantalla.'**
   String get navGuidesReset;
+
+  /// No description provided for @railExpand.
+  ///
+  /// In es, this message translates to:
+  /// **'Mostrar nombres del menú'**
+  String get railExpand;
+
+  /// No description provided for @railCollapse.
+  ///
+  /// In es, this message translates to:
+  /// **'Plegar el menú a iconos'**
+  String get railCollapse;
 }
 
 class _AppLocalizationsDelegate

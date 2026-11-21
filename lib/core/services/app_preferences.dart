@@ -8,6 +8,7 @@ class AppPreferences {
   static const _tutorialSeenKey = 'tutorial_seen';
   static const _menuHintKey = 'menu_hint_shown';
   static const _coachSeenKey = 'coach_guides_seen';
+  static const _railExpandedKey = 'side_rail_expanded';
   static const _autoBackupKey = 'auto_backup_enabled';
   static const _backupRiskKey = 'backup_risk_accepted';
   static const _lastLocalBackupKey = 'last_local_backup_at';
@@ -30,6 +31,9 @@ class AppPreferences {
   /// Guías por pantalla (mini tutoriales) que ya se han visto. Van en las
   /// preferencias, nunca en la BD, para no entrar en las copias de seguridad.
   static final Set<String> coachSeen = {};
+
+  /// Barra lateral de tablet: desplegada (con textos) o plegada (solo iconos).
+  static final ValueNotifier<bool> railExpanded = ValueNotifier(false);
 
   static bool isCoachSeen(String id) => coachSeen.contains(id);
 
@@ -82,6 +86,7 @@ class AppPreferences {
     privacyModeEnabled.value = preferences.getBool(_privacyModeKey) ?? false;
     tutorialSeen = preferences.getBool(_tutorialSeenKey) ?? false;
     menuHintShown = preferences.getBool(_menuHintKey) ?? false;
+    railExpanded.value = preferences.getBool(_railExpandedKey) ?? false;
     coachSeen
       ..clear()
       ..addAll(preferences.getStringList(_coachSeenKey) ?? const []);
@@ -91,6 +96,12 @@ class AppPreferences {
     privacyModeEnabled.value = enabled;
     final preferences = await SharedPreferences.getInstance();
     await preferences.setBool(_privacyModeKey, enabled);
+  }
+
+  static Future<void> setRailExpanded(bool expanded) async {
+    railExpanded.value = expanded;
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.setBool(_railExpandedKey, expanded);
   }
 
   static Future<void> markMenuHintShown() async {

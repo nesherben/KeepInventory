@@ -789,5 +789,7 @@
   "tutorialGuidesBody": "The first time you open each screen you'll see a short guide highlighting what matters. Create your own test products to practice. You can replay any guide with the ? icon in the top bar.",
   "navGuides": "Screen guides",
   "navGuidesSubtitle": "See the mini tutorials again",
-  "navGuidesReset": "The guides will show again when you open each screen."
+  "navGuidesReset": "The guides will show again when you open each screen.",
+  "railExpand": "Show menu names",
+  "railCollapse": "Collapse menu to icons"
 }
