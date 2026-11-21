@@ -561,7 +561,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             const SizedBox(width: 8),
           ],
         ),
-        drawer: const AppDrawer(),
+        drawer: appDrawer(context),
         body: _isLoading
             ? const Center(child: CircularProgressIndicator())
             : RefreshIndicator(

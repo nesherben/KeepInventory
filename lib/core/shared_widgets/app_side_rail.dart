@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:keepinventory/l10n/app_localizations_ext.dart';
 
 import '../services/app_preferences.dart';
+import 'app_alerts.dart';
+import 'app_drawer.dart';
 import 'app_ui.dart';
 import 'coach_marks.dart';
 
@@ -59,6 +61,25 @@ const _railItems = [
   _RailItem('/changes', Icons.history, Icons.history),
   _RailItem('/data-management', Icons.storage_outlined, Icons.storage),
 ];
+
+/// ¿Hay barra lateral a la vista? Con ella, el menú clásico sobra: la barra es
+/// ese mismo menú plegado a iconos.
+class RailScope extends InheritedWidget {
+  const RailScope({super.key, required this.visible, required super.child});
+
+  final bool visible;
+
+  static bool of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<RailScope>()?.visible ?? false;
+
+  @override
+  bool updateShouldNotify(RailScope old) => visible != old.visible;
+}
+
+/// Menú lateral clásico de una pantalla: no existe cuando hay barra lateral
+/// (tampoco su botón ☰; la barra se pliega y despliega con su propio botón).
+Widget? appDrawer(BuildContext context) =>
+    RailScope.of(context) ? null : const AppDrawer();
 
 /// Anchos de la barra: plegada (solo iconos) y desplegada (con nombres).
 const double kRailCollapsedWidth = 72;
@@ -126,7 +147,7 @@ class AppShell extends StatelessWidget {
                         media.size.height,
                       ),
                     ),
-                    child: child,
+                    child: RailScope(visible: show, child: child),
                   ),
                 ),
               ],
@@ -154,6 +175,20 @@ class _SideRail extends StatelessWidget {
       _ => l10n.navDataManagement,
     };
   }
+
+  /// Acción de ayuda o enlace del pie de la barra (nunca queda seleccionada).
+  Widget _extra(
+    IconData icon,
+    String label,
+    bool expanded,
+    VoidCallback onTap,
+  ) => _RailButton(
+    item: _RailItem('', icon, icon),
+    label: label,
+    selected: false,
+    expanded: expanded,
+    onTap: onTap,
+  );
 
   void _go(String route) {
     if (appCurrentRoute.value == route) return;
@@ -209,6 +244,57 @@ class _SideRail extends StatelessWidget {
                           expanded: expanded,
                           onTap: () => _go(item.route),
                         ),
+                    ],
+                  ),
+                ),
+                const Divider(height: 1),
+                // Lo que el menú clásico tenía aparte: ayuda y enlaces
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.sm,
+                    vertical: AppSpacing.sm,
+                  ),
+                  child: Column(
+                    children: [
+                      _extra(
+                        Icons.school_outlined,
+                        context.l10n.navTutorial,
+                        expanded,
+                        () => appNavigatorKey.currentState?.pushNamed(
+                          '/tutorial',
+                        ),
+                      ),
+                      _extra(
+                        Icons.lightbulb_outline,
+                        context.l10n.navGuides,
+                        expanded,
+                        () async {
+                          final message = context.l10n.navGuidesReset;
+                          await AppPreferences.resetCoachGuides();
+                          final target = appNavigatorKey.currentContext;
+                          if (target != null && target.mounted) {
+                            AppAlerts.showInfo(target, message);
+                          }
+                        },
+                      ),
+                      _extra(
+                        Icons.code,
+                        context.l10n.drawerSourceCode,
+                        expanded,
+                        () => AppDrawer.openLink(
+                          appNavigatorKey.currentContext ?? context,
+                          AppDrawer.repoUrl,
+                        ),
+                      ),
+                      _extra(
+                        Icons.coffee_outlined,
+                        context.l10n.drawerDonate,
+                        expanded,
+                        () => AppDrawer.openLink(
+                          appNavigatorKey.currentContext ?? context,
+                          AppDrawer.donateUrl,
+                        ),
+                      ),
                     ],
                   ),
                 ),

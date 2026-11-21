@@ -1,3 +1,4 @@
+import '../../../core/shared_widgets/app_side_rail.dart';
 import '../../../core/services/app_version.dart';
 
 import 'package:flutter/material.dart';
@@ -12,7 +13,6 @@ import '../../../core/services/sync_approval.dart';
 import '../../../core/services/sync_invite.dart';
 import '../../../core/services/sync_service.dart';
 import '../../../core/shared_widgets/app_alerts.dart';
-import '../../../core/shared_widgets/app_drawer.dart';
 import '../../../core/shared_widgets/app_ui.dart';
 import '../../../core/theme/app_colors.dart';
 
@@ -376,7 +376,7 @@ class _SyncScreenState extends State<SyncScreen> {
       child: Scaffold(
         key: _scaffoldKey,
         appBar: AppBar(title: Text(context.l10n.syncTitle)),
-        drawer: const AppDrawer(),
+        drawer: appDrawer(context),
         body: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(AppSpacing.xl),

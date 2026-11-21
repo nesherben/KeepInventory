@@ -1,3 +1,5 @@
+import '../../../core/shared_widgets/app_side_rail.dart';
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -5,7 +7,6 @@ import 'package:flutter/services.dart';
 import 'package:keepinventory/core/utils/app_numbers.dart';
 import 'package:keepinventory/l10n/app_localizations_ext.dart';
 
-import '../../../core/shared_widgets/app_drawer.dart';
 import '../../../core/shared_widgets/app_alerts.dart';
 import '../../../core/shared_widgets/app_ui.dart';
 
@@ -845,7 +846,7 @@ class _SalesScreenState extends State<SalesScreen>
               ],
             ),
           ),
-          drawer: const AppDrawer(),
+          drawer: appDrawer(context),
           body: _isLoading
               ? const Center(child: CircularProgressIndicator())
               : isLandscape

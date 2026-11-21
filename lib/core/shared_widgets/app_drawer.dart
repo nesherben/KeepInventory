@@ -26,6 +26,22 @@ class AppDrawer extends StatelessWidget {
   /// con "¡Empieza añadiendo productos!". Lo actualizan Inicio e Inventario.
   static final ValueNotifier<bool> catalogEmpty = ValueNotifier(false);
 
+  static final donateUrl = Uri.parse('https://www.paypal.me/nestor8299');
+  static final repoUrl = Uri.parse(
+    'https://github.com/nesherben/KeepInventory',
+  );
+
+  /// Abre un enlace fuera de la app; avisa si no se puede.
+  static Future<void> openLink(BuildContext context, Uri url) async {
+    var opened = false;
+    try {
+      opened = await launchUrl(url, mode: LaunchMode.externalApplication);
+    } catch (_) {}
+    if (!opened && context.mounted) {
+      AppAlerts.showError(context, context.l10n.linkOpenError);
+    }
+  }
+
   static final ValueNotifier<Color?> customThemeNotifier =
       ValueNotifier<Color?>(null);
   static int _currentColorIndex = 0;
@@ -240,20 +256,9 @@ class _DrawerFooter extends StatelessWidget {
   const _DrawerFooter();
 
   static const _authorName = 'Néstor';
-  static final _donateUrl = Uri.parse('https://www.paypal.me/nestor8299');
-  static final _repoUrl = Uri.parse(
-    'https://github.com/nesherben/KeepInventory',
-  );
 
-  Future<void> _open(BuildContext context, Uri url) async {
-    var opened = false;
-    try {
-      opened = await launchUrl(url, mode: LaunchMode.externalApplication);
-    } catch (_) {}
-    if (!opened && context.mounted) {
-      AppAlerts.showError(context, context.l10n.linkOpenError);
-    }
-  }
+  Future<void> _open(BuildContext context, Uri url) =>
+      AppDrawer.openLink(context, url);
 
   @override
   Widget build(BuildContext context) {
@@ -283,7 +288,7 @@ class _DrawerFooter extends StatelessWidget {
                     tooltip: context.l10n.drawerSourceCode,
                     visualDensity: VisualDensity.compact,
                     icon: const Icon(Icons.code, size: 20),
-                    onPressed: () => _open(context, _repoUrl),
+                    onPressed: () => _open(context, AppDrawer.repoUrl),
                   ),
                 ],
               ),
@@ -292,7 +297,7 @@ class _DrawerFooter extends StatelessWidget {
                 child: SizedBox(
                   height: 42,
                   child: FilledButton.tonalIcon(
-                    onPressed: () => _open(context, _donateUrl),
+                    onPressed: () => _open(context, AppDrawer.donateUrl),
                     icon: const Icon(Icons.coffee_outlined, size: 18),
                     label: Text(context.l10n.drawerDonate),
                   ),

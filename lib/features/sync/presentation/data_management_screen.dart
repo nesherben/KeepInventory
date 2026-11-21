@@ -1,3 +1,4 @@
+import '../../../core/shared_widgets/app_side_rail.dart';
 import '../../../core/shared_widgets/coach_marks.dart';
 
 import 'dart:math' as math;
@@ -12,7 +13,6 @@ import 'package:restart_app/restart_app.dart';
 import 'package:keepinventory/l10n/app_localizations_ext.dart';
 
 import '../../../core/database/database_helper.dart';
-import '../../../core/shared_widgets/app_drawer.dart';
 import '../../../core/shared_widgets/app_alerts.dart';
 import '../../../core/services/backup_coordinator.dart';
 import '../../../core/services/database_backup_service.dart';
@@ -414,7 +414,7 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
             ),
           ],
         ),
-        drawer: const AppDrawer(),
+        drawer: appDrawer(context),
         body: body,
       ),
     );

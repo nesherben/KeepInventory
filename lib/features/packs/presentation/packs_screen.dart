@@ -1,3 +1,4 @@
+import '../../../core/shared_widgets/app_side_rail.dart';
 import '../../../core/shared_widgets/adaptive_form.dart';
 
 import 'package:flutter/material.dart';
@@ -10,7 +11,6 @@ import '../../../core/shared_widgets/app_ui.dart';
 
 import 'package:keepinventory/l10n/app_localizations_ext.dart';
 
-import '../../../core/shared_widgets/app_drawer.dart';
 import '../../../core/shared_widgets/app_alerts.dart';
 
 // Imports de la feature PACKS
@@ -282,7 +282,7 @@ class _PacksScreenState extends State<PacksScreen> {
             ),
           ],
         ),
-        drawer: const AppDrawer(),
+        drawer: appDrawer(context),
         body: _isLoading
             ? const Center(child: CircularProgressIndicator())
             : Column(

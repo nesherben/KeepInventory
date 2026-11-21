@@ -64,6 +64,46 @@ void main() {
     expect(find.text('Inventario'), findsNothing);
   });
 
+  Widget drawerApp() => MaterialApp(
+    navigatorKey: appNavigatorKey,
+    navigatorObservers: [appRouteObserver],
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: AppLocalizations.supportedLocales,
+    locale: const Locale('es'),
+    builder: (context, child) => AppShell(child: child!),
+    initialRoute: '/sales',
+    routes: {
+      '/sales': (context) => Scaffold(
+        appBar: AppBar(title: const Text('Caja')),
+        drawer: appDrawer(context),
+      ),
+    },
+  );
+
+  testWidgets('tablet: the classic menu (and its hamburger) is gone', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1600, 1000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(drawerApp());
+    await tester.pumpAndSettle();
+    // Solo está el botón de la barra lateral, no el ☰ de la barra superior
+    expect(find.byIcon(Icons.menu), findsOneWidget);
+    expect(find.byType(DrawerButton), findsNothing);
+  });
+
+  testWidgets('phone: the classic menu keeps its hamburger', (tester) async {
+    tester.view.physicalSize = const Size(400, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(drawerApp());
+    await tester.pumpAndSettle();
+    expect(find.byIcon(Icons.menu), findsOneWidget);
+  });
+
   testWidgets('phone: no rail', (tester) async {
     tester.view.physicalSize = const Size(400, 800);
     tester.view.devicePixelRatio = 1;

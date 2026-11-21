@@ -1,7 +1,8 @@
+import '../../../core/shared_widgets/app_side_rail.dart';
+
 import 'package:flutter/material.dart';
 import 'package:keepinventory/l10n/app_localizations_ext.dart';
 
-import '../../../core/shared_widgets/app_drawer.dart';
 import '../../../core/shared_widgets/app_ui.dart';
 import '../../../core/shared_widgets/coach_marks.dart';
 import '../data/datasources/history_local_datasource.dart';
@@ -113,7 +114,7 @@ class _HistoryChangesScreenState extends State<HistoryChangesScreen> {
           IconButton(icon: const Icon(Icons.refresh), onPressed: _load),
         ],
       ),
-      drawer: const AppDrawer(),
+      drawer: appDrawer(context),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _entries.isEmpty

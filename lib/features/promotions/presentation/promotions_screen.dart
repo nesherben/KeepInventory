@@ -1,3 +1,4 @@
+import '../../../core/shared_widgets/app_side_rail.dart';
 import '../../../core/shared_widgets/coach_marks.dart';
 import '../../../core/shared_widgets/adaptive_card_list.dart';
 import '../../inventory/presentation/widgets/product_picker_sheet.dart';
@@ -13,7 +14,6 @@ import '../../../core/shared_widgets/app_ui.dart';
 
 import 'package:keepinventory/l10n/app_localizations_ext.dart';
 
-import '../../../core/shared_widgets/app_drawer.dart';
 import '../../../core/shared_widgets/app_alerts.dart'; // 💡 Sistema de alertas en cola
 
 import '../data/repositories/promotion_repository_impl.dart';
@@ -442,7 +442,7 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
             ),
           ],
         ),
-        drawer: const AppDrawer(),
+        drawer: appDrawer(context),
         body: _isLoading
             ? const Center(child: CircularProgressIndicator())
             : Column(

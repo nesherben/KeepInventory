@@ -1,3 +1,4 @@
+import '../../../core/shared_widgets/app_side_rail.dart';
 import 'categories_screen.dart';
 import '../data/datasources/category_local_datasource.dart';
 import '../data/repositories/category_repository_impl.dart';
@@ -548,7 +549,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                     ),
                   ],
                 ),
-          drawer: const AppDrawer(),
+          drawer: appDrawer(context),
           body: _isLoading
               ? const Center(child: CircularProgressIndicator())
               : Column(

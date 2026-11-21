@@ -1,3 +1,4 @@
+import '../../../core/shared_widgets/app_side_rail.dart';
 import '../../../core/shared_widgets/adaptive_form.dart';
 import '../../../core/shared_widgets/name_picker_sheet.dart';
 
@@ -10,7 +11,6 @@ import '../../../core/shared_widgets/app_ui.dart';
 
 import 'package:keepinventory/l10n/app_localizations_ext.dart';
 
-import '../../../core/shared_widgets/app_drawer.dart';
 import '../../../core/shared_widgets/app_alerts.dart';
 
 // Imports de la feature SALES
@@ -287,7 +287,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
             IconButton(icon: const Icon(Icons.refresh), onPressed: _loadSales),
           ],
         ),
-        drawer: const AppDrawer(),
+        drawer: appDrawer(context),
         body: _isLoading
             ? const Center(child: CircularProgressIndicator())
             : Column(

@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
+import 'app_side_rail.dart';
 
-import 'app_drawer.dart';
+import 'package:flutter/material.dart';
 
 class MainScaffold extends StatelessWidget {
   final String title;
@@ -22,7 +22,7 @@ class MainScaffold extends StatelessWidget {
       // AQUÍ CONFIGURAMOS EL GESTO UNA SOLA VEZ PARA TODA LA APP
       drawerEdgeDragWidth: 120.0,
       appBar: AppBar(title: Text(title), elevation: 0, actions: actions),
-      drawer: const AppDrawer(),
+      drawer: appDrawer(context),
       body: body,
       floatingActionButton: floatingActionButton,
     );
