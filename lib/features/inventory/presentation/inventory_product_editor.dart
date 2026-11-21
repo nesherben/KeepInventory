@@ -10,6 +10,10 @@ import 'package:keepinventory/core/utils/app_numbers.dart';
 import 'package:keepinventory/l10n/app_localizations_ext.dart';
 
 import '../data/repositories/product_repository_impl.dart';
+import '../../packs/data/datasources/pack_local_datasource.dart';
+import '../../packs/data/repositories/pack_repository_impl.dart';
+import '../../promotions/data/datasources/combo_local_datasource.dart';
+import '../../promotions/data/repositories/combo_repository_impl.dart';
 import '../domain/product.dart';
 import '../../promotions/domain/promotion.dart';
 import 'widgets/category_picker.dart';
@@ -63,15 +67,48 @@ class InventoryProductEditor {
     }
   }
 
-  void showDeleteConfirmation(BuildContext context, Product product) {
+  /// Nombres de los combos y packs que incluyen el producto.
+  Future<List<String>> _usedIn(int productId) async {
+    final combos = await ComboRepositoryImpl(ComboLocalDatasource())
+        .getCombos();
+    final packs = await PackRepositoryImpl(PackLocalDatasource()).getPacks();
+    return [
+      for (final c in combos)
+        if (c.productIds.contains(productId)) c.name,
+      for (final p in packs)
+        if (p.items.any((i) => i.productId == productId)) p.name,
+    ];
+  }
+
+  Future<void> showDeleteConfirmation(
+    BuildContext context,
+    Product product,
+  ) async {
     final id = product.id!;
+    // Avisa si el producto forma parte de packs o combos (se quitaría de ellos)
+    final usedIn = await _usedIn(id);
+    if (!context.mounted) return;
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(dialogContext.l10n.deleteProductTitle),
         // Nombra el producto: con la lista llena evita borrar el equivocado
-        content: Text(
-          dialogContext.l10n.deleteProductConfirmNamed(product.name),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(dialogContext.l10n.deleteProductConfirmNamed(product.name)),
+            if (usedIn.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Text(
+                dialogContext.l10n.deleteProductUsedIn(usedIn.join(', ')),
+                style: TextStyle(
+                  color: Theme.of(dialogContext).colorScheme.error,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ],
         ),
         actions: [
           TextButton(

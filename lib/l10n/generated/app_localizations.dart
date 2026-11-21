@@ -4615,6 +4615,18 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'{count} uds.'**
   String dashboardUnitsLeft(int count);
+
+  /// No description provided for @refundAll.
+  ///
+  /// In es, this message translates to:
+  /// **'Devolver todo'**
+  String get refundAll;
+
+  /// No description provided for @deleteProductUsedIn.
+  ///
+  /// In es, this message translates to:
+  /// **'Este producto está en: {names}. Al borrarlo se quitará de ahí y esos packs o combos podrían quedar incompletos.'**
+  String deleteProductUsedIn(String names);
 }
 
 class _AppLocalizationsDelegate

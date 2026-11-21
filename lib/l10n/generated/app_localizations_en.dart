@@ -2820,4 +2820,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String dashboardUnitsLeft(int count) {
     return '$count units';
   }
+
+  @override
+  String get refundAll => 'Refund everything';
+
+  @override
+  String deleteProductUsedIn(String names) {
+    return 'This product is part of: $names. Deleting it removes it from there, and those packs or combos may end up incomplete.';
+  }
 }

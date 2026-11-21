@@ -1455,5 +1455,14 @@
         "type": "int"
       }
     }
+  },
+  "refundAll": "Devolver todo",
+  "deleteProductUsedIn": "Este producto está en: {names}. Al borrarlo se quitará de ahí y esos packs o combos podrían quedar incompletos.",
+  "@deleteProductUsedIn": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
   }
 }

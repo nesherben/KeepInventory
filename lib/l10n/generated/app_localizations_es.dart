@@ -2834,4 +2834,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String dashboardUnitsLeft(int count) {
     return '$count uds.';
   }
+
+  @override
+  String get refundAll => 'Devolver todo';
+
+  @override
+  String deleteProductUsedIn(String names) {
+    return 'Este producto está en: $names. Al borrarlo se quitará de ahí y esos packs o combos podrían quedar incompletos.';
+  }
 }

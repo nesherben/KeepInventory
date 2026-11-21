@@ -136,6 +136,7 @@ Pantallas: `SalesScreen` (`/sales`) y `HistoryScreen` (`/history`).
 - **Propósito:** devolver parte de un ticket reponiendo stock y dejando constancia.
 - **Reglas de negocio:**
   - Diálogo desde el ticket: por cada línea (agrupadas por combo cuando aplica; opción de devolver un combo entero) y por cada pack, un selector 0..cantidad. Al cambiar cualquiera se recalcula el reembolso sugerido: `max(0, total_amount − valor restante × factor)`.
+  - Botón «Devolver todo» (`_selectAll`): marca de una vez todas las líneas devolvibles y todos los packs (las líneas con descuento manual no entran) y recalcula el reembolso.
   - Campo del reembolso editable; se formatea al perder el foco. Si el importe > `total_amount` de la venta → error "no puede superar" y no se confirma.
   - Interruptor "reponer packs abiertos como componentes" (`restockAsComponents`): si está activo, los packs devueltos reponen sus **componentes** (`cantidad × unidades devueltas`) al inventario de productos; si no, suman a `packs.units`.
   - `processPartialRefund` (transacción):

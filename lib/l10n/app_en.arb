@@ -797,5 +797,7 @@
   "dashboardLowStock": "Low stock",
   "dashboardNoTicketsYet": "No sales yet",
   "dashboardAllStocked": "All stock levels are fine",
-  "dashboardUnitsLeft": "{count} units"
+  "dashboardUnitsLeft": "{count} units",
+  "refundAll": "Refund everything",
+  "deleteProductUsedIn": "This product is part of: {names}. Deleting it removes it from there, and those packs or combos may end up incomplete."
 }

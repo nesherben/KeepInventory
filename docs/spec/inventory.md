@@ -50,6 +50,7 @@ Productos, stock, categorías y su pantalla. Los precios por promoción están e
   - Borrar = `is_active = 0` **y** `units = 0` (no se elimina la fila: `sale_items.product_id` es `RESTRICT`).
   - `getProducts()` solo devuelve activos; `getProductById` devuelve también inactivos.
   - Los productos inactivos no cuentan para huecos de combo (se excluyen al cargar) ni para el resumen del inventario.
+  - Si el producto forma parte de algún combo o pack, el diálogo lo avisa en rojo con sus nombres (el producto se quita de ahí y esos combos/packs pueden quedar incompletos).
   - Confirmación con diálogo (acción destructiva en rojo) y aviso al terminar; se descartan los +/− de stock pendientes del producto.
   - Una devolución **completa** de ticket (`refundSale`) reactiva el producto (`is_active = 1`); las devoluciones parciales **no** lo reactivan (ver SALES-009).
 - **Datos:** `products.is_active`, `products.units`.
