@@ -14,6 +14,9 @@ final ValueNotifier<String?> appCurrentRoute = ValueNotifier(null);
 final NavigatorObserver appRouteObserver = _RouteObserver();
 
 class _RouteObserver extends NavigatorObserver {
+  /// Ruta con nombre que había antes de abrir el tutorial (que oculta la barra).
+  String? _beforeTutorial;
+
   void _set(Route<dynamic>? route) {
     final name = route?.settings.name;
     if (name == null || name == appCurrentRoute.value) return;
@@ -26,6 +29,9 @@ class _RouteObserver extends NavigatorObserver {
   @override
   void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
     CoachMarks.dismissAll();
+    if (route.settings.name == '/tutorial') {
+      _beforeTutorial = appCurrentRoute.value;
+    }
     _set(route);
   }
 
@@ -36,6 +42,16 @@ class _RouteObserver extends NavigatorObserver {
   @override
   void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
     CoachMarks.dismissAll();
+    if (route.settings.name == '/tutorial' &&
+        previousRoute?.settings.name == null &&
+        _beforeTutorial != null) {
+      // La pantalla de debajo no tiene nombre: se recupera la anterior
+      final restore = _beforeTutorial!;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        appCurrentRoute.value = restore;
+      });
+      return;
+    }
     _set(previousRoute);
   }
 }

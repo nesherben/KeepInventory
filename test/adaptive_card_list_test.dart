@@ -5,9 +5,9 @@ import 'package:keepinventory/core/shared_widgets/adaptive_card_list.dart';
 void main() {
   test('columns grow with the available width', () {
     expect(AdaptiveCardList.columnsFor(360), 1);
-    expect(AdaptiveCardList.columnsFor(900), 1);
-    expect(AdaptiveCardList.columnsFor(1000), 2);
-    expect(AdaptiveCardList.columnsFor(1600), 3);
+    expect(AdaptiveCardList.columnsFor(800), 1);
+    expect(AdaptiveCardList.columnsFor(900), 2);
+    expect(AdaptiveCardList.columnsFor(1300), 3);
     expect(AdaptiveCardList.columnsFor(4000), 3);
   });
 

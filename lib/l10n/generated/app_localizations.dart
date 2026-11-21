@@ -4457,7 +4457,7 @@ abstract class AppLocalizations {
   /// No description provided for @coachSalesTotal.
   ///
   /// In es, this message translates to:
-  /// **'Aquí ves el total. Despliega el carrito para ajustar el descuento de una línea o pactar un total, y pulsa Cobrar.'**
+  /// **'Aquí ves el total. En el carrito puedes ajustar el descuento de una línea o pactar un total, y pulsar Cobrar.'**
   String get coachSalesTotal;
 
   /// No description provided for @coachPromosEmptyTitle.
@@ -4535,7 +4535,7 @@ abstract class AppLocalizations {
   /// No description provided for @coachDataBackup.
   ///
   /// In es, this message translates to:
-  /// **'Tu copia de seguridad diaria se hace sola. Aquí ves la última y puedes restaurar una desde el móvil, Drive o un archivo.'**
+  /// **'Activa la copia diaria y se hará sola. Aquí ves la última copia y puedes restaurar una desde el móvil, Drive o un archivo.'**
   String get coachDataBackup;
 
   /// No description provided for @tutorialGuidesTitle.

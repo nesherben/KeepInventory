@@ -9,7 +9,7 @@ class AdaptiveCardList extends StatelessWidget {
     required this.itemCount,
     required this.itemBuilder,
     this.padding = const EdgeInsets.all(16),
-    this.minColumnWidth = 480,
+    this.minColumnWidth = 420,
     this.maxColumns = 3,
     this.gap = 12,
   });
@@ -28,7 +28,7 @@ class AdaptiveCardList extends StatelessWidget {
   /// Columnas que caben en [width] (sin contar el relleno).
   static int columnsFor(
     double width, {
-    double minColumnWidth = 480,
+    double minColumnWidth = 420,
     double gap = 12,
     int maxColumns = 3,
   }) {

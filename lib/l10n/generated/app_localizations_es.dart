@@ -2741,7 +2741,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get coachSalesTotal =>
-      'Aquí ves el total. Despliega el carrito para ajustar el descuento de una línea o pactar un total, y pulsa Cobrar.';
+      'Aquí ves el total. En el carrito puedes ajustar el descuento de una línea o pactar un total, y pulsar Cobrar.';
 
   @override
   String get coachPromosEmptyTitle => 'Crea tu primera oferta';
@@ -2790,7 +2790,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get coachDataBackup =>
-      'Tu copia de seguridad diaria se hace sola. Aquí ves la última y puedes restaurar una desde el móvil, Drive o un archivo.';
+      'Activa la copia diaria y se hará sola. Aquí ves la última copia y puedes restaurar una desde el móvil, Drive o un archivo.';
 
   @override
   String get tutorialGuidesTitle => 'Cada pantalla te guía';

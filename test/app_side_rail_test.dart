@@ -104,6 +104,35 @@ void main() {
     expect(find.byIcon(Icons.menu), findsOneWidget);
   });
 
+  testWidgets('the rail comes back after the tutorial over an unnamed page', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1600, 1000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(app());
+    await tester.pumpAndSettle();
+    expect(find.byIcon(Icons.point_of_sale), findsOneWidget);
+
+    // Pantalla secundaria sin nombre (como Sincronización), y encima el tutorial
+    appNavigatorKey.currentState!.push(
+      MaterialPageRoute<void>(
+        builder: (_) => const Scaffold(body: Text('pantalla secundaria')),
+      ),
+    );
+    await tester.pumpAndSettle();
+    appNavigatorKey.currentState!.pushNamed('/tutorial');
+    await tester.pumpAndSettle();
+    expect(find.byIcon(Icons.point_of_sale), findsNothing);
+
+    appNavigatorKey.currentState!.pop();
+    await tester.pumpAndSettle();
+    expect(find.text('pantalla secundaria'), findsOneWidget);
+    // La barra vuelve (antes se quedaba oculta)
+    expect(find.byIcon(Icons.point_of_sale), findsOneWidget);
+  });
+
   testWidgets('phone: no rail', (tester) async {
     tester.view.physicalSize = const Size(400, 800);
     tester.view.devicePixelRatio = 1;

@@ -246,8 +246,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
     await Future.delayed(const Duration(milliseconds: 600));
     if (!mounted) return;
     await AppPreferences.markMenuHintShown();
-    // Con la barra lateral de tablet no hace falta abrir el menú
-    if (AppShell.railVisible) return;
+    // Con la barra lateral de tablet no hace falta abrir el menú: la pista es
+    // la guía de Inicio
+    if (AppShell.railVisible) {
+      if (mounted && !_guideTried) {
+        _guideTried = true;
+        CoachGuide.showOnce(context, 'dashboard', _guideSteps);
+      }
+      return;
+    }
     _scaffoldKey.currentState?.openDrawer();
   }
 
