@@ -6,10 +6,12 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import 'widgets/bulk_edit_sheet.dart';
 import 'widgets/inventory_product_widgets.dart';
 import 'widgets/inventory_filters_bar.dart';
 import '../domain/inventory_view.dart';
 
+import '../../../core/shared_widgets/app_alerts.dart';
 import '../../../core/shared_widgets/app_ui.dart';
 
 import 'package:keepinventory/l10n/app_localizations_ext.dart';
@@ -85,6 +87,11 @@ class _InventoryScreenState extends State<InventoryScreen> {
   /// nueva, se descarta.
   int _loadSeq = 0;
 
+  /// Edición múltiple: productos marcados. Con la selección activa, tocar una
+  /// tarjeta la marca en vez de editarla.
+  bool _selecting = false;
+  final Set<int> _selected = {};
+
   InventoryProductEditor get _productEditor => InventoryProductEditor(
     repository: _productRepository,
     promotions: () => _promotionsMap,
@@ -159,8 +166,105 @@ class _InventoryScreenState extends State<InventoryScreen> {
           for (final id in combo.productIds) id: combo.name,
       };
       _packedUnits = packedUnits;
+      _selected.retainAll({for (final p in products) p.id});
       _isLoading = false;
     });
+  }
+
+  // ------------------------------------------------------------------
+  // Edición múltiple
+  // ------------------------------------------------------------------
+
+  void _startSelecting([Product? first]) => setState(() {
+    _selecting = true;
+    if (first?.id != null) _selected.add(first!.id!);
+  });
+
+  void _exitSelecting() => setState(() {
+    _selecting = false;
+    _selected.clear();
+  });
+
+  void _toggleSelected(Product product) {
+    final id = product.id;
+    if (id == null) return;
+    setState(() {
+      if (!_selected.remove(id)) _selected.add(id);
+    });
+  }
+
+  void _selectAll(List<Product> visible, bool select) => setState(() {
+    final ids = {for (final p in visible) ?p.id};
+    select ? _selected.addAll(ids) : _selected.removeAll(ids);
+  });
+
+  List<Product> get _selectedProducts => [
+    for (final p in _products)
+      if (_selected.contains(p.id)) p,
+  ];
+
+  Future<void> _bulkEdit() async {
+    final products = _selectedProducts;
+    if (products.isEmpty) return;
+    final edit = await showBulkEditSheet(
+      context,
+      count: products.length,
+      promotions: _promotionsMap.values.toList(),
+    );
+    if (edit == null || !mounted) return;
+    final changed = await _productRepository.updateMany(edit, products);
+    if (!mounted) return;
+    _exitSelecting();
+    await _loadProducts();
+    if (mounted) {
+      AppAlerts.showSuccess(context, context.l10n.bulkUpdated(changed));
+    }
+  }
+
+  Future<void> _bulkDelete() async {
+    final ids = _selected.toList();
+    if (ids.isEmpty) return;
+    var answered = false;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(dialogContext.l10n.bulkDeleteTitle(ids.length)),
+        content: Text(dialogContext.l10n.bulkDeleteBody),
+        actions: [
+          TextButton(
+            onPressed: () {
+              if (answered) return;
+              answered = true;
+              Navigator.pop(dialogContext, false);
+            },
+            child: Text(dialogContext.l10n.cancel),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(dialogContext).colorScheme.error,
+              foregroundColor: Theme.of(dialogContext).colorScheme.onError,
+            ),
+            onPressed: () {
+              if (answered) return;
+              answered = true;
+              Navigator.pop(dialogContext, true);
+            },
+            child: Text(dialogContext.l10n.delete),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    for (final id in ids) {
+      _discardPendingStock(id);
+    }
+    final deleted = await _productRepository.deleteMany(ids);
+    if (!mounted) return;
+    _exitSelecting();
+    await _loadProducts();
+    if (mounted) {
+      AppAlerts.showWarning(context, context.l10n.bulkDeleted(deleted));
+    }
   }
 
   void _updateStockQuickly(Product product, int amountChange) {
@@ -252,6 +356,10 @@ class _InventoryScreenState extends State<InventoryScreen> {
           comboName: _comboNames[product.id],
           packedUnits: _packedUnits[product.id] ?? 0,
           categoryName: _categoryNames[product.categoryId],
+          selectionMode: _selecting,
+          selected: _selected.contains(product.id),
+          onSelectChanged: () => _toggleSelected(product),
+          onLongPress: () => _startSelecting(product),
         );
       },
     );
@@ -291,6 +399,10 @@ class _InventoryScreenState extends State<InventoryScreen> {
           ascending: _sortAscending,
           onSort: _onSort,
           onResetSort: _resetSort,
+          selectionMode: _selecting,
+          selectedIds: _selected,
+          onSelectChanged: (product, _) => _toggleSelected(product),
+          onSelectAll: (select) => _selectAll(products, select),
         ),
       ),
     );
@@ -309,124 +421,177 @@ class _InventoryScreenState extends State<InventoryScreen> {
       categoryId: _categoryFilter,
     );
 
-    return Listener(
-      onPointerDown: (event) {
-        _startX = event.position.dx;
-        _startY = event.position.dy;
+    return PopScope(
+      // Con la selección activa, "atrás" la cierra en vez de salir
+      canPop: !_selecting,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _exitSelecting();
       },
-      onPointerMove: (event) {
-        if (_startX == null || _startY == null) return;
-        final dx = event.position.dx - _startX!;
-        final dy = event.position.dy - _startY!;
+      child: Listener(
+        onPointerDown: (event) {
+          _startX = event.position.dx;
+          _startY = event.position.dy;
+        },
+        onPointerMove: (event) {
+          if (_startX == null || _startY == null) return;
+          final dx = event.position.dx - _startX!;
+          final dy = event.position.dy - _startY!;
 
-        final bool isAtStartOfTable =
-            !_horizontalScrollController.hasClients ||
-            _horizontalScrollController.offset <= 0;
+          final bool isAtStartOfTable =
+              !_horizontalScrollController.hasClients ||
+              _horizontalScrollController.offset <= 0;
 
-        if (isAtStartOfTable && dx > 50 && dy.abs() < 30) {
+          if (isAtStartOfTable && dx > 50 && dy.abs() < 30) {
+            _startX = null;
+            _startY = null;
+            _scaffoldKey.currentState?.openDrawer();
+          }
+        },
+        onPointerUp: (_) {
           _startX = null;
           _startY = null;
-          _scaffoldKey.currentState?.openDrawer();
-        }
-      },
-      onPointerUp: (_) {
-        _startX = null;
-        _startY = null;
-      },
-      child: Scaffold(
-        key: _scaffoldKey,
-        appBar: AppBar(
-          title: Text(context.l10n.inventoryTitle),
-          actions: [
-            IconButton(
-              tooltip: context.l10n.categoriesTitle,
-              icon: const Icon(Icons.sell_outlined),
-              onPressed: () async {
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const CategoriesScreen()),
-                );
-                // Al volver: nombres, filtros y asignaciones al día
-                if (mounted) _loadProducts();
-              },
-            ),
-          ],
-        ),
-        drawer: const AppDrawer(),
-        body: _isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-                    child: TextField(
-                      controller: _searchController,
-                      onChanged: (value) =>
-                          setState(() => _searchQuery = value),
-                      decoration: InputDecoration(
-                        hintText: context.l10n.searchProduct,
-                        prefixIcon: const Icon(Icons.search, size: 20),
-                        suffixIcon: _searchQuery.isNotEmpty
-                            ? IconButton(
-                                icon: const Icon(Icons.close, size: 18),
-                                onPressed: () {
-                                  _searchController.clear();
-                                  setState(() => _searchQuery = '');
-                                },
-                              )
-                            : null,
-                        fillColor: Theme.of(context).cardColor,
+        },
+        child: Scaffold(
+          key: _scaffoldKey,
+          appBar: _selecting
+              ? AppBar(
+                  leading: IconButton(
+                    tooltip: context.l10n.inventoryExitSelection,
+                    icon: const Icon(Icons.close),
+                    onPressed: _exitSelecting,
+                  ),
+                  title: Text(
+                    context.l10n.inventorySelectedCount(_selected.length),
+                  ),
+                  actions: [
+                    IconButton(
+                      tooltip: context.l10n.inventorySelectAll,
+                      icon: const Icon(Icons.select_all),
+                      onPressed: () => _selectAll(filteredProducts, true),
+                    ),
+                    IconButton(
+                      tooltip: context.l10n.inventoryBulkEdit,
+                      icon: const Icon(Icons.edit_outlined),
+                      onPressed: _selected.isEmpty ? null : _bulkEdit,
+                    ),
+                    IconButton(
+                      tooltip: context.l10n.inventoryBulkDelete,
+                      icon: Icon(
+                        Icons.delete_outline,
+                        color: _selected.isEmpty
+                            ? null
+                            : Theme.of(context).colorScheme.error,
+                      ),
+                      onPressed: _selected.isEmpty ? null : _bulkDelete,
+                    ),
+                  ],
+                )
+              : AppBar(
+                  title: Text(context.l10n.inventoryTitle),
+                  actions: [
+                    if (_products.isNotEmpty)
+                      IconButton(
+                        tooltip: context.l10n.inventorySelectTooltip,
+                        icon: const Icon(Icons.checklist),
+                        onPressed: _startSelecting,
+                      ),
+                    IconButton(
+                      tooltip: context.l10n.categoriesTitle,
+                      icon: const Icon(Icons.sell_outlined),
+                      onPressed: () async {
+                        await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const CategoriesScreen(),
+                          ),
+                        );
+                        // Al volver: nombres, filtros y asignaciones al día
+                        if (mounted) _loadProducts();
+                      },
+                    ),
+                  ],
+                ),
+          drawer: const AppDrawer(),
+          body: _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                      child: TextField(
+                        controller: _searchController,
+                        onChanged: (value) =>
+                            setState(() => _searchQuery = value),
+                        decoration: InputDecoration(
+                          hintText: context.l10n.searchProduct,
+                          prefixIcon: const Icon(Icons.search, size: 20),
+                          suffixIcon: _searchQuery.isNotEmpty
+                              ? IconButton(
+                                  icon: const Icon(Icons.close, size: 18),
+                                  onPressed: () {
+                                    _searchController.clear();
+                                    setState(() => _searchQuery = '');
+                                  },
+                                )
+                              : null,
+                          fillColor: Theme.of(context).cardColor,
+                        ),
                       ),
                     ),
-                  ),
-                  if (_products.isNotEmpty)
-                    InventoryFiltersBar(
-                      summary: summary,
-                      filter: _filter,
-                      onFilterChanged: (filter) =>
-                          setState(() => _filter = filter),
-                      categoryNames: _categoryNames,
-                      categoryFilter: _categoryFilter,
-                      onCategoryChanged: (categoryId) =>
-                          setState(() => _categoryFilter = categoryId),
-                      sort: _sort,
-                      ascending: _sortAscending,
-                      onSort: _onSort,
-                      onResetSort: _resetSort,
-                      isNarrow:
-                          MediaQuery.sizeOf(context).width < _tableMinWidth,
+                    if (_products.isNotEmpty)
+                      InventoryFiltersBar(
+                        summary: summary,
+                        filter: _filter,
+                        onFilterChanged: (filter) =>
+                            setState(() => _filter = filter),
+                        categoryNames: _categoryNames,
+                        categoryFilter: _categoryFilter,
+                        onCategoryChanged: (categoryId) =>
+                            setState(() => _categoryFilter = categoryId),
+                        sort: _sort,
+                        ascending: _sortAscending,
+                        onSort: _onSort,
+                        onResetSort: _resetSort,
+                        isNarrow:
+                            MediaQuery.sizeOf(context).width < _tableMinWidth,
+                      ),
+                    Expanded(
+                      child: filteredProducts.isEmpty
+                          ? EmptyState(
+                              icon: Icons.inventory_2_outlined,
+                              title: _products.isEmpty
+                                  ? context.l10n.inventoryEmpty
+                                  : context.l10n.productsNotFound,
+                              action: _products.isEmpty
+                                  ? FilledButton.icon(
+                                      onPressed: () => _productEditor
+                                          .showProductFormDialog(context),
+                                      icon: const Icon(Icons.add),
+                                      label: Text(
+                                        context.l10n.inventoryAddFirst,
+                                      ),
+                                    )
+                                  : null,
+                            )
+                          : LayoutBuilder(
+                              builder: (context, constraints) =>
+                                  constraints.maxWidth >= _tableMinWidth
+                                  ? _buildProductTable(
+                                      filteredProducts,
+                                      constraints,
+                                    )
+                                  : _buildProductList(filteredProducts),
+                            ),
                     ),
-                  Expanded(
-                    child: filteredProducts.isEmpty
-                        ? EmptyState(
-                            icon: Icons.inventory_2_outlined,
-                            title: _products.isEmpty
-                                ? context.l10n.inventoryEmpty
-                                : context.l10n.productsNotFound,
-                            action: _products.isEmpty
-                                ? FilledButton.icon(
-                                    onPressed: () => _productEditor
-                                        .showProductFormDialog(context),
-                                    icon: const Icon(Icons.add),
-                                    label: Text(context.l10n.inventoryAddFirst),
-                                  )
-                                : null,
-                          )
-                        : LayoutBuilder(
-                            builder: (context, constraints) =>
-                                constraints.maxWidth >= _tableMinWidth
-                                ? _buildProductTable(
-                                    filteredProducts,
-                                    constraints,
-                                  )
-                                : _buildProductList(filteredProducts),
-                          ),
-                  ),
-                ],
-              ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () => _productEditor.showProductFormDialog(context),
-          child: const Icon(Icons.add),
+                  ],
+                ),
+          floatingActionButton: _selecting
+              ? null
+              : FloatingActionButton(
+                  onPressed: () =>
+                      _productEditor.showProductFormDialog(context),
+                  child: const Icon(Icons.add),
+                ),
         ),
       ),
     );

@@ -139,6 +139,71 @@ class ProductLocalDatasource {
     });
   }
 
+  /// Cambia varios productos a la vez (columnas por id) en UNA transacción:
+  /// o se aplican todos o ninguno. Cada uno queda anotado en el historial y
+  /// comparten grupo. Devuelve cuántos se cambiaron.
+  Future<int> updateMany(Map<int, Map<String, Object?>> valuesById) async {
+    final database = await db;
+    return database.transaction((txn) async {
+      final group = HistoryRecorder.newGroupId();
+      var count = 0;
+      for (final entry in valuesById.entries) {
+        if (entry.value.isEmpty) continue;
+        final before = await HistoryRecorder.snapshot(
+          txn,
+          ChangeEntity.product,
+          entry.key,
+        );
+        final changed = await txn.update(
+          'products',
+          entry.value,
+          where: 'id = ?',
+          whereArgs: [entry.key],
+        );
+        count += changed;
+        await HistoryRecorder.recordUpdated(
+          txn,
+          ChangeEntity.product,
+          entry.key,
+          before: before,
+          groupId: group,
+        );
+      }
+      return count;
+    });
+  }
+
+  /// Borrado lógico de varios productos en una transacción (mismo grupo en el
+  /// historial). Devuelve cuántos se borraron.
+  Future<int> deleteMany(List<int> ids) async {
+    final database = await db;
+    return database.transaction((txn) async {
+      final group = HistoryRecorder.newGroupId();
+      var count = 0;
+      for (final id in ids) {
+        final before = await HistoryRecorder.snapshot(
+          txn,
+          ChangeEntity.product,
+          id,
+        );
+        count += await txn.update(
+          'products',
+          {'is_active': 0, 'units': 0},
+          where: 'id = ?',
+          whereArgs: [id],
+        );
+        await HistoryRecorder.recordDeleted(
+          txn,
+          ChangeEntity.product,
+          id,
+          before: before,
+          groupId: group,
+        );
+      }
+      return count;
+    });
+  }
+
   /// Suma (o resta) unidades en una sola operación, sin bajar de 0.
   /// El stock no se registra en el historial.
   Future<void> addUnits(int id, int delta) async {

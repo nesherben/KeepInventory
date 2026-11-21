@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import '../../data/datasources/product_local_datasource.dart';
 import '../../data/product_model.dart';
+import '../../domain/bulk_product_edit.dart';
 import '../../domain/product.dart';
 import '../../domain/repositories/product_repository.dart';
 
@@ -92,4 +93,15 @@ class ProductRepositoryImpl implements ProductRepository {
   Future<int> deleteProduct(int id) async {
     return await datasource.deleteProduct(id);
   }
+
+  @override
+  Future<int> updateMany(BulkProductEdit edit, List<Product> products) {
+    return datasource.updateMany({
+      for (final product in products)
+        if (product.id != null) product.id!: edit.valuesFor(product),
+    });
+  }
+
+  @override
+  Future<int> deleteMany(List<int> ids) => datasource.deleteMany(ids);
 }

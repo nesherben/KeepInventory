@@ -35,7 +35,17 @@ class InventoryProductsTable extends StatelessWidget {
     this.verticalController,
     this.minWidth = 0,
     this.packedUnits = const {},
+    this.selectionMode = false,
+    this.selectedIds = const {},
+    this.onSelectChanged,
+    this.onSelectAll,
   });
+
+  /// Modo selección (edición múltiple): casilla en cada fila y en la cabecera.
+  final bool selectionMode;
+  final Set<int> selectedIds;
+  final void Function(Product product, bool selected)? onSelectChanged;
+  final ValueChanged<bool>? onSelectAll;
 
   /// Unidades dentro de packs montados, por id de producto.
   final Map<int, int> packedUnits;
@@ -111,6 +121,10 @@ class InventoryProductsTable extends StatelessWidget {
     final outOfStock = StockLevel.of(product.units) == StockLevel.out;
 
     return DataRow(
+      selected: selectedIds.contains(product.id),
+      onSelectChanged: selectionMode
+          ? (value) => onSelectChanged?.call(product, value ?? false)
+          : null,
       // Agotado: fila ligeramente tintada para localizarlo de un vistazo
       color: outOfStock
           ? WidgetStateProperty.all(colors.error.withValues(alpha: 0.04))
@@ -241,6 +255,10 @@ class InventoryProductsTable extends StatelessWidget {
   Widget _buildTable(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     return DataTable(
+      showCheckboxColumn: selectionMode,
+      onSelectAll: selectionMode
+          ? (value) => onSelectAll?.call(value ?? false)
+          : null,
       headingRowHeight: kHeadingHeight,
       headingRowColor: WidgetStateProperty.all(
         colors.surfaceContainerHighest.withValues(alpha: 0.5),

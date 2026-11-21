@@ -1327,5 +1327,61 @@
     }
   },
   "historyUndone": "Deshecho",
-  "close": "Cerrar"
+  "close": "Cerrar",
+  "inventorySelectTooltip": "Seleccionar varios",
+  "inventorySelectedCount": "{count, plural, =1{1 seleccionado} other{{count} seleccionados}}",
+  "@inventorySelectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "inventorySelectAll": "Seleccionar todo",
+  "inventoryBulkEdit": "Editar seleccionados",
+  "inventoryBulkDelete": "Eliminar seleccionados",
+  "inventoryExitSelection": "Salir de la selección",
+  "bulkEditTitle": "{count, plural, =1{Editar 1 producto} other{Editar {count} productos}}",
+  "@bulkEditTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bulkEditApply": "Aplicar",
+  "bulkEditHint": "Solo se cambia lo que elijas; el resto queda como está. El stock no se toca.",
+  "bulkKeep": "No cambiar",
+  "bulkSet": "Fijar",
+  "bulkPercent": "± %",
+  "bulkAmount": "± €",
+  "bulkHelpSet": "El mismo valor para todos.",
+  "bulkHelpPercent": "Positivo sube, negativo baja (−10 baja un 10 %).",
+  "bulkHelpAmount": "Positivo sube, negativo baja (−2 baja 2 €).",
+  "bulkUpdated": "{count, plural, =1{1 producto actualizado} other{{count} productos actualizados}}",
+  "@bulkUpdated": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bulkDeleteTitle": "{count, plural, =1{¿Eliminar 1 producto?} other{¿Eliminar {count} productos?}}",
+  "@bulkDeleteTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bulkDeleteBody": "Su stock pasará a 0 y dejarán de aparecer en el inventario; las ventas ya hechas se conservan.",
+  "bulkDeleted": "{count, plural, =1{1 producto eliminado} other{{count} productos eliminados}}",
+  "@bulkDeleted": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bulkKeepShort": "Igual"
 }

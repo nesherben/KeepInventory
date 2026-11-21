@@ -2559,4 +2559,110 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get close => 'Cerrar';
+
+  @override
+  String get inventorySelectTooltip => 'Seleccionar varios';
+
+  @override
+  String inventorySelectedCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count seleccionados',
+      one: '1 seleccionado',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get inventorySelectAll => 'Seleccionar todo';
+
+  @override
+  String get inventoryBulkEdit => 'Editar seleccionados';
+
+  @override
+  String get inventoryBulkDelete => 'Eliminar seleccionados';
+
+  @override
+  String get inventoryExitSelection => 'Salir de la selección';
+
+  @override
+  String bulkEditTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Editar $count productos',
+      one: 'Editar 1 producto',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get bulkEditApply => 'Aplicar';
+
+  @override
+  String get bulkEditHint =>
+      'Solo se cambia lo que elijas; el resto queda como está. El stock no se toca.';
+
+  @override
+  String get bulkKeep => 'No cambiar';
+
+  @override
+  String get bulkSet => 'Fijar';
+
+  @override
+  String get bulkPercent => '± %';
+
+  @override
+  String get bulkAmount => '± €';
+
+  @override
+  String get bulkHelpSet => 'El mismo valor para todos.';
+
+  @override
+  String get bulkHelpPercent =>
+      'Positivo sube, negativo baja (−10 baja un 10 %).';
+
+  @override
+  String get bulkHelpAmount => 'Positivo sube, negativo baja (−2 baja 2 €).';
+
+  @override
+  String bulkUpdated(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count productos actualizados',
+      one: '1 producto actualizado',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String bulkDeleteTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '¿Eliminar $count productos?',
+      one: '¿Eliminar 1 producto?',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get bulkDeleteBody =>
+      'Su stock pasará a 0 y dejarán de aparecer en el inventario; las ventas ya hechas se conservan.';
+
+  @override
+  String bulkDeleted(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count productos eliminados',
+      one: '1 producto eliminado',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get bulkKeepShort => 'Igual';
 }

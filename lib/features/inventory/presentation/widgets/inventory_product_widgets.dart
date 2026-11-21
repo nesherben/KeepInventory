@@ -371,7 +371,20 @@ class InventoryProductCard extends StatelessWidget {
     this.comboName,
     this.categoryName,
     this.packedUnits = 0,
+    this.selectionMode = false,
+    this.selected = false,
+    this.onSelectChanged,
+    this.onLongPress,
   });
+
+  /// Modo selección (edición múltiple): la tarjeta lleva casilla y tocarla
+  /// marca o desmarca, sin abrir las ediciones de cada campo.
+  final bool selectionMode;
+  final bool selected;
+  final VoidCallback? onSelectChanged;
+
+  /// Pulsación larga: empieza la selección con este producto.
+  final VoidCallback? onLongPress;
 
   /// Unidades dentro de packs montados.
   final int packedUnits;
@@ -388,94 +401,113 @@ class InventoryProductCard extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
     final cost = context.money(product.cost);
 
+    final content = Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        InventoryProductPhoto(
+          product: product,
+          size: 60,
+          onTap: () => actions.onEditImage(product),
+        ),
+        const SizedBox(width: AppSpacing.md),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                product.name,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 15,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  Text(
+                    context.money(product.price),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Flexible(
+                    child: Text(
+                      context.l10n.inventoryCostMargin(
+                        cost,
+                        InventoryMarginText.format(product),
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: product.marginAmount < 0
+                            ? colors.error
+                            : colors.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Wrap(
+                spacing: AppSpacing.sm,
+                runSpacing: AppSpacing.xs,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  InventoryStockStepper(
+                    product: product,
+                    actions: actions,
+                    packedUnits: packedUnits,
+                  ),
+                  InventoryPromotionChip(
+                    promotion: promotion,
+                    onTap: () => actions.onEditPromotion(product),
+                  ),
+                  InventoryCategoryChip(
+                    name: categoryName,
+                    onTap: actions.onEditCategory == null
+                        ? null
+                        : () => actions.onEditCategory!(product),
+                  ),
+                  if (comboName != null)
+                    InventoryComboTag(comboName: comboName!),
+                ],
+              ),
+            ],
+          ),
+        ),
+        InventoryActionMenu(product: product, actions: actions),
+      ],
+    );
+
     return AppCard(
       margin: const EdgeInsets.only(bottom: AppSpacing.sm),
       padding: const EdgeInsets.fromLTRB(12, 12, 4, 12),
-      onTap: () => actions.onEditProduct(product),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          InventoryProductPhoto(
-            product: product,
-            size: 60,
-            onTap: () => actions.onEditImage(product),
-          ),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      selected: selected,
+      onTap: selectionMode
+          ? onSelectChanged
+          : () => actions.onEditProduct(product),
+      onLongPress: selectionMode ? null : onLongPress,
+      child: selectionMode
+          ? Row(
               children: [
-                Text(
-                  product.name,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 15,
-                  ),
+                Checkbox(
+                  value: selected,
+                  visualDensity: VisualDensity.compact,
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  onChanged: (_) => onSelectChanged?.call(),
                 ),
-                const SizedBox(height: 2),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                  textBaseline: TextBaseline.alphabetic,
-                  children: [
-                    Text(
-                      context.money(product.price),
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 16,
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Flexible(
-                      child: Text(
-                        context.l10n.inventoryCostMargin(
-                          cost,
-                          InventoryMarginText.format(product),
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: product.marginAmount < 0
-                              ? colors.error
-                              : colors.onSurfaceVariant,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                Wrap(
-                  spacing: AppSpacing.sm,
-                  runSpacing: AppSpacing.xs,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    InventoryStockStepper(
-                      product: product,
-                      actions: actions,
-                      packedUnits: packedUnits,
-                    ),
-                    InventoryPromotionChip(
-                      promotion: promotion,
-                      onTap: () => actions.onEditPromotion(product),
-                    ),
-                    InventoryCategoryChip(
-                      name: categoryName,
-                      onTap: actions.onEditCategory == null
-                          ? null
-                          : () => actions.onEditCategory!(product),
-                    ),
-                    if (comboName != null)
-                      InventoryComboTag(comboName: comboName!),
-                  ],
-                ),
+                // En selección, solo la tarjeta entera responde al toque
+                Expanded(child: IgnorePointer(child: content)),
               ],
-            ),
-          ),
-          InventoryActionMenu(product: product, actions: actions),
-        ],
-      ),
+            )
+          : content,
     );
   }
 }

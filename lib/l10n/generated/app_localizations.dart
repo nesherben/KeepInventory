@@ -4219,6 +4219,132 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Cerrar'**
   String get close;
+
+  /// No description provided for @inventorySelectTooltip.
+  ///
+  /// In es, this message translates to:
+  /// **'Seleccionar varios'**
+  String get inventorySelectTooltip;
+
+  /// No description provided for @inventorySelectedCount.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =1{1 seleccionado} other{{count} seleccionados}}'**
+  String inventorySelectedCount(int count);
+
+  /// No description provided for @inventorySelectAll.
+  ///
+  /// In es, this message translates to:
+  /// **'Seleccionar todo'**
+  String get inventorySelectAll;
+
+  /// No description provided for @inventoryBulkEdit.
+  ///
+  /// In es, this message translates to:
+  /// **'Editar seleccionados'**
+  String get inventoryBulkEdit;
+
+  /// No description provided for @inventoryBulkDelete.
+  ///
+  /// In es, this message translates to:
+  /// **'Eliminar seleccionados'**
+  String get inventoryBulkDelete;
+
+  /// No description provided for @inventoryExitSelection.
+  ///
+  /// In es, this message translates to:
+  /// **'Salir de la selección'**
+  String get inventoryExitSelection;
+
+  /// No description provided for @bulkEditTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =1{Editar 1 producto} other{Editar {count} productos}}'**
+  String bulkEditTitle(int count);
+
+  /// No description provided for @bulkEditApply.
+  ///
+  /// In es, this message translates to:
+  /// **'Aplicar'**
+  String get bulkEditApply;
+
+  /// No description provided for @bulkEditHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Solo se cambia lo que elijas; el resto queda como está. El stock no se toca.'**
+  String get bulkEditHint;
+
+  /// No description provided for @bulkKeep.
+  ///
+  /// In es, this message translates to:
+  /// **'No cambiar'**
+  String get bulkKeep;
+
+  /// No description provided for @bulkSet.
+  ///
+  /// In es, this message translates to:
+  /// **'Fijar'**
+  String get bulkSet;
+
+  /// No description provided for @bulkPercent.
+  ///
+  /// In es, this message translates to:
+  /// **'± %'**
+  String get bulkPercent;
+
+  /// No description provided for @bulkAmount.
+  ///
+  /// In es, this message translates to:
+  /// **'± €'**
+  String get bulkAmount;
+
+  /// No description provided for @bulkHelpSet.
+  ///
+  /// In es, this message translates to:
+  /// **'El mismo valor para todos.'**
+  String get bulkHelpSet;
+
+  /// No description provided for @bulkHelpPercent.
+  ///
+  /// In es, this message translates to:
+  /// **'Positivo sube, negativo baja (−10 baja un 10 %).'**
+  String get bulkHelpPercent;
+
+  /// No description provided for @bulkHelpAmount.
+  ///
+  /// In es, this message translates to:
+  /// **'Positivo sube, negativo baja (−2 baja 2 €).'**
+  String get bulkHelpAmount;
+
+  /// No description provided for @bulkUpdated.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =1{1 producto actualizado} other{{count} productos actualizados}}'**
+  String bulkUpdated(int count);
+
+  /// No description provided for @bulkDeleteTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =1{¿Eliminar 1 producto?} other{¿Eliminar {count} productos?}}'**
+  String bulkDeleteTitle(int count);
+
+  /// No description provided for @bulkDeleteBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Su stock pasará a 0 y dejarán de aparecer en el inventario; las ventas ya hechas se conservan.'**
+  String get bulkDeleteBody;
+
+  /// No description provided for @bulkDeleted.
+  ///
+  /// In es, this message translates to:
+  /// **'{count, plural, =1{1 producto eliminado} other{{count} productos eliminados}}'**
+  String bulkDeleted(int count);
+
+  /// No description provided for @bulkKeepShort.
+  ///
+  /// In es, this message translates to:
+  /// **'Igual'**
+  String get bulkKeepShort;
 }
 
 class _AppLocalizationsDelegate

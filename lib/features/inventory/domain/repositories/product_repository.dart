@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import '../bulk_product_edit.dart';
 import '../product.dart';
 
 abstract class ProductRepository {
@@ -26,6 +27,13 @@ abstract class ProductRepository {
   /// Pone la promoción a todos los productos de una categoría (cada uno se
   /// puede cambiar después por separado). Devuelve cuántos se cambiaron.
   Future<int> setPromotionForCategory(int categoryId, int promotionId);
+
+  /// Aplica [edit] a [products] de una vez (todo o nada). Devuelve cuántos
+  /// productos se cambiaron.
+  Future<int> updateMany(BulkProductEdit edit, List<Product> products);
+
+  /// Borra (de forma lógica) varios productos de una vez. Devuelve cuántos.
+  Future<int> deleteMany(List<int> ids);
 
   /// Suma (o resta) unidades de stock de forma atómica.
   Future<void> addUnits(int id, int delta);

@@ -92,6 +92,15 @@ abstract final class AppNumbers {
     FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
   ];
 
+  /// Como [decimalInputFormatters] pero deja escribir el signo menos
+  /// (ajustes que suben o bajan, p. ej. −10 %).
+  static final List<TextInputFormatter> signedDecimalInputFormatters = [
+    FilteringTextInputFormatter.allow(RegExp(r'[0-9.,\-]')),
+  ];
+
+  static const TextInputType signedDecimalKeyboard =
+      TextInputType.numberWithOptions(decimal: true, signed: true);
+
   static final List<TextInputFormatter> integerInputFormatters = [
     FilteringTextInputFormatter.digitsOnly,
   ];
