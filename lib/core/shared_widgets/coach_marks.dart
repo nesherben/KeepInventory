@@ -143,7 +143,9 @@ class _CoachOverlayState extends State<CoachOverlay> {
         ? layer.size
         : MediaQuery.sizeOf(context);
     final padding = MediaQuery.paddingOf(context);
-    final hole = rect.inflate(6);
+    // Con un poco de margen, pero sin salirse de la capa: un elemento a todo
+    // el ancho (pestañas, filtros) dejaría el borde y las esquinas fuera
+    final hole = rect.inflate(6).intersect((Offset.zero & screen).deflate(3));
     final step = _steps[_index];
     final last = _index == _steps.length - 1;
 
