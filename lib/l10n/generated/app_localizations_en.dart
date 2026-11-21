@@ -2709,4 +2709,23 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get coachInventorySelect =>
       'Select several products to change their category, promotion, price or cost at once.';
+
+  @override
+  String get coachSalesEmptyTitle => 'You have no products yet';
+
+  @override
+  String get coachSalesEmptyText =>
+      'To sell, first create your products in Inventory (☰ menu). Start with a test one: a name and a price are enough.';
+
+  @override
+  String get coachSalesTabs =>
+      'Pick what to sell here: single products or packs. Tap one to add it to the cart.';
+
+  @override
+  String get coachSalesCatalog =>
+      'Search by name or filter by category to quickly find what the customer asks for.';
+
+  @override
+  String get coachSalesTotal =>
+      'This is the total. Pull up the cart to adjust a line\'s discount or agree on a total, then tap Checkout.';
 }

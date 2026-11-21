@@ -4429,6 +4429,36 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Marca varios productos para cambiarles la categoría, la promoción, el precio o el coste de una vez.'**
   String get coachInventorySelect;
+
+  /// No description provided for @coachSalesEmptyTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Aún no tienes productos'**
+  String get coachSalesEmptyTitle;
+
+  /// No description provided for @coachSalesEmptyText.
+  ///
+  /// In es, this message translates to:
+  /// **'Para vender, primero crea tus productos en Inventario (menú ☰). Empieza con uno de prueba: con nombre y precio basta.'**
+  String get coachSalesEmptyText;
+
+  /// No description provided for @coachSalesTabs.
+  ///
+  /// In es, this message translates to:
+  /// **'Aquí eliges qué vender: productos sueltos o packs. Toca uno para añadirlo al carrito.'**
+  String get coachSalesTabs;
+
+  /// No description provided for @coachSalesCatalog.
+  ///
+  /// In es, this message translates to:
+  /// **'Busca por nombre o filtra por categoría para encontrar rápido lo que pide el cliente.'**
+  String get coachSalesCatalog;
+
+  /// No description provided for @coachSalesTotal.
+  ///
+  /// In es, this message translates to:
+  /// **'Aquí ves el total. Despliega el carrito para ajustar el descuento de una línea o pactar un total, y pulsa Cobrar.'**
+  String get coachSalesTotal;
 }
 
 class _AppLocalizationsDelegate

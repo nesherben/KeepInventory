@@ -46,6 +46,7 @@ import 'widgets/product_grid_widget.dart';
 import 'widgets/packs_grid_widget.dart';
 import 'widgets/cart_items_list_widget.dart';
 import 'widgets/payment_method_widgets.dart';
+import '../../../core/shared_widgets/coach_marks.dart';
 import 'widgets/sales_cart_sheet.dart';
 import 'widgets/sales_cart_total_summary.dart';
 import 'widgets/sales_catalog_header.dart';
@@ -103,6 +104,12 @@ class _SalesScreenState extends State<SalesScreen>
 
   String _productSearchQuery = '';
   String _packSearchQuery = '';
+
+  // Guía de la pantalla (mini tutorial): elementos que se iluminan
+  final _tabsKey = GlobalKey();
+  final _headerKey = GlobalKey();
+  final _totalKey = GlobalKey();
+  bool _guideTried = false;
 
   final Map<Product, int> _cart = {};
   final Map<Pack, int> _cartPacks = {};
@@ -168,6 +175,29 @@ class _SalesScreenState extends State<SalesScreen>
       _remapCart();
       _isLoading = false;
     });
+    if (!_guideTried) {
+      _guideTried = true;
+      CoachGuide.showOnce(context, 'sales', _guideSteps);
+    }
+  }
+
+  /// Pasos de la guía: sin productos invita a crear el primero en Inventario.
+  List<CoachStep> _guideSteps() {
+    final l10n = context.l10n;
+    if (_products.isEmpty) {
+      return [
+        CoachStep(
+          target: _tabsKey,
+          title: l10n.coachSalesEmptyTitle,
+          text: l10n.coachSalesEmptyText,
+        ),
+      ];
+    }
+    return [
+      CoachStep(target: _tabsKey, text: l10n.coachSalesTabs),
+      CoachStep(target: _headerKey, text: l10n.coachSalesCatalog),
+      CoachStep(target: _totalKey, text: l10n.coachSalesTotal),
+    ];
   }
 
   /// Reconstruye el carrito con los productos y packs recién cargados: la
@@ -392,17 +422,20 @@ class _SalesScreenState extends State<SalesScreen>
 
   Widget _buildCartTotalSummary({required double fontSize, Color? color}) {
     final pricing = _pricing;
-    return SalesCartTotalSummary(
-      // Base SIN descuentos: al fijar un total acordado se borran
-      baseTotal: _priceCart(withDiscounts: false).total,
-      total: _cartTotal,
-      itemCount: _cartItemCount,
-      fontSize: fontSize,
-      hasAdjustment: _hasAdjustment,
-      savings: pricing.discountTotal,
-      color: color,
-      onTotalAdjusted: _applyAgreedTotal,
-      onReset: () => setState(() => _cartAdjustmentFactor = 1.0),
+    return KeyedSubtree(
+      key: _totalKey,
+      child: SalesCartTotalSummary(
+        // Base SIN descuentos: al fijar un total acordado se borran
+        baseTotal: _priceCart(withDiscounts: false).total,
+        total: _cartTotal,
+        itemCount: _cartItemCount,
+        fontSize: fontSize,
+        hasAdjustment: _hasAdjustment,
+        savings: pricing.discountTotal,
+        color: color,
+        onTotalAdjusted: _applyAgreedTotal,
+        onReset: () => setState(() => _cartAdjustmentFactor = 1.0),
+      ),
     );
   }
 
@@ -629,19 +662,23 @@ class _SalesScreenState extends State<SalesScreen>
 
   /// Buscador y, en Productos, chips de categoría.
   Widget _buildCatalogHeader() {
-    return SalesCatalogHeader(
-      isProductTab: _tabController.index == 0,
-      productSearchController: _productSearchController,
-      packSearchController: _packSearchController,
-      productSearchQuery: _productSearchQuery,
-      packSearchQuery: _packSearchQuery,
-      categories: _categories,
-      categoryFilter: _categoryFilter,
-      onProductSearchChanged: (value) =>
-          setState(() => _productSearchQuery = value),
-      onPackSearchChanged: (value) => setState(() => _packSearchQuery = value),
-      onCategoryChanged: (categoryId) =>
-          setState(() => _categoryFilter = categoryId),
+    return KeyedSubtree(
+      key: _headerKey,
+      child: SalesCatalogHeader(
+        isProductTab: _tabController.index == 0,
+        productSearchController: _productSearchController,
+        packSearchController: _packSearchController,
+        productSearchQuery: _productSearchQuery,
+        packSearchQuery: _packSearchQuery,
+        categories: _categories,
+        categoryFilter: _categoryFilter,
+        onProductSearchChanged: (value) =>
+            setState(() => _productSearchQuery = value),
+        onPackSearchChanged: (value) =>
+            setState(() => _packSearchQuery = value),
+        onCategoryChanged: (categoryId) =>
+            setState(() => _categoryFilter = categoryId),
+      ),
     );
   }
 
@@ -785,7 +822,16 @@ class _SalesScreenState extends State<SalesScreen>
           drawerEnableOpenDragGesture: _tabController.index == 0,
           appBar: AppBar(
             title: Text(context.l10n.salesTitle),
+            actions: [
+              IconButton(
+                tooltip: context.l10n.coachHelpTooltip,
+                icon: const Icon(Icons.help_outline),
+                onPressed: () =>
+                    CoachGuide.replay(context, 'sales', _guideSteps),
+              ),
+            ],
             bottom: TabBar(
+              key: _tabsKey,
               controller: _tabController,
               tabs: [
                 Tab(

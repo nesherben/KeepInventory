@@ -2723,4 +2723,23 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get coachInventorySelect =>
       'Marca varios productos para cambiarles la categoría, la promoción, el precio o el coste de una vez.';
+
+  @override
+  String get coachSalesEmptyTitle => 'Aún no tienes productos';
+
+  @override
+  String get coachSalesEmptyText =>
+      'Para vender, primero crea tus productos en Inventario (menú ☰). Empieza con uno de prueba: con nombre y precio basta.';
+
+  @override
+  String get coachSalesTabs =>
+      'Aquí eliges qué vender: productos sueltos o packs. Toca uno para añadirlo al carrito.';
+
+  @override
+  String get coachSalesCatalog =>
+      'Busca por nombre o filtra por categoría para encontrar rápido lo que pide el cliente.';
+
+  @override
+  String get coachSalesTotal =>
+      'Aquí ves el total. Despliega el carrito para ajustar el descuento de una línea o pactar un total, y pulsa Cobrar.';
 }
