@@ -2817,4 +2817,21 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get ticketSelectPrompt => 'Elige un ticket para ver su detalle';
+
+  @override
+  String get dashboardRecentTickets => 'Últimos tickets';
+
+  @override
+  String get dashboardLowStock => 'Stock bajo';
+
+  @override
+  String get dashboardNoTicketsYet => 'Aún no hay ventas';
+
+  @override
+  String get dashboardAllStocked => 'Todo el stock está bien';
+
+  @override
+  String dashboardUnitsLeft(int count) {
+    return '$count uds.';
+  }
 }

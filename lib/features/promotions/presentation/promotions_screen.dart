@@ -1,4 +1,5 @@
 import '../../../core/shared_widgets/coach_marks.dart';
+import '../../../core/shared_widgets/adaptive_card_list.dart';
 import '../../inventory/presentation/widgets/product_picker_sheet.dart';
 import '../../../core/shared_widgets/adaptive_form.dart';
 import 'widgets/offer_card.dart';
@@ -171,7 +172,7 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
             : context.l10n.promotionsNotFound,
       );
     }
-    return ListView.builder(
+    return AdaptiveCardList(
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 96),
       itemCount: combos.length,
       itemBuilder: (context, index) {
@@ -509,7 +510,7 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
                                   ? context.l10n.promotionsEmpty
                                   : context.l10n.promotionsNotFound,
                             )
-                          : ListView.builder(
+                          : AdaptiveCardList(
                               padding: const EdgeInsets.fromLTRB(
                                 12,
                                 12,

@@ -68,6 +68,8 @@ Funciona 100 % sin conexión: tus datos viven en tu móvil.
 
 El menú lateral (desliza desde el borde izquierdo o pulsa ☰) da acceso a todas las secciones: **Inicio**; **Venta** (Caja y Tickets y ferias); **Catálogo** (Inventario, Ofertas y Packs); **Datos** (Copias y sincronización) y **Ayuda** (Tutorial).
 
+> 🖥️ En una **tablet** el menú pasa a ser una barra fija a la izquierda, solo con iconos (pulsa el botón de arriba para ver los nombres y vuelve a pulsarlo para plegarla). En **Tickets** ves la lista y el detalle a la vez, **Ofertas** y **Packs** se reparten en columnas, y **Inicio** muestra los últimos tickets y el stock que se acaba.
+>
 > 📱 Los formularios se adaptan a la pantalla: en el móvil se abren a pantalla completa desde abajo (desliza la pestaña para cerrar), en una tablet en horizontal como panel lateral sin perder de vista la lista, y en vertical como ventana con letra grande.
 >
 > 🎓 La primera vez que abres la app aparece un **tutorial** de tres páginas y, si aún no tienes productos, el menú se abre solo con **Inventario** resaltado para que sepas por dónde empezar. Puedes volver a verlo cuando quieras desde **menú → Tutorial**.

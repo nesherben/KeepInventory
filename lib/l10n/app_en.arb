@@ -792,5 +792,10 @@
   "navGuidesReset": "The guides will show again when you open each screen.",
   "railExpand": "Show menu names",
   "railCollapse": "Collapse menu to icons",
-  "ticketSelectPrompt": "Pick a ticket to see its details"
+  "ticketSelectPrompt": "Pick a ticket to see its details",
+  "dashboardRecentTickets": "Latest tickets",
+  "dashboardLowStock": "Low stock",
+  "dashboardNoTicketsYet": "No sales yet",
+  "dashboardAllStocked": "All stock levels are fine",
+  "dashboardUnitsLeft": "{count} units"
 }

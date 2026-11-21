@@ -4585,6 +4585,36 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Elige un ticket para ver su detalle'**
   String get ticketSelectPrompt;
+
+  /// No description provided for @dashboardRecentTickets.
+  ///
+  /// In es, this message translates to:
+  /// **'Últimos tickets'**
+  String get dashboardRecentTickets;
+
+  /// No description provided for @dashboardLowStock.
+  ///
+  /// In es, this message translates to:
+  /// **'Stock bajo'**
+  String get dashboardLowStock;
+
+  /// No description provided for @dashboardNoTicketsYet.
+  ///
+  /// In es, this message translates to:
+  /// **'Aún no hay ventas'**
+  String get dashboardNoTicketsYet;
+
+  /// No description provided for @dashboardAllStocked.
+  ///
+  /// In es, this message translates to:
+  /// **'Todo el stock está bien'**
+  String get dashboardAllStocked;
+
+  /// No description provided for @dashboardUnitsLeft.
+  ///
+  /// In es, this message translates to:
+  /// **'{count} uds.'**
+  String dashboardUnitsLeft(int count);
 }
 
 class _AppLocalizationsDelegate

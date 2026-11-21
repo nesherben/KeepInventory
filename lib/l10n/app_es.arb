@@ -1443,5 +1443,17 @@
   "navGuidesReset": "Las guías volverán a salir al abrir cada pantalla.",
   "railExpand": "Mostrar nombres del menú",
   "railCollapse": "Plegar el menú a iconos",
-  "ticketSelectPrompt": "Elige un ticket para ver su detalle"
+  "ticketSelectPrompt": "Elige un ticket para ver su detalle",
+  "dashboardRecentTickets": "Últimos tickets",
+  "dashboardLowStock": "Stock bajo",
+  "dashboardNoTicketsYet": "Aún no hay ventas",
+  "dashboardAllStocked": "Todo el stock está bien",
+  "dashboardUnitsLeft": "{count} uds.",
+  "@dashboardUnitsLeft": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

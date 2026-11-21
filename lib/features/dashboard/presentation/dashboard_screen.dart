@@ -1,4 +1,10 @@
 import 'widgets/backup_reminder_banner.dart';
+import 'widgets/dashboard_overview_panels.dart';
+import '../../inventory/domain/inventory_view.dart';
+import '../../inventory/domain/product.dart';
+import '../../sales/data/datasources/sale_local_datasource.dart';
+import '../../sales/data/repositories/sale_repository_imp.dart';
+import '../../sales/domain/sale.dart';
 import '../../inventory/data/repositories/product_repository_impl.dart';
 import '../../inventory/data/datasources/product_local_datasource.dart';
 
@@ -21,7 +27,6 @@ import '../../../../core/services/github_update_service.dart';
 import '../../../core/theme/app_colors.dart';
 import 'widgets/dashboard_chart.dart'; // Ajusta esta ruta si es distinta
 import 'widgets/update_available_dialog.dart';
-import '../../sales/domain/payment_method.dart';
 import '../../sales/presentation/widgets/payment_method_widgets.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -45,6 +50,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   bool _isLoading = true;
   // Desglose de la tarjeta de ingresos totales, plegado por defecto
   bool _showPaymentBreakdown = false;
+  List<Sale> _recentSales = [];
+  List<Product> _lowStock = [];
+
   bool get _isPrivacyModeEnabled => AppPreferences.privacyModeEnabled.value;
 
   double _totalRevenue = 0;
@@ -160,6 +168,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
           .getRevenueByPaymentMethod();
       final revenueByMethodPerGroup = await _dashboardRepository
           .getRevenueByPaymentMethodPerGroup();
+      // Paneles de la tablet: últimos tickets y stock que se acaba
+      final sales = await SaleRepositoryImpl(SaleLocalDatasource()).getSales();
+      sales.sort((a, b) => b.date.compareTo(a.date));
+      final products = await ProductRepositoryImpl(ProductLocalDatasource())
+          .getProducts();
+      final low =
+          products
+              .where((p) => StockLevel.of(p.units) != StockLevel.ok)
+              .toList()
+            ..sort((a, b) => a.units.compareTo(b.units));
 
       if (!mounted) return;
       setState(() {
@@ -171,6 +189,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _dailyNetProfits = dailyNetProfits;
         _revenueByMethod = revenueByMethod;
         _revenueByMethodPerGroup = revenueByMethodPerGroup;
+        _recentSales = sales.take(5).toList();
+        _lowStock = low.take(5).toList();
         _isLoading = false;
       });
       _checkFirstSteps();
@@ -600,6 +620,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                       ),
                       _buildPaymentBreakdownPanel(),
+                      const SizedBox(height: 20),
+                      DashboardOverviewPanels(
+                        recentSales: _recentSales,
+                        lowStock: _lowStock,
+                        onOpenTickets: () => Navigator.pushNamedAndRemoveUntil(
+                          context,
+                          '/history',
+                          (_) => false,
+                        ),
+                        onOpenInventory: () =>
+                            Navigator.pushNamedAndRemoveUntil(
+                              context,
+                              '/inventory',
+                              (_) => false,
+                            ),
+                      ),
                     ] else ...[
                       _buildMainCard(false),
                       _buildPaymentBreakdownPanel(),

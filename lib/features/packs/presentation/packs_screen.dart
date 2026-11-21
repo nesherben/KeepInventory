@@ -2,6 +2,8 @@ import '../../../core/shared_widgets/adaptive_form.dart';
 
 import 'package:flutter/material.dart';
 
+import '../../../core/shared_widgets/adaptive_card_list.dart';
+
 import '../../../core/shared_widgets/coach_marks.dart';
 
 import '../../../core/shared_widgets/app_ui.dart';
@@ -320,7 +322,7 @@ class _PacksScreenState extends State<PacksScreen> {
                                 ? context.l10n.packsEmpty
                                 : context.l10n.packsNotFound,
                           )
-                        : ListView.builder(
+                        : AdaptiveCardList(
                             padding: const EdgeInsets.all(16),
                             itemCount: filteredPacks.length,
                             itemBuilder: (context, index) {
