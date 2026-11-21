@@ -706,12 +706,10 @@ class _SalesScreenState extends State<SalesScreen>
         ),
       ),
     );
-    // En efectivo, junto a COBRAR: calculadora de vueltas (no con Bizum/PayPal)
+    // En efectivo, a la izquierda de COBRAR: calculadora de vueltas (no con Bizum/PayPal)
     if (_paymentMethod != PaymentMethod.cash || isEmpty) return button;
     return Row(
       children: [
-        Expanded(child: button),
-        const SizedBox(width: 8),
         IconButton.filledTonal(
           tooltip: context.l10n.cashCalculatorTitle,
           style: IconButton.styleFrom(
@@ -723,6 +721,8 @@ class _SalesScreenState extends State<SalesScreen>
           onPressed: _processing ? null : _openCashChange,
           icon: const Icon(Icons.calculate_outlined),
         ),
+        const SizedBox(width: 8),
+        Expanded(child: button),
       ],
     );
   }
